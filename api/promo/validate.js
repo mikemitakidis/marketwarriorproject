@@ -27,7 +27,8 @@ module.exports = async (req, res) => {
             'LAUNCH20': { discount: 20, description: '20% off - Launch Special' },
             'EARLY25': { discount: 25, description: '25% off - Early Bird' },
             'VIP30': { discount: 30, description: '30% off - VIP Access' },
-            'FRIEND15': { discount: 15, description: '15% off - Friend Referral' }
+            'FRIEND15': { discount: 15, description: '15% off - Friend Referral' },
+            'FREETEST': { discount: 100, description: '100% off - Testing Only' }
         };
         
         const upperCode = code.toUpperCase().trim();
