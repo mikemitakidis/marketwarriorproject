@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day Loading... - Market Warrior</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        .site-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-left a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .header-left img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        
+        .header-left h1 {
+            font-size: 1.3em;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-dashboard {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-dashboard:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Day Header */
+        .day-header {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .day-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .day-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 6px;
+            transition: width 0.8s ease;
+        }
+        
+        /* Navigation */
+        .day-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .nav-btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn.prev {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
+        .nav-btn.next {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* Video Section */
+        .video-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .video-section h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .video-placeholder {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .video-placeholder iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .video-placeholder .placeholder-content {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .video-placeholder .play-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        
+        .video-placeholder p {
+            opacity: 0.8;
+        }
+        
+        /* Content Section */
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section h3 {
+            color: #3b82f6;
+            font-size: 1.4em;
+            margin: 25px 0 15px 0;
+        }
+        
+        .section p {
+            color: #475569;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        .section ul, .section ol {
+            margin: 15px 0 15px 25px;
+            color: #475569;
+        }
+        
+        .section li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .highlight-box.warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        
+        .highlight-box.success {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        
+        /* Quiz Section */
+        .quiz-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-section h2 {
+            color: #10b981;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        
+        .quiz-progress {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .question-container {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .question-number {
+            background: #10b981;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .quiz-option {
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .quiz-option:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .quiz-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .quiz-option.correct {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .option-letter {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748b;
+        }
+        
+        .quiz-option.selected .option-letter {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .quiz-option.correct .option-letter {
+            background: #10b981;
+            color: white;
+        }
+        
+        .quiz-option.incorrect .option-letter {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-quiz {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .btn-quiz.primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .btn-quiz:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-quiz:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Quiz Results */
+        .quiz-results {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #10b981;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .quiz-results.show {
+            display: block;
+        }
+        
+        .quiz-results h3 {
+            color: #065f46;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .score-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .score-label {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        
+        .quiz-results.failed .score-value {
+            color: #ef4444;
+        }
+        
+        /* Task Section */
+        .task-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #f59e0b;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .task-section h2 {
+            color: #f59e0b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        
+        .task-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+        }
+        
+        .task-box h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .task-box ol {
+            margin-left: 20px;
+            color: #78350f;
+        }
+        
+        .task-box li {
+            margin-bottom: 12px;
+        }
+        
+        .task-upload {
+            margin-top: 25px;
+        }
+        
+        .task-upload input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 25px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #d97706;
+        }
+        
+        .upload-preview {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .upload-preview.show {
+            display: block;
+        }
+        
+        .upload-preview img {
+            max-width: 300px;
+            border-radius: 10px;
+            border: 3px solid #f59e0b;
+        }
+        
+        .btn-submit-task {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit-task:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit-task:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Sneak Peek */
+        .sneak-peek {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .sneak-peek h2 {
+            margin-bottom: 15px;
+        }
+        
+        .sneak-peek p {
+            opacity: 0.95;
+            margin-bottom: 25px;
+        }
+        
+        .btn-next-day {
+            display: inline-block;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        
+        .btn-next-day:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn-next-day.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* Completion Status */
+        .completion-status {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .completion-status.show {
+            display: block;
+        }
+        
+        .completion-status h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .completion-status p {
+            color: #047857;
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .loading-overlay.hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Access Denied */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            display: none;
+        }
+        
+        .access-denied.show {
+            display: block;
+        }
+        
+        .access-denied h2 {
+            color: #ef4444;
+            margin-bottom: 15px;
+        }
+        
+        .access-denied p {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+        
+        .access-denied a {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .day-header, .section, .quiz-section, .task-section {
+                padding: 25px;
+            }
+            
+            .day-header h1 {
+                font-size: 1.8em;
+            }
+            
+            .section h2, .quiz-section h2, .task-section h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Loading Day Content...</p>
+    </div>
+
+    <!-- Site Header -->
+    <header class="site-header">
+        <div class="header-left">
+            <a href="/dashboard">
+                <img src="/logo.png" alt="Market Warrior">
+                <h1>Market Warrior</h1>
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="/dashboard" class="btn-dashboard">← Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Access Denied Message (hidden by default) -->
+    <div class="container">
+        <div class="access-denied" id="accessDenied">
+            <h2>🔒 Day Locked</h2>
+            <p id="accessDeniedMessage">This day is not yet available. Complete previous days first.</p>
+            <a href="/dashboard">Go to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until verified) -->
+    <main class="container" id="mainContent" style="display: none;">
+        <!-- Day Header -->
+        <div class="day-header">
+            <span class="day-badge" id="dayBadge">Day 1 of 30</span>
+            <h1 id="dayTitle">Loading...</h1>
+            <p id="daySubtitle">Loading content...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 3.33%"></div>
+            </div>
+        </div>
+
+        <!-- Completion Status (if already completed) -->
+        <div class="completion-status" id="completionStatus">
+            <h3>✅ Day Completed!</h3>
+            <p>You've already completed this day. Feel free to review the content.</p>
+        </div>
+
+        <!-- Day Navigation -->
+        <div class="day-navigation">
+            <a href="#" class="nav-btn prev" id="prevDayBtn">← Previous Day</a>
+            <a href="#" class="nav-btn next" id="nextDayBtn">Next Day →</a>
+        </div>
+
+        <!-- Video Section -->
+        <div class="video-section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder" id="videoContainer">
+                <div class="placeholder-content" id="videoPlaceholder">
+                    <div class="play-icon">▶️</div>
+                    <p>Video content loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Section (loaded dynamically) -->
+        <div id="contentContainer">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="quiz-section" id="quizSection">
+            <h2>📝 Day Quiz</h2>
+            <div class="quiz-progress">
+                <span>Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
+                <span>Score: <span id="quizScore">0</span>/<span id="quizTotal">5</span></span>
+            </div>
+            
+            <div id="quizContainer">
+                <!-- Quiz questions will be loaded here -->
+            </div>
+            
+            <div class="quiz-results" id="quizResults">
+                <h3 id="resultsTitle">Quiz Complete!</h3>
+                <div class="score-circle">
+                    <span class="score-value" id="scoreValue">0%</span>
+                    <span class="score-label">Score</span>
+                </div>
+                <p id="resultsMessage">Great job!</p>
+                <button class="btn-quiz primary" onclick="retryQuiz()" id="retryBtn" style="display: none;">Retry Quiz</button>
+            </div>
+        </div>
+
+        <!-- Task Section -->
+        <div class="task-section" id="taskSection">
+            <h2>📋 Practical Task</h2>
+            
+            <div class="task-box" id="taskBox">
+                <h3>Today's Task</h3>
+                <p id="taskDescription">Loading task...</p>
+                <ol id="taskSteps">
+                    <!-- Task steps will be loaded here -->
+                </ol>
+            </div>
+            
+            <div class="task-upload">
+                <label class="upload-btn" for="taskFile">
+                    📎 Upload Screenshot/Evidence
+                </label>
+                <input type="file" id="taskFile" accept="image/*" onchange="previewUpload(this)">
+                
+                <div class="upload-preview" id="uploadPreview">
+                    <img id="previewImage" src="" alt="Preview">
+                </div>
+                
+                <button class="btn-submit-task" id="submitTaskBtn" onclick="submitTask()" disabled>
+                    Submit Task & Complete Day
+                </button>
+            </div>
+            
+            <div class="task-completed" id="taskCompleted" style="display: none;">
+                <div class="highlight-box success">
+                    <h3>✅ Task Submitted!</h3>
+                    <p>You've completed this day's task. Great work!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sneak Peek / Next Day -->
+        <div class="sneak-peek" id="sneakPeek">
+            <h2>🔮 Coming Up Next...</h2>
+            <p id="nextDayPreview">Loading preview...</p>
+            <a href="#" class="btn-next-day" id="goNextDayBtn">Continue to Next Day →</a>
+        </div>
+    </main>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gvpaendpmwyncdztlczy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MDY1NTAsImV4cCI6MjA4MDk4MjU1MH0.kg6mlLcHv3APGnIeE7vRJpzF1u8JUyGKsYthXQXEAAE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // State
+        let currentUser = null;
+        let userData = null;
+        let dayNumber = 1;
+        let dayContent = null;
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let quizScore = 0;
+        let quizCompleted = false;
+        let taskSubmitted = false;
+        let dayCompleted = false;
+        let progressData = [];
+        
+        // Get day number from URL
+        function getDayFromURL() {
+            const pathParts = window.location.pathname.split('/');
+            const dayIndex = pathParts.indexOf('day');
+            if (dayIndex !== -1 && pathParts[dayIndex + 1]) {
+                return parseInt(pathParts[dayIndex + 1]) || 1;
+            }
+            // Also check query params
+            const params = new URLSearchParams(window.location.search);
+            return parseInt(params.get('day')) || 1;
+        }
+        
+        // Initialize
+        async function init() {
+            dayNumber = getDayFromURL();
+            
+            // Validate day number
+            if (dayNumber < 1 || dayNumber > 30 || isNaN(dayNumber)) {
+                showAccessDenied('Invalid day number. Please go back to dashboard.');
+                return;
+            }
+            
+            try {
+                // Check authentication
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                currentUser = session.user;
+                
+                // Get user data
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (userError || !user) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Check if paid
+                if (!user.has_paid) {
+                    window.location.href = '/#pricing';
+                    return;
+                }
+                
+                // Check if agreed to terms
+                if (!user.agreed_to_terms) {
+                    window.location.href = '/welcome';
+                    return;
+                }
+                
+                userData = user;
+                
+                // Get progress data
+                const { data: progress } = await supabase
+                    .from('progress')
+                    .select('*')
+                    .eq('user_id', currentUser.id);
+                
+                progressData = progress || [];
+                
+                // SECURITY CHECK: Is this day unlocked?
+                const isUnlocked = await checkDayAccess(dayNumber);
+                
+                if (!isUnlocked) {
+                    showAccessDenied(getAccessDeniedMessage(dayNumber));
+                    return;
+                }
+                
+                // Load day content
+                await loadDayContent();
+                
+                // Show main content
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                
+            } catch (error) {
+                console.error('Init error:', error);
+                showAccessDenied('An error occurred. Please try again.');
+            }
+        }
+        
+        // Check if user has access to this day
+        async function checkDayAccess(day) {
+            // Day 1 is always accessible
+            if (day === 1) return true;
+            
+            // Check if previous day is completed
+            const prevDayProgress = progressData.find(p => p.day_number === day - 1);
+            if (!prevDayProgress || !prevDayProgress.completed) {
+                return false;
+            }
+            
+            // Check if enough time has passed (24 hours per day)
+            if (!userData.challenge_start_time) return false;
+            
+            const startTime = new Date(userData.challenge_start_time).getTime();
+            const now = Date.now();
+            const daysPassed = Math.floor((now - startTime) / (24 * 60 * 60 * 1000));
+            
+            return day <= daysPassed + 1;
+        }
+        
+        function getAccessDeniedMessage(day) {
+            const prevDayProgress = progressData.find(p => p.day_number === day - 1);
+            
+            if (!prevDayProgress || !prevDayProgress.completed) {
+                return `You need to complete Day ${day - 1} first before accessing Day ${day}.`;
+            }
+            
+            return `Day ${day} will unlock after 24 hours have passed. Please wait or review previous content.`;
+        }
+        
+        function showAccessDenied(message) {
+            document.getElementById('accessDeniedMessage').textContent = message;
+            document.getElementById('accessDenied').classList.add('show');
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        
+        // Load day content from API
+        async function loadDayContent() {
+            try {
+                const response = await fetch(`/api/day/${dayNumber}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load content');
+                }
+                
+                dayContent = data.content;
+                quizQuestions = data.quiz || [];
+                
+                // Check if day is already completed
+                const dayProgress = progressData.find(p => p.day_number === dayNumber);
+                if (dayProgress) {
+                    quizCompleted = dayProgress.quiz_passed || false;
+                    taskSubmitted = dayProgress.task_submitted || false;
+                    dayCompleted = dayProgress.completed || false;
+                    quizScore = dayProgress.quiz_score || 0;
+                }
+                
+                // Render content
+                renderDayContent();
+                
+            } catch (error) {
+                console.error('Load content error:', error);
+                // Show fallback content
+                renderFallbackContent();
+            }
+        }
+        
+        function renderDayContent() {
+            // Update header
+            document.title = `Day ${dayNumber}: ${dayContent?.title || 'Market Warrior'}`;
+            document.getElementById('dayBadge').textContent = `Day ${dayNumber} of 30`;
+            document.getElementById('dayTitle').textContent = dayContent?.title || `Day ${dayNumber}`;
+            document.getElementById('daySubtitle').textContent = dayContent?.subtitle || 'Learn and practice trading skills';
+            document.getElementById('progressFill').style.width = `${(dayNumber / 30) * 100}%`;
+            
+            // Video
+            if (dayContent?.youtube_id) {
+                document.getElementById('videoContainer').innerHTML = `
+                    <iframe src="https://www.youtube.com/embed/${dayContent.youtube_id}" 
+                            title="Day ${dayNumber} Video Lesson"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>
+                `;
+            } else {
+                document.getElementById('videoPlaceholder').innerHTML = `
+                    <div class="play-icon">📹</div>
+                    <p>Video lesson coming soon!</p>
+                    <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">The instructor video will be added here</p>
+                `;
+            }
+            
+            // Main content
+            if (dayContent?.html) {
+                document.getElementById('contentContainer').innerHTML = dayContent.html;
+            }
+            
+            // Task
+            if (dayContent?.task) {
+                document.getElementById('taskDescription').textContent = dayContent.task.description || '';
+                const stepsList = document.getElementById('taskSteps');
+                stepsList.innerHTML = '';
+                (dayContent.task.steps || []).forEach(step => {
+                    const li = document.createElement('li');
+                    li.textContent = step;
+                    stepsList.appendChild(li);
+                });
+            }
+            
+            // Navigation
+            updateNavigation();
+            
+            // Quiz
+            if (quizQuestions.length > 0) {
+                document.getElementById('totalQuestions').textContent = quizQuestions.length;
+                document.getElementById('quizTotal').textContent = quizQuestions.length;
+                renderQuiz();
+            }
+            
+            // Show completion status if already done
+            if (dayCompleted) {
+                document.getElementById('completionStatus').classList.add('show');
+                document.getElementById('taskCompleted').style.display = 'block';
+                document.querySelector('.task-upload').style.display = 'none';
+            }
+            
+            // Next day preview
+            if (dayContent?.next_preview) {
+                document.getElementById('nextDayPreview').textContent = dayContent.next_preview;
+            } else {
+                document.getElementById('nextDayPreview').textContent = `Day ${dayNumber + 1} will cover more advanced topics!`;
+            }
+            
+            updateNextDayButton();
+        }
+        
+        function renderFallbackContent() {
+            // Basic fallback if API fails
+            document.getElementById('dayBadge').textContent = `Day ${dayNumber} of 30`;
+            document.getElementById('dayTitle').textContent = `Day ${dayNumber}`;
+            document.getElementById('daySubtitle').textContent = 'Content loading...';
+            
+            document.getElementById('contentContainer').innerHTML = `
+                <div class="section">
+                    <h2>📚 Today's Lesson</h2>
+                    <p>Content is being loaded. Please refresh the page or check your connection.</p>
+                </div>
+            `;
+            
+            updateNavigation();
+        }
+        
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevDayBtn');
+            const nextBtn = document.getElementById('nextDayBtn');
+            
+            if (dayNumber > 1) {
+                prevBtn.href = `/day/${dayNumber - 1}`;
+                prevBtn.classList.remove('disabled');
+            } else {
+                prevBtn.classList.add('disabled');
+            }
+            
+            if (dayNumber < 30 && dayCompleted) {
+                nextBtn.href = `/day/${dayNumber + 1}`;
+                nextBtn.classList.remove('disabled');
+            } else {
+                nextBtn.classList.add('disabled');
+            }
+        }
+        
+        function updateNextDayButton() {
+            const btn = document.getElementById('goNextDayBtn');
+            
+            if (dayNumber >= 30) {
+                btn.textContent = 'View Your Certificate →';
+                btn.href = '/certificate';
+                btn.classList.remove('disabled');
+            } else if (dayCompleted) {
+                btn.href = `/day/${dayNumber + 1}`;
+                btn.classList.remove('disabled');
+            } else {
+                btn.classList.add('disabled');
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    alert('Complete the quiz (60%+) and submit your task to unlock the next day!');
+                };
+            }
+        }
+        
+        // Quiz functions
+        function renderQuiz() {
+            if (quizCompleted) {
+                showQuizResults();
+                return;
+            }
+            
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+            
+            quizQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container';
+                questionDiv.id = `question-${index}`;
+                questionDiv.style.display = index === 0 ? 'block' : 'none';
+                
+                questionDiv.innerHTML = `
+                    <div class="question-number">${index + 1}</div>
+                    <div class="question-text">${q.question}</div>
+                    <div class="quiz-options">
+                        ${q.options.map((opt, optIndex) => `
+                            <div class="quiz-option" onclick="selectOption(${index}, ${optIndex})">
+                                <div class="option-letter">${['A', 'B', 'C', 'D'][optIndex]}</div>
+                                <span>${opt}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(questionDiv);
+            });
+            
+            // Add submit button
+            const submitBtn = document.createElement('button');
+            submitBtn.className = 'btn-quiz primary';
+            submitBtn.id = 'quizSubmitBtn';
+            submitBtn.textContent = 'Next Question';
+            submitBtn.onclick = nextQuestion;
+            submitBtn.disabled = true;
+            container.appendChild(submitBtn);
+        }
+        
+        function selectOption(questionIndex, optionIndex) {
+            userAnswers[questionIndex] = optionIndex;
+            
+            // Update UI
+            const options = document.querySelectorAll(`#question-${questionIndex} .quiz-option`);
+            options.forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === optionIndex) opt.classList.add('selected');
+            });
+            
+            document.getElementById('quizSubmitBtn').disabled = false;
+        }
+        
+        function nextQuestion() {
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                // Hide current question
+                document.getElementById(`question-${currentQuestionIndex}`).style.display = 'none';
+                currentQuestionIndex++;
+                // Show next question
+                document.getElementById(`question-${currentQuestionIndex}`).style.display = 'block';
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('quizSubmitBtn').disabled = true;
+                
+                if (currentQuestionIndex === quizQuestions.length - 1) {
+                    document.getElementById('quizSubmitBtn').textContent = 'Submit Quiz';
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+        
+        async function submitQuiz() {
+            // Calculate score
+            quizScore = 0;
+            quizQuestions.forEach((q, i) => {
+                if (userAnswers[i] === q.correct) {
+                    quizScore++;
+                }
+            });
+            
+            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            const passed = percentage >= 60;
+            quizCompleted = passed;
+            
+            // Save to database
+            try {
+                await supabase.from('quiz_results').upsert({
+                    user_id: currentUser.id,
+                    day_number: dayNumber,
+                    score: percentage,
+                    passed: passed,
+                    answers: userAnswers,
+                    completed_at: new Date().toISOString()
+                });
+                
+                // Update progress
+                await supabase.from('progress').upsert({
+                    user_id: currentUser.id,
+                    day_number: dayNumber,
+                    quiz_passed: passed,
+                    quiz_score: percentage,
+                    unlocked: true
+                });
+                
+            } catch (error) {
+                console.error('Error saving quiz:', error);
+            }
+            
+            showQuizResults();
+        }
+        
+        function showQuizResults() {
+            const percentage = quizScore > 0 ? Math.round((quizScore / quizQuestions.length) * 100) : 0;
+            const passed = percentage >= 60;
+            
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizResults').classList.add('show');
+            
+            if (passed) {
+                document.getElementById('quizResults').classList.remove('failed');
+                document.getElementById('resultsTitle').textContent = '🎉 Quiz Passed!';
+                document.getElementById('resultsMessage').textContent = 'Great job! You can now proceed to the task.';
+                document.getElementById('retryBtn').style.display = 'none';
+                document.getElementById('submitTaskBtn').disabled = false;
+            } else {
+                document.getElementById('quizResults').classList.add('failed');
+                document.getElementById('resultsTitle').textContent = '❌ Quiz Not Passed';
+                document.getElementById('resultsMessage').textContent = 'You need 60% to pass. Review the content and try again!';
+                document.getElementById('retryBtn').style.display = 'inline-block';
+            }
+            
+            document.getElementById('scoreValue').textContent = percentage + '%';
+            document.getElementById('quizScore').textContent = quizScore;
+        }
+        
+        function retryQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizScore = 0;
+            quizCompleted = false;
+            
+            document.getElementById('quizResults').classList.remove('show');
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('quizScore').textContent = '0';
+            document.getElementById('quizSubmitBtn').textContent = 'Next Question';
+            
+            // Reset option selections
+            document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Show first question
+            document.querySelectorAll('.question-container').forEach((q, i) => {
+                q.style.display = i === 0 ? 'block' : 'none';
+            });
+        }
+        
+        // Task functions
+        function previewUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('uploadPreview').classList.add('show');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        async function submitTask() {
+            if (!quizCompleted) {
+                alert('Please complete and pass the quiz first!');
+                return;
+            }
+            
+            const fileInput = document.getElementById('taskFile');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('Please upload a screenshot or evidence of your completed task.');
+                return;
+            }
+            
+            const btn = document.getElementById('submitTaskBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            
+            try {
+                // Upload file to Supabase Storage
+                const file = fileInput.files[0];
+                const fileName = `${currentUser.id}/day${dayNumber}_${Date.now()}.${file.name.split('.').pop()}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('task-uploads')
+                    .upload(fileName, file);
+                
+                if (uploadError) {
+                    console.warn('File upload failed, continuing without file');
+                }
+                
+                // Mark task as submitted
+                taskSubmitted = true;
+                dayCompleted = true;
+                
+                // Update progress
+                await supabase.from('progress').upsert({
+                    user_id: currentUser.id,
+                    day_number: dayNumber,
+                    task_submitted: true,
+                    task_file: fileName,
+                    completed: true,
+                    completed_at: new Date().toISOString(),
+                    quiz_passed: quizCompleted,
+                    quiz_score: Math.round((quizScore / quizQuestions.length) * 100),
+                    unlocked: true
+                });
+                
+                // Unlock next day
+                if (dayNumber < 30) {
+                    await supabase.from('progress').upsert({
+                        user_id: currentUser.id,
+                        day_number: dayNumber + 1,
+                        unlocked: true,
+                        unlocked_at: new Date().toISOString()
+                    });
+                }
+                
+                // Show success
+                document.getElementById('taskCompleted').style.display = 'block';
+                document.querySelector('.task-upload').style.display = 'none';
+                document.getElementById('completionStatus').classList.add('show');
+                
+                updateNavigation();
+                updateNextDayButton();
+                
+                alert(`🎉 Congratulations! Day ${dayNumber} completed!\n\n${dayNumber < 30 ? 'Day ' + (dayNumber + 1) + ' will be available in 24 hours.' : 'You have completed the 30-Day Challenge!'}`);
+                
+            } catch (error) {
+                console.error('Submit task error:', error);
+                alert('Error submitting task. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Submit Task & Complete Day';
+            }
+        }
+        
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'c')) {
+                e.preventDefault();
+            }
+        });
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
