@@ -493,12 +493,28 @@
                     .eq('id', data.user.id)
                     .single();
                 
-                // If user hasn't paid, redirect to purchase page
+                // If user hasn't paid, redirect directly to Stripe checkout
                 if (userError || !userData || !userData.has_paid) {
-                    showSuccess('Welcome! Redirecting to complete your purchase...');
-                    setTimeout(() => {
-                        window.location.href = '/#pricing';
-                    }, 1500);
+                    showSuccess('Redirecting to checkout...');
+                    try {
+                        const response = await fetch('/api/checkout/stripe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: email })
+                        });
+                        const checkoutData = await response.json();
+                        if (checkoutData.url) {
+                            window.location.href = checkoutData.url;
+                        } else {
+                            showError('Failed to start checkout. Please try again.');
+                            btn.disabled = false;
+                            btnText.textContent = 'Login to Challenge';
+                        }
+                    } catch (err) {
+                        showError('Checkout error. Please try again.');
+                        btn.disabled = false;
+                        btnText.textContent = 'Login to Challenge';
+                    }
                     return;
                 }
                 
@@ -558,20 +574,21 @@
                 if (error) throw error;
                 
                 if (data.user && data.user.identities && data.user.identities.length === 0) {
-                    // Email already exists - show helpful options
+                    // Email already exists - show helpful options with direct checkout
+                    const existingEmail = email;
                     document.getElementById('registerTab').innerHTML = `
                         <div style="text-align: center; padding: 20px;">
                             <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
                             <h3 style="color: #1e293b; margin-bottom: 15px;">Welcome Back!</h3>
                             <p style="color: #64748b; margin-bottom: 20px;">This email is already registered. What would you like to do?</p>
                             
-                            <a href="/login" class="btn btn-primary" style="display: block; text-decoration: none; margin-bottom: 15px;">
+                            <button onclick="switchTab('login')" class="btn btn-primary" style="display: block; width: 100%; margin-bottom: 15px;">
                                 Login to My Account
-                            </a>
+                            </button>
                             
-                            <a href="/#pricing" class="btn" style="display: block; text-decoration: none; background: #f1f5f9; color: #1e293b; padding: 15px; border-radius: 12px;">
+                            <button onclick="goToCheckout('${existingEmail}')" class="btn" style="display: block; width: 100%; background: #f1f5f9; color: #1e293b; padding: 15px; border-radius: 12px; cursor: pointer; border: none; font-size: 1.1em; font-weight: 700;">
                                 Purchase the Challenge - $39.99
-                            </a>
+                            </button>
                             
                             <p style="margin-top: 20px; font-size: 0.85em; color: #94a3b8;">
                                 Forgot your password? <a href="#" onclick="switchTab('reset')" style="color: #667eea;">Reset it here</a>
@@ -582,15 +599,16 @@
                     if (isAffiliateSignup) {
                         showSuccess('Affiliate account created! Check your email to verify, then you can get your referral link from the dashboard.');
                     } else {
-                        // Show success and redirect to purchase
+                        // Show success with direct checkout button
+                        const newEmail = email;
                         document.getElementById('registerTab').innerHTML = `
                             <div style="text-align: center; padding: 20px;">
                                 <div style="font-size: 50px; margin-bottom: 15px;">✅</div>
                                 <h3 style="color: #16a34a; margin-bottom: 15px;">Account Created!</h3>
                                 <p style="color: #64748b; margin-bottom: 20px;">Check your email to verify your account, then complete your purchase to access the challenge.</p>
-                                <a href="/#pricing" class="btn btn-primary" style="display: inline-block; text-decoration: none;">
+                                <button onclick="goToCheckout('${newEmail}')" class="btn btn-primary" style="display: block; width: 100%; cursor: pointer; border: none;">
                                     Complete Purchase - $39.99
-                                </a>
+                                </button>
                                 <p style="margin-top: 15px; font-size: 0.9em; color: #94a3b8;">
                                     Already verified? <a href="/login" style="color: #667eea;">Login here</a>
                                 </p>
@@ -650,6 +668,26 @@
                 
             } catch (error) {
                 showError(error.message || 'Failed to sign in with Google');
+            }
+        }
+        
+        // Direct checkout function
+        async function goToCheckout(email) {
+            showSuccess('Redirecting to checkout...');
+            try {
+                const response = await fetch('/api/checkout/stripe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await response.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    showError('Failed to start checkout. Please try again.');
+                }
+            } catch (err) {
+                showError('Checkout error. Please try again.');
             }
         }
         
