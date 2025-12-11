@@ -412,53 +412,6 @@
         }
         
         /* Promo Section */
-        .promo-section {
-            background: #fef3c7;
-            padding: 25px;
-            border-radius: 15px;
-            margin: 30px 0;
-        }
-        
-        .promo-input {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .promo-input input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #fcd34d;
-            border-radius: 10px;
-            font-size: 1em;
-            text-transform: uppercase;
-        }
-        
-        .promo-input input:focus {
-            outline: none;
-            border-color: #f59e0b;
-        }
-        
-        .btn-apply-promo {
-            background: #f59e0b;
-            color: white;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .btn-apply-promo:hover {
-            background: #d97706;
-        }
-        
-        .promo-message {
-            margin-top: 10px;
-            font-weight: 600;
-        }
-        
         /* Checkout Button */
         .btn-checkout {
             width: 100%;
@@ -840,15 +793,6 @@
                     <li><span class="check-icon">✓</span> 3-day money-back guarantee</li>
                 </ul>
                 
-                <div class="promo-section">
-                    <p style="color: #92400e; font-weight: 600;">Have a promo code?</p>
-                    <div class="promo-input">
-                        <input type="text" id="promoCode" placeholder="Enter code" maxlength="20">
-                        <button class="btn-apply-promo" onclick="applyPromoCode()">Apply</button>
-                    </div>
-                    <div id="promoMessage" class="promo-message"></div>
-                </div>
-                
                 <button class="btn-checkout" onclick="goToRegister()">
                     <span>🚀 Start Challenge Now</span>
                 </button>
@@ -937,12 +881,6 @@
     </footer>
 
     <script>
-        // Configuration
-        const BASE_PRICE = 39.99;
-        let currentPromoCode = null;
-        let currentDiscount = 0;
-        let finalPrice = BASE_PRICE;
-        
         // Check for referral code in URL and store it
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
@@ -950,14 +888,9 @@
             sessionStorage.setItem('referral_code', refCode);
         }
         
-        // Go to register page (with promo code if applied)
+        // Go to register page
         function goToRegister() {
             let url = '/login?register=true';
-            
-            // Pass promo code if applied
-            if (currentPromoCode) {
-                url += '&promo=' + encodeURIComponent(currentPromoCode);
-            }
             
             // Pass referral code if present
             const refCode = sessionStorage.getItem('referral_code');
@@ -966,113 +899,6 @@
             }
             
             window.location.href = url;
-        }
-        
-        // Apply promo code
-        async function applyPromoCode() {
-            const input = document.getElementById('promoCode');
-            const message = document.getElementById('promoMessage');
-            const code = input.value.toUpperCase().trim();
-            
-            if (!code) {
-                message.textContent = 'Please enter a promo code';
-                message.style.color = '#dc2626';
-                return;
-            }
-            
-            message.textContent = 'Checking...';
-            message.style.color = '#64748b';
-            
-            try {
-                const response = await fetch('/api/promo/validate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
-                });
-                
-                const data = await response.json();
-                
-                if (data.valid) {
-                    currentPromoCode = code;
-                    currentDiscount = data.discount_percent || 0;
-                    
-                    if (data.discount_percent) {
-                        finalPrice = BASE_PRICE * (1 - currentDiscount / 100);
-                    } else if (data.discount_amount) {
-                        finalPrice = Math.max(0, BASE_PRICE - data.discount_amount);
-                    }
-                    
-                    finalPrice = Math.round(finalPrice * 100) / 100;
-                    
-                    document.getElementById('displayPrice').innerHTML = 
-                        `$${finalPrice.toFixed(2)} <span class="price-original">$${BASE_PRICE.toFixed(2)}</span>`;
-                    
-                    message.innerHTML = `✓ ${currentDiscount}% discount applied! You save $${(BASE_PRICE - finalPrice).toFixed(2)}`;
-                    message.style.color = '#059669';
-                } else {
-                    currentPromoCode = null;
-                    currentDiscount = 0;
-                    finalPrice = BASE_PRICE;
-                    document.getElementById('displayPrice').textContent = `$${BASE_PRICE.toFixed(2)}`;
-                    message.textContent = data.error || '✗ Invalid or expired promo code';
-                    message.style.color = '#dc2626';
-                }
-            } catch (error) {
-                message.textContent = '✗ Error checking code. Please try again.';
-                message.style.color = '#dc2626';
-            }
-        }
-        
-        // Start checkout
-        async function startCheckout() {
-            const btn = document.getElementById('checkoutBtn');
-            const btnText = document.getElementById('checkoutText');
-            const emailInput = document.getElementById('checkoutEmail');
-            const email = emailInput.value.trim();
-            
-            // Validate email
-            if (!email) {
-                alert('Please enter your email address');
-                emailInput.focus();
-                return;
-            }
-            
-            // Simple email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                alert('Please enter a valid email address');
-                emailInput.focus();
-                return;
-            }
-            
-            btn.disabled = true;
-            btnText.innerHTML = '<span class="spinner"></span> Processing...';
-            
-            try {
-                const referralCode = sessionStorage.getItem('referral_code') || '';
-                
-                const response = await fetch('/api/checkout/stripe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: email,
-                        promoCode: currentPromoCode,
-                        referralCode: referralCode
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.url) {
-                    window.location.href = data.url;
-                } else {
-                    throw new Error(data.error || 'Failed to create checkout session');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message + '\n\nPlease try again or contact support.');
-                btn.disabled = false;
-                btnText.textContent = '🚀 Start Challenge Now';
-            }
         }
         
         // FAQ toggle
