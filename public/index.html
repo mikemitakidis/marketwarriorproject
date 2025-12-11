@@ -849,16 +849,8 @@
                     <div id="promoMessage" class="promo-message"></div>
                 </div>
                 
-                <div class="email-section" style="margin: 25px 0;">
-                    <label for="checkoutEmail" style="display: block; color: #1e293b; font-weight: 600; margin-bottom: 8px;">Your Email Address</label>
-                    <input type="email" id="checkoutEmail" placeholder="Enter your email to get started" 
-                           style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1em; box-sizing: border-box;"
-                           required>
-                    <p style="font-size: 0.85em; color: #64748b; margin-top: 8px;">We'll send your login details to this email</p>
-                </div>
-                
-                <button class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">
-                    <span id="checkoutText">🚀 Start Challenge Now</span>
+                <button class="btn-checkout" onclick="goToRegister()">
+                    <span>🚀 Start Challenge Now</span>
                 </button>
                 
                 <p style="margin-top: 15px; font-size: 0.9em; color: #64748b;">
@@ -956,6 +948,24 @@
         const refCode = urlParams.get('ref');
         if (refCode) {
             sessionStorage.setItem('referral_code', refCode);
+        }
+        
+        // Go to register page (with promo code if applied)
+        function goToRegister() {
+            let url = '/login?register=true';
+            
+            // Pass promo code if applied
+            if (currentPromoCode) {
+                url += '&promo=' + encodeURIComponent(currentPromoCode);
+            }
+            
+            // Pass referral code if present
+            const refCode = sessionStorage.getItem('referral_code');
+            if (refCode) {
+                url += '&ref=' + encodeURIComponent(refCode);
+            }
+            
+            window.location.href = url;
         }
         
         // Apply promo code
