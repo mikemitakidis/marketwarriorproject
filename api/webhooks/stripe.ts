@@ -271,7 +271,7 @@ async function handler(
     return;
   }
 
-  const stripe = new Stripe(getStripeSecretKey());
+  const stripe = new Stripe(getStripeSecretKey(), { apiVersion: '2022-11-15' });
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const supabase = createSupabaseClient();
 

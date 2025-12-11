@@ -6,8 +6,6 @@ import type {
   VercelRequest,
   VercelResponse,
   QuizSubmitRequestBody,
-  QuizResultRecord,
-  ProgressRecord,
   QuizSubmitSuccessResponse,
   QuizSubmitErrorResponse,
 } from '../../types';

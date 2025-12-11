@@ -1,12 +1,10 @@
 // Day Content API - Server-side security check
 // Route: /api/day/[dayNumber]
 
-import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type {
   VercelRequest,
   VercelResponse,
-  QuizQuestion,
-  TaskContent,
   DayContent,
   DayContentMap,
   DayContentSuccessResponse,

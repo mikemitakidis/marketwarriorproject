@@ -23,6 +23,7 @@ const BASE_PRICE_CENTS = 3999; // $39.99 USD
 const SITE_URL = process.env.SITE_URL || 'https://marketwarriorproject.vercel.app';
 
 interface StripeSessionMetadata {
+  [key: string]: string;
   email: string;
   promoCode: string;
   referralCode: string;
@@ -152,7 +153,7 @@ export default async function handler(
       throw new Error('Stripe secret key not configured');
     }
 
-    const stripe = new Stripe(stripeSecretKey);
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2022-11-15' });
 
     if (!isValidRequestBody(req.body)) {
       res.status(400).json({ error: 'Invalid request body' } as CheckoutErrorResponse);
