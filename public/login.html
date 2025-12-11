@@ -496,11 +496,19 @@
                 // If user hasn't paid, redirect directly to Stripe checkout
                 if (userError || !userData || !userData.has_paid) {
                     showSuccess('Redirecting to checkout...');
+                    // Get promo code from URL if present
+                    const promoCode = urlParams.get('promo') || '';
+                    const refCode = urlParams.get('ref') || '';
+                    
                     try {
                         const response = await fetch('/api/checkout/stripe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email: email })
+                            body: JSON.stringify({ 
+                                email: email,
+                                promoCode: promoCode,
+                                referralCode: refCode
+                            })
                         });
                         const checkoutData = await response.json();
                         if (checkoutData.url) {
@@ -674,11 +682,19 @@
         // Direct checkout function
         async function goToCheckout(email) {
             showSuccess('Redirecting to checkout...');
+            // Get promo code from URL if present
+            const promoCode = urlParams.get('promo') || '';
+            const refCode = urlParams.get('ref') || '';
+            
             try {
                 const response = await fetch('/api/checkout/stripe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
+                    body: JSON.stringify({ 
+                        email: email,
+                        promoCode: promoCode,
+                        referralCode: refCode
+                    })
                 });
                 const data = await response.json();
                 if (data.url) {
