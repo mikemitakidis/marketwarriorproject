@@ -399,9 +399,20 @@
         
         // Check URL parameters for auto-switching to register
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('register') === 'true') {
-            // Small delay to ensure DOM is ready
+        const isAffiliateSignup = urlParams.get('affiliate') === 'true';
+        
+        if (urlParams.get('register') === 'true' || isAffiliateSignup) {
             setTimeout(() => switchTab('register'), 100);
+        }
+        
+        // Update UI for affiliate signup mode
+        if (isAffiliateSignup) {
+            document.querySelector('h1').textContent = 'Become an Affiliate';
+            document.querySelector('.subtitle').textContent = 'Sign up free to earn 25% commission on referrals';
+            document.getElementById('registerBtnText').textContent = 'Create Affiliate Account';
+            // Hide "Purchase Challenge" link for affiliates
+            const purchaseLink = document.querySelector('a[href="/#pricing"]');
+            if (purchaseLink) purchaseLink.parentElement.style.display = 'none';
         }
         
         // Tab switching
@@ -530,7 +541,10 @@
                     email,
                     password,
                     options: {
-                        emailRedirectTo: window.location.origin + '/welcome'
+                        emailRedirectTo: window.location.origin + (isAffiliateSignup ? '/dashboard?affiliate=new' : '/welcome'),
+                        data: {
+                            is_affiliate: isAffiliateSignup
+                        }
                     }
                 });
                 
@@ -539,7 +553,11 @@
                 if (data.user && data.user.identities && data.user.identities.length === 0) {
                     showError('This email is already registered. Please login instead.');
                 } else {
-                    showSuccess('Account created! Please check your email to verify your account, then purchase the challenge to get started.');
+                    if (isAffiliateSignup) {
+                        showSuccess('Affiliate account created! Check your email to verify, then you can get your referral link from the dashboard.');
+                    } else {
+                        showSuccess('Account created! Please check your email to verify your account, then purchase the challenge to get started.');
+                    }
                 }
                 
             } catch (error) {
@@ -547,7 +565,7 @@
             }
             
             btn.disabled = false;
-            btnText.textContent = 'Create Account';
+            btnText.textContent = isAffiliateSignup ? 'Create Affiliate Account' : 'Create Account';
         });
         
         // Reset password form

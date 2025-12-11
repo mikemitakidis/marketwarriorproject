@@ -672,7 +672,7 @@
                 <a href="#pricing" class="nav-link">Pricing</a>
                 <a href="#faq" class="nav-link">FAQ</a>
                 <a href="/login" class="nav-link">Login</a>
-                <a href="/login?register=true" class="btn-login">Register Free</a>
+                <a href="#pricing" class="btn-login">Get Started</a>
             </nav>
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
         </div>
@@ -849,6 +849,14 @@
                     <div id="promoMessage" class="promo-message"></div>
                 </div>
                 
+                <div class="email-section" style="margin: 25px 0;">
+                    <label for="checkoutEmail" style="display: block; color: #1e293b; font-weight: 600; margin-bottom: 8px;">Your Email Address</label>
+                    <input type="email" id="checkoutEmail" placeholder="Enter your email to get started" 
+                           style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1em; box-sizing: border-box;"
+                           required>
+                    <p style="font-size: 0.85em; color: #64748b; margin-top: 8px;">We'll send your login details to this email</p>
+                </div>
+                
                 <button class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">
                     <span id="checkoutText">🚀 Start Challenge Now</span>
                 </button>
@@ -873,11 +881,11 @@
                 </div>
                 <div class="commission-badge" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #f59e0b;">
                     <div class="commission-rate" style="color: #d97706;">30%</div>
-                    <p style="margin: 0; color: #d97706; font-weight: 600;">Graduate Affiliate</p>
-                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">$12 per sale • After completing course</p>
+                    <p style="margin: 0; color: #d97706; font-weight: 600;">Course Member</p>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">$12 per sale • After purchasing course</p>
                 </div>
             </div>
-            <p><a href="/login" style="color: #059669; font-weight: 600;">Sign up free</a> to get your affiliate link. Automatic payouts via Stripe.</p>
+            <p><a href="/login?affiliate=true" style="color: #059669; font-weight: 600;">Sign up as affiliate</a> to get your referral link. Automatic payouts via Stripe.</p>
         </div>
     </section>
 
@@ -1009,6 +1017,23 @@
         async function startCheckout() {
             const btn = document.getElementById('checkoutBtn');
             const btnText = document.getElementById('checkoutText');
+            const emailInput = document.getElementById('checkoutEmail');
+            const email = emailInput.value.trim();
+            
+            // Validate email
+            if (!email) {
+                alert('Please enter your email address');
+                emailInput.focus();
+                return;
+            }
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address');
+                emailInput.focus();
+                return;
+            }
             
             btn.disabled = true;
             btnText.innerHTML = '<span class="spinner"></span> Processing...';
@@ -1020,8 +1045,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        promo_code: currentPromoCode,
-                        referral_code: referralCode
+                        email: email,
+                        promoCode: currentPromoCode,
+                        referralCode: referralCode
                     })
                 });
                 

@@ -114,16 +114,16 @@ module.exports = async (req, res) => {
                 
                 // Handle referral commission
                 if (referralCode) {
-                    // Find referrer and check if they've completed the course
+                    // Find referrer and check if they've purchased the course
                     const { data: referrer } = await supabase
                         .from('users')
-                        .select('id, affiliate_code, has_completed_course')
+                        .select('id, affiliate_code, has_paid')
                         .eq('affiliate_code', referralCode)
                         .single();
                     
                     if (referrer) {
-                        // Calculate commission: 30% for graduates, 25% for standard affiliates
-                        const commissionRate = referrer.has_completed_course ? 0.30 : 0.25;
+                        // Calculate commission: 30% for purchasers, 25% for free affiliates
+                        const commissionRate = referrer.has_paid ? 0.30 : 0.25;
                         const commission = Math.round(amountPaid * commissionRate * 100) / 100;
                         
                         // Create referral record
