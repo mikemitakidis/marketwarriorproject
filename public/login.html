@@ -614,8 +614,7 @@
             }
         }
         
-        // Handle password reset return
-        const urlParams = new URLSearchParams(window.location.search);
+        // Handle password reset return (urlParams already declared above)
         if (urlParams.get('reset') === 'true') {
             showSuccess('Password updated! You can now login with your new password.');
         }
