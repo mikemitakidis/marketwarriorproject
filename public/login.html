@@ -493,11 +493,12 @@
                     .eq('id', data.user.id)
                     .single();
                 
+                // If user hasn't paid, redirect to purchase page
                 if (userError || !userData || !userData.has_paid) {
-                    showError('Your payment is not confirmed. Please purchase the challenge first or contact support.');
-                    await supabase.auth.signOut();
-                    btn.disabled = false;
-                    btnText.textContent = 'Login to Challenge';
+                    showSuccess('Welcome! Redirecting to complete your purchase...');
+                    setTimeout(() => {
+                        window.location.href = '/#pricing';
+                    }, 1500);
                     return;
                 }
                 
@@ -557,7 +558,26 @@
                 if (error) throw error;
                 
                 if (data.user && data.user.identities && data.user.identities.length === 0) {
-                    showError('This email is already registered. Please login instead.');
+                    // Email already exists - show helpful options
+                    document.getElementById('registerTab').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
+                            <h3 style="color: #1e293b; margin-bottom: 15px;">Welcome Back!</h3>
+                            <p style="color: #64748b; margin-bottom: 20px;">This email is already registered. What would you like to do?</p>
+                            
+                            <a href="/login" class="btn btn-primary" style="display: block; text-decoration: none; margin-bottom: 15px;">
+                                Login to My Account
+                            </a>
+                            
+                            <a href="/#pricing" class="btn" style="display: block; text-decoration: none; background: #f1f5f9; color: #1e293b; padding: 15px; border-radius: 12px;">
+                                Purchase the Challenge - $39.99
+                            </a>
+                            
+                            <p style="margin-top: 20px; font-size: 0.85em; color: #94a3b8;">
+                                Forgot your password? <a href="#" onclick="switchTab('reset')" style="color: #667eea;">Reset it here</a>
+                            </p>
+                        </div>
+                    `;
                 } else {
                     if (isAffiliateSignup) {
                         showSuccess('Affiliate account created! Check your email to verify, then you can get your referral link from the dashboard.');
