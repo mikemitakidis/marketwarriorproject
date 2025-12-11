@@ -20,64 +20,29 @@ module.exports = async (req, res) => {
     try {
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
         
-        const { email, promoCode, referralCode } = req.body;
+        const { email, referralCode } = req.body;
         
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
         }
         
-        // Base price in cents ($39.99 USD)
-        let unitAmount = 3999; // $39.99 in cents
-        let discountPercent = 0;
-        
-        // Validate promo code if provided
-        if (promoCode) {
-            const validPromoCodes = {
-                'WARRIOR10': 10,
-                'LAUNCH20': 20,
-                'EARLY25': 25,
-                'VIP30': 30,
-                'FRIEND15': 15,
-                'FREETEST': 100
-            };
-            
-            if (validPromoCodes[promoCode.toUpperCase()]) {
-                discountPercent = validPromoCodes[promoCode.toUpperCase()];
-                unitAmount = Math.round(3999 * (1 - discountPercent / 100));
-            }
-        }
-        
-        // Create checkout session
-        const sessionParams = {
+        // Create checkout session using Stripe Price ID
+        const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
-                price_data: {
-                    currency: 'usd', // USD pricing
-                    product_data: {
-                        name: 'Market Warrior 30-Day Trading Challenge',
-                        description: discountPercent > 0 
-                            ? `${discountPercent}% discount applied! Complete trading education with lifetime certificate.`
-                            : 'Complete 30-day trading education program with lifetime certificate.',
-                        images: ['https://marketwarriorproject.vercel.app/logo.png']
-                    },
-                    unit_amount: unitAmount // Price in cents - this is the FINAL price
-                },
+                price: 'price_1SHXI8KnljudWYin6IHxo7QS', // Your Stripe Price ID
                 quantity: 1
             }],
             mode: 'payment',
             success_url: `${process.env.SITE_URL || 'https://marketwarriorproject.vercel.app'}/welcome?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.SITE_URL || 'https://marketwarriorproject.vercel.app'}/?canceled=true`,
             customer_email: email,
+            allow_promotion_codes: true, // Shows promo code field on Stripe checkout
             metadata: {
                 email: email,
-                promoCode: promoCode || '',
-                referralCode: referralCode || '',
-                discountPercent: discountPercent.toString()
-            },
-            allow_promotion_codes: false // We handle our own promo codes
-        };
-        
-        const session = await stripe.checkout.sessions.create(sessionParams);
+                referralCode: referralCode || ''
+            }
+        });
         
         return res.status(200).json({ 
             url: session.url,
