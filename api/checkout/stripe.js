@@ -37,7 +37,8 @@ module.exports = async (req, res) => {
                 'LAUNCH20': 20,
                 'EARLY25': 25,
                 'VIP30': 30,
-                'FRIEND15': 15
+                'FRIEND15': 15,
+                'FREETEST': 100
             };
             
             if (validPromoCodes[promoCode.toUpperCase()]) {
