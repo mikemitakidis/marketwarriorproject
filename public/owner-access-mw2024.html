@@ -80,10 +80,10 @@
         <div id="message" class="message" style="display: none;"></div>
     </div>
     <script>
-        const supabase = window.supabase.createClient(
-            'https://gvpaemdpmwyncdztlczy.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM0MzQxNzUsImV4cCI6MjA0OTAxMDE3NX0.yrXU7tPwBSKnFP2NiT8uBzPdlmWNJMrhGv-PnE0PsKU'
-        );
+        const SUPABASE_URL = 'https://gvpaemdpmwyncdztlczy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MDY1NTAsImV4cCI6MjA4MDk4MjU1MH0.kg6mlLcHv3APGnIeE7vRJpzF1u8JUyGKsYthXQXEAAE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         document.getElementById('bypassForm').addEventListener('submit', async function(e) {
             e.preventDefault();
