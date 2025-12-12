@@ -8,6 +8,8 @@
         { "source": "/api/webhooks/stripe", "destination": "/api/webhooks/stripe.js" },
         { "source": "/api/promo/validate", "destination": "/api/promo/validate.js" },
         { "source": "/api/quiz/submit", "destination": "/api/quiz/submit.js" },
+        { "source": "/api/progress/status", "destination": "/api/progress/status.js" },
+        { "source": "/api/task/submit", "destination": "/api/task/submit.js" },
         { "source": "/day/:day", "destination": "/day.html" },
         { "source": "/login", "destination": "/login.html" },
         { "source": "/welcome", "destination": "/welcome.html" },
