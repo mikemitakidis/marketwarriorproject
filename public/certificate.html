@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Completion - Market Warrior</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #1e293b;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 100px 20px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .not-completed {
+            text-align: center;
+            color: white;
+            padding: 100px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .not-completed h2 {
+            color: #f59e0b;
+            margin-bottom: 20px;
+        }
+        
+        .not-completed p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .not-completed a {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-family: sans-serif;
+            font-weight: 600;
+        }
+        
+        .actions {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-family: sans-serif;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Certificate Styles */
+        .certificate-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .certificate {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 50%, #fefce8 100%);
+            padding: 60px;
+            position: relative;
+            border-radius: 10px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+        }
+        
+        .certificate::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 3px solid #b8860b;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        
+        .certificate::after {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            border: 1px solid #daa520;
+            border-radius: 3px;
+            pointer-events: none;
+        }
+        
+        .cert-content {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cert-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 10px;
+        }
+        
+        .cert-header {
+            font-size: 0.9em;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .cert-title {
+            font-size: 3em;
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-weight: 400;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .cert-subtitle {
+            font-size: 1.2em;
+            color: #78350f;
+            margin-bottom: 40px;
+        }
+        
+        .cert-presented {
+            font-size: 1em;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        
+        .cert-name {
+            font-size: 2.5em;
+            color: #1e3a8a;
+            margin-bottom: 30px;
+            font-style: italic;
+            border-bottom: 2px solid #daa520;
+            display: inline-block;
+            padding: 10px 50px;
+        }
+        
+        .cert-description {
+            font-size: 1.1em;
+            color: #475569;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        .cert-achievement {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 40px;
+            font-family: sans-serif;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .cert-footer {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .cert-signature {
+            text-align: center;
+        }
+        
+        .signature-line {
+            width: 200px;
+            border-bottom: 2px solid #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .signature-name {
+            font-size: 1.1em;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        
+        .signature-title {
+            font-size: 0.85em;
+            color: #64748b;
+            font-family: sans-serif;
+        }
+        
+        .cert-date {
+            text-align: center;
+        }
+        
+        .date-label {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-family: sans-serif;
+        }
+        
+        .date-value {
+            font-size: 1.1em;
+            color: #1e293b;
+        }
+        
+        .cert-id {
+            text-align: center;
+        }
+        
+        .cert-id-label {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-family: sans-serif;
+        }
+        
+        .cert-id-value {
+            font-size: 0.9em;
+            color: #1e293b;
+            font-family: monospace;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .actions {
+                display: none;
+            }
+            
+            .certificate {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .certificate {
+                padding: 30px 20px;
+            }
+            
+            .cert-title {
+                font-size: 2em;
+            }
+            
+            .cert-name {
+                font-size: 1.8em;
+                padding: 10px 20px;
+            }
+            
+            .cert-footer {
+                flex-direction: column;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading your certificate...</p>
+    </div>
+    
+    <div class="not-completed" id="notCompleted" style="display: none;">
+        <h2>🏆 Certificate Not Yet Available</h2>
+        <p>You need to complete all 30 days of the Market Warrior Challenge to earn your certificate.</p>
+        <p>Keep going - you're doing great!</p>
+        <a href="/dashboard">Continue Learning →</a>
+    </div>
+    
+    <div class="certificate-container" id="certificateSection" style="display: none;">
+        <div class="actions">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print Certificate</button>
+            <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+        
+        <div class="certificate" id="certificate">
+            <div class="cert-content">
+                <img src="/logo.png" alt="Market Warrior" class="cert-logo">
+                
+                <div class="cert-header">Market Warrior Academy</div>
+                <h1 class="cert-title">Certificate of Completion</h1>
+                <p class="cert-subtitle">30-Day Trading Challenge</p>
+                
+                <p class="cert-presented">This is to certify that</p>
+                <h2 class="cert-name" id="certName">Loading...</h2>
+                
+                <p class="cert-description">
+                    has successfully completed the Market Warrior 30-Day Trading Challenge,
+                    demonstrating dedication, discipline, and commitment to mastering the
+                    fundamentals of trading and financial market analysis.
+                </p>
+                
+                <div class="cert-achievement">
+                    🎓 Market Warrior Graduate
+                </div>
+                
+                <div class="cert-footer">
+                    <div class="cert-signature">
+                        <div class="signature-line"></div>
+                        <div class="signature-name">Market Warrior Team</div>
+                        <div class="signature-title">Course Director</div>
+                    </div>
+                    
+                    <div class="cert-date">
+                        <div class="date-label">Completion Date</div>
+                        <div class="date-value" id="certDate">Loading...</div>
+                    </div>
+                    
+                    <div class="cert-id">
+                        <div class="cert-id-label">Certificate ID</div>
+                        <div class="cert-id-value" id="certId">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://gvpaemdpmwyncdztlczy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MDY1NTAsImV4cCI6MjA4MDk4MjU1MH0.kg6mlLcHv3APGnIeE7vRJpzF1u8JUyGKsYthXQXEAAE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function init() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Get user data
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (!userData || !userData.has_paid) {
+                    window.location.href = '/#pricing';
+                    return;
+                }
+                
+                // Check if completed all 30 days
+                const { data: progress } = await supabase
+                    .from('progress')
+                    .select('day_number, completed')
+                    .eq('user_id', session.user.id)
+                    .eq('completed', true);
+                
+                const completedDays = progress ? progress.map(p => p.day_number) : [];
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (completedDays.length < 30) {
+                    document.getElementById('notCompleted').style.display = 'block';
+                    return;
+                }
+                
+                // Show certificate
+                document.getElementById('certificateSection').style.display = 'block';
+                document.getElementById('certName').textContent = userData.full_name || 'Market Warrior Graduate';
+                
+                // Get completion date (latest completed day)
+                const { data: lastDay } = await supabase
+                    .from('progress')
+                    .select('completed_at')
+                    .eq('user_id', session.user.id)
+                    .eq('day_number', 30)
+                    .single();
+                
+                const completionDate = lastDay?.completed_at 
+                    ? new Date(lastDay.completed_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })
+                    : new Date().toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                
+                document.getElementById('certDate').textContent = completionDate;
+                
+                // Generate certificate ID
+                const certId = 'MW-' + session.user.id.substring(0, 8).toUpperCase() + '-' + 
+                    new Date().getFullYear();
+                document.getElementById('certId').textContent = certId;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<p>Error loading certificate. <a href="/dashboard" style="color: #667eea;">Return to Dashboard</a></p>';
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
