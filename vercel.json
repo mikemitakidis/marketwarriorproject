@@ -1,0 +1,22 @@
+{
+    "version": 2,
+    "builds": [
+        { "src": "api/**/*.js", "use": "@vercel/node" },
+        { "src": "public/**", "use": "@vercel/static" }
+    ],
+    "routes": [
+        { "src": "/api/(.*)", "dest": "/api/$1" },
+        { "src": "/day", "dest": "/public/day.html" },
+        { "src": "/dashboard", "dest": "/public/dashboard.html" },
+        { "src": "/login", "dest": "/public/login.html" },
+        { "src": "/signup", "dest": "/public/signup.html" },
+        { "src": "/welcome", "dest": "/public/welcome.html" },
+        { "src": "/success", "dest": "/public/success.html" },
+        { "src": "/admin", "dest": "/public/admin.html" },
+        { "src": "/journal", "dest": "/public/journal.html" },
+        { "src": "/terms", "dest": "/public/terms.html" },
+        { "src": "/privacy", "dest": "/public/privacy.html" },
+        { "src": "/test", "dest": "/public/test-flow.html" },
+        { "src": "/", "dest": "/public/index.html" }
+    ]
+}
