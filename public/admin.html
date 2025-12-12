@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Market Warrior</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        /* Layout */
+        .admin-layout {
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-logo span {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .sidebar-menu .icon {
+            font-size: 1.2em;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-size: 1.8em;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-card .label {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-card .change {
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        .stat-card .change.positive { color: #10b981; }
+        .stat-card .change.negative { color: #ef4444; }
+
+        /* Tables */
+        .table-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        td {
+            color: #e2e8f0;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+
+        /* Status Badges */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3em;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        /* Search */
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 300px;
+            padding: 10px 15px 10px 40px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            color: #64748b;
+        }
+
+        /* Access Denied */
+        .access-denied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .access-denied h2 {
+            color: #ef4444;
+            margin-bottom: 20px;
+        }
+
+        .access-denied p {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Access Denied (shown if not admin) -->
+    <div class="access-denied" id="accessDenied" style="display: none;">
+        <h2>🚫 Access Denied</h2>
+        <p>You don't have permission to access the admin panel.</p>
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout" id="adminLayout" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h1>⚔️ Market Warrior</h1>
+                <span>Admin Panel</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" onclick="showSection('dashboard')" class="active" id="nav-dashboard"><span class="icon">📊</span> Dashboard</a></li>
+                <li><a href="#" onclick="showSection('users')" id="nav-users"><span class="icon">👥</span> Users</a></li>
+                <li><a href="#" onclick="showSection('promo')" id="nav-promo"><span class="icon">🎟️</span> Promo Codes</a></li>
+                <li><a href="#" onclick="showSection('affiliates')" id="nav-affiliates"><span class="icon">🤝</span> Affiliates</a></li>
+                <li><a href="#" onclick="showSection('announcements')" id="nav-announcements"><span class="icon">📢</span> Announcements</a></li>
+                <li><a href="#" onclick="showSection('payments')" id="nav-payments"><span class="icon">💳</span> Payments</a></li>
+                <li><a href="/dashboard" style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;"><span class="icon">🏠</span> Back to Site</a></li>
+                <li><a href="#" onclick="logout()"><span class="icon">🚪</span> Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section class="section active" id="section-dashboard">
+                <div class="page-header">
+                    <h2>📊 Dashboard Overview</h2>
+                    <span id="lastUpdated">Last updated: --</span>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Total Revenue</div>
+                        <div class="value" id="totalRevenue">$0</div>
+                        <div class="change positive" id="revenueChange">+0% this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Users</div>
+                        <div class="value" id="totalUsers">0</div>
+                        <div class="change positive" id="usersChange">+0 this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Paid Users</div>
+                        <div class="value" id="paidUsers">0</div>
+                        <div class="change" id="conversionRate">0% conversion</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Completion Rate</div>
+                        <div class="value" id="completionRate">0%</div>
+                        <div class="change" id="avgDaysCompleted">Avg 0 days</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Recent Activity</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTable">
+                            <tr><td colspan="4" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="section" id="section-users">
+                <div class="page-header">
+                    <h2>👥 User Management</h2>
+                    <div class="search-box">
+                        <input type="text" id="userSearch" placeholder="Search users..." oninput="searchUsers()">
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr><td colspan="6" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Promo Codes Section -->
+            <section class="section" id="section-promo">
+                <div class="page-header">
+                    <h2>🎟️ Promo Codes</h2>
+                    <button class="btn btn-primary" onclick="openPromoModal()">+ Create Code</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Discount</th>
+                                <th>Uses</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promoTable">
+                            <tr><td colspan="6" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Affiliates Section -->
+            <section class="section" id="section-affiliates">
+                <div class="page-header">
+                    <h2>🤝 Affiliate Management</h2>
+                    <button class="btn btn-primary" onclick="openAffiliateModal()">+ Add Affiliate</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Total Affiliates</div>
+                        <div class="value" id="totalAffiliates">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Referrals</div>
+                        <div class="value" id="totalReferrals">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Pending Payouts</div>
+                        <div class="value" id="pendingPayouts">$0</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Referrals</th>
+                                <th>Earnings</th>
+                                <th>Pending</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="affiliatesTable">
+                            <tr><td colspan="6" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Announcements Section -->
+            <section class="section" id="section-announcements">
+                <div class="page-header">
+                    <h2>📢 Live Feed / Announcements</h2>
+                    <button class="btn btn-primary" onclick="openAnnouncementModal()">+ New Announcement</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Message</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTable">
+                            <tr><td colspan="4" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payments Section -->
+            <section class="section" id="section-payments">
+                <div class="page-header">
+                    <h2>💳 Payment History</h2>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Promo</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTable">
+                            <tr><td colspan="5" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Promo Code Modal -->
+    <div class="modal-overlay" id="promoModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create Promo Code</h3>
+                <button class="modal-close" onclick="closeModal('promoModal')">&times;</button>
+            </div>
+            <form onsubmit="createPromoCode(event)">
+                <div class="form-group">
+                    <label>Code (uppercase)</label>
+                    <input type="text" id="promoCodeInput" required style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Discount %</label>
+                    <input type="number" id="promoDiscount" min="1" max="100" value="10" required>
+                </div>
+                <div class="form-group">
+                    <label>Max Uses (leave empty for unlimited)</label>
+                    <input type="number" id="promoMaxUses" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Expires (optional)</label>
+                    <input type="date" id="promoExpires">
+                </div>
+                <div class="form-group">
+                    <label>Affiliate (optional)</label>
+                    <select id="promoAffiliate">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Code</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div class="modal-overlay" id="announcementModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>New Announcement</h3>
+                <button class="modal-close" onclick="closeModal('announcementModal')">&times;</button>
+            </div>
+            <form onsubmit="createAnnouncement(event)">
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="announcementContent" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Post Announcement</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://gvpaemdpmwyncdztlczy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM0MzQxNzUsImV4cCI6MjA0OTAxMDE3NX0.yrXU7tPwBSKnFP2NiT8uBzPdlmWNJMrhGv-PnE0PsKU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Admin email
+        const ADMIN_EMAIL = 'mitakidis.mike@gmail.com';
+
+        let currentUser = null;
+        let allUsers = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = '/login';
+                return;
+            }
+
+            currentUser = session.user;
+
+            // Check if admin
+            if (currentUser.email !== ADMIN_EMAIL) {
+                document.getElementById('accessDenied').style.display = 'flex';
+                return;
+            }
+
+            // Show admin panel
+            document.getElementById('adminLayout').style.display = 'flex';
+
+            // Load all data
+            await loadDashboard();
+            await loadUsers();
+            await loadPromoCodes();
+            await loadAffiliates();
+            await loadAnnouncements();
+            await loadPayments();
+        }
+
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Show selected section
+            document.getElementById(`section-${section}`).classList.add('active');
+            // Update nav
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            document.getElementById(`nav-${section}`)?.classList.add('active');
+        }
+
+        async function loadDashboard() {
+            try {
+                // Get total users
+                const { count: totalUsers } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true });
+
+                // Get paid users
+                const { count: paidUsers } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('payment_status', 'paid');
+
+                // Get total revenue
+                const { data: payments } = await supabase
+                    .from('payments')
+                    .select('amount')
+                    .eq('status', 'completed');
+
+                const totalRevenue = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+                // Get completion stats
+                const { data: progress } = await supabase
+                    .from('challenge_progress')
+                    .select('day_number, user_id');
+
+                const completedUsers = new Set();
+                progress?.forEach(p => {
+                    if (p.day_number === 30) completedUsers.add(p.user_id);
+                });
+
+                // Update UI
+                document.getElementById('totalRevenue').textContent = `$${(totalRevenue / 100).toFixed(2)}`;
+                document.getElementById('totalUsers').textContent = totalUsers || 0;
+                document.getElementById('paidUsers').textContent = paidUsers || 0;
+                document.getElementById('conversionRate').textContent = totalUsers ? 
+                    `${Math.round((paidUsers / totalUsers) * 100)}% conversion` : '0% conversion';
+                document.getElementById('completionRate').textContent = paidUsers ?
+                    `${Math.round((completedUsers.size / paidUsers) * 100)}%` : '0%';
+
+                document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+                // Load recent activity
+                await loadActivity();
+
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        async function loadActivity() {
+            const { data: activities } = await supabase
+                .from('activity_log')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            const tbody = document.getElementById('activityTable');
+            
+            if (!activities || activities.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No recent activity</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = activities.map(a => `
+                <tr>
+                    <td>${a.user_id?.slice(0, 8) || 'System'}...</td>
+                    <td>${a.action}</td>
+                    <td>${a.details?.slice(0, 50) || '-'}...</td>
+                    <td>${new Date(a.created_at).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadUsers() {
+            const { data: users } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            allUsers = users || [];
+            renderUsersTable(allUsers);
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTable');
+            
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.full_name || 'N/A'}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge ${u.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}">${u.payment_status || 'unpaid'}</span></td>
+                    <td>Day ${u.current_day || 0}/30</td>
+                    <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-small btn-success" onclick="resetUserProgress('${u.id}')">Reset</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteUser('${u.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                u.email?.toLowerCase().includes(query) ||
+                u.full_name?.toLowerCase().includes(query)
+            );
+            renderUsersTable(filtered);
+        }
+
+        async function resetUserProgress(userId) {
+            if (!confirm('Reset this user\'s progress? This cannot be undone.')) return;
+            
+            await supabase.from('challenge_progress').delete().eq('user_id', userId);
+            await supabase.from('users').update({ current_day: 1 }).eq('id', userId);
+            
+            alert('Progress reset!');
+            loadUsers();
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Delete this user permanently? This cannot be undone.')) return;
+            
+            await supabase.from('challenge_progress').delete().eq('user_id', userId);
+            await supabase.from('payments').delete().eq('user_id', userId);
+            await supabase.from('users').delete().eq('id', userId);
+            
+            alert('User deleted!');
+            loadUsers();
+        }
+
+        async function loadPromoCodes() {
+            const { data: codes } = await supabase
+                .from('promo_codes')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('promoTable');
+            
+            if (!codes || codes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No promo codes</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = codes.map(c => `
+                <tr>
+                    <td><strong>${c.code}</strong></td>
+                    <td>${c.discount_percent}%</td>
+                    <td>${c.uses_count || 0}/${c.max_uses || '∞'}</td>
+                    <td>${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never'}</td>
+                    <td><span class="badge ${c.is_active ? 'badge-success' : 'badge-danger'}">${c.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-small ${c.is_active ? 'btn-danger' : 'btn-success'}" onclick="togglePromoCode('${c.id}', ${!c.is_active})">${c.is_active ? 'Disable' : 'Enable'}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openPromoModal() {
+            document.getElementById('promoModal').classList.add('show');
+        }
+
+        async function createPromoCode(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('promoCodeInput').value.toUpperCase();
+            const discount = parseInt(document.getElementById('promoDiscount').value);
+            const maxUses = document.getElementById('promoMaxUses').value || null;
+            const expires = document.getElementById('promoExpires').value || null;
+            const affiliateId = document.getElementById('promoAffiliate').value || null;
+
+            const { error } = await supabase.from('promo_codes').insert({
+                code,
+                discount_percent: discount,
+                max_uses: maxUses ? parseInt(maxUses) : null,
+                expires_at: expires,
+                affiliate_id: affiliateId,
+                is_active: true
+            });
+
+            if (error) {
+                alert('Error: ' + error.message);
+                return;
+            }
+
+            closeModal('promoModal');
+            loadPromoCodes();
+            alert('Promo code created!');
+        }
+
+        async function togglePromoCode(id, active) {
+            await supabase.from('promo_codes').update({ is_active: active }).eq('id', id);
+            loadPromoCodes();
+        }
+
+        async function loadAffiliates() {
+            const { data: affiliates } = await supabase
+                .from('affiliates')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('affiliatesTable');
+
+            // Update stats
+            document.getElementById('totalAffiliates').textContent = affiliates?.length || 0;
+            
+            const totalReferrals = affiliates?.reduce((sum, a) => sum + (a.referral_count || 0), 0) || 0;
+            document.getElementById('totalReferrals').textContent = totalReferrals;
+            
+            const pendingPayouts = affiliates?.reduce((sum, a) => sum + (a.pending_payout || 0), 0) || 0;
+            document.getElementById('pendingPayouts').textContent = `$${(pendingPayouts / 100).toFixed(2)}`;
+
+            if (!affiliates || affiliates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No affiliates</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = affiliates.map(a => `
+                <tr>
+                    <td>${a.name}</td>
+                    <td><strong>${a.code}</strong></td>
+                    <td>${a.referral_count || 0}</td>
+                    <td>$${((a.total_earnings || 0) / 100).toFixed(2)}</td>
+                    <td>$${((a.pending_payout || 0) / 100).toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-small btn-success" onclick="payoutAffiliate('${a.id}', ${a.pending_payout})">Payout</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Also populate affiliate dropdown in promo modal
+            const select = document.getElementById('promoAffiliate');
+            select.innerHTML = '<option value="">None</option>' + 
+                affiliates.map(a => `<option value="${a.id}">${a.name} (${a.code})</option>`).join('');
+        }
+
+        async function payoutAffiliate(id, amount) {
+            if (amount <= 0) {
+                alert('No pending payout');
+                return;
+            }
+            if (!confirm(`Mark $${(amount / 100).toFixed(2)} as paid?`)) return;
+
+            await supabase.from('affiliates').update({
+                pending_payout: 0,
+                last_payout_at: new Date().toISOString()
+            }).eq('id', id);
+
+            await supabase.from('referral_transactions').update({
+                status: 'paid',
+                paid_at: new Date().toISOString()
+            }).eq('affiliate_id', id).eq('status', 'pending');
+
+            alert('Payout marked as complete!');
+            loadAffiliates();
+        }
+
+        async function loadAnnouncements() {
+            const { data: announcements } = await supabase
+                .from('live_feed')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('announcementsTable');
+
+            if (!announcements || announcements.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No announcements</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = announcements.map(a => `
+                <tr>
+                    <td>${a.content?.slice(0, 50)}...</td>
+                    <td>${new Date(a.created_at).toLocaleDateString()}</td>
+                    <td><span class="badge ${a.is_active ? 'badge-success' : 'badge-danger'}">${a.is_active ? 'Active' : 'Hidden'}</span></td>
+                    <td>
+                        <button class="btn btn-small ${a.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleAnnouncement('${a.id}', ${!a.is_active})">${a.is_active ? 'Hide' : 'Show'}</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAnnouncementModal() {
+            document.getElementById('announcementModal').classList.add('show');
+        }
+
+        async function createAnnouncement(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('announcementContent').value;
+
+            const { error } = await supabase.from('live_feed').insert({
+                content,
+                is_active: true
+            });
+
+            if (error) {
+                alert('Error: ' + error.message);
+                return;
+            }
+
+            closeModal('announcementModal');
+            document.getElementById('announcementContent').value = '';
+            loadAnnouncements();
+            alert('Announcement posted!');
+        }
+
+        async function toggleAnnouncement(id, active) {
+            await supabase.from('live_feed').update({ is_active: active }).eq('id', id);
+            loadAnnouncements();
+        }
+
+        async function deleteAnnouncement(id) {
+            if (!confirm('Delete this announcement?')) return;
+            await supabase.from('live_feed').delete().eq('id', id);
+            loadAnnouncements();
+        }
+
+        async function loadPayments() {
+            const { data: payments } = await supabase
+                .from('payments')
+                .select('*, users(email, full_name)')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            const tbody = document.getElementById('paymentsTable');
+
+            if (!payments || payments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No payments</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = payments.map(p => `
+                <tr>
+                    <td>${p.users?.full_name || p.users?.email || 'Unknown'}</td>
+                    <td>$${((p.amount || 0) / 100).toFixed(2)}</td>
+                    <td>${p.promo_code || '-'}</td>
+                    <td><span class="badge badge-success">${p.status}</span></td>
+                    <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+        }
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
