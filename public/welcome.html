@@ -7,14 +7,10 @@
     <link rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 40px 20px;
@@ -45,15 +41,9 @@
             border: 4px solid rgba(255,255,255,0.3);
         }
         
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
+        h1 { font-size: 2.5em; margin-bottom: 15px; }
         
-        .subtitle {
-            font-size: 1.2em;
-            opacity: 0.95;
-        }
+        .subtitle { font-size: 1.2em; opacity: 0.95; }
         
         .user-email {
             background: rgba(255,255,255,0.2);
@@ -61,12 +51,9 @@
             border-radius: 20px;
             display: inline-block;
             margin-top: 15px;
-            font-size: 0.95em;
         }
         
-        .content {
-            padding: 50px 40px;
-        }
+        .content { padding: 50px 40px; }
         
         .welcome-message {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
@@ -76,15 +63,8 @@
             border-left: 5px solid #fbbf24;
         }
         
-        .welcome-message h2 {
-            color: #92400e;
-            margin-bottom: 15px;
-        }
-        
-        .welcome-message p {
-            color: #78350f;
-            line-height: 1.8;
-        }
+        .welcome-message h2 { color: #92400e; margin-bottom: 15px; }
+        .welcome-message p { color: #78350f; line-height: 1.8; }
         
         .name-section {
             background: #f8fafc;
@@ -93,746 +73,498 @@
             margin-bottom: 40px;
         }
         
-        .name-section h3 {
-            color: #1e293b;
-            margin-bottom: 20px;
-        }
+        .name-section h3 { color: #1e293b; margin-bottom: 20px; }
         
         .name-input {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .name-input input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
+            width: 100%;
+            padding: 18px;
             font-size: 1.1em;
-        }
-        
-        .name-input input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .warning-box {
-            background: #fee2e2;
-            border: 2px solid #ef4444;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-        
-        .warning-box strong {
-            color: #991b1b;
-        }
-        
-        .terms-section {
-            margin: 40px 0;
-        }
-        
-        .terms-section h3 {
-            color: #1e293b;
-            margin-bottom: 25px;
-            font-size: 1.8em;
-        }
-        
-        .term-item {
-            background: white;
             border: 2px solid #e2e8f0;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .term-item h4 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .term-item ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .term-item li {
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-            color: #475569;
-            line-height: 1.6;
-        }
-        
-        .term-item li:before {
-            content: "•";
-            position: absolute;
-            left: 5px;
-            color: #667eea;
-            font-weight: 700;
-        }
-        
-        .highlight {
-            background: #fef3c7;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-weight: 600;
-            color: #92400e;
-        }
-        
-        .agreement-section {
-            background: #f8fafc;
-            padding: 30px;
-            border-radius: 20px;
-            margin: 40px 0;
-        }
-        
-        .agreement-section h3 {
-            color: #1e293b;
-            margin-bottom: 25px;
-        }
-        
-        .checkbox-item {
-            padding: 15px;
-            margin: 15px 0;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: start;
-            gap: 15px;
-            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             transition: all 0.3s;
         }
         
-        .checkbox-item:hover {
+        .name-input:focus {
+            outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
+        
+        .terms-section { margin-bottom: 40px; }
+        
+        .terms-section h3 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .term-item {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .term-item h4 {
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .term-item p {
+            color: #64748b;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .checkbox-section { margin-bottom: 40px; }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .checkbox-item:hover { background: #f1f5f9; }
         
         .checkbox-item input[type="checkbox"] {
             width: 24px;
             height: 24px;
-            margin-top: 3px;
+            margin-top: 2px;
             cursor: pointer;
         }
         
         .checkbox-item label {
-            flex: 1;
             cursor: pointer;
-            color: #475569;
-            line-height: 1.6;
+            color: #334155;
+            line-height: 1.5;
         }
         
         .affiliate-section {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
             padding: 30px;
             border-radius: 20px;
-            margin: 40px 0;
-            text-align: center;
+            margin-bottom: 40px;
         }
         
         .affiliate-section h3 {
             color: #92400e;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
-        .commission-badge {
-            display: inline-block;
+        .affiliate-code {
             background: white;
-            padding: 20px 40px;
-            border-radius: 15px;
-            margin: 20px 0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
         }
         
-        .commission-rate {
-            font-size: 3em;
-            font-weight: 700;
-            color: #92400e;
+        .affiliate-code input {
+            flex: 1;
+            border: none;
+            font-size: 1em;
+            color: #334155;
+            background: transparent;
         }
         
-        .commission-text {
-            color: #78350f;
+        .copy-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
         }
         
-        .affiliate-link {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .copy-btn:hover { background: #d97706; }
         
-        .affiliate-link input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #fbbf24;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            background: #fef3c7;
-        }
-        
-        .copy-button {
-            padding: 10px 20px;
-            background: #fbbf24;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .copy-button:hover {
-            background: #f59e0b;
-        }
-        
-        .start-button {
+        .submit-btn {
             width: 100%;
             padding: 20px;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
             border-radius: 15px;
-            font-size: 1.3em;
+            font-size: 1.2em;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 30px;
         }
         
-        .start-button:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
+        .submit-btn:hover {
+            transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
         
-        .start-button:disabled {
-            background: #cbd5e1;
+        .submit-btn:disabled {
+            background: #94a3b8;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .loading-overlay {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
         
-        .loading-content {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-        }
+        .loading-overlay.hidden { display: none; }
         
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e2e8f0;
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
             border-top-color: #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
-        .gdpr-notice {
-            background: #f0fdf4;
-            border: 2px solid #10b981;
-            padding: 20px;
-            border-radius: 15px;
+        .loading-text {
+            color: white;
             margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        /* Content Protection */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
-        .gdpr-notice strong {
-            color: #065f46;
-        }
-        
-        .gdpr-notice p {
-            color: #047857;
-            font-size: 0.95em;
-            margin-top: 10px;
-        }
-        
-        .error-message {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .content {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .name-input {
-                flex-direction: column;
-            }
+        .name-input, .affiliate-code input {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Setting up your account...</p>
-        </div>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Setting up your account...</div>
     </div>
-    
+
     <div class="container">
         <div class="header">
             <img src="/logo.png" alt="Market Warrior" class="logo">
-            <h1>Welcome, Market Warrior!</h1>
-            <p class="subtitle">Your trading journey starts here</p>
+            <h1>🎉 Welcome to Market Warrior!</h1>
+            <p class="subtitle">You're about to begin your 30-day trading journey</p>
             <div class="user-email" id="userEmail">Loading...</div>
         </div>
         
         <div class="content">
-            <div class="error-message" id="errorMessage"></div>
-            
+            <!-- Welcome Message -->
             <div class="welcome-message">
-                <h2>🏆 Congratulations on Your Purchase!</h2>
-                <p>You've just taken the first step towards becoming a confident, professional trader. Over the next 30 days, you'll learn everything you need to start trading successfully.</p>
-                <p style="margin-top: 15px;"><strong>What happens next:</strong> After accepting the terms below, Day 1 will unlock immediately. Each subsequent day unlocks automatically after 24 hours.</p>
+                <h2>🚀 Your Trading Journey Begins Now!</h2>
+                <p>Congratulations on taking the first step towards becoming a confident trader. Over the next 30 days, you'll learn the fundamentals of trading, technical analysis, risk management, and portfolio strategies used by professional traders.</p>
             </div>
             
+            <!-- Name Section -->
             <div class="name-section">
-                <h3>📝 Enter Your Full Name</h3>
-                <p>This name will appear on your Certificate of Completion at the end of the challenge.</p>
-                
-                <div class="name-input">
-                    <input type="text" id="fullName" placeholder="Enter your full name (e.g., John Smith)" required maxlength="100">
-                </div>
-                
-                <div class="warning-box">
-                    <strong>⚠️ IMPORTANT:</strong> Your name cannot be changed later. Make sure it's spelled correctly! This name will appear on your official certificate.
-                </div>
+                <h3>👤 Enter Your Full Name</h3>
+                <p style="color: #64748b; margin-bottom: 15px;">This name will appear on your certificate upon completion. Choose carefully - it cannot be changed later.</p>
+                <input type="text" class="name-input" id="fullName" placeholder="Enter your full name" required>
             </div>
             
+            <!-- Terms Section -->
             <div class="terms-section">
-                <h3>📋 Terms & Conditions</h3>
-                <p style="margin-bottom: 20px; color: #64748b;">Please read carefully before proceeding</p>
+                <h3>📋 Challenge Terms & Conditions</h3>
                 
                 <div class="term-item">
-                    <h4>1. Virtual Trading Recommendation</h4>
-                    <p>We <strong>strongly recommend</strong> using only <span class="highlight">demo/virtual accounts</span> during this challenge.</p>
-                    <ul>
-                        <li>All lessons are designed for demo account practice</li>
-                        <li>Practice with virtual money for at least 6 months</li>
-                        <li>We are not responsible for any trading losses</li>
-                        <li>This is education, not financial advice</li>
-                    </ul>
+                    <h4>1. 💻 Virtual Trading Recommendation</h4>
+                    <p>We strongly recommend using demo/paper trading accounts for all practice during this challenge. Never risk real money while learning.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>2. 3-Day Refund Policy</h4>
-                    <p>You have <span class="highlight">3 days from purchase</span> to request a full refund.</p>
-                    <ul>
-                        <li>Refund requests must be made within 72 hours</li>
-                        <li>After 3 days, all sales are final</li>
-                        <li>Refunds processed within 5-7 business days</li>
-                        <li>Contact support@marketwarrior.club for refunds</li>
-                    </ul>
+                    <h4>2. 💰 3-Day Refund Policy</h4>
+                    <p>Full refunds are available within 3 days of purchase if you haven't accessed beyond Day 3 of the content.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>3. Device Limitations</h4>
-                    <p>Your account can be used on <span class="highlight">up to 2 devices</span>.</p>
-                    <ul>
-                        <li>Maximum 2 devices allowed per account</li>
-                        <li>Devices are automatically registered on first login</li>
-                        <li>Contact support to reset devices if needed</li>
-                        <li>Account sharing is prohibited</li>
-                    </ul>
+                    <h4>3. 📱 Device Limitations</h4>
+                    <p>Your account can be accessed from a maximum of 2 devices. Additional devices will require logging out from existing ones.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>4. 120-Day Access Period</h4>
-                    <p>You have <span class="highlight">120 days (4 months)</span> of platform access.</p>
-                    <ul>
-                        <li>Access starts from today</li>
-                        <li>Complete the 30-day challenge at your own pace</li>
-                        <li>Access expires automatically after 120 days</li>
-                        <li>Certificate remains valid forever</li>
-                    </ul>
+                    <h4>4. ⏰ 120-Day Access Period</h4>
+                    <p>You have 120 days from today to complete the 30-day challenge. After this period, access to course materials will expire.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>5. Name Cannot Be Changed</h4>
-                    <p>The name you enter is <span class="highlight">permanent</span> and will be used for:</p>
-                    <ul>
-                        <li>Your certificate of completion</li>
-                        <li>All official documentation</li>
-                        <li>Double-check spelling before submitting</li>
-                    </ul>
+                    <h4>5. ✏️ Name Cannot Be Changed</h4>
+                    <p>The name you enter above will be permanent and will appear on your certificate. Please ensure it's correct.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>6. Content Protection</h4>
-                    <p>All course materials are copyrighted and protected.</p>
-                    <ul>
-                        <li>Do not share, copy, or distribute course content</li>
-                        <li>Screenshots and recording are prohibited</li>
-                        <li>For personal use only</li>
-                        <li>Violations may result in account termination</li>
-                    </ul>
+                    <h4>6. 🔒 Content Protection</h4>
+                    <p>All course content is copyrighted. Copying, sharing, or redistributing materials is strictly prohibited.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>7. Challenge Structure</h4>
-                    <p>The challenge operates on a <span class="highlight">time-based unlock system</span>.</p>
-                    <ul>
-                        <li>Day 1 unlocks immediately upon agreement</li>
-                        <li>Day 2 unlocks 24 hours after Day 1</li>
-                        <li>You must complete quizzes (60%+) to proceed</li>
-                        <li>You must submit tasks to proceed to next day</li>
-                    </ul>
+                    <h4>7. 📚 Challenge Structure</h4>
+                    <p>Days unlock progressively. You must complete each day's quiz with a minimum 60% score and submit required tasks before the next day unlocks (after a 24-hour waiting period).</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>8. Educational Disclaimer</h4>
-                    <p>This is an <span class="highlight">educational program</span>, not financial advice.</p>
-                    <ul>
-                        <li>Content is for educational purposes only</li>
-                        <li>Trading involves risk of loss</li>
-                        <li>Past performance doesn't guarantee future results</li>
-                        <li>Consult a licensed financial advisor before trading real money</li>
-                    </ul>
+                    <h4>8. 📖 Educational Disclaimer</h4>
+                    <p>This course is for educational purposes only. We do not provide personalized financial advice or guarantee trading profits.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>9. Risk Disclosure</h4>
-                    <p>Trading and investing carry significant risk.</p>
-                    <ul>
-                        <li>You can lose 100% of your investment</li>
-                        <li>Only trade with money you can afford to lose</li>
-                        <li>Market Warrior is not liable for any losses</li>
-                        <li>Your results will vary based on your decisions</li>
-                    </ul>
+                    <h4>9. ⚠️ Risk Disclosure</h4>
+                    <p>Trading involves substantial risk of loss. Past performance does not guarantee future results. Only trade with money you can afford to lose.</p>
                 </div>
                 
                 <div class="term-item">
-                    <h4>10. Data Protection (GDPR)</h4>
-                    <p>Your personal data is <span class="highlight">protected</span> under GDPR and international data protection laws.</p>
-                    <ul>
-                        <li>We collect only essential data (email, name, progress)</li>
-                        <li>Your data is stored securely with encryption</li>
-                        <li>We never sell your data to third parties</li>
-                        <li>You can request data deletion at any time</li>
-                        <li>Contact support@marketwarrior.club for data requests</li>
-                    </ul>
+                    <h4>10. 🛡️ Data Protection (GDPR)</h4>
+                    <p>We collect and process your data in accordance with GDPR. View our <a href="/privacy.html" target="_blank">Privacy Policy</a> for details on your rights.</p>
                 </div>
             </div>
             
-            <div class="agreement-section">
-                <h3>✅ I Agree To:</h3>
-                
+            <!-- Checkbox Section -->
+            <div class="checkbox-section">
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree1" onchange="checkAllAgreed()">
-                    <label for="agree1">I have read and agree to all Terms & Conditions above</label>
+                    <input type="checkbox" id="check1">
+                    <label for="check1">I have read and agree to all Terms & Conditions listed above</label>
                 </div>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree2" onchange="checkAllAgreed()">
-                    <label for="agree2">I understand this is education only, not financial advice, and I will use demo accounts</label>
+                    <input type="checkbox" id="check2">
+                    <label for="check2">I understand this is educational content only, not financial advice, and I will use demo accounts for practice</label>
                 </div>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree3" onchange="checkAllAgreed()">
-                    <label for="agree3">I understand my name is permanent and cannot be changed after submission</label>
+                    <input type="checkbox" id="check3">
+                    <label for="check3">I understand my name above is permanent and will appear on my certificate</label>
                 </div>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree4" onchange="checkAllAgreed()">
-                    <label for="agree4">I understand I have 120 days of access and 3 days for refunds</label>
+                    <input type="checkbox" id="check4">
+                    <label for="check4">I understand I have 120 days of access and refunds are only available within 3 days if I haven't passed Day 3</label>
                 </div>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree5" onchange="checkAllAgreed()">
-                    <label for="agree5">I understand trading involves risk and I may lose money</label>
+                    <input type="checkbox" id="check5">
+                    <label for="check5">I understand trading involves risk and I should never trade with money I cannot afford to lose</label>
                 </div>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="agree6" onchange="checkAllAgreed()">
-                    <label for="agree6">I consent to data processing as described in the <a href="/privacy.html" target="_blank">Privacy Policy</a> (GDPR compliant)</label>
-                </div>
-                
-                <div class="gdpr-notice">
-                    <strong>🔒 Your Data is Protected</strong>
-                    <p>By proceeding, you consent to the processing of your personal data in accordance with GDPR. You can withdraw consent or request data deletion at any time by contacting support@marketwarrior.club</p>
+                    <input type="checkbox" id="check6">
+                    <label for="check6">I consent to the processing of my personal data as described in the <a href="/privacy.html" target="_blank">Privacy Policy</a></label>
                 </div>
             </div>
             
+            <!-- Affiliate Section -->
             <div class="affiliate-section">
-                <h3>💰 Your Affiliate Link</h3>
-                <p style="color: #78350f; margin-bottom: 15px;">
-                    Share your unique link and earn passive income!
-                </p>
-                
-                <div class="commission-badge">
-                    <div class="commission-rate">30%</div>
-                    <p class="commission-text">Commission Per Sale</p>
+                <h3>🎁 Your Affiliate Link - Earn 30% Commission!</h3>
+                <p style="color: #78350f;">Share this link with friends. When they join, you earn $12 (30% of $39.99) for each signup!</p>
+                <div class="affiliate-code">
+                    <input type="text" id="affiliateLink" readonly value="Loading...">
+                    <button class="copy-btn" onclick="copyLink()">Copy Link</button>
                 </div>
-                
-                <p style="color: #78350f; font-size: 0.95em;">
-                    You get <strong>30% commission</strong> for every person who signs up through your link!
-                </p>
-                
-                <div class="affiliate-link">
-                    <input type="text" id="affiliateLink" value="https://marketwarriorproject.vercel.app/?ref=LOADING" readonly>
-                    <button class="copy-button" onclick="copyAffiliateLink()">Copy</button>
-                </div>
-                
-                <p style="color: #78350f; font-size: 0.95em;">
-                    Track your earnings in your dashboard. Payouts via Stripe!
-                </p>
             </div>
             
-            <button class="start-button" id="startButton" disabled onclick="startChallenge()">
-                🚀 Start My Challenge
+            <!-- Submit Button -->
+            <button class="submit-btn" id="submitBtn" onclick="startChallenge()" disabled>
+                Start My Challenge 🚀
             </button>
-            
-            <p style="text-align: center; margin-top: 20px; color: #64748b; font-size: 0.9em;">
-                By clicking "Start My Challenge", you agree to our <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>
-            </p>
         </div>
     </div>
 
     <script>
-        // Supabase configuration
+        // Supabase Configuration
         const SUPABASE_URL = 'https://gvpaemdpmwyncdztlczy.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NjIxNjgsImV4cCI6MjA0OTQzODE2OH0.aCHOP4MXKPZ2AYgtevknXd58vPwbqPNpXx6wvLpYEIA';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFlbWRwbXd5bmNkenRsY3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MDY1NTAsImV4cCI6MjA4MDk4MjU1MH0.kg6mlLcHv3APGnIeE7vRJpzF1u8JUyGKsYthXQXEAAE';
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+
         let currentUser = null;
-        let sessionData = null;
-        
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', async function() {
+
+        // Initialize
+        async function init() {
             try {
-                // Check for session_id from Stripe checkout
-                const urlParams = new URLSearchParams(window.location.search);
-                const sessionId = urlParams.get('session_id');
+                const { data: { session }, error } = await supabase.auth.getSession();
                 
-                // Get current user session
-                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                currentUser = session.user;
                 
-                if (session && session.user) {
-                    currentUser = session.user;
-                    document.getElementById('userEmail').textContent = currentUser.email;
-                    
-                    // Generate affiliate code
-                    const affiliateCode = generateAffiliateCode(currentUser.email);
-                    document.getElementById('affiliateLink').value = `https://marketwarriorproject.vercel.app/?ref=${affiliateCode}`;
-                    
-                    // Check if user has already completed welcome
+                // Check if user already completed welcome
+                const welcomeCompleted = localStorage.getItem('welcomeCompleted_' + currentUser.id);
+                if (welcomeCompleted === 'true') {
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                // Also check Supabase
+                try {
                     const { data: profile } = await supabase
                         .from('user_profiles')
-                        .select('*')
+                        .select('welcome_completed')
                         .eq('user_id', currentUser.id)
                         .single();
                     
-                    if (profile && profile.agreed_to_terms) {
-                        // Already completed welcome, redirect to dashboard
+                    if (profile && profile.welcome_completed) {
+                        localStorage.setItem('welcomeCompleted_' + currentUser.id, 'true');
                         window.location.href = '/dashboard.html';
                         return;
                     }
-                } else {
-                    // Not logged in - check localStorage for email from checkout
-                    const storedEmail = localStorage.getItem('userEmail');
-                    if (storedEmail) {
-                        document.getElementById('userEmail').textContent = storedEmail;
-                        const affiliateCode = generateAffiliateCode(storedEmail);
-                        document.getElementById('affiliateLink').value = `https://marketwarriorproject.vercel.app/?ref=${affiliateCode}`;
-                    } else {
-                        // No user info, redirect to login
-                        showError('Please log in to access the welcome page.');
-                        setTimeout(() => {
-                            window.location.href = '/login.html';
-                        }, 2000);
-                        return;
-                    }
+                } catch (e) {
+                    // Profile might not exist yet, that's ok
                 }
+
+                // Show user email
+                document.getElementById('userEmail').textContent = currentUser.email;
+                
+                // Generate affiliate link
+                const affiliateCode = generateAffiliateCode(currentUser.email);
+                document.getElementById('affiliateLink').value = 'https://marketwarriorproject.vercel.app/?ref=' + affiliateCode;
+                
+                // Setup checkbox listeners
+                setupCheckboxes();
+                
             } catch (error) {
-                console.error('Initialization error:', error);
-                showError('Error loading page. Please refresh or contact support.');
+                console.error('Init error:', error);
             }
-        });
-        
-        // Generate affiliate code from email
+        }
+
+        // Generate Affiliate Code
         function generateAffiliateCode(email) {
-            const base = btoa(email).replace(/[^a-zA-Z0-9]/g, '');
-            return base.substring(0, 8).toUpperCase();
+            const hash = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            return hash.substring(0, 8) || 'WARRIOR';
         }
-        
-        // Check if all checkboxes are checked and name is entered
-        function checkAllAgreed() {
-            const name = document.getElementById('fullName').value.trim();
-            const agree1 = document.getElementById('agree1').checked;
-            const agree2 = document.getElementById('agree2').checked;
-            const agree3 = document.getElementById('agree3').checked;
-            const agree4 = document.getElementById('agree4').checked;
-            const agree5 = document.getElementById('agree5').checked;
-            const agree6 = document.getElementById('agree6').checked;
-            
-            const allAgreed = name.length >= 2 && agree1 && agree2 && agree3 && agree4 && agree5 && agree6;
-            document.getElementById('startButton').disabled = !allAgreed;
-        }
-        
-        // Also check when name is entered
-        document.getElementById('fullName').addEventListener('input', checkAllAgreed);
-        
-        // Show error message
-        function showError(message) {
-            const errorEl = document.getElementById('errorMessage');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-        
-        // Start challenge
-        async function startChallenge() {
-            const fullName = document.getElementById('fullName').value.trim();
-            
-            if (!fullName || fullName.length < 2) {
-                showError('Please enter your full name (at least 2 characters).');
-                return;
+
+        // Setup Checkboxes
+        function setupCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const nameInput = document.getElementById('fullName');
+            const submitBtn = document.getElementById('submitBtn');
+
+            function checkForm() {
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                const nameEntered = nameInput.value.trim().length >= 2;
+                submitBtn.disabled = !(allChecked && nameEntered);
             }
-            
-            // Double confirm name
-            const confirmed = window.confirm(
-                `Confirm your name: "${fullName}"\n\n` +
-                `This will appear on your certificate and CANNOT be changed later.\n\n` +
-                `Is this correct?`
-            );
-            
-            if (!confirmed) {
-                return;
-            }
-            
-            // Show loading
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            
-            try {
-                const now = new Date().toISOString();
-                const accessExpiry = new Date(Date.now() + (120 * 24 * 60 * 60 * 1000)).toISOString(); // 120 days
-                const affiliateCode = generateAffiliateCode(currentUser ? currentUser.email : localStorage.getItem('userEmail'));
-                
-                if (currentUser) {
-                    // Update or create user profile in Supabase
-                    const { error } = await supabase
-                        .from('user_profiles')
-                        .upsert({
-                            user_id: currentUser.id,
-                            email: currentUser.email,
-                            full_name: fullName,
-                            agreed_to_terms: true,
-                            agreement_date: now,
-                            challenge_start_date: now,
-                            access_expiry_date: accessExpiry,
-                            affiliate_code: affiliateCode,
-                            current_day: 1,
-                            day_1_unlocked: true,
-                            day_1_unlock_time: now,
-                            gdpr_consent: true,
-                            gdpr_consent_date: now
-                        }, {
-                            onConflict: 'user_id'
-                        });
-                    
-                    if (error) {
-                        console.error('Supabase error:', error);
-                        // Continue anyway - save to localStorage as backup
-                    }
-                }
-                
-                // Save to localStorage as backup
-                localStorage.setItem('userName', fullName);
-                localStorage.setItem('agreedToTerms', 'true');
-                localStorage.setItem('agreementDate', now);
-                localStorage.setItem('challengeStartDate', now);
-                localStorage.setItem('accessExpiryDate', accessExpiry);
-                localStorage.setItem('affiliateCode', affiliateCode);
-                localStorage.setItem('currentDay', '1');
-                localStorage.setItem('gdprConsent', 'true');
-                
-                // Success!
-                alert('🎉 Welcome to Market Warrior!\n\nDay 1 is now unlocked. Let\'s start your trading journey!');
-                
-                // Redirect to dashboard
-                window.location.href = '/dashboard.html';
-                
-            } catch (error) {
-                console.error('Error starting challenge:', error);
-                document.getElementById('loadingOverlay').style.display = 'none';
-                showError('Error saving your information. Please try again or contact support.');
-            }
+
+            checkboxes.forEach(cb => cb.addEventListener('change', checkForm));
+            nameInput.addEventListener('input', checkForm);
         }
-        
-        // Copy affiliate link
-        function copyAffiliateLink() {
+
+        // Copy Link
+        function copyLink() {
             const input = document.getElementById('affiliateLink');
             input.select();
-            input.setSelectionRange(0, 99999);
+            document.execCommand('copy');
             
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy Link', 2000);
+        }
+
+        // Start Challenge
+        async function startChallenge() {
+            const name = document.getElementById('fullName').value.trim();
+            
+            if (!name || name.length < 2) {
+                alert('Please enter your full name');
+                return;
+            }
+
+            // Confirm
+            if (!confirm('Are you sure? Your name "' + name + '" cannot be changed after this.')) {
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
             try {
-                document.execCommand('copy');
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
+                const now = new Date().toISOString();
+                const expiryDate = new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString();
+                const affiliateCode = generateAffiliateCode(currentUser.email);
+
+                // Save to Supabase
+                const { error } = await supabase.from('user_profiles').upsert({
+                    user_id: currentUser.id,
+                    email: currentUser.email,
+                    full_name: name,
+                    agreed_to_terms: true,
+                    agreement_date: now,
+                    challenge_start_date: now,
+                    access_expiry_date: expiryDate,
+                    affiliate_code: affiliateCode,
+                    current_day: 1,
+                    days_completed: 0,
+                    day_1_unlocked: true,
+                    welcome_completed: true,
+                    gdpr_consent: true,
+                    gdpr_consent_date: now
+                }, { onConflict: 'user_id' });
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                }
+
+                // Save to localStorage as backup
+                localStorage.setItem('userName', name);
+                localStorage.setItem('currentDay', '1');
+                localStorage.setItem('daysCompleted', '0');
+                localStorage.setItem('challengeStartDate', now);
+                localStorage.setItem('accessExpiryDate', expiryDate);
+                localStorage.setItem('affiliateCode', affiliateCode);
+                localStorage.setItem('welcomeCompleted_' + currentUser.id, 'true');
+
+                // Redirect to dashboard
                 setTimeout(() => {
-                    button.textContent = originalText;
-                }, 2000);
-            } catch (err) {
-                // Try modern clipboard API
-                navigator.clipboard.writeText(input.value).then(() => {
-                    const button = event.target;
-                    button.textContent = '✓ Copied!';
-                    setTimeout(() => {
-                        button.textContent = 'Copy';
-                    }, 2000);
-                }).catch(() => {
-                    alert('Please copy manually: ' + input.value);
-                });
+                    window.location.href = '/dashboard.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                alert('An error occurred. Please try again.');
             }
         }
-        
-        // Content protection
+
+        // Content Protection
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('selectstart', e => {
-            // Allow selecting name input
-            if (e.target.id === 'fullName' || e.target.id === 'affiliateLink') return;
-            e.preventDefault();
-        });
         document.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'p' || e.key === 's' || e.key === 'u')) {
-                // Allow copy in name input
-                if (document.activeElement.id === 'fullName' || document.activeElement.id === 'affiliateLink') return;
-                e.preventDefault();
-            }
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
                 e.preventDefault();
             }
         });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
