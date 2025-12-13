@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUser, jsonResponse, errorResponse, isUserAdmin } from '@/lib/api-middleware';
 import { createAdminSupabase } from '@/lib/supabase-server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // GET - List campaigns and stats
 export async function GET(request) {
@@ -48,6 +45,15 @@ export async function POST(request) {
 
     const admin = await isUserAdmin(user.id);
     if (!admin) return errorResponse('Admin access required', 403);
+
+    // Check for Resend API key
+    if (!process.env.RESEND_API_KEY) {
+      return errorResponse('Email service not configured. Add RESEND_API_KEY to environment variables.', 500);
+    }
+
+    // Dynamic import to avoid build-time errors
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     const body = await request.json();
     const { action, subject, content, audience, custom_emails } = body;
@@ -122,7 +128,7 @@ export async function POST(request) {
             .replace(/{name}/g, recipient.full_name || 'Trader');
 
           await resend.emails.send({
-            from: process.env.FROM_EMAIL || 'Market Warrior <noreply@marketwarrior.club>',
+            from: process.env.FROM_EMAIL || 'Market Warrior <onboarding@resend.dev>',
             to: recipient.email,
             subject: personalizedSubject,
             html: `
