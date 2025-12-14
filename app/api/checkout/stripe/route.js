@@ -19,25 +19,25 @@ export async function POST(request) {
           .from('promo_codes')
           .select('*')
           .eq('code', promo_code.toUpperCase())
-          .eq('active', true)
+          .eq('is_active', true)
           .single();
 
         if (promo) {
           const validExpiry = !promo.expires_at || new Date(promo.expires_at) > new Date();
-          const validUsage = !promo.max_uses || promo.uses_count < promo.max_uses;
+          const validUsage = !promo.max_uses || promo.current_uses < promo.max_uses;
 
           if (validExpiry && validUsage) {
             discountPercent = promo.discount_percent || 0;
             // Increment usage
             await supabase
               .from('promo_codes')
-              .update({ uses_count: (promo.uses_count || 0) + 1 })
+              .update({ current_uses: (promo.current_uses || 0) + 1 })
               .eq('id', promo.id);
           }
         }
       } catch (e) {
         // Promo codes table doesn't exist - continue without discount
-        console.log('Promo codes not available');
+        console.log('Promo codes not available:', e.message);
       }
     }
 
