@@ -11,7 +11,7 @@ async function requireAdmin(request) {
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('is_admin')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single();
   
   if (!profile?.is_admin) return { error: 'Admin access required', status: 403 };
@@ -146,7 +146,7 @@ export async function POST(request) {
         await supabase
           .from('user_profiles')
           .update({ 
-            is_paid: false,
+            has_paid: false,
             access_expires_at: new Date().toISOString() // Expire immediately
           })
           .eq('id', payment.user_id);

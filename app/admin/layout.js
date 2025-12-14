@@ -38,7 +38,7 @@ export default function AdminLayout({ children }) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!profile?.is_admin) {

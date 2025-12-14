@@ -44,7 +44,7 @@ export async function POST(request) {
 }
 
 async function handleSuccessfulPayment(supabase, session) {
-  const { user_id, user_email, affiliate_code, promo_code, expected_price_id } = session.metadata || {};
+  const { user_id, user_email, affiliate_code } = session.metadata || {};
   const email = user_email || session.customer_details?.email;
 
   if (!email) {
@@ -52,42 +52,7 @@ async function handleSuccessfulPayment(supabase, session) {
     return;
   }
 
-  // SECURITY: Validate this is a legitimate purchase for our course
-  // Expand line_items to verify the price
-  const expectedPriceId = expected_price_id || process.env.STRIPE_PRICE_ID;
-  
-  if (expectedPriceId && session.id) {
-    try {
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-        expand: ['line_items']
-      });
-      
-      const lineItems = fullSession.line_items?.data || [];
-      const hasValidProduct = lineItems.some(item => 
-        item.price?.id === expectedPriceId
-      );
-      
-      if (!hasValidProduct && lineItems.length > 0) {
-        console.error('SECURITY: Payment session does not contain expected product!', {
-          expected: expectedPriceId,
-          actual: lineItems.map(i => i.price?.id)
-        });
-        // Log this as suspicious but still process (might be a legacy session)
-        await supabase.from('activity_log').insert({
-          action: 'suspicious_payment',
-          details: { 
-            session_id: session.id, 
-            expected_price: expectedPriceId,
-            actual_prices: lineItems.map(i => i.price?.id)
-          }
-        });
-      }
-    } catch (e) {
-      console.error('Could not verify line items:', e);
-    }
-  }
-
-  // Find the user
+  // Find the user by user_id (auth id) or email
   let userId = user_id;
   let existingProfile = null;
   
@@ -95,10 +60,12 @@ async function handleSuccessfulPayment(supabase, session) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
     existingProfile = profile;
-  } else {
+  }
+  
+  if (!existingProfile) {
     // Find user by email
     const { data: profile } = await supabase
       .from('user_profiles')
@@ -106,7 +73,7 @@ async function handleSuccessfulPayment(supabase, session) {
       .eq('email', email)
       .single();
     if (profile) {
-      userId = profile.id;
+      userId = profile.user_id; // Use user_id, not id!
       existingProfile = profile;
     }
   }
@@ -114,8 +81,11 @@ async function handleSuccessfulPayment(supabase, session) {
   // Build update data - DO NOT reset dates if already set
   const now = new Date().toISOString();
   const updateData = {
-    is_paid: true,
-    stripe_customer_id: session.customer
+    has_paid: true,
+    stripe_customer_id: session.customer,
+    payment_date: now,
+    amount_paid: (session.amount_total || 0) / 100,
+    stripe_session_id: session.id
   };
   
   // Only set challenge_start_date if not already set
@@ -138,99 +108,88 @@ async function handleSuccessfulPayment(supabase, session) {
     await supabase
       .from('user_profiles')
       .update(updateData)
-      .eq('id', userId);
+      .eq('user_id', userId);
 
     // Initialize Day 1 progress only if not exists
-    await supabase.from('challenge_progress').upsert({
-      user_id: userId,
-      day_number: 1,
-      unlocked_at: existingProfile?.challenge_start_date || now
-    }, { onConflict: 'user_id,day_number' });
+    const { data: existingProgress } = await supabase
+      .from('challenge_progress')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('day_number', 1)
+      .single();
+    
+    if (!existingProgress) {
+      await supabase.from('challenge_progress').insert({
+        user_id: userId,
+        day_number: 1,
+        unlocked: true,
+        unlocked_at: updateData.challenge_start_date || now
+      });
+    }
   }
 
   // Record payment
   await supabase.from('payments').insert({
-    user_id: userId || null,
     email: email,
     amount: (session.amount_total || 0) / 100,
     currency: session.currency || 'usd',
     stripe_session_id: session.id,
-    stripe_payment_intent_id: session.payment_intent,
-    promo_code: promo_code || null,
-    affiliate_code: affiliate_code || null,
+    stripe_customer_id: session.customer,
+    stripe_payment_intent: session.payment_intent,
+    referral_code: affiliate_code || null,
     status: 'completed'
   });
 
   // Handle affiliate commission
   if (affiliate_code) {
-    await processAffiliateCommission(supabase, affiliate_code, session, userId);
+    await processAffiliateCommission(supabase, affiliate_code, session, email);
   }
-
-  // Increment promo code usage (only on successful payment!)
-  if (promo_code) {
-    // Get current promo code
-    const { data: promo } = await supabase
-      .from('promo_codes')
-      .select('id, current_uses')
-      .eq('code', promo_code.toUpperCase())
-      .single();
-    
-    if (promo) {
-      await supabase
-        .from('promo_codes')
-        .update({ current_uses: (promo.current_uses || 0) + 1 })
-        .eq('id', promo.id);
-    }
-  }
-
-  // Log successful payment
-  await supabase.from('activity_log').insert({
-    user_id: userId,
-    action: 'payment_completed',
-    details: { 
-      amount: (session.amount_total || 0) / 100,
-      promo_code,
-      affiliate_code
-    }
-  });
 
   console.log(`Payment completed for ${email}`);
 }
 
-async function processAffiliateCommission(supabase, affiliateCode, session, referredUserId) {
-  const { data: affiliate } = await supabase
-    .from('affiliates')
-    .select('id, user_id, commission_rate, total_referrals, total_earnings, pending_earnings')
+async function processAffiliateCommission(supabase, affiliateCode, session, referredEmail) {
+  // Find the referrer by their affiliate_code in user_profiles
+  const { data: referrer } = await supabase
+    .from('user_profiles')
+    .select('user_id, has_paid')
     .eq('affiliate_code', affiliateCode)
-    .eq('is_active', true)
     .single();
 
-  if (!affiliate) return;
+  if (!referrer) {
+    console.log(`Affiliate code ${affiliateCode} not found`);
+    return;
+  }
 
   const amount = (session.amount_total || 0) / 100;
-  const commissionRate = affiliate.commission_rate || 0.30;
+  // Paid users get 30%, free affiliates get 25%
+  const commissionRate = referrer.has_paid ? 0.30 : 0.25;
   const commission = amount * commissionRate;
 
   // Create referral record
   await supabase.from('referrals').insert({
-    referrer_user_id: affiliate.user_id,
-    referred_user_id: referredUserId,
-    referred_email: session.customer_details?.email,
-    commission_earned: commission,
+    referrer_user_id: referrer.user_id,
+    referred_email: referredEmail,
+    commission: commission,
     commission_rate: commissionRate,
-    status: 'converted',
+    status: 'pending',
     stripe_session_id: session.id
   });
 
-  // Update affiliate totals (proper increment, not using .raw())
+  // Update referrer's totals in user_profiles
+  const { data: currentProfile } = await supabase
+    .from('user_profiles')
+    .select('total_referrals, total_earnings')
+    .eq('user_id', referrer.user_id)
+    .single();
+
   await supabase
-    .from('affiliates')
+    .from('user_profiles')
     .update({
-      total_referrals: (affiliate.total_referrals || 0) + 1,
-      total_earnings: parseFloat((affiliate.total_earnings || 0)) + commission,
-      pending_earnings: parseFloat((affiliate.pending_earnings || 0)) + commission
+      total_referrals: (currentProfile?.total_referrals || 0) + 1,
+      total_earnings: parseFloat((currentProfile?.total_earnings || 0)) + commission
     })
-    .eq('id', affiliate.id);
+    .eq('user_id', referrer.user_id);
 
   console.log(`Affiliate ${affiliateCode} earned $${commission.toFixed(2)}`);
 }

@@ -1,172 +1,117 @@
-import { NextResponse } from 'next/server';
-import { getUser, jsonResponse, errorResponse } from '@/lib/api-middleware';
-import { createAdminSupabase } from '@/lib/supabase-server';
+import { jsonResponse, errorResponse, getAuthUser, isAdmin, logActivity } from '@/lib/api-middleware';
+import { getServiceClient } from '@/lib/supabase-server';
 
-// Check if user is admin
-async function requireAdmin(request) {
-  const user = await getUser(request);
-  if (!user) return { error: 'Unauthorized', status: 401 };
-  
-  const supabase = createAdminSupabase();
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-  
-  if (!profile?.is_admin) return { error: 'Admin access required', status: 403 };
-  
-  return { user, supabase };
-}
-
-// GET - List all affiliates with their stats
 export async function GET(request) {
   try {
-    const auth = await requireAdmin(request);
-    if (auth.error) return errorResponse(auth.error, auth.status);
-    
-    const { supabase } = auth;
-    
-    // Get all affiliates with user info
+    const user = await getAuthUser(request);
+    if (!user) return errorResponse('Unauthorized', 401);
+    if (!await isAdmin(user.id)) return errorResponse('Admin access required', 403);
+
+    const supabase = getServiceClient();
+
+    // Get users who have affiliate_code set (they're affiliates)
     const { data: affiliates, error } = await supabase
-      .from('affiliates')
-      .select(`
-        *,
-        user_profiles (
-          email,
-          full_name
-        )
-      `)
-      .order('created_at', { ascending: false });
-    
+      .from('user_profiles')
+      .select('user_id, email, full_name, affiliate_code, total_referrals, total_earnings, has_paid, created_at')
+      .not('affiliate_code', 'is', null)
+      .order('total_earnings', { ascending: false });
+
     if (error) throw error;
-    
-    // Get referral counts for each affiliate
-    const affiliatesWithStats = await Promise.all(affiliates.map(async (aff) => {
-      const { count: pendingCount } = await supabase
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('referrer_user_id', aff.user_id)
-        .eq('status', 'pending');
-      
-      const { count: convertedCount } = await supabase
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('referrer_user_id', aff.user_id)
-        .eq('status', 'converted');
-      
-      return {
-        ...aff,
-        pending_referrals: pendingCount || 0,
-        converted_referrals: convertedCount || 0
-      };
+
+    // Get referrals data
+    const { data: referrals } = await supabase
+      .from('referrals')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    // Format response to match expected structure
+    const formattedAffiliates = (affiliates || []).map(a => ({
+      id: a.user_id,
+      user_id: a.user_id,
+      email: a.email,
+      full_name: a.full_name,
+      affiliate_code: a.affiliate_code,
+      commission_rate: a.has_paid ? 0.30 : 0.25,
+      total_referrals: a.total_referrals || 0,
+      total_earnings: parseFloat(a.total_earnings) || 0,
+      status: 'active',
+      created_at: a.created_at
     }));
-    
-    return jsonResponse({ affiliates: affiliatesWithStats });
+
+    return jsonResponse({ 
+      affiliates: formattedAffiliates, 
+      referrals: referrals || [] 
+    });
   } catch (error) {
-    console.error('Admin affiliates GET error:', error);
+    console.error('Admin affiliates error:', error);
     return errorResponse('Failed to fetch affiliates', 500);
   }
 }
 
-// POST - Create affiliate or update affiliate settings
 export async function POST(request) {
   try {
-    const auth = await requireAdmin(request);
-    if (auth.error) return errorResponse(auth.error, auth.status);
-    
-    const { supabase } = auth;
-    const body = await request.json();
-    const { action, affiliate_id, user_id, commission_rate, is_active } = body;
-    
-    if (action === 'create') {
-      // Create new affiliate for a user
-      if (!user_id) return errorResponse('user_id required', 400);
-      
-      // Check if user exists
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('email')
-        .eq('id', user_id)
-        .single();
-      
-      if (!userProfile) return errorResponse('User not found', 404);
-      
-      // Generate affiliate code
-      const code = userProfile.email.split('@')[0].toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
-      
-      const { data: newAffiliate, error } = await supabase
-        .from('affiliates')
-        .insert({
-          user_id,
-          affiliate_code: code,
-          commission_rate: commission_rate || 0.30,
-          is_active: true
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return jsonResponse({ affiliate: newAffiliate, message: 'Affiliate created' });
+    const user = await getAuthUser(request);
+    if (!user) return errorResponse('Unauthorized', 401);
+    if (!await isAdmin(user.id)) return errorResponse('Admin access required', 403);
+
+    const { action, ...data } = await request.json();
+    const supabase = getServiceClient();
+
+    switch (action) {
+      case 'generate_code': {
+        // Generate affiliate code for a user
+        const { user_id } = data;
+        if (!user_id) return errorResponse('Missing user_id', 400);
+        
+        // Generate unique code
+        const code = `MW${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        
+        const { error } = await supabase
+          .from('user_profiles')
+          .update({ affiliate_code: code })
+          .eq('user_id', user_id);
+
+        if (error) throw error;
+        
+        return jsonResponse({ success: true, affiliate_code: code });
+      }
+
+      case 'update_referral': {
+        // Update referral status (paid/pending)
+        const { referral_id, status } = data;
+        if (!referral_id || !status) return errorResponse('Missing referral_id or status', 400);
+        
+        const { error } = await supabase
+          .from('referrals')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', referral_id);
+
+        if (error) throw error;
+        
+        return jsonResponse({ success: true });
+      }
+
+      case 'payout': {
+        // Mark referrals as paid
+        const { affiliate_id, referral_ids } = data;
+        if (!affiliate_id) return errorResponse('Missing affiliate_id', 400);
+        
+        // Update referrals to paid status
+        if (referral_ids && referral_ids.length > 0) {
+          await supabase
+            .from('referrals')
+            .update({ status: 'paid', paid_at: new Date().toISOString() })
+            .in('id', referral_ids);
+        }
+        
+        return jsonResponse({ success: true, message: 'Payout processed' });
+      }
+
+      default:
+        return errorResponse('Unknown action', 400);
     }
-    
-    if (action === 'update') {
-      // Update affiliate settings
-      if (!affiliate_id) return errorResponse('affiliate_id required', 400);
-      
-      const updateData = {};
-      if (commission_rate !== undefined) updateData.commission_rate = commission_rate;
-      if (is_active !== undefined) updateData.is_active = is_active;
-      
-      const { data: updated, error } = await supabase
-        .from('affiliates')
-        .update(updateData)
-        .eq('id', affiliate_id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return jsonResponse({ affiliate: updated, message: 'Affiliate updated' });
-    }
-    
-    if (action === 'payout') {
-      // Mark pending earnings as paid
-      if (!affiliate_id) return errorResponse('affiliate_id required', 400);
-      
-      const { data: affiliate } = await supabase
-        .from('affiliates')
-        .select('pending_earnings')
-        .eq('id', affiliate_id)
-        .single();
-      
-      if (!affiliate) return errorResponse('Affiliate not found', 404);
-      
-      // Reset pending earnings (admin has paid them externally)
-      const { error: updateError } = await supabase
-        .from('affiliates')
-        .update({ pending_earnings: 0 })
-        .eq('id', affiliate_id);
-      
-      if (updateError) throw updateError;
-      
-      // Update referrals to paid status
-      const { error: refError } = await supabase
-        .from('referrals')
-        .update({ status: 'paid' })
-        .eq('referrer_user_id', (await supabase.from('affiliates').select('user_id').eq('id', affiliate_id).single()).data.user_id)
-        .eq('status', 'converted');
-      
-      return jsonResponse({ 
-        message: `Payout of $${affiliate.pending_earnings} marked as complete`,
-        amount_paid: affiliate.pending_earnings
-      });
-    }
-    
-    return errorResponse('Invalid action', 400);
   } catch (error) {
-    console.error('Admin affiliates POST error:', error);
-    return errorResponse('Failed to process affiliate action', 500);
+    console.error('Admin affiliate action error:', error);
+    return errorResponse('Action failed', 500);
   }
 }

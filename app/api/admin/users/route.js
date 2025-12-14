@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
 import { getUser, jsonResponse, errorResponse, isUserAdmin } from '@/lib/api-middleware';
-import { createAdminSupabase } from '@/lib/supabase-server';
-import { resetUserDevices } from '@/lib/fingerprint';
+import { getServiceClient } from '@/lib/supabase-server';
+import { resetDevices } from '@/lib/fingerprint';
 
 export async function GET(request) {
   try {
@@ -11,7 +10,7 @@ export async function GET(request) {
     const admin = await isUserAdmin(user.id);
     if (!admin) return errorResponse('Admin access required', 403);
     
-    const supabase = createAdminSupabase();
+    const supabase = getServiceClient();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -47,31 +46,49 @@ export async function PATCH(request) {
     if (!admin) return errorResponse('Admin access required', 403);
     
     const body = await request.json();
-    const { user_id, action, data } = body;
+    // profile_id is the PRIMARY KEY of user_profiles row
+    const { user_id: profile_id, action, data } = body;
     
-    if (!user_id || !action) {
+    if (!profile_id || !action) {
       return errorResponse('Missing user_id or action', 400);
     }
     
-    const supabase = createAdminSupabase();
+    const supabase = getServiceClient();
+    
+    // For actions that need the auth user_id, we need to look it up
+    // because the frontend sends the profile's primary key (id), not user_id
+    let authUserId = null;
+    if (['reset_devices', 'reset_progress'].includes(action)) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('id', profile_id)
+        .single();
+      
+      if (!profile) {
+        return errorResponse('User not found', 404);
+      }
+      authUserId = profile.user_id;
+    }
     
     switch (action) {
       case 'toggle_paid':
         await supabase
           .from('user_profiles')
-          .update({ is_paid: data.is_paid })
-          .eq('id', user_id);
+          .update({ has_paid: data.has_paid, updated_at: new Date().toISOString() })
+          .eq('id', profile_id);
         break;
         
       case 'toggle_admin':
         await supabase
           .from('user_profiles')
-          .update({ is_admin: data.is_admin })
-          .eq('id', user_id);
+          .update({ is_admin: data.is_admin, updated_at: new Date().toISOString() })
+          .eq('id', profile_id);
         break;
         
       case 'reset_devices':
-        await resetUserDevices(user_id);
+        // Use authUserId (the user_id column value) for fingerprint reset
+        await resetDevices(authUserId);
         break;
         
       case 'extend_access':
@@ -79,19 +96,33 @@ export async function PATCH(request) {
         newExpiry.setDate(newExpiry.getDate() + (data.days || 30));
         await supabase
           .from('user_profiles')
-          .update({ access_expires_at: newExpiry.toISOString() })
-          .eq('id', user_id);
+          .update({ access_expires_at: newExpiry.toISOString(), updated_at: new Date().toISOString() })
+          .eq('id', profile_id);
         break;
         
       case 'reset_progress':
+        // Use authUserId for progress tables that are keyed by user_id
         await supabase
           .from('challenge_progress')
           .delete()
-          .eq('user_id', user_id);
+          .eq('user_id', authUserId);
         await supabase
           .from('quiz_results')
           .delete()
-          .eq('user_id', user_id);
+          .eq('user_id', authUserId);
+        await supabase
+          .from('task_submissions')
+          .delete()
+          .eq('user_id', authUserId);
+        // Reset progress in user_profiles too
+        await supabase
+          .from('user_profiles')
+          .update({ 
+            challenge_start_date: null, 
+            current_day: 1,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', profile_id);
         break;
         
       default:

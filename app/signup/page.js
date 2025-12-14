@@ -70,30 +70,14 @@ function SignupForm() {
         const userReferralCode = generateReferralCode(email);
         
         await supabase.from('user_profiles').upsert({
-          id: data.user.id,
+          user_id: data.user.id,
           email: data.user.email,
           full_name: fullName,
-          is_paid: false,
+          has_paid: false,
           is_admin: false,
-          referral_code: userReferralCode,
+          affiliate_code: userReferralCode,
           referred_by: referralCode || null
-        });
-
-        if (referralCode) {
-          const { data: referrer } = await supabase
-            .from('user_profiles')
-            .select('id')
-            .eq('referral_code', referralCode)
-            .single();
-
-          if (referrer) {
-            await supabase.from('affiliate_referrals').insert({
-              referrer_id: referrer.id,
-              referred_id: data.user.id,
-              status: 'pending'
-            });
-          }
-        }
+        }, { onConflict: 'user_id' });
 
         sessionStorage.removeItem('referral_code');
       }

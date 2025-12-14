@@ -14,11 +14,11 @@ export async function GET(request) {
     // Get user profile
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('challenge_start_date, is_paid, access_expires_at')
-      .eq('id', user.id)
+      .select('challenge_start_date, has_paid, access_expires_at')
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_paid) {
+    if (!profile?.has_paid) {
       return errorResponse('Payment required', 403);
     }
 

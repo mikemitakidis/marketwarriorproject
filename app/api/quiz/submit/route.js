@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUser, jsonResponse, errorResponse, hasUserPaidAccess, logActivity } from '@/lib/api-middleware';
+import { getUser, jsonResponse, errorResponse, hasUserPaidAccess } from '@/lib/api-middleware';
 import { createAdminSupabase } from '@/lib/supabase-server';
 
 const PASS_THRESHOLD = 60; // 60% to pass
@@ -31,40 +31,37 @@ export async function POST(request) {
       return errorResponse('Payment required', 403);
     }
 
-    // Get correct answers from database (SERVER-SIDE ONLY)
-    const { data: content } = await supabase
-      .from('course_content')
-      .select('quiz_answers, quiz_questions')
+    // Get quiz questions with correct answers from database (SERVER-SIDE ONLY)
+    const { data: questions } = await supabase
+      .from('quiz_questions')
+      .select('id, question_order, correct_answer, explanation')
       .eq('day_number', dayNumber)
-      .single();
+      .order('question_order', { ascending: true });
 
-    if (!content?.quiz_answers) {
-      return errorResponse('Quiz not found', 404);
+    if (!questions || questions.length === 0) {
+      return errorResponse('Quiz not found for this day', 404);
     }
 
-    const correctAnswers = content.quiz_answers;
-    const totalQuestions = correctAnswers.length;
-
-    if (totalQuestions === 0) {
-      return errorResponse('No questions for this day', 400);
-    }
+    const totalQuestions = questions.length;
 
     // Calculate score - SERVER SIDE VALIDATION
     let correctCount = 0;
     const results = {};
+    const explanations = {};
 
-    for (let i = 0; i < totalQuestions; i++) {
-      const questionNum = i + 1;
-      const userAnswer = answers[questionNum]?.toLowerCase();
-      const correctAnswer = correctAnswers[i]?.toLowerCase();
+    questions.forEach((question, index) => {
+      const questionId = question.id;
+      const userAnswer = parseInt(answers[questionId]);
+      const correctAnswer = question.correct_answer;
 
       if (userAnswer === correctAnswer) {
         correctCount++;
-        results[questionNum] = 'correct';
+        results[questionId] = 'correct';
       } else {
-        results[questionNum] = 'incorrect';
+        results[questionId] = 'incorrect';
       }
-    }
+      explanations[questionId] = question.explanation;
+    });
 
     const score = Math.round((correctCount / totalQuestions) * 100);
     const passed = score >= PASS_THRESHOLD;
@@ -80,48 +77,57 @@ export async function POST(request) {
     await supabase.from('quiz_results').insert({
       user_id: user.id,
       day_number: dayNumber,
-      answers_submitted: answers,
+      answers: answers,
       score: score,
       passed: passed,
-      attempt_number: (attemptCount || 0) + 1
+      correct_count: correctCount,
+      total_questions: totalQuestions,
+      completed_at: new Date().toISOString()
     });
 
     // Update challenge progress if passed
     if (passed) {
-      await supabase.from('challenge_progress').upsert({
-        user_id: user.id,
-        day_number: dayNumber,
-        quiz_completed: true,
-        quiz_score: score,
-        quiz_passed: true,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id,day_number' });
-
-      // If task is also completed, unlock next day
-      const { data: currentProgress } = await supabase
+      // Check if progress record exists
+      const { data: existingProgress } = await supabase
         .from('challenge_progress')
-        .select('task_completed')
+        .select('id, task_completed')
         .eq('user_id', user.id)
         .eq('day_number', dayNumber)
         .single();
 
-      if (currentProgress?.task_completed && dayNumber < 30) {
-        // Unlock next day
-        await supabase.from('challenge_progress').upsert({
+      if (existingProgress) {
+        // Update existing record
+        await supabase
+          .from('challenge_progress')
+          .update({
+            quiz_passed: true,
+            quiz_score: score,
+            quiz_completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingProgress.id);
+      } else {
+        // Insert new record
+        await supabase.from('challenge_progress').insert({
           user_id: user.id,
-          day_number: dayNumber + 1,
+          day_number: dayNumber,
+          quiz_passed: true,
+          quiz_score: score,
+          quiz_completed_at: new Date().toISOString(),
+          unlocked: true,
           unlocked_at: new Date().toISOString()
-        }, { onConflict: 'user_id,day_number' });
+        });
       }
-    }
 
-    // Log activity
-    await logActivity(user.id, 'quiz_submit', {
-      day: dayNumber,
-      score: score,
-      passed: passed,
-      attempt: (attemptCount || 0) + 1
-    });
+      // Update user's current day
+      await supabase
+        .from('user_profiles')
+        .update({ 
+          current_day: dayNumber,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+    }
 
     return jsonResponse({
       score,
@@ -129,10 +135,11 @@ export async function POST(request) {
       correct_count: correctCount,
       total_questions: totalQuestions,
       threshold: PASS_THRESHOLD,
-      results: passed ? results : undefined, // Only show detailed results if passed
+      results: results,
+      explanations: passed ? explanations : undefined,
       message: passed 
-        ? `Congratulations! You passed with ${score}%!`
-        : `You scored ${score}%. You need ${PASS_THRESHOLD}% to pass. Try again!`
+        ? 'Congratulations! You passed with ' + score + '%!'
+        : 'You scored ' + score + '%. You need ' + PASS_THRESHOLD + '% to pass. Try again!'
     });
   } catch (error) {
     console.error('Quiz submit error:', error);

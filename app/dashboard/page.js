@@ -58,10 +58,10 @@ export default function DashboardPage() {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_paid) {
+    if (!profile?.has_paid) {
       router.push('/checkout');
       return;
     }
@@ -123,19 +123,15 @@ export default function DashboardPage() {
 
   async function loadAffiliateStats(userId) {
     try {
+      // Use existing referrals table
       const { data: referrals } = await supabase
-        .from('affiliate_referrals')
+        .from('referrals')
         .select('*')
-        .eq('referrer_id', userId);
-
-      const { data: payouts } = await supabase
-        .from('affiliate_payouts')
-        .select('*')
-        .eq('user_id', userId);
+        .eq('referrer_user_id', userId);
 
       const totalReferrals = referrals?.length || 0;
-      const pendingEarnings = referrals?.filter(r => r.status === 'pending').reduce((sum, r) => sum + parseFloat(r.commission_amount || 0), 0) || 0;
-      const paidEarnings = payouts?.filter(p => p.status === 'completed').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+      const pendingEarnings = referrals?.filter(r => r.status === 'pending').reduce((sum, r) => sum + parseFloat(r.commission || 0), 0) || 0;
+      const paidEarnings = referrals?.filter(r => r.status === 'paid').reduce((sum, r) => sum + parseFloat(r.commission || 0), 0) || 0;
 
       setAffiliateStats({
         referrals: totalReferrals,
@@ -155,7 +151,7 @@ export default function DashboardPage() {
   }
 
   function copyAffiliateLink() {
-    const link = `${window.location.origin}/?ref=${profile?.referral_code || ''}`;
+    const link = `${window.location.origin}/?ref=${profile?.affiliate_code || ''}`;
     navigator.clipboard.writeText(link);
     alert('Affiliate link copied!');
   }
@@ -196,7 +192,7 @@ export default function DashboardPage() {
 
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Warrior';
   const userInitial = userName.charAt(0).toUpperCase();
-  const commissionRate = profile?.is_paid ? '30%' : '25%';
+  const commissionRate = profile?.has_paid ? '30%' : '25%';
 
   return (
     <>
@@ -600,13 +596,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <p style={{ color: '#d4a574', marginBottom: '15px' }}>Share your unique link and earn ${profile?.is_paid ? '12' : '10'} for every friend who joins!</p>
+            <p style={{ color: '#d4a574', marginBottom: '15px' }}>Share your unique link and earn ${profile?.has_paid ? '12' : '10'} for every friend who joins!</p>
 
             <div style={{ display: 'flex', gap: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '8px' }}>
               <input
                 type="text"
                 readOnly
-                value={typeof window !== 'undefined' ? `${window.location.origin}/?ref=${profile?.referral_code || ''}` : ''}
+                value={typeof window !== 'undefined' ? `${window.location.origin}/?ref=${profile?.affiliate_code || ''}` : ''}
                 style={{
                   flex: 1,
                   background: 'transparent',

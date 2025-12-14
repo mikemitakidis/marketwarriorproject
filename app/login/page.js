@@ -48,13 +48,13 @@ function LoginForm() {
 
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_paid, agreed_to_terms, is_admin')
-        .eq('id', data.user.id)
+        .select('has_paid, agreed_to_terms, is_admin')
+        .eq('user_id', data.user.id)
         .single();
 
       if (profile?.is_admin) {
         router.push('/dashboard');
-      } else if (!profile?.is_paid) {
+      } else if (!profile?.has_paid) {
         if (isAffiliateSignup) {
           router.push('/dashboard');
         } else {

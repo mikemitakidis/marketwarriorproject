@@ -27,7 +27,7 @@ export default function CertificatePage() {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     // Check if all 30 days completed

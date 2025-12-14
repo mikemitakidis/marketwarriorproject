@@ -1,51 +1,49 @@
-import { NextResponse } from 'next/server';
 import { jsonResponse, errorResponse } from '@/lib/api-middleware';
-import { createAdminSupabase } from '@/lib/supabase-server';
+import { getServiceClient } from '@/lib/supabase-server';
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { code } = body;
-    
-    if (!code) {
-      return errorResponse('Promo code required', 400);
+    const { code } = await request.json();
+    if (!code) return errorResponse('Missing promo code', 400);
+
+    const supabase = getServiceClient();
+
+    // Try to query promo_codes table - if it doesn't exist, return not found
+    try {
+      const { data: promo, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', code.toUpperCase())
+        .eq('active', true)
+        .single();
+
+      if (error || !promo) {
+        return jsonResponse({ valid: false, message: 'Invalid or expired promo code' });
+      }
+
+      // Check usage limits
+      if (promo.max_uses && promo.uses_count >= promo.max_uses) {
+        return jsonResponse({ valid: false, message: 'Promo code has reached maximum uses' });
+      }
+
+      // Check expiry
+      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+        return jsonResponse({ valid: false, message: 'Promo code has expired' });
+      }
+
+      return jsonResponse({
+        valid: true,
+        discount_percent: promo.discount_percent,
+        discount_amount: promo.discount_amount,
+        code: promo.code
+      });
+    } catch (tableError) {
+      // Table doesn't exist - promo codes feature not enabled
+      console.log('Promo codes table not available');
+      return jsonResponse({ valid: false, message: 'Promo codes not available' });
     }
-    
-    const supabase = createAdminSupabase();
-    
-    const { data: promo, error } = await supabase
-      .from('promo_codes')
-      .select('code, discount_percent, max_uses, current_uses, expires_at, is_active')
-      .eq('code', code.toUpperCase())
-      .single();
-    
-    if (error || !promo) {
-      return jsonResponse({ valid: false, message: 'Invalid promo code' });
-    }
-    
-    // Check if active
-    if (!promo.is_active) {
-      return jsonResponse({ valid: false, message: 'Promo code is no longer active' });
-    }
-    
-    // Check if expired
-    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-      return jsonResponse({ valid: false, message: 'Promo code has expired' });
-    }
-    
-    // Check usage limit
-    if (promo.max_uses && promo.current_uses >= promo.max_uses) {
-      return jsonResponse({ valid: false, message: 'Promo code usage limit reached' });
-    }
-    
-    return jsonResponse({
-      valid: true,
-      code: promo.code,
-      discount_percent: promo.discount_percent,
-      message: `${promo.discount_percent}% discount applied!`
-    });
   } catch (error) {
     console.error('Promo validation error:', error);
-    return errorResponse('Failed to validate promo code', 500);
+    return errorResponse('Failed to validate code', 500);
   }
 }

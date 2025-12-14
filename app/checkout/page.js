@@ -37,10 +37,10 @@ export default function CheckoutPage() {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (profile?.is_paid) {
+    if (profile?.has_paid) {
       router.push('/dashboard');
       return;
     }

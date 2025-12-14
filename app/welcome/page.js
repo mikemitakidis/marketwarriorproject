@@ -30,10 +30,10 @@ export default function WelcomePage() {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_paid) {
+    if (!profile?.has_paid) {
       router.push('/checkout');
       return;
     }
@@ -62,7 +62,7 @@ export default function WelcomePage() {
       // Build update object - only set dates if NOT already set
       const updateData = {
         agreed_to_terms: true,
-        terms_agreed_at: now
+        agreement_date: now
       };
       
       // Only set challenge_start_date if not already set (prevents resetting progress timing)
@@ -81,7 +81,7 @@ export default function WelcomePage() {
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (profileError) throw profileError;
 

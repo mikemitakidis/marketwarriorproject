@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('challenge_start_date, agreed_to_terms, access_expires_at')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!profile?.agreed_to_terms) {
@@ -53,16 +53,23 @@ export async function GET(request, { params }) {
       return errorResponse(unlockStatus.reason || 'Day is locked', 403);
     }
 
-    // Get day content (WITHOUT answers - those are server-only)
+    // Get day content
     const { data: content } = await supabase
       .from('course_content')
-      .select('day_number, title, content_html, youtube_video_id, has_video, quiz_questions, task_instructions')
+      .select('day_number, title, subtitle, content_html, youtube_video_id, task_description, task_steps, next_preview')
       .eq('day_number', dayNumber)
       .single();
 
     if (!content) {
       return errorResponse('Day content not found', 404);
     }
+
+    // Get quiz questions for this day (WITHOUT correct answers for security)
+    const { data: quizQuestions } = await supabase
+      .from('quiz_questions')
+      .select('id, question_order, question, options, explanation')
+      .eq('day_number', dayNumber)
+      .order('question_order', { ascending: true });
 
     // Get user's progress for this day
     const { data: progress } = await supabase
@@ -75,13 +82,22 @@ export async function GET(request, { params }) {
     // Get previous task submission if exists
     const { data: taskSubmission } = await supabase
       .from('task_submissions')
-      .select('task_text, file_url, status')
+      .select('task_text, file_url')
       .eq('user_id', user.id)
       .eq('day_number', dayNumber)
       .single();
 
     return jsonResponse({
-      ...content,
+      day_number: content.day_number,
+      title: content.title,
+      subtitle: content.subtitle,
+      content_html: content.content_html,
+      youtube_video_id: content.youtube_video_id,
+      has_video: !!content.youtube_video_id,
+      task_description: content.task_description,
+      task_steps: content.task_steps,
+      next_preview: content.next_preview,
+      quiz_questions: quizQuestions || [],
       progress: progress || {
         quiz_completed: false,
         quiz_passed: false,

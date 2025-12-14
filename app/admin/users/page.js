@@ -93,9 +93,9 @@ export default function AdminUsers() {
                 </td>
                 <td style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {user.is_paid && <Badge color="#10b981">Paid</Badge>}
+                    {user.has_paid && <Badge color="#10b981">Paid</Badge>}
                     {user.is_admin && <Badge color="#667eea">Admin</Badge>}
-                    {!user.is_paid && <Badge color="#9ca3af">Free</Badge>}
+                    {!user.has_paid && <Badge color="#9ca3af">Free</Badge>}
                     {user.agreed_to_terms && <Badge color="#3b82f6">Terms ✓</Badge>}
                   </div>
                 </td>
@@ -108,11 +108,11 @@ export default function AdminUsers() {
                 <td style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <ActionBtn
-                      onClick={() => handleAction(user.id, 'toggle_paid', { is_paid: !user.is_paid })}
+                      onClick={() => handleAction(user.id, 'toggle_paid', { has_paid: !user.has_paid })}
                       loading={actionLoading === user.id}
-                      color={user.is_paid ? '#dc2626' : '#10b981'}
+                      color={user.has_paid ? '#dc2626' : '#10b981'}
                     >
-                      {user.is_paid ? 'Revoke' : 'Grant'}
+                      {user.has_paid ? 'Revoke' : 'Grant'}
                     </ActionBtn>
                     <ActionBtn
                       onClick={() => handleAction(user.id, 'toggle_admin', { is_admin: !user.is_admin })}

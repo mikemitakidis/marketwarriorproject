@@ -28,7 +28,7 @@ export default function AdminDashboard() {
     const { count: paidUsers } = await supabase
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('is_paid', true);
+      .eq('has_paid', true);
 
     // Get revenue
     const { data: payments } = await supabase

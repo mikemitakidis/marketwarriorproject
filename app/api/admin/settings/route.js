@@ -1,66 +1,68 @@
-import { NextResponse } from 'next/server';
-import { getUser, jsonResponse, errorResponse, isUserAdmin, logActivity } from '@/lib/api-middleware';
-import { createAdminSupabase } from '@/lib/supabase-server';
+import { jsonResponse, errorResponse, getAuthUser, isAdmin } from '@/lib/api-middleware';
+import { getServiceClient } from '@/lib/supabase-server';
+
+// Default settings when table doesn't exist
+const DEFAULT_SETTINGS = {
+  site_name: 'Market Warrior',
+  support_email: 'support@marketwarrior.club',
+  price_amount: 47,
+  price_currency: 'USD',
+  max_devices: 2,
+  affiliate_rate_paid: 30,
+  affiliate_rate_unpaid: 25
+};
 
 export async function GET(request) {
   try {
-    const user = await getUser(request);
+    const user = await getAuthUser(request);
     if (!user) return errorResponse('Unauthorized', 401);
-    
-    const admin = await isUserAdmin(user.id);
-    if (!admin) return errorResponse('Admin access required', 403);
-    
-    const supabase = createAdminSupabase();
-    
-    const { data: settings } = await supabase
-      .from('site_settings')
-      .select('*');
-    
-    // Convert to key-value object
-    const settingsObj = {};
-    (settings || []).forEach(s => {
-      settingsObj[s.key] = s.value;
-    });
-    
-    return jsonResponse({ settings: settingsObj });
+    if (!await isAdmin(user.id)) return errorResponse('Admin access required', 403);
+
+    const supabase = getServiceClient();
+
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return jsonResponse({ settings: data });
+    } catch (e) {
+      // Table doesn't exist - return defaults
+      return jsonResponse({ 
+        settings: DEFAULT_SETTINGS,
+        message: 'Using default settings. Create site_settings table to customize.'
+      });
+    }
   } catch (error) {
     console.error('Admin settings error:', error);
     return errorResponse('Failed to fetch settings', 500);
   }
 }
 
-export async function POST(request) {
+export async function PATCH(request) {
   try {
-    const user = await getUser(request);
+    const user = await getAuthUser(request);
     if (!user) return errorResponse('Unauthorized', 401);
-    
-    const admin = await isUserAdmin(user.id);
-    if (!admin) return errorResponse('Admin access required', 403);
-    
-    const body = await request.json();
-    const { key, value } = body;
-    
-    if (!key) {
-      return errorResponse('Missing setting key', 400);
+    if (!await isAdmin(user.id)) return errorResponse('Admin access required', 403);
+
+    const updates = await request.json();
+    const supabase = getServiceClient();
+
+    try {
+      const { error } = await supabase
+        .from('site_settings')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', 1);
+
+      if (error) throw error;
+      return jsonResponse({ success: true });
+    } catch (e) {
+      return errorResponse('Site settings table not configured. Create the table first.', 400);
     }
-    
-    const supabase = createAdminSupabase();
-    
-    // Upsert setting
-    await supabase
-      .from('site_settings')
-      .upsert({
-        key,
-        value: JSON.stringify(value),
-        updated_by: user.id,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'key' });
-    
-    await logActivity(user.id, 'admin_setting_update', { key, value });
-    
-    return jsonResponse({ success: true, key, value });
   } catch (error) {
-    console.error('Admin setting update error:', error);
-    return errorResponse('Failed to update setting', 500);
+    console.error('Admin settings update error:', error);
+    return errorResponse('Failed to update settings', 500);
   }
 }

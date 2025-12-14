@@ -19,21 +19,23 @@ export async function GET(request) {
       // Check if user profile exists and their status
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_paid, agreed_to_terms')
-        .eq('id', data.user.id)
+        .select('has_paid, agreed_to_terms')
+        .eq('user_id', data.user.id)
         .single();
       
       if (!profile) {
         // Create user profile if doesn't exist
         await supabase.from('user_profiles').insert({
-          id: data.user.id,
+          user_id: data.user.id,
           email: data.user.email,
-          full_name: data.user.user_metadata?.full_name || null
+          full_name: data.user.user_metadata?.full_name || null,
+          has_paid: false,
+          agreed_to_terms: false
         });
         return NextResponse.redirect(`${origin}/checkout`);
       }
       
-      if (!profile.is_paid) {
+      if (!profile.has_paid) {
         return NextResponse.redirect(`${origin}/checkout`);
       }
       

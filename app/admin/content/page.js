@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase';
 export default function AdminContent() {
   const supabase = createClient();
   const [content, setContent] = useState([]);
+  const [questionCounts, setQuestionCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,12 +14,27 @@ export default function AdminContent() {
   }, []);
 
   async function loadContent() {
-    const { data } = await supabase
+    // Get course content with correct columns
+    const { data: contentData } = await supabase
       .from('course_content')
-      .select('day_number, title, has_video, quiz_questions')
+      .select('day_number, title, youtube_video_id')
       .order('day_number', { ascending: true });
 
-    setContent(data || []);
+    // Get question counts from quiz_questions table
+    const { data: questions } = await supabase
+      .from('quiz_questions')
+      .select('day_number');
+
+    // Count questions per day
+    const counts = {};
+    if (questions) {
+      questions.forEach(q => {
+        counts[q.day_number] = (counts[q.day_number] || 0) + 1;
+      });
+    }
+
+    setContent(contentData || []);
+    setQuestionCounts(counts);
     setLoading(false);
   }
 
@@ -43,8 +59,8 @@ export default function AdminContent() {
               <tr key={day.day_number} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '16px', fontWeight: 600 }}>Day {day.day_number}</td>
                 <td style={{ padding: '16px' }}>{day.title}</td>
-                <td style={{ padding: '16px' }}>{day.has_video ? '✓' : '—'}</td>
-                <td style={{ padding: '16px' }}>{day.quiz_questions?.length || 0}</td>
+                <td style={{ padding: '16px' }}>{day.youtube_video_id ? '✓' : '—'}</td>
+                <td style={{ padding: '16px' }}>{questionCounts[day.day_number] || 0}</td>
               </tr>
             ))}
           </tbody>
