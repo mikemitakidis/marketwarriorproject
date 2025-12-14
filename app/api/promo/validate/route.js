@@ -14,7 +14,7 @@ export async function POST(request) {
         .from('promo_codes')
         .select('*')
         .eq('code', code.toUpperCase())
-        .eq('active', true)
+        .eq('is_active', true)
         .single();
 
       if (error || !promo) {
@@ -22,7 +22,7 @@ export async function POST(request) {
       }
 
       // Check usage limits
-      if (promo.max_uses && promo.uses_count >= promo.max_uses) {
+      if (promo.max_uses && promo.current_uses >= promo.max_uses) {
         return jsonResponse({ valid: false, message: 'Promo code has reached maximum uses' });
       }
 
@@ -35,7 +35,8 @@ export async function POST(request) {
         valid: true,
         discount_percent: promo.discount_percent,
         discount_amount: promo.discount_amount,
-        code: promo.code
+        code: promo.code,
+        message: `${promo.discount_percent}% discount applied!`
       });
     } catch (tableError) {
       // Table doesn't exist - promo codes feature not enabled
