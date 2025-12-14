@@ -1,59 +1,99 @@
-# 📈 Market Warrior - 30-Day Trading Challenge
+# Market Warrior - 30-Day Trading Challenge
 
-A Next.js-based course platform with Supabase backend, Stripe payments, and Resend emails.
+A comprehensive trading education platform built with Next.js 14, Supabase, and Stripe.
 
 ## Features
 
-- ✅ 30-day structured course with daily lessons, quizzes, and tasks
-- ✅ Server-side quiz scoring (anti-cheat)
-- ✅ Server-time unlock logic (can't cheat by changing device clock)
-- ✅ Stripe payment integration ($39.99)
-- ✅ Device fingerprinting (2 device limit)
-- ✅ Trading Journal with Excel export
-- ✅ Certificate generation on completion
-- ✅ Full admin panel
-
-## Admin Panel Features
-
-| Feature | Description |
-|---------|-------------|
-| 👥 Users | Grant/revoke access, admin toggle, device reset |
-| 📝 Content | Edit day content, lessons, tasks |
-| 🎟️ Promo Codes | Create discount codes |
-| 🤝 Affiliates | Track referral commissions |
-| 💳 Payments | View transaction history |
-| 📧 Email Campaigns | Send bulk emails with templates |
-| 📢 Live Feed | Post announcements to dashboard |
-| ⚙️ Settings | Configure pricing, limits |
-
-## Quick Deploy
-
-1. **Supabase**: Run `sql/schema.sql` then `sql/content.sql`
-2. **Stripe**: Add webhook to `/api/webhooks/stripe`
-3. **Vercel**: Push to GitHub (auto-deploys)
-4. **Environment Variables**: Add to Vercel dashboard
-
-See `DEPLOYMENT_GUIDE.md` for detailed instructions.
-See `RESEND_SETUP.md` for email configuration.
-
-## Environment Variables
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx
-SUPABASE_SERVICE_KEY=xxx
-STRIPE_SECRET_KEY=sk_xxx
-STRIPE_PRICE_ID=price_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-RESEND_API_KEY=re_xxx
-FROM_EMAIL=Market Warrior <hello@marketwarrior.club>
-NEXT_PUBLIC_APP_URL=https://marketwarriorproject.vercel.app
-```
+- 📚 30-day structured trading course
+- 📝 Interactive quizzes with server-side validation
+- ✅ Daily task completion tracking
+- 🎓 Certificate generation upon completion
+- 💰 Affiliate program (25-30% commission)
+- 👤 Admin panel for content management
+- 📊 Free trading journal
+- 🔐 Device fingerprinting for license protection
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
-- Supabase (Auth + Database + Storage)
-- Stripe (Payments)
-- Resend (Emails)
-- Vercel (Hosting)
+- **Frontend:** Next.js 14 (App Router)
+- **Backend:** Supabase (Auth, Database, Storage)
+- **Payments:** Stripe
+- **Email:** Resend
+- **Deployment:** Vercel
+
+## Getting Started
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/your-repo/marketwarriorproject.git
+cd marketwarriorproject
+npm install
+```
+
+### 2. Set Environment Variables
+
+Create `.env.local` with:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_key
+STRIPE_SECRET_KEY=your_stripe_secret
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+RESEND_API_KEY=your_resend_key (optional)
+```
+
+### 3. Run Locally
+
+```bash
+npm run dev
+```
+
+### 4. Deploy
+
+Push to GitHub and connect to Vercel. Set environment variables in Vercel dashboard.
+
+## Project Structure
+
+```
+├── app/
+│   ├── admin/          # Admin panel pages
+│   ├── api/            # API routes
+│   ├── day/[day]/      # Dynamic day pages
+│   ├── dashboard/      # User dashboard
+│   ├── checkout/       # Payment flow
+│   └── ...
+├── lib/
+│   ├── supabase.js     # Supabase client
+│   └── ...
+├── sql/
+│   └── missing-tables.sql  # Additional tables SQL
+└── public/
+    └── logo.png        # Site logo
+```
+
+## Database Tables
+
+- `user_profiles` - User data and progress
+- `course_content` - Day lessons and content
+- `quiz_questions` - Quiz questions per day
+- `quiz_results` - User quiz attempts
+- `challenge_progress` - Day completion tracking
+- `task_submissions` - Task uploads
+- `payments` - Payment records
+- `referrals` - Affiliate referrals
+- `announcements` - Live feed items
+- `promo_codes` - Discount codes
+- `site_settings` - Configuration
+
+## Admin Access
+
+1. Create account at /signup
+2. In Supabase, set `is_admin = true` for your user
+3. Access admin at /admin
+
+## License
+
+Proprietary - All rights reserved.

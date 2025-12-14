@@ -1,90 +1,108 @@
-# Market Warrior - Quick Deployment Guide
+# Deployment Guide - Market Warrior
 
-## 1. Supabase Setup (5 minutes)
+## Prerequisites
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Once created, go to **SQL Editor**
-3. Copy and paste contents of `sql/schema.sql` and run
-4. Copy and paste contents of `sql/content.sql` and run (loads 30 days + 151 quiz questions)
-5. Go to **Storage** → Create bucket named `user-uploads` (set to public)
-6. Go to **Settings → API** and copy:
-   - Project URL
-   - anon public key
-   - service_role key (⚠️ keep secret!)
+- GitHub account
+- Vercel account  
+- Supabase account
+- Stripe account
 
-## 2. Stripe Webhook Setup (3 minutes)
+## Step 1: Supabase Setup
 
-1. Go to [Stripe Dashboard](https://dashboard.stripe.com/webhooks)
-2. Click **Add endpoint**
-3. URL: `https://YOUR-DOMAIN.vercel.app/api/webhooks/stripe`
-4. Events: Select `checkout.session.completed`
-5. Copy the **Signing secret** (starts with `whsec_`)
+### 1.1 Create Database Tables
 
-Your existing prices:
-- **USD**: `price_1SZq7P8SNp2YoTH67FkC4Oir` ($39.99)
-- **GBP**: `price_1Sd0gA8SNp2YoTH6yiDWpmZC` (£39.99)
+Run the SQL in `sql/missing-tables.sql` and `sql/fix-rls-policies.sql` in Supabase SQL Editor.
 
-## 3. Vercel Deployment (5 minutes)
+### 1.2 Create Storage Bucket
 
-### Option A: CLI Deploy
-```bash
-cd market-warrior-nextjs
-npm install -g vercel
-vercel
-```
+1. Go to Storage > New Bucket
+2. Name: `user-uploads`
+3. Make it public
 
-### Option B: Git Deploy
-1. Push to GitHub
-2. Import in Vercel dashboard
-3. Deploy
+### 1.3 Get API Keys
 
-### Environment Variables (set in Vercel Dashboard)
+From Project Settings > API:
+- `SUPABASE_URL` - Project URL
+- `SUPABASE_ANON_KEY` - anon public key
+- `SUPABASE_SERVICE_KEY` - service_role secret key (keep secure!)
+
+## Step 2: Stripe Setup
+
+### 2.1 Create Products
+
+1. Go to Products > Add product
+2. Create "30-Day Trading Challenge" at $39.99
+3. Create GBP version at £39.99 (optional)
+4. Copy the price IDs
+
+### 2.2 Set Up Webhook
+
+1. Go to Developers > Webhooks
+2. Add endpoint: `https://your-domain.com/api/webhooks/stripe`
+3. Select events:
+   - `checkout.session.completed`
+   - `customer.subscription.deleted` (optional)
+4. Copy webhook signing secret
+
+## Step 3: Vercel Deployment
+
+### 3.1 Connect Repository
+
+1. Push code to GitHub
+2. Import project in Vercel
+3. Select the repository
+
+### 3.2 Environment Variables
+
+Add in Vercel Settings > Environment Variables:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_KEY=eyJ...
-STRIPE_SECRET_KEY=sk_live_xxx
-STRIPE_PRICE_ID=price_1SZq7P8SNp2YoTH67FkC4Oir
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-RESEND_API_KEY=re_xxx
-FROM_EMAIL=Market Warrior <noreply@marketwarrior.club>
-NEXT_PUBLIC_APP_URL=https://marketwarriorproject.vercel.app
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 ```
 
-## 4. Make Yourself Admin
+### 3.3 Deploy
 
-In Supabase SQL Editor:
-```sql
-UPDATE user_profiles 
-SET is_admin = true 
-WHERE email = 'your@email.com';
-```
+Click Deploy. Vercel will automatically build and deploy.
 
-## 5. Test Flow
+## Step 4: Post-Deployment
 
-1. ✅ Visit site → Landing page
-2. ✅ Sign up → Redirect to checkout
-3. ✅ Pay with test card `4242 4242 4242 4242`
-4. ✅ Accept terms → Dashboard
-5. ✅ Complete Day 1 (quiz + task)
-6. ✅ Check admin panel
+### 4.1 Verify Webhook
 
-## Quick Troubleshooting
+Make a test purchase or check Stripe webhook logs.
 
-| Issue | Solution |
-|-------|----------|
-| 401 errors | Check Supabase anon key |
-| 500 errors | Check Supabase service key |
-| Payment not updating user | Check webhook secret |
-| Can't access admin | Run SQL to set is_admin=true |
+### 4.2 Create Admin User
+
+1. Sign up at /signup
+2. In Supabase Table Editor, find your user_profiles row
+3. Set `is_admin = true`
+4. Login to access /admin
+
+### 4.3 Add Course Content
+
+In Admin > Content, add content for all 30 days.
+
+## Troubleshooting
+
+### "Email not confirmed" error
+- Ensure signup uses server-side API route
+- Check Supabase Auth settings
+
+### "Database error saving user"  
+- Run `sql/fix-rls-policies.sql` in Supabase
+
+### Payment not recorded
+- Check Stripe webhook is active
+- Verify webhook secret is correct
+- Check Vercel function logs
 
 ## Support
 
-File structure:
-```
-/app - Next.js pages
-/api - API routes (all server-side)
-/lib - Utilities (supabase, email, fingerprint)
-/sql - Database schema and content
-```
+For issues, check:
+1. Vercel deployment logs
+2. Supabase database logs
+3. Stripe webhook logs

@@ -34,15 +34,28 @@ export default function CheckoutPage() {
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (profile?.has_paid) {
+    // If no profile exists, create one (edge case - callback may have failed)
+    if (profileError || !profile) {
+      // Profile will be created by the checkout API
+      setUser(user);
+      setLoading(false);
+      return;
+    }
+
+    if (profile.has_paid) {
       router.push('/dashboard');
       return;
+    }
+
+    // Store referral code from profile if exists
+    if (profile.referred_by && !affiliateCode) {
+      setAffiliateCode(profile.referred_by);
     }
 
     setUser(user);

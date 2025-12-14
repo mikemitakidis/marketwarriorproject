@@ -19,7 +19,15 @@ function LoginForm() {
 
   useEffect(() => {
     const msg = searchParams.get('message');
-    if (msg) setMessage(msg);
+    if (msg) setMessage(decodeURIComponent(msg));
+    
+    const err = searchParams.get('error');
+    if (err) {
+      if (err === 'auth_failed') setError('Authentication failed. Please try again.');
+      else if (err === 'no_code') setError('Invalid confirmation link.');
+      else if (err === 'callback_error') setError('Something went wrong. Please try again.');
+      else setError(err);
+    }
     
     const register = searchParams.get('register');
     if (register === 'true') {
@@ -44,29 +52,73 @@ function LoginForm() {
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Handle specific error messages
+        if (authError.message.includes('Email not confirmed')) {
+          throw new Error('Please check your email and click the confirmation link before logging in.');
+        }
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password. Please try again.');
+        }
+        throw authError;
+      }
 
-      const { data: profile } = await supabase
+      // Check if profile exists
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('has_paid, agreed_to_terms, is_admin')
         .eq('user_id', data.user.id)
         .single();
 
-      if (profile?.is_admin) {
+      // If no profile exists yet (user confirmed email but profile wasn't created)
+      // This can happen if callback failed - we'll handle it gracefully
+      if (profileError || !profile) {
+        // Profile doesn't exist - redirect to checkout which will handle it
+        router.push('/checkout');
+        return;
+      }
+
+      if (profile.is_admin) {
         router.push('/dashboard');
-      } else if (!profile?.has_paid) {
+      } else if (!profile.has_paid) {
         if (isAffiliateSignup) {
           router.push('/dashboard');
         } else {
           router.push('/checkout');
         }
-      } else if (!profile?.agreed_to_terms) {
+      } else if (!profile.agreed_to_terms) {
         router.push('/welcome');
       } else {
         router.push('/dashboard');
       }
     } catch (err) {
       setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) throw error;
+      setMessage('Confirmation email sent! Please check your inbox.');
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to resend confirmation email');
     } finally {
       setLoading(false);
     }
@@ -106,6 +158,24 @@ function LoginForm() {
       {error && (
         <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', marginBottom: '16px', fontSize: '0.875rem' }}>
           {error}
+          {error.includes('confirmation link') && (
+            <button 
+              onClick={handleResendConfirmation}
+              disabled={loading}
+              style={{
+                display: 'block',
+                marginTop: '10px',
+                background: 'none',
+                border: 'none',
+                color: '#667eea',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                textDecoration: 'underline'
+              }}
+            >
+              Resend confirmation email
+            </button>
+          )}
         </div>
       )}
 

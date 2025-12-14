@@ -70,41 +70,80 @@ async function handleSuccessfulPayment(supabase, session) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('email', email)
+      .eq('email', email.toLowerCase())
       .single();
     if (profile) {
-      userId = profile.user_id; // Use user_id, not id!
+      userId = profile.user_id;
       existingProfile = profile;
     }
   }
 
-  // Build update data - DO NOT reset dates if already set
   const now = new Date().toISOString();
-  const updateData = {
-    has_paid: true,
-    stripe_customer_id: session.customer,
-    payment_date: now,
-    amount_paid: (session.amount_total || 0) / 100,
-    stripe_session_id: session.id
-  };
-  
-  // Only set challenge_start_date if not already set
-  if (!existingProfile?.challenge_start_date) {
-    updateData.challenge_start_date = now;
-  }
-  
-  // Only set access_expires_at if not already set OR if expired
-  const currentExpiry = existingProfile?.access_expires_at;
-  const isExpired = currentExpiry && new Date(currentExpiry) < new Date();
-  
-  if (!currentExpiry || isExpired) {
-    const accessExpiresAt = new Date();
-    accessExpiresAt.setDate(accessExpiresAt.getDate() + 120);
-    updateData.access_expires_at = accessExpiresAt.toISOString();
-  }
+  const accessExpiresAt = new Date();
+  accessExpiresAt.setDate(accessExpiresAt.getDate() + 120);
 
-  // Update user profile
-  if (userId) {
+  // If no profile exists, we need to create one
+  // This can happen if auth callback failed
+  if (!existingProfile && userId) {
+    console.log(`Creating profile for user ${userId} during payment`);
+    
+    // Generate affiliate code
+    const prefix = email.split('@')[0].toUpperCase().slice(0, 4);
+    const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const affiliateCodeGenerated = prefix + suffix;
+    
+    const { error: insertError } = await supabase.from('user_profiles').insert({
+      user_id: userId,
+      email: email.toLowerCase(),
+      has_paid: true,
+      is_admin: false,
+      agreed_to_terms: false,
+      affiliate_code: affiliateCodeGenerated,
+      referred_by: affiliate_code || null,
+      stripe_customer_id: session.customer,
+      payment_date: now,
+      amount_paid: (session.amount_total || 0) / 100,
+      stripe_session_id: session.id,
+      challenge_start_date: now,
+      access_expires_at: accessExpiresAt.toISOString(),
+      created_at: now
+    });
+    
+    if (insertError) {
+      console.error('Failed to create profile during payment:', insertError);
+    } else {
+      // Initialize Day 1 progress
+      await supabase.from('challenge_progress').insert({
+        user_id: userId,
+        day_number: 1,
+        unlocked: true,
+        unlocked_at: now
+      });
+    }
+  } else if (existingProfile) {
+    // Build update data - DO NOT reset dates if already set
+    const updateData = {
+      has_paid: true,
+      stripe_customer_id: session.customer,
+      payment_date: now,
+      amount_paid: (session.amount_total || 0) / 100,
+      stripe_session_id: session.id
+    };
+    
+    // Only set challenge_start_date if not already set
+    if (!existingProfile.challenge_start_date) {
+      updateData.challenge_start_date = now;
+    }
+    
+    // Only set access_expires_at if not already set OR if expired
+    const currentExpiry = existingProfile.access_expires_at;
+    const isExpired = currentExpiry && new Date(currentExpiry) < new Date();
+    
+    if (!currentExpiry || isExpired) {
+      updateData.access_expires_at = accessExpiresAt.toISOString();
+    }
+
+    // Update user profile
     await supabase
       .from('user_profiles')
       .update(updateData)
@@ -130,7 +169,8 @@ async function handleSuccessfulPayment(supabase, session) {
 
   // Record payment
   await supabase.from('payments').insert({
-    email: email,
+    user_id: userId || null,
+    email: email.toLowerCase(),
     amount: (session.amount_total || 0) / 100,
     currency: session.currency || 'usd',
     stripe_session_id: session.id,

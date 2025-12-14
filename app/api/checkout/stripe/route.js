@@ -42,7 +42,7 @@ export async function POST(request) {
     }
 
     // Calculate price
-    const basePrice = 4700; // $47.00 in cents
+    const basePrice = 3999; // $39.99 in cents
     const finalPrice = discountPercent > 0 
       ? Math.round(basePrice * (1 - discountPercent / 100))
       : basePrice;
