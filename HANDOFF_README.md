@@ -38,9 +38,6 @@ After downloading and unzipping `Market_Warrior_Master_Handoff_Bundle_v3.zip`, t
 
 ### 4) Day 1–30 course content (HTML)
 - `content/days-zips/market_warrior_days_content.zip`
-- `content/days-zips/day1-10.zip`
-- `content/days-zips/day11-20.zip`
-- `content/days-zips/day21-30.zip`
 
 > These are the raw lesson/task HTML. Quizzes must be stored server-side (do not ship correct answers to client).
 
@@ -83,6 +80,14 @@ Vercel currently uses:
 - Yes, new Supabase project = **new API keys** and a new URL.
 - Supabase Auth SMTP settings are **per project**. If you used Google Workspace or Resend SMTP, configure SMTP again in the new project.
 - Recommended: create a clean schema + RLS from migrations (avoid “patching” messy RLS).
+- 
+---
+
+## Trade Journal code
+- Download: `trade_journal_code.zip` (repo root)
+- Purpose: Trading Journal module (user can log trades; stored in Supabase `trading_journal` table)
+- DB table already exists: `public.trading_journal`
+
 
 ---
 
