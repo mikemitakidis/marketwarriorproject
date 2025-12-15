@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Warrior - Create Your Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .signup-container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .success-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 15px;
+            border-radius: 50%;
+        }
+        
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .info-box h4 {
+            color: #166534;
+            margin-bottom: 8px;
+        }
+        
+        .info-box p {
+            color: #15803d;
+            font-size: 0.9em;
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .password-requirements {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        
+        .login-link {
+            margin-top: 25px;
+            color: #64748b;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="success-badge">✓ Payment Successful!</div>
+        <img src="logo.jpg" alt="Market Warrior" class="logo">
+        <h1>Create Your Account</h1>
+        <p class="subtitle">Set up your login to access the 30-Day Challenge</p>
+        
+        <div class="info-box">
+            <h4>🎉 Welcome to Market Warrior!</h4>
+            <p>Your payment has been confirmed. Create your account below to start your trading journey!</p>
+        </div>
+        
+        <div id="errorMsg" class="error-message"></div>
+        
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="fullName">Full Name (for Certificate)</label>
+                <input type="text" id="fullName" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Create Password</label>
+                <input type="password" id="password" placeholder="Create a secure password" required minlength="6">
+                <p class="password-requirements">At least 6 characters</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+            </div>
+            
+            <button type="submit" class="btn">Create Account & Start Challenge</button>
+        </form>
+        
+        <p class="login-link">
+            Already have an account? <a href="login.html">Login here</a>
+        </p>
+    </div>
+    
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (password !== confirmPassword) {
+                document.getElementById('errorMsg').textContent = 'Passwords do not match!';
+                document.getElementById('errorMsg').style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                document.getElementById('errorMsg').textContent = 'Password must be at least 6 characters!';
+                document.getElementById('errorMsg').style.display = 'block';
+                return;
+            }
+            
+            // Get existing users
+            const users = JSON.parse(localStorage.getItem('marketWarriorUsers') || '{}');
+            
+            // Check if email exists
+            if (users[email]) {
+                document.getElementById('errorMsg').textContent = 'This email is already registered. Please login instead.';
+                document.getElementById('errorMsg').style.display = 'block';
+                return;
+            }
+            
+            // Create new user
+            users[email] = {
+                fullName: fullName,
+                password: password,
+                createdAt: new Date().toISOString(),
+                welcomeCompleted: false,
+                challengeStartTime: null,
+                progress: {}
+            };
+            
+            // Save users
+            localStorage.setItem('marketWarriorUsers', JSON.stringify(users));
+            localStorage.setItem('currentUser', email);
+            localStorage.setItem('userLoggedIn', 'true');
+            localStorage.setItem('userName', fullName);
+            
+            // Redirect to welcome page
+            alert('Account created successfully! Let\'s begin your trading journey!');
+            window.location.href = 'welcome.html';
+        });
+    </script>
+</body>
+</html>
