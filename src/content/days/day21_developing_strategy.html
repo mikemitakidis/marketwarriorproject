@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 21: Dividends, Bonds & Fixed Income Assets | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981, #059669);
+            height: 100%;
+            width: 70%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .section h4 {
+            color: #475569;
+            margin: 20px 0 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .dividend-card {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .dividend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .bond-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .bond-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .bond-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102,126,234,0.2);
+        }
+        
+        .calculator-tool {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            color: white;
+        }
+        
+        .calc-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .calc-input {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .calc-input label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .calc-input input {
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .calc-input input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .calc-button {
+            background: white;
+            color: #667eea;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .example-box {
+            background: #fefce8;
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .quiz-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .quiz-option:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: 600;
+        }
+        
+        .quiz-option.selected .option-letter {
+            background: white;
+            color: #667eea;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-btn:hover:not(:disabled) {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-btn:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .sneak-peek {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: white;
+            color: #059669;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">🎯 PHASE 3: ADVANCED STRATEGIES</div>
+            <div class="day-badge">DAY 21 OF 30</div>
+            <h1>💰 Dividends, Bonds & Fixed Income Assets</h1>
+            <p>Build wealth with passive income strategies. Learn how to get paid while you sleep!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – The Passive Income Revolution</h2>
+            <p>Welcome to <strong>Day 21</strong> of your Market Warrior journey!</p>
+            <p>Today we explore the "boring" investments that make millionaires: <strong>Dividends and Bonds</strong>. While traders chase quick profits, smart investors build wealth through steady, predictable income streams.</p>
+            
+            <div class="highlight-box">
+                <h4>💭 The Wealth-Building Secret</h4>
+                <p><strong>Warren Buffett's Coca-Cola investment:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Bought in 1988 for $1.3 billion</li>
+                    <li>Now worth over $25 billion</li>
+                    <li>Receives $704 million in dividends EVERY YEAR</li>
+                    <li>That's 54% annual return on original investment - just from dividends!</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>The lesson: Passive income compounds wealth over time.</strong></p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Why Most People Miss This</h4>
+                <p>Dividends and bonds seem "boring" compared to day trading. But consider this:</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>90% of day traders lose money</li>
+                    <li>But dividend investors make money even when sleeping</li>
+                    <li>Bonds provide guaranteed income (if held to maturity)</li>
+                    <li>Combined strategy = wealth + security</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                <p>Passive Income Masterclass - Loading...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💸 Part 1: Understanding Dividends</h2>
+            
+            <div class="dividend-card">
+                <h3>What Are Dividends?</h3>
+                <p><strong>Definition:</strong> Cash payments companies make to shareholders from their profits.</p>
+                <p><strong>Think of it like:</strong> Owning a rental property that pays you monthly rent, except it's a business paying you quarterly.</p>
+                <br>
+                <p><strong>Example:</strong> You own 100 shares of Apple at $150 each ($15,000 investment)</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Apple pays $0.96/share annually in dividends</li>
+                    <li>You receive: 100 × $0.96 = $96/year</li>
+                    <li>That's free money just for holding the stock!</li>
+                </ul>
+            </div>
+
+            <h3>Key Dividend Metrics</h3>
+            
+            <div class="info-box">
+                <h4>📊 1. Dividend Yield</h4>
+                <p><strong>Formula:</strong> (Annual Dividend ÷ Stock Price) × 100</p>
+                <p><strong>Example:</strong> Stock pays $2/year, costs $50 = 4% yield</p>
+                <p><strong>Good yield:</strong> 2-6% (higher might be risky)</p>
+            </div>
+
+            <div class="info-box">
+                <h4>💰 2. Dividend Payout Ratio</h4>
+                <p><strong>Formula:</strong> (Dividends Paid ÷ Net Income) × 100</p>
+                <p><strong>What it means:</strong> % of profits paid as dividends</p>
+                <p><strong>Sweet spot:</strong> 30-50% (sustainable)</p>
+                <p><strong>Red flag:</strong> >80% (might cut dividend)</p>
+            </div>
+
+            <div class="info-box">
+                <h4>📈 3. Dividend Growth Rate</h4>
+                <p><strong>What it shows:</strong> Annual increase in dividend payments</p>
+                <p><strong>Example:</strong> Microsoft increased dividend 10%/year for 10 years</p>
+                <p><strong>Why it matters:</strong> Growing dividends = inflation protection</p>
+            </div>
+
+            <h3>Types of Dividend Stocks</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Yield</th>
+                            <th>Growth</th>
+                            <th>Risk</th>
+                            <th>Examples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dividend Aristocrats</strong></td>
+                            <td>2-4%</td>
+                            <td>Steady</td>
+                            <td>Low</td>
+                            <td>Coca-Cola, J&J</td>
+                        </tr>
+                        <tr>
+                            <td><strong>High Yield</strong></td>
+                            <td>5-10%</td>
+                            <td>Low</td>
+                            <td>High</td>
+                            <td>REITs, Utilities</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dividend Growth</strong></td>
+                            <td>1-3%</td>
+                            <td>High</td>
+                            <td>Medium</td>
+                            <td>Microsoft, Apple</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏦 Part 2: Understanding Bonds</h2>
+            
+            <div class="highlight-box">
+                <h4>📚 What Are Bonds?</h4>
+                <p><strong>Simple Definition:</strong> You loan money to companies/governments, they pay you interest.</p>
+                <p><strong>Think of it like:</strong> You become the bank, earning interest on your loan.</p>
+            </div>
+
+            <h3>Bond Components</h3>
+            
+            <div class="bond-grid">
+                <div class="bond-item">
+                    <h4>Face Value</h4>
+                    <p>Amount paid at maturity</p>
+                    <p><strong>Usually: $1,000</strong></p>
+                </div>
+                <div class="bond-item">
+                    <h4>Coupon Rate</h4>
+                    <p>Annual interest rate</p>
+                    <p><strong>Example: 5%/year</strong></p>
+                </div>
+                <div class="bond-item">
+                    <h4>Maturity Date</h4>
+                    <p>When you get money back</p>
+                    <p><strong>1-30 years</strong></p>
+                </div>
+                <div class="bond-item">
+                    <h4>Credit Rating</h4>
+                    <p>Safety of bond</p>
+                    <p><strong>AAA (best) to D</strong></p>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>💡 Real Bond Example</h4>
+                <p><strong>You buy:</strong> $10,000 US Treasury Bond, 5% coupon, 10-year maturity</p>
+                <p><strong>You receive:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>$500/year for 10 years (5% of $10,000)</li>
+                    <li>Your $10,000 back after 10 years</li>
+                    <li>Total received: $15,000 ($5,000 interest + $10,000 principal)</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Risk:</strong> Almost zero with government bonds!</p>
+            </div>
+
+            <h3>Types of Bonds</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Bond Type</th>
+                            <th>Issuer</th>
+                            <th>Yield</th>
+                            <th>Risk</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Treasury</strong></td>
+                            <td>Government</td>
+                            <td>3-5%</td>
+                            <td>Zero</td>
+                            <td>Safety</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Corporate</strong></td>
+                            <td>Companies</td>
+                            <td>4-8%</td>
+                            <td>Medium</td>
+                            <td>Income</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Municipal</strong></td>
+                            <td>Cities/States</td>
+                            <td>2-4%</td>
+                            <td>Low</td>
+                            <td>Tax-free income</td>
+                        </tr>
+                        <tr>
+                            <td><strong>High Yield</strong></td>
+                            <td>Risky companies</td>
+                            <td>8-15%</td>
+                            <td>High</td>
+                            <td>Risk-takers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧮 Interactive Dividend Calculator</h2>
+            
+            <div class="calculator-tool">
+                <h4>📊 Calculate Your Dividend Income</h4>
+                <p style="margin-bottom: 20px;">See how much passive income you could earn!</p>
+                
+                <div class="calc-input-group">
+                    <div class="calc-input">
+                        <label>Investment Amount ($)</label>
+                        <input type="number" id="divInvestment" placeholder="10000" value="10000">
+                    </div>
+                    <div class="calc-input">
+                        <label>Dividend Yield (%)</label>
+                        <input type="number" id="divYield" placeholder="4" value="4" step="0.1">
+                    </div>
+                    <div class="calc-input">
+                        <label>Years to Hold</label>
+                        <input type="number" id="divYears" placeholder="10" value="10">
+                    </div>
+                    <div class="calc-input">
+                        <label>Annual Growth (%)</label>
+                        <input type="number" id="divGrowth" placeholder="5" value="5" step="0.1">
+                    </div>
+                </div>
+                
+                <button class="calc-button" onclick="calculateDividends()">Calculate Income</button>
+                
+                <div id="divResult" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: none; color: #1e293b;">
+                    <h5 style="margin-bottom: 15px;">📈 Your Dividend Income Projection:</h5>
+                    <div id="divContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Part 3: Building Your Income Portfolio</h2>
+            
+            <div class="success-box">
+                <h4>✅ The 60/30/10 Income Strategy</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>60% Dividend Stocks:</strong> Core holdings for growth + income</li>
+                    <li><strong>30% Bonds:</strong> Stability and guaranteed income</li>
+                    <li><strong>10% High-Yield:</strong> REITs or preferred stocks for extra income</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Result:</strong> Balanced portfolio with 4-5% annual income + growth potential</p>
+            </div>
+
+            <h3>Where to Buy Dividends & Bonds</h3>
+            
+            <div class="info-box">
+                <h4>🏦 Best Platforms for Income Investing</h4>
+                <p><strong>For beginners (user-friendly):</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li><strong>eToro:</strong> Great for dividend stocks, shows yield clearly, copy successful dividend investors</li>
+                    <li><strong>Trading 212:</strong> Commission-free, automatic dividend reinvestment</li>
+                    <li><strong>Robinhood:</strong> Easy interface, fractional shares for expensive dividend stocks</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>For bonds specifically:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li><strong>Interactive Brokers:</strong> Best bond selection</li>
+                    <li><strong>Vanguard:</strong> Low-cost bond ETFs</li>
+                    <li><strong>TreasuryDirect:</strong> Buy government bonds directly</li>
+                </ul>
+            </div>
+
+            <h3>Dividend Reinvestment (DRIP)</h3>
+            
+            <div class="highlight-box">
+                <h4>🔄 The Power of Reinvesting</h4>
+                <p><strong>What is DRIP?</strong> Automatically using dividends to buy more shares</p>
+                <br>
+                <p><strong>$10,000 investment example:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Without DRIP: $400/year income × 20 years = $8,000</li>
+                    <li>With DRIP: Same investment grows to $26,533!</li>
+                    <li>That's $16,533 in profit vs $8,000 - double the return!</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Pro tip:</strong> Most platforms like eToro and Trading 212 offer automatic dividend reinvestment - turn it ON!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ Part 4: Risks & Red Flags</h2>
+            
+            <div class="warning-box">
+                <h4>🚩 Dividend Traps to Avoid</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Yields above 8%:</strong> Often unsustainable, company might be in trouble</li>
+                    <li><strong>Declining revenue:</strong> Can't pay dividends if not making money</li>
+                    <li><strong>Payout ratio >100%:</strong> Paying more than they earn = dividend cut coming</li>
+                    <li><strong>No dividend history:</strong> Avoid companies without 5+ years of payments</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>📉 Bond Risks</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Interest rate risk:</strong> Bond prices fall when rates rise</li>
+                    <li><strong>Default risk:</strong> Company might not pay back (check credit ratings!)</li>
+                    <li><strong>Inflation risk:</strong> 3% bond loses money if inflation is 5%</li>
+                    <li><strong>Liquidity risk:</strong> Hard to sell before maturity</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 Extra Learning: Advanced Strategies</h2>
+            
+            <div class="highlight-box">
+                <h4>🎯 Dividend Capture Strategy</h4>
+                <p>Buy stock just before ex-dividend date, sell after receiving dividend</p>
+                <p><strong>Example:</strong> Stock trades at $100, pays $2 dividend tomorrow</p>
+                <p><strong>Reality:</strong> Stock usually drops by dividend amount - not free money!</p>
+            </div>
+
+            <div class="info-box">
+                <h4>🏗️ Bond Laddering</h4>
+                <p>Buy bonds maturing in different years for steady income</p>
+                <p><strong>Example:</strong> Buy 5 bonds maturing in 1, 2, 3, 4, 5 years</p>
+                <p><strong>Benefit:</strong> Money available every year + protection from rate changes</p>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <h2>📝 Day 21 Quiz - Test Your Income Knowledge</h2>
+            
+            <div id="quizQuestions">
+                <div class="question-container active" data-question="1">
+                    <div class="question-text">1. A stock costs $50 and pays $2 annual dividend. What's the dividend yield?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>4%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>2%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>25%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>$2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="2">
+                    <div class="question-text">2. Which bond type has the LOWEST risk?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>High-yield corporate bonds</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Government treasury bonds</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Junk bonds</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Startup company bonds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="3">
+                    <div class="question-text">3. What's a dangerous dividend payout ratio?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>30%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>50%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Over 100%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Under 20%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="4">
+                    <div class="question-text">4. What happens to bond prices when interest rates rise?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Bond prices increase</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Bond prices decrease</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>No effect on prices</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Bonds become stocks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="5">
+                    <div class="question-text">5. What is DRIP?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Dividend Reinvestment Plan</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Daily Risk Investment Protocol</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Declining Rate Interest Program</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Direct Return Investment Platform</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-navigation">
+                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
+                <div id="questionInfo">
+                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+                <button class="quiz-btn" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+            </div>
+
+            <div id="quizResults" class="quiz-results" style="display: none;">
+                <h3>Quiz Complete!</h3>
+                <div id="scoreDisplay"></div>
+                <div id="passedButtons" style="display: none;">
+                    <button class="quiz-btn" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+                <div id="failedButtons" style="display: none;">
+                    <button class="quiz-btn" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 21 Task - Build Your Income Portfolio</h2>
+            <h3>Design your first dividend & bond portfolio!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Research and create a mock income portfolio using your demo account on eToro, Trading 212, or any platform. Include both dividend stocks and bond ETFs.</p>
+            </div>
+
+            <textarea id="taskResponse" placeholder="MY INCOME PORTFOLIO PLAN
+
+Date: [Today's Date]
+
+PORTFOLIO ALLOCATION:
+Total Investment: $[Amount - can be hypothetical]
+- Dividend Stocks: [%]
+- Bonds/Bond ETFs: [%]
+- High-Yield Assets: [%]
+
+═══════════════════════════════════════
+
+DIVIDEND STOCKS SELECTED:
+
+Stock #1:
+Name: [Company Name & Ticker]
+Current Price: $[X]
+Dividend Yield: [%]
+Payout Ratio: [%]
+Dividend History: [Years of payments]
+Why Selected: [Your reasoning]
+Platform to buy: [eToro/Trading 212/Other]
+
+Stock #2:
+[Same format]
+
+Stock #3:
+[Same format]
+
+═══════════════════════════════════════
+
+BONDS/BOND ETFs SELECTED:
+
+Bond/ETF #1:
+Name: [Bond or ETF Name]
+Type: [Government/Corporate/Municipal]
+Yield: [%]
+Credit Rating: [AAA/AA/etc]
+Maturity: [For bonds]
+Why Selected: [Your reasoning]
+
+Bond/ETF #2:
+[Same format]
+
+═══════════════════════════════════════
+
+INCOME CALCULATIONS:
+
+Annual Dividend Income Expected:
+Stock 1: $[Investment] × [Yield%] = $[Income]
+Stock 2: $[Investment] × [Yield%] = $[Income]
+Stock 3: $[Investment] × [Yield%] = $[Income]
+
+Annual Bond Income Expected:
+Bond 1: $[Investment] × [Yield%] = $[Income]
+Bond 2: $[Investment] × [Yield%] = $[Income]
+
+Total Annual Income: $[Sum]
+Overall Portfolio Yield: [%]
+
+═══════════════════════════════════════
+
+DRIP STRATEGY:
+Will you reinvest dividends? [Yes/No]
+Why: [Your reasoning]
+
+Platform features used:
+- [eToro's dividend info display]
+- [Trading 212's auto-reinvestment]
+- [Other platform features]
+
+═══════════════════════════════════════
+
+RISK ASSESSMENT:
+Main risks identified:
+1. [Risk #1]
+2. [Risk #2]
+3. [Risk #3]
+
+How I'll manage them:
+[Your risk management plan]
+
+═══════════════════════════════════════
+
+KEY LESSONS FROM DAY 21:
+1. [Most important thing learned about dividends]
+2. [Most important thing learned about bonds]
+3. [How passive income fits my overall strategy]"></textarea>
+            
+            <button class="completion-button" onclick="submitTask()">Submit Portfolio Plan</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="sneak-peek">
+            <h2>👀 Sneak Peek: Day 22 - Phase 4 Begins!</h2>
+            <p>Tomorrow: <strong>IPOs, Penny Stocks, Crypto & Market Volatility</strong></p>
+            <p>Enter the high-risk, high-reward world of speculative trading!</p>
+        </div>
+
+        <div class="completion-section">
+            <h2>🎉 Day 21 Complete - Passive Income Unlocked!</h2>
+            <p>You now understand how to build wealth through dividends and bonds!</p>
+            <button class="completion-button" onclick="completeDay21()">Complete Day 21 ✓</button>
+            <button class="completion-button" onclick="proceedToDay22()">Preview Day 22 →</button>
+        </div>
+    </div>
+
+    <script>
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['a', 'b', 'c', 'b', 'a'];
+        let quizCompleted = false;
+        let quizScore = 0;
+        let taskSubmitted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            document.getElementById('totalQuestions').textContent = correctAnswers.length;
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectQuizOption(this);
+                });
+            });
+        }
+
+        function selectQuizOption(selectedOption) {
+            const questionContainer = selectedOption.closest('.question-container');
+            const options = questionContainer.querySelectorAll('.quiz-option');
+            
+            options.forEach(opt => opt.classList.remove('selected'));
+            selectedOption.classList.add('selected');
+            
+            const questionIndex = parseInt(questionContainer.dataset.question) - 1;
+            userAnswers[questionIndex] = selectedOption.dataset.answer;
+            
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                questions[currentQuestionIndex].classList.remove('active');
+                currentQuestionIndex++;
+                questions[currentQuestionIndex].classList.add('active');
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (userAnswers[currentQuestionIndex]) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+                
+                if (currentQuestionIndex === questions.length - 1) {
+                    document.getElementById('nextBtn').textContent = 'Submit Quiz';
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex > 0) {
+                questions[currentQuestionIndex].classList.remove('active');
+                currentQuestionIndex--;
+                questions[currentQuestionIndex].classList.add('active');
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('nextBtn').textContent = 'Next';
+                document.getElementById('nextBtn').disabled = false;
+                
+                if (currentQuestionIndex === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            quizCompleted = true;
+            
+            document.getElementById('quizQuestions').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = (score / correctAnswers.length * 100).toFixed(0);
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+            `;
+            
+            if (score >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('scoreDisplay').innerHTML += '<p>Excellent! You understand passive income!</p>';
+            } else {
+                document.getElementById('failedButtons').style.display = 'block';
+                document.getElementById('scoreDisplay').innerHTML += '<p>Review the material and try again. Need 60% to pass.</p>';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizCompleted = false;
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach(q => q.classList.remove('active'));
+            questions[0].classList.add('active');
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
+
+        function calculateDividends() {
+            const investment = parseFloat(document.getElementById('divInvestment').value);
+            const yield = parseFloat(document.getElementById('divYield').value);
+            const years = parseFloat(document.getElementById('divYears').value);
+            const growth = parseFloat(document.getElementById('divGrowth').value);
+            
+            if (!investment || !yield || !years) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            let totalDividends = 0;
+            let currentYield = yield;
+            let yearlyBreakdown = '';
+            
+            for (let i = 1; i <= years; i++) {
+                const yearlyIncome = (investment * currentYield) / 100;
+                totalDividends += yearlyIncome;
+                yearlyBreakdown += `<p>Year ${i}: $${yearlyIncome.toFixed(2)} (${currentYield.toFixed(2)}% yield)</p>`;
+                currentYield *= (1 + growth / 100);
+            }
+            
+            const avgMonthly = totalDividends / (years * 12);
+            
+            const resultHTML = `
+                <p><strong>Initial Investment:</strong> $${investment.toLocaleString()}</p>
+                <p><strong>Total Dividends (${years} years):</strong> $${totalDividends.toFixed(2)}</p>
+                <p><strong>Average Monthly Income:</strong> $${avgMonthly.toFixed(2)}</p>
+                <p><strong>Final Yield:</strong> ${currentYield.toFixed(2)}%</p>
+                <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; font-weight: 600;">Year-by-Year Breakdown</summary>
+                    ${yearlyBreakdown}
+                </details>
+            `;
+            
+            document.getElementById('divContent').innerHTML = resultHTML;
+            document.getElementById('divResult').style.display = 'block';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 500) {
+                showTaskStatus('Please complete all sections of your portfolio plan (minimum 500 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Portfolio plan submitted successfully! You\'ve designed your first income portfolio.', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+
+        function completeDay21() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% before marking Day 21 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your income portfolio plan before completing Day 21.');
+                return;
+            }
+            
+            alert('🎉 Congratulations! Day 21 completed! You understand passive income strategies. Day 22 unlocks in 24 hours.');
+        }
+
+        function proceedToDay22() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements before proceeding to Day 22.');
+                return;
+            }
+            
+            alert('Day 22: IPOs, Penny Stocks, Crypto & Market Volatility will be available in 24 hours! Phase 4 begins!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
