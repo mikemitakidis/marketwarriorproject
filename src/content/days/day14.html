@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 14: Simulated Trading Exercise</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .day-badge {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .day-header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .day-header p {
+            font-size: 1.2em;
+            color: #64748b;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            width: 46.67%;
+        }
+        
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        
+        .section h3 {
+            color: #2563eb;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        .section h4 {
+            color: #3b82f6;
+            margin: 20px 0 12px 0;
+            font-size: 1.2em;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid #10b981;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #10b981;
+        }
+        
+        .info-box {
+            background: #f8fafc;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .trade-card {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1em;
+        }
+        
+        .learning-path {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 5px solid #f59e0b;
+        }
+        
+        .learning-path h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #f59e0b;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .task-section h2 {
+            color: #92400e;
+        }
+        
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-header h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-progress {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .quiz-progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            display: none;
+        }
+        
+        .question-container.active {
+            display: block;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .question-number {
+            background: #10b981;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 15px 0;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        
+        .option-letter {
+            background: #10b981;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #e5e7eb;
+            color: #64748b;
+        }
+        
+        .quiz-btn:hover:not(:disabled) {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+            color: white;
+        }
+        
+        .quiz-btn.next:hover:not(:disabled) {
+            background: #059669;
+        }
+        
+        .quiz-results {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+            margin: 30px 0;
+        }
+        
+        .sneak-peek {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .completion-section {
+            text-align: center;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .completion-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .trading-simulator {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 3px solid #3b82f6;
+        }
+
+        .simulator-input {
+            margin: 15px 0;
+        }
+
+        .simulator-input label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .simulator-input input,
+        .simulator-input select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .simulator-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .simulator-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .trade-result {
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .trade-result.profit {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+        }
+
+        .trade-result.loss {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+        }
+
+        .checklist-item {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #10b981;
+            display: flex;
+            align-items: start;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="day-badge">DAY 14 OF 30 - PHASE 2 COMPLETE!</div>
+            <h1>📈 Simulated Trading Exercise</h1>
+            <p>Put Everything You've Learned Into Practice!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Today's Mission - PHASE 2 FINALE!</h2>
+            <p>Congratulations on reaching Day 14 - the final day of Phase 2! You've learned:</p>
+            
+            <div class="success-box">
+                <h4>✅ Your Phase 2 Arsenal:</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>Day 8:</strong> Identifying Trends & Price Action</li>
+                    <li><strong>Day 9:</strong> Support & Resistance Levels</li>
+                    <li><strong>Day 10:</strong> Chart Patterns (Flags, Triangles, Head & Shoulders)</li>
+                    <li><strong>Day 11:</strong> Key Indicators (RSI, MACD, Moving Averages, Economic Cycle)</li>
+                    <li><strong>Day 12:</strong> Fundamental Analysis Basics</li>
+                    <li><strong>Day 13:</strong> Stock Research & Financial Ratios</li>
+                </ul>
+            </div>
+            
+            <p style="margin-top: 20px;">Today, you'll <strong>execute 5 simulated trades</strong> using ALL the skills you've mastered. This is your trading exam - show what you've learned!</p>
+            
+            <div class="highlight-box">
+                <p><strong>Why This Matters:</strong> Practice makes permanent! Before risking real money, you need to prove you can identify setups, plan trades, and execute them correctly. Today's practice builds the muscle memory for profitable trading!</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ This Is NOT About Being Right</h4>
+                <p>Professional traders lose 40-60% of their trades! Today's goal is NOT 5 winning trades. Your goal is to follow your process:</p>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>✅ Identify valid setups using multiple confirmations</li>
+                    <li>✅ Plan entry, stop loss, and target BEFORE entering</li>
+                    <li>✅ Manage risk properly (1-2% per trade)</li>
+                    <li>✅ Follow your plan without emotional decisions</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Even if all 5 trades lose money, but you followed your process perfectly - that's a WIN!</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                Video player will load here
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Part 1: Pre-Trade Checklist System</h2>
+            
+            <h3>The Professional Trader's Checklist</h3>
+            <p>Before entering ANY trade, check ALL boxes below. If even ONE box is unchecked - DON'T TRADE!</p>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="check1">
+                <div>
+                    <strong>1. Trend Confirmation (Day 8 + 11)</strong>
+                    <p>Is price above/below key moving averages? What's the trend direction?</p>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="check2">
+                <div>
+                    <strong>2. Support/Resistance Level (Day 9)</strong>
+                    <p>Am I buying at support in uptrend or selling at resistance in downtrend?</p>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="check3">
+                <div>
+                    <strong>3. Pattern Recognition (Day 10)</strong>
+                    <p>Is there a valid chart pattern? (Flag, triangle, H&S, double top/bottom)</p>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="check4">
+                <div>
+                    <strong>4. Indicator Confirmation (Day 11)</strong>
+                    <p>RSI in good zone? MACD showing momentum? Price near key MA?</p>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="check5">
+                <div>
+                    <strong>5. Fundamental Check (Day 12-13)</strong>
+                    <p>For stocks: Is company fundamentally sound? Not overvalued?</p>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="check6">
+                <div>
+                    <strong>6. Risk Management Plan (Day 13)</strong>
+                    <p>Entry, stop loss, target defined? Risk 1-2%? Risk/Reward minimum 1:2?</p>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>💡 Real Example: Complete Trade Setup</h4>
+                <p><strong>Stock:</strong> Apple (AAPL)</p>
+                <p><strong>Setup Analysis:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>✅ <strong>Trend:</strong> Above 200 SMA ($185) = Uptrend</li>
+                    <li>✅ <strong>S/R:</strong> Bounced off $190 support 3 times</li>
+                    <li>✅ <strong>Pattern:</strong> Bull flag forming, flagpole from $175 to $195</li>
+                    <li>✅ <strong>Indicators:</strong> RSI 45 (room to run), MACD bullish cross, price at 50 SMA</li>
+                    <li>✅ <strong>Fundamentals:</strong> P/E 28 (reasonable for tech), ROE 25% (strong)</li>
+                    <li>✅ <strong>Risk Plan:</strong> Entry $192, Stop $188 (-2.1%), Target $200 (+4.2%) = 1:2 R:R</li>
+                </ul>
+                <p><strong>All 6 boxes checked = HIGH PROBABILITY TRADE! ✅</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎮 Part 2: Interactive Trading Simulator</h2>
+            
+            <div class="trading-simulator">
+                <h3>📊 Virtual Trade Planner</h3>
+                <p>Use this to plan each of your 5 trades. Calculate position size and risk/reward!</p>
+                
+                <div class="simulator-input">
+                    <label>Stock/Asset Name:</label>
+                    <input type="text" id="assetName" placeholder="e.g., AAPL, TSLA, EUR/USD">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Account Size:</label>
+                    <input type="number" id="accountSize" placeholder="10000" value="10000">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Risk Per Trade (%):</label>
+                    <input type="number" id="riskPercent" placeholder="1-2" value="1" step="0.1">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Entry Price:</label>
+                    <input type="number" id="entryPrice" placeholder="150.00" step="0.01">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Stop Loss Price:</label>
+                    <input type="number" id="stopLoss" placeholder="148.00" step="0.01">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Target Price:</label>
+                    <input type="number" id="targetPrice" placeholder="154.00" step="0.01">
+                </div>
+
+                <div class="simulator-input">
+                    <label>Trade Direction:</label>
+                    <select id="tradeDirection">
+                        <option value="long">Long (Buy)</option>
+                        <option value="short">Short (Sell)</option>
+                    </select>
+                </div>
+
+                <button class="simulator-btn" onclick="calculateTrade()">Calculate Trade Plan</button>
+
+                <div id="tradeResult" class="trade-result"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 Part 3: Trade Execution Steps</h2>
+            
+            <h3>Step-by-Step Trade Process</h3>
+            
+            <div class="trade-card">
+                <h4>Step 1: Find Your Setup (15 minutes)</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Open your demo trading platform</li>
+                    <li>Scan charts looking for patterns from Day 10</li>
+                    <li>Check if trend, S/R, and indicators align</li>
+                    <li>Don't force trades - wait for quality setups</li>
+                </ul>
+            </div>
+
+            <div class="trade-card">
+                <h4>Step 2: Complete Pre-Trade Checklist (5 minutes)</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Go through all 6 checklist items above</li>
+                    <li>Document why each box is checked</li>
+                    <li>If any box unchecked = find different setup</li>
+                </ul>
+            </div>
+
+            <div class="trade-card">
+                <h4>Step 3: Plan Risk & Position Size (5 minutes)</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Use the calculator above to determine position size</li>
+                    <li>Verify R:R ratio is minimum 1:2</li>
+                    <li>Make sure you're risking only 1-2% of account</li>
+                </ul>
+            </div>
+
+            <div class="trade-card">
+                <h4>Step 4: Execute Trade (2 minutes)</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Place entry order on demo platform</li>
+                    <li>Set stop loss immediately (non-negotiable!)</li>
+                    <li>Set take profit target</li>
+                    <li>Screenshot the trade for your records</li>
+                </ul>
+            </div>
+
+            <div class="trade-card">
+                <h4>Step 5: Document Everything (3 minutes)</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Screenshot chart with annotations</li>
+                    <li>Write down your reasoning for the trade</li>
+                    <li>Note your emotional state (calm, anxious, excited?)</li>
+                    <li>Set alert to check trade later (don't watch constantly!)</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>⏰ Total Time Per Trade: 30 Minutes</h4>
+                <p>Don't rush! Quality over speed. Professional traders spend hours analyzing before risking money. Today's 5 trades = 2.5 hours of focused practice. This time investment will save you thousands in losses later!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Part 4: What Makes A Good Trade?</h2>
+            
+            <div class="info-box">
+                <h4>✅ Signs of a HIGH Quality Trade:</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>4+ Confirmations:</strong> Multiple signals align (trend + pattern + indicator + S/R)</li>
+                    <li><strong>Clear Entry Trigger:</strong> You know EXACTLY when to enter (breakout, bounce, cross)</li>
+                    <li><strong>Obvious Stop Loss:</strong> Natural place to exit if wrong (below support, above resistance)</li>
+                    <li><strong>Good R:R Ratio:</strong> Minimum 1:2, ideally 1:3 or better</li>
+                    <li><strong>Emotional Clarity:</strong> You feel calm and confident, not desperate or FOMO</li>
+                    <li><strong>Plan B Ready:</strong> You know what to do if trade goes wrong</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>❌ Signs of a POOR Quality Trade:</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>Few Confirmations:</strong> Only 1-2 signals (trend only, or just a pattern)</li>
+                    <li><strong>Vague Entry:</strong> "I'll buy somewhere around here" = Recipe for disaster</li>
+                    <li><strong>No Clear Stop:</strong> "I'll just hold if it drops" = How accounts die</li>
+                    <li><strong>Bad R:R:</strong> Risk $100 to make $50 = Losing math</li>
+                    <li><strong>Emotional Trade:</strong> FOMO, revenge trading, or "trying to make back losses"</li>
+                    <li><strong>No Plan:</strong> Don't know what you'll do if it moves against you</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>If you see these signs = DON'T TRADE! Wait for a better setup.</strong></p>
+            </div>
+
+            <div class="example-box">
+                <h4>💡 Quality vs Quantity</h4>
+                <p><strong>Amateur Trader:</strong> Takes 20 trades per day, wins 30%, loses money overall</p>
+                <p><strong>Professional Trader:</strong> Takes 2-3 trades per week, wins 60%, makes consistent money</p>
+                <br>
+                <p><strong>The Lesson:</strong> You don't get paid for the number of trades. You get paid for taking ONLY the highest quality setups. One perfect trade beats 10 mediocre ones!</p>
+            </div>
+        </div>
+
+        <div class="section task-section">
+            <h2>✍️ Day 14 Practical Task - YOUR TRADING EXAM!</h2>
+            <p><strong>Mission:</strong> Execute 5 simulated trades using everything from Phase 2!</p>
+            
+            <div class="info-box">
+                <h4>📝 Task Requirements:</h4>
+                <ol style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>Execute 5 Trades</strong> on your demo account</li>
+                    <li><strong>For EACH trade, document:</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Asset name and timeframe</li>
+                            <li>Complete pre-trade checklist (all 6 items)</li>
+                            <li>Entry price, stop loss, target</li>
+                            <li>Position size calculation</li>
+                            <li>Risk/reward ratio</li>
+                            <li>Screenshot of chart with annotations</li>
+                            <li>Screenshot of order execution</li>
+                            <li>Why you took this trade (your reasoning)</li>
+                            <li>Trade outcome (win/loss/pending)</li>
+                            <li>What you learned from this trade</li>
+                        </ul>
+                    </li>
+                    <li><strong>Final Summary:</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Overall win rate (X out of 5)</li>
+                            <li>Total P&L (profit/loss in dollars or %)</li>
+                            <li>Best trade - why was it good?</li>
+                            <li>Worst trade - what went wrong?</li>
+                            <li>Key lessons learned from this exercise</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ CRITICAL: This Task Determines Your Phase 2 Mastery</h4>
+                <p>This is NOT a regular task. This is your Phase 2 final exam! Take 2-3 hours to do this properly. Your ability to plan and execute trades determines your success in Phase 3!</p>
+            </div>
+
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📋 Task Submission Required</h4>
+                <p><strong>⚠️ Important:</strong> You must submit this task to unlock Phase 3!</p>
+                <textarea id="taskResponse" placeholder="SIMULATED TRADING EXERCISE REPORT
+
+Date: [Today's Date]
+
+ACCOUNT INFO:
+Starting Capital: $[Amount]
+Risk Per Trade: [%]
+Total Trades: 5
+
+═══════════════════════════════════════
+
+TRADE 1:
+Asset: [Name & Ticker]
+Timeframe: [5min/15min/1H/Daily]
+Direction: [Long/Short]
+
+Pre-Trade Checklist:
+  ✓/✗ Trend Confirmation: [Details]
+  ✓/✗ S/R Level: [Details]
+  ✓/✗ Chart Pattern: [Details]
+  ✓/✗ Indicators: [Details]
+  ✓/✗ Fundamentals: [Details]
+  ✓/✗ Risk Management: [Details]
+
+Trade Plan:
+  Entry: $[X]
+  Stop Loss: $[X] (Risk: [%])
+  Target: $[X] (Reward: [%])
+  Position Size: [Shares/Lots]
+  Risk/Reward: [1:X]
+
+Why I Took This Trade:
+[Your detailed reasoning - minimum 3 sentences]
+
+Trade Outcome:
+  Result: [Win/Loss/Break-even/Pending]
+  P&L: $[+/-X] ([%])
+  Exit Reason: [Target hit / Stop hit / Manual exit - why?]
+
+What I Learned:
+[What went well? What could improve?]
+
+═══════════════════════════════════════
+
+TRADE 2:
+[Same format as Trade 1]
+
+═══════════════════════════════════════
+
+TRADE 3:
+[Same format as Trade 1]
+
+═══════════════════════════════════════
+
+TRADE 4:
+[Same format as Trade 1]
+
+═══════════════════════════════════════
+
+TRADE 5:
+[Same format as Trade 1]
+
+═══════════════════════════════════════
+
+FINAL SUMMARY:
+
+Performance Metrics:
+  Win Rate: [X/5 wins = X%]
+  Total P&L: $[+/-X] ([%] of starting capital)
+  Average R:R: [1:X]
+  Largest Win: $[X]
+  Largest Loss: $[X]
+
+Best Trade Analysis:
+Trade #[X] was my best because:
+[Why was this trade successful? What did you do right?]
+
+Worst Trade Analysis:
+Trade #[X] was my worst because:
+[What went wrong? How will you avoid this mistake?]
+
+Process Quality Assessment:
+Did I follow my checklist? [Yes/No - explain]
+Did I manage risk properly? [Yes/No - explain]
+Did emotions affect decisions? [Yes/No - explain]
+Did I stick to my plan? [Yes/No - explain]
+
+KEY LESSONS FROM DAY 14:
+1. [Most important lesson]
+2. [Second lesson]
+3. [What I'll focus on in Phase 3]
+
+PHASE 2 REFLECTION:
+Looking back at Days 8-14, what's my biggest achievement?
+What trading skill am I most proud of developing?
+What do I still need to improve?
+Am I ready for Phase 3 (Risk Management & Advanced Strategies)?
+" style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Trade Screenshots (Required - minimum 10 images: 5 chart screenshots + 5 order executions)</label>
+                    <input type="file" id="taskFile" accept="image/*" multiple style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;">
+                </div>
+                
+                <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
+                    <p id="taskStatusText"></p>
+                </div>
+                
+                <button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 14 Task - Complete Phase 2!</button>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <div class="quiz-header">
+                <h2>Day 14 Knowledge Check</h2>
+                <p>Test your understanding of complete trade execution</p>
+                <div class="quiz-progress">
+                    <div class="quiz-progress-fill" id="quizProgress"></div>
+                </div>
+                <p id="questionCounter">Question 1 of 5</p>
+            </div>
+
+            <div id="quizContent">
+                <div class="question-container active" data-question="1">
+                    <div class="question-number">1</div>
+                    <div class="question-text">What is the MINIMUM number of confirmations you should have before taking a trade?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>1 confirmation (just a pattern or indicator)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>2 confirmations (pattern + indicator)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>4+ confirmations (trend + S/R + pattern + indicators + fundamentals + risk plan)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>No confirmations needed, just trade on gut feeling</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="2">
+                    <div class="question-number">2</div>
+                    <div class="question-text">You find a trade setup with 3 confirmations. Entry $100, Stop $95, Target $110. Risk/Reward is 1:2. Should you take this trade?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Yes, R:R is 1:2 and you have confirmations</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>No, wait for 4+ confirmations for highest probability</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Yes, but only if FOMO is driving the decision</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Yes, ignore confirmations and just trade</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="3">
+                    <div class="question-number">3</div>
+                    <div class="question-text">Which is MORE important: winning percentage or following your process?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Winning percentage - you must win 80%+ to be profitable</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Following your process - even with 40-50% win rate, you profit with good risk management</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Both are equally important</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Neither matters, just make money somehow</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="4">
+                    <div class="question-number">4</div>
+                    <div class="question-text">You're on Trade #4 and the first 3 trades lost. What should you do?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Double your position size to make back losses faster (revenge trading)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Stop trading for today - you're clearly doing something wrong</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Continue with same risk (1-2%), follow your process, review what went wrong later</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Remove stop losses to give trades more room</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="5">
+                    <div class="question-number">5</div>
+                    <div class="question-text">What's the PRIMARY goal of today's simulated trading exercise?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Win all 5 trades and make maximum profit</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Prove you can identify high-quality setups and follow a complete trading process</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Take as many trades as possible for practice</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Test different strategies randomly to see what works</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-navigation">
+                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
+                <div id="questionInfo">
+                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+                <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+            </div>
+
+            <div id="quizResults" class="quiz-results" style="display: none;">
+                <h3>Quiz Complete!</h3>
+                <div id="scoreDisplay"></div>
+                
+                <div id="passedButtons" style="display: none;">
+                    <p style="color: #065f46; font-size: 1.2em; margin: 20px 0;">Great job! You understand the complete trading process!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+                
+                <div id="failedButtons" style="display: none;">
+                    <p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review the trading execution steps and try again!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sneak-peek">
+            <h2>👀 Sneak Peek: Phase 3 - Day 15</h2>
+            <p>Tomorrow: <strong>Risk Management & Position Sizing</strong></p>
+            <p>The #1 skill that separates professionals from amateurs!</p>
+            <p><strong>Phase 3 begins - get ready to level up! 🚀</strong></p>
+        </div>
+
+        <div class="completion-section">
+            <h2>🎉 Day 14 & Phase 2 Complete!</h2>
+            <p>Congratulations! You've mastered technical analysis, patterns, indicators, and fundamentals. Phase 3 starts tomorrow!</p>
+            <button class="completion-button" onclick="completeDay14()">Complete Day 14</button>
+            <button class="completion-button" style="background: #3b82f6;" onclick="proceedToDay15()">Proceed to Phase 3 →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['c', 'b', 'b', 'c', 'b'];
+        let quizScore = 0;
+        let quizCompleted = false;
+        let taskSubmitted = false;
+        const totalQuestions = 5;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            updateQuestionDisplay();
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    const questionNum = questionContainer.getAttribute('data-question');
+                    
+                    questionContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    this.classList.add('selected');
+                    userAnswers[currentQuestionIndex] = this.getAttribute('data-answer');
+                    
+                    document.getElementById('nextBtn').disabled = false;
+                });
+            });
+        }
+
+        function updateQuestionDisplay() {
+            document.querySelectorAll('.question-container').forEach((container, index) => {
+                container.classList.remove('active');
+                if (index === currentQuestionIndex) {
+                    container.classList.add('active');
+                }
+            });
+
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('quizProgress').style.width = progressPercent + '%';
+
+            if (userAnswers[currentQuestionIndex]) {
+                document.getElementById('nextBtn').disabled = false;
+            } else {
+                document.getElementById('nextBtn').disabled = true;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                currentQuestionIndex++;
+                updateQuestionDisplay();
+                document.getElementById('nextBtn').textContent = 'Next';
+            } else {
+                submitQuiz();
+            }
+
+            if (currentQuestionIndex === totalQuestions - 1) {
+                document.getElementById('nextBtn').textContent = 'Submit Quiz';
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                updateQuestionDisplay();
+            }
+        }
+
+        function submitQuiz() {
+            quizScore = 0;
+            for (let i = 0; i < totalQuestions; i++) {
+                if (userAnswers[i] === correctAnswers[i]) {
+                    quizScore++;
+                }
+            }
+
+            const percentage = (quizScore / totalQuestions * 100).toFixed(0);
+            
+            document.getElementById('quizContent').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            let scoreHTML = `
+                <div style="font-size: 3em; font-weight: bold; color: ${quizScore >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    ${quizScore}/${totalQuestions}
+                </div>
+                <p style="font-size: 1.3em; color: #64748b;">Score: ${percentage}%</p>
+            `;
+            
+            document.getElementById('scoreDisplay').innerHTML = scoreHTML;
+            
+            if (quizScore >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                quizCompleted = true;
+            } else {
+                document.getElementById('failedButtons').style.display = 'block';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizScore = 0;
+            
+            document.getElementById('quizContent').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            updateQuestionDisplay();
+        }
+
+        function calculateTrade() {
+            const assetName = document.getElementById('assetName').value;
+            const accountSize = parseFloat(document.getElementById('accountSize').value);
+            const riskPercent = parseFloat(document.getElementById('riskPercent').value);
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+            const targetPrice = parseFloat(document.getElementById('targetPrice').value);
+            const direction = document.getElementById('tradeDirection').value;
+            
+            if (!assetName || !accountSize || !riskPercent || !entryPrice || !stopLoss || !targetPrice) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const riskAmount = (accountSize * riskPercent) / 100;
+            const riskPerShare = Math.abs(entryPrice - stopLoss);
+            const rewardPerShare = Math.abs(targetPrice - entryPrice);
+            const positionSize = Math.floor(riskAmount / riskPerShare);
+            const totalValue = positionSize * entryPrice;
+            const potentialProfit = positionSize * rewardPerShare;
+            const rrRatio = (rewardPerShare / riskPerShare).toFixed(2);
+
+            const isGoodRR = rrRatio >= 2;
+            const isGoodRisk = riskPercent <= 2;
+            const tradeQuality = isGoodRR && isGoodRisk ? 'profit' : 'loss';
+
+            const resultHTML = `
+                <h4>📊 Trade Plan for ${assetName}</h4>
+                <p><strong>Direction:</strong> ${direction.toUpperCase()}</p>
+                <p><strong>Account Size:</strong> $${accountSize.toLocaleString()}</p>
+                <p><strong>Risk Per Trade:</strong> ${riskPercent}% = $${riskAmount.toFixed(2)}</p>
+                <br>
+                <p><strong>Entry Price:</strong> $${entryPrice.toFixed(2)}</p>
+                <p><strong>Stop Loss:</strong> $${stopLoss.toFixed(2)}</p>
+                <p><strong>Target Price:</strong> $${targetPrice.toFixed(2)}</p>
+                <br>
+                <p style="font-size: 1.5em; font-weight: bold; margin: 20px 0;">
+                    📈 BUY ${positionSize} ${direction === 'long' ? 'SHARES' : 'CONTRACTS'}
+                </p>
+                <p><strong>Position Value:</strong> $${totalValue.toFixed(2)}</p>
+                <p><strong>Risk per Share:</strong> $${riskPerShare.toFixed(2)}</p>
+                <p><strong>Reward per Share:</strong> $${rewardPerShare.toFixed(2)}</p>
+                <br>
+                <p style="font-size: 1.3em; font-weight: bold; color: ${isGoodRR ? '#10b981' : '#ef4444'};">
+                    Risk/Reward Ratio: 1:${rrRatio}
+                </p>
+                <p><strong>Max Loss if SL hit:</strong> -$${riskAmount.toFixed(2)} (-${riskPercent}%)</p>
+                <p><strong>Potential Profit if target hit:</strong> +$${potentialProfit.toFixed(2)} (+${(potentialProfit/accountSize*100).toFixed(2)}%)</p>
+                <br>
+                <div style="padding: 15px; background: ${isGoodRR && isGoodRisk ? '#d1fae5' : '#fee2e2'}; border-radius: 8px; margin-top: 15px;">
+                    <p style="font-weight: bold; color: ${isGoodRR && isGoodRisk ? '#065f46' : '#dc2626'};">
+                        ${isGoodRR && isGoodRisk ? 
+                            '✅ GOOD TRADE SETUP! R:R is above 1:2 and risk is 1-2%' : 
+                            '⚠️ IMPROVE SETUP: ' + (!isGoodRR ? 'R:R should be minimum 1:2. ' : '') + (!isGoodRisk ? 'Risk should be 1-2% max.' : '')
+                        }
+                    </p>
+                </div>
+            `;
+            
+            const resultDiv = document.getElementById('tradeResult');
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.className = 'trade-result ' + tradeQuality;
+            resultDiv.style.display = 'block';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value;
+            const fileInput = document.getElementById('taskFile');
+            
+            if (taskResponse.length < 100) {
+                showTaskStatus('Please provide detailed trade analysis (minimum 100 characters).', 'error');
+                return;
+            }
+            
+            if (!fileInput.files || fileInput.files.length < 10) {
+                showTaskStatus('Please upload at least 10 screenshots (5 charts + 5 order executions).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('✅ Task submitted successfully! Phase 2 complete - excellent trading work!', 'success');
+            showTaskSubmitted();
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            const statusText = document.getElementById('taskStatusText');
+            
+            statusDiv.style.display = 'block';
+            statusText.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Task Submitted ✓';
+            submitBtn.style.backgroundColor = '#10b981';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+            document.getElementById('taskFile').disabled = true;
+        }
+
+        function completeDay14() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% (3/5) before marking Day 14 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your 5 simulated trades before completing Day 14.');
+                return;
+            }
+            
+            alert('🎉 Congratulations! Day 14 & Phase 2 completed! You\'ve mastered technical analysis! Phase 3 unlocks in 24 hours.');
+        }
+
+        function proceedToDay15() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements (quiz 60%+ and 5 simulated trades) before proceeding to Phase 3.');
+                return;
+            }
+            
+            alert('Phase 3: Day 15 - Risk Management & Position Sizing will be available in 24 hours. Get ready to master professional risk control!');
+        }
+
+        // Disable right-click and copy
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

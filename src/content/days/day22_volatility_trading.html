@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 22: IPOs, Penny Stocks, Crypto & Market Volatility | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            height: 100%;
+            width: 73.33%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .danger-box {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .crypto-card {
+            background: linear-gradient(135deg, #f59e0b10, #ec481510);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .ipo-timeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .timeline-item::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #667eea;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        
+        .volatility-meter {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .risk-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(90deg, #10b981, #fbbf24, #ef4444);
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .scalping-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 350px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .completion-button {
+            background: #10b981;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">🔥 PHASE 4: ADVANCED MARKETS</div>
+            <div class="day-badge">DAY 22 OF 30</div>
+            <h1>🚀 IPOs, Penny Stocks, Crypto & Volatility</h1>
+            <p>Master high-risk, high-reward markets. Learn scalping and volatility trading strategies!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – The Wild Side of Trading</h2>
+            <p>Welcome to <strong>Day 22</strong> and <strong>Phase 4</strong> of your Market Warrior journey!</p>
+            <p>Today we enter the most exciting and dangerous markets: <strong>IPOs, Penny Stocks, and Cryptocurrency</strong>. These markets can make you rich overnight... or lose everything just as fast.</p>
+            
+            <div class="warning-box">
+                <h4>⚠️ CRITICAL WARNING</h4>
+                <p><strong>Today's content is HIGH RISK - DEMO ACCOUNT ONLY:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>IPOs can drop 50% on day one</li>
+                    <li>90% of penny stocks go to zero</li>
+                    <li>Crypto can lose 80% in hours</li>
+                    <li>Practice on DEMO account for at least 6 months!</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Rule #1:</strong> NEVER trade these markets with real money until consistently profitable on demo for 6+ months!</p>
+            </div>
+
+            <div class="highlight-box">
+                <h4>💎 But the Rewards...</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Airbnb IPO: +112% on day one</li>
+                    <li>GameStop penny stock: +1,600% in weeks</li>
+                    <li>Bitcoin: +60,000,000% since 2010</li>
+                    <li>Scalping volatile stocks: 1-5% daily gains possible</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>The key:</strong> Risk management + timing + discipline = potential fortune</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                <p>High-Risk Trading Masterclass - Loading...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎪 Part 1: IPOs (Initial Public Offerings)</h2>
+            
+            <h3>What is an IPO?</h3>
+            <p>When a private company goes public for the first time, selling shares to everyone. It's like a company's "debut" on the stock market.</p>
+            
+            <div class="ipo-timeline">
+                <div class="timeline-item">
+                    <strong>Pre-IPO</strong>
+                    <p>Private company</p>
+                    <p>Only VCs invest</p>
+                </div>
+                <div class="timeline-item">
+                    <strong>IPO Day</strong>
+                    <p>Goes public</p>
+                    <p>Massive volatility</p>
+                </div>
+                <div class="timeline-item">
+                    <strong>First Week</strong>
+                    <p>Price discovery</p>
+                    <p>Wild swings</p>
+                </div>
+                <div class="timeline-item">
+                    <strong>Lock-up Ends</strong>
+                    <p>Insiders can sell</p>
+                    <p>Often drops</p>
+                </div>
+            </div>
+
+            <h3>IPO Trading Strategies</h3>
+            
+            <div class="success-box">
+                <h4>✅ The "Wait and See" Strategy (Safest)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>NEVER buy on IPO day (too volatile)</li>
+                    <li>Wait 30-90 days for price to stabilize</li>
+                    <li>Look for base formation around support</li>
+                    <li>Enter after first earnings report</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Example:</strong> Facebook IPO at $38, dropped to $18, now worth $500+</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>❌ IPO Day Trading (Extremely Risky)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Buy at open if opens below IPO price</li>
+                    <li>Sell into first spike (usually 10-30 minutes)</li>
+                    <li>Never hold overnight on day 1</li>
+                    <li>Use only 1-2% of portfolio maximum</li>
+                </ul>
+            </div>
+
+            <h3>Where to Trade IPOs</h3>
+            <p><strong>Best platforms for IPO access:</strong></p>
+            <ul style="padding-left: 20px; margin: 10px 0;">
+                <li><strong>eToro:</strong> Often lists major IPOs on day one, easy access for retail traders</li>
+                <li><strong>Interactive Brokers:</strong> Sometimes offers pre-IPO access</li>
+                <li><strong>Robinhood:</strong> IPO access program for active users</li>
+                <li><strong>TD Ameritrade:</strong> IPO center with allocation possibility</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>💰 Part 2: Penny Stocks (Under $5)</h2>
+            
+            <div class="danger-box">
+                <h4>🚨 EXTREME WARNING</h4>
+                <p>95% of penny stocks are scams or failing companies. Most go to $0. Only trade with money you're prepared to lose entirely!</p>
+            </div>
+
+            <h3>Why Penny Stocks Move</h3>
+            <ul style="padding-left: 20px; margin: 15px 0;">
+                <li><strong>Low float:</strong> Few shares = easy to manipulate</li>
+                <li><strong>News catalysts:</strong> Any news causes 50-200% moves</li>
+                <li><strong>Pump & dump schemes:</strong> Coordinated buying then selling</li>
+                <li><strong>Short squeezes:</strong> Like GameStop phenomenon</li>
+            </ul>
+
+            <h3>Penny Stock Patterns</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>What Happens</th>
+                            <th>Success Rate</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Morning Spike</strong></td>
+                            <td>Gaps up 30-100% at open</td>
+                            <td>60% fade by noon</td>
+                            <td>Extreme</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Breakout</strong></td>
+                            <td>Breaks 52-week high</td>
+                            <td>30% continue up</td>
+                            <td>Very High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bounce Play</strong></td>
+                            <td>Bounces off support</td>
+                            <td>40% success</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>News Catalyst</strong></td>
+                            <td>FDA approval, contract</td>
+                            <td>50% hold gains</td>
+                            <td>Very High</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Penny Stock Rules</h3>
+            <div class="warning-box">
+                <h4>🛡️ Survival Rules</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li>NEVER hold overnight (90% gap down)</li>
+                    <li>Use stop loss at -10% maximum</li>
+                    <li>Take profits at +20-30%</li>
+                    <li>Trade only with high volume (1M+ shares)</li>
+                    <li>Avoid anything under $0.50</li>
+                    <li>Maximum 2% of portfolio per trade</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>₿ Part 3: Cryptocurrency Trading</h2>
+            
+            <div class="crypto-card">
+                <h3>Understanding Crypto Volatility</h3>
+                <p><strong>Why crypto is so volatile:</strong></p>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>24/7 trading (never closes)</li>
+                    <li>No circuit breakers (can drop 90% in hours)</li>
+                    <li>Highly speculative (no real valuations)</li>
+                    <li>Whale manipulation (big holders control price)</li>
+                    <li>News-driven (Elon tweet = 30% move)</li>
+                </ul>
+            </div>
+
+            <h3>Major Cryptocurrencies</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Crypto</th>
+                            <th>Volatility</th>
+                            <th>Use Case</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Bitcoin (BTC)</strong></td>
+                            <td>20-30% weekly</td>
+                            <td>Digital gold</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ethereum (ETH)</strong></td>
+                            <td>30-40% weekly</td>
+                            <td>Smart contracts</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Altcoins</strong></td>
+                            <td>50-100% daily</td>
+                            <td>Various</td>
+                            <td>Extreme</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Meme Coins</strong></td>
+                            <td>100-500% daily</td>
+                            <td>None/Speculation</td>
+                            <td>Gambling</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Crypto Trading Strategies</h3>
+            
+            <div class="highlight-box">
+                <h4>📊 Strategy 1: Trend Following</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Buy when breaks above 20-day MA</li>
+                    <li>Hold while trend intact</li>
+                    <li>Sell when breaks below 20-day MA</li>
+                    <li>Works best with Bitcoin/Ethereum</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 Strategy 2: Range Trading</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Identify support/resistance levels</li>
+                    <li>Buy at support, sell at resistance</li>
+                    <li>Use 5-10% profit targets</li>
+                    <li>Stop loss 3% below support</li>
+                </ul>
+            </div>
+
+            <h3>Where to Trade Crypto</h3>
+            <p><strong>Recommended platforms:</strong></p>
+            <ul style="padding-left: 20px; margin: 10px 0;">
+                <li><strong>eToro:</strong> User-friendly, copy crypto traders, major coins only (safer)</li>
+                <li><strong>Coinbase:</strong> Beginner-friendly, insured, higher fees</li>
+                <li><strong>Binance:</strong> Most coins, lowest fees, complex interface</li>
+                <li><strong>Kraken:</strong> Good security, margin trading available</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Part 4: Scalping & Volatility Trading</h2>
+            
+            <div class="scalping-box">
+                <h3>🎯 Scalping Strategy (1-5 Minute Trades)</h3>
+                <p><strong>What is scalping?</strong> Making 10-50 trades per day, holding for seconds to minutes, targeting 0.5-2% gains per trade.</p>
+                
+                <h4>The 3-Candle Scalping System</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Setup:</strong> 1-minute chart, 20 EMA, RSI, Volume</li>
+                    <li><strong>Entry:</strong> When 3 green candles close above 20 EMA + RSI > 50</li>
+                    <li><strong>Target:</strong> 0.5-1% gain (5-10 cents on $10 stock)</li>
+                    <li><strong>Stop:</strong> 0.25% loss (immediate exit)</li>
+                    <li><strong>Time limit:</strong> Exit after 5 minutes regardless</li>
+                </ol>
+                
+                <p style="margin-top: 20px;"><strong>Success rate:</strong> 60-70% wins, but need high win rate due to commissions</p>
+                <p><strong>Requirements for Demo Practice:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Fast execution platform (eToro, Trading 212, etc.)</li>
+                    <li>Level 2 data if available (order book)</li>
+                    <li>No emotion (mechanical execution)</li>
+                    <li>Practice on demo for minimum 3 months first!</li>
+                </ul>
+            </div>
+
+            <h3>Volatility Indicators</h3>
+            
+            <div class="volatility-meter">
+                <h4>VIX - The Fear Index</h4>
+                <div class="risk-scale">
+                    <span>VIX &lt;20 (Low Vol)</span>
+                    <span>VIX 20-30 (Normal)</span>
+                    <span>VIX &gt;30 (High Vol)</span>
+                </div>
+                <p style="margin-top: 20px;"><strong>Trading rules:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>VIX &lt;15: Reduced position sizes (calm market)</li>
+                    <li>VIX 15-25: Normal trading</li>
+                    <li>VIX 25-35: Increased opportunities (bigger moves)</li>
+                    <li>VIX &gt;35: Extreme caution (market panic)</li>
+                </ul>
+            </div>
+
+            <h3>Best Volatile Stocks for Scalping</h3>
+            <ul style="padding-left: 20px; margin: 15px 0;">
+                <li><strong>Tesla (TSLA):</strong> Moves $5-20 daily</li>
+                <li><strong>NVIDIA (NVDA):</strong> Tech volatility champion</li>
+                <li><strong>AMC/GME:</strong> Meme stock volatility</li>
+                <li><strong>SPDR S&P 500 (SPY):</strong> Most liquid, tight spreads</li>
+                <li><strong>Crypto stocks (MARA, RIOT):</strong> Follow Bitcoin</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📊 Part 5: Managing Volatility Risk</h2>
+            
+            <div class="danger-box">
+                <h4>☠️ The Volatility Death Spiral</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li>Big gain → Overconfidence → Bigger position</li>
+                    <li>Big loss → Revenge trade → Even bigger position</li>
+                    <li>Bigger loss → Panic → All-in desperation trade</li>
+                    <li>Account blown → Game over</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Solution:</strong> Fixed position sizes regardless of wins/losses!</p>
+            </div>
+
+            <h3>Position Sizing for Volatile Markets</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Market Type</th>
+                            <th>Max Position Size</th>
+                            <th>Stop Loss</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>IPO Day 1</strong></td>
+                            <td>1% of portfolio</td>
+                            <td>-10%</td>
+                            <td>$100 of $10k account</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Penny Stocks</strong></td>
+                            <td>2% of portfolio</td>
+                            <td>-10%</td>
+                            <td>$200 of $10k account</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Crypto</strong></td>
+                            <td>5% of portfolio</td>
+                            <td>-15%</td>
+                            <td>$500 of $10k account</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scalping</strong></td>
+                            <td>10% per trade</td>
+                            <td>-0.5%</td>
+                            <td>$1000 × 0.5% = $5 risk</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Day 22 Quiz - Test Your Volatility Knowledge</h2>
+            
+            <div class="quiz-container" style="background: #f8fafc; border-radius: 15px; padding: 30px;">
+                <div id="quizQuestions">
+                    <div class="question-container active" data-question="1" style="display: block;">
+                        <div class="question-text" style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            1. What percentage of your portfolio should you risk on IPO day one trades?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a" style="background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; display: flex; align-items: center;">
+                                <div class="option-letter" style="background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">A</div>
+                                <span>Maximum 1% of portfolio</span>
+                            </div>
+                            <div class="quiz-option" data-answer="b" style="background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; display: flex; align-items: center;">
+                                <div class="option-letter" style="background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">B</div>
+                                <span>10-20% is fine</span>
+                            </div>
+                            <div class="quiz-option" data-answer="c" style="background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; display: flex; align-items: center;">
+                                <div class="option-letter" style="background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">C</div>
+                                <span>50% for big opportunities</span>
+                            </div>
+                            <div class="quiz-option" data-answer="d" style="background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; display: flex; align-items: center;">
+                                <div class="option-letter" style="background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">D</div>
+                                <span>All in if you believe</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="question-container" data-question="2" style="display: none;">
+                        <div class="question-text" style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            2. What percentage of penny stocks typically go to zero?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <div class="option-letter">A</div>
+                                <span>10%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <div class="option-letter">B</div>
+                                <span>50%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <div class="option-letter">C</div>
+                                <span>90-95%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <div class="option-letter">D</div>
+                                <span>25%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="question-container" data-question="3" style="display: none;">
+                        <div class="question-text" style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            3. When scalping, what's the recommended profit target per trade?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <div class="option-letter">A</div>
+                                <span>10-20%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <div class="option-letter">B</div>
+                                <span>0.5-2%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <div class="option-letter">C</div>
+                                <span>5-10%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <div class="option-letter">D</div>
+                                <span>Hold until 50%+</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="question-container" data-question="4" style="display: none;">
+                        <div class="question-text" style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            4. What VIX level indicates extreme market fear/volatility?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <div class="option-letter">A</div>
+                                <span>Under 15</span>
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <div class="option-letter">B</div>
+                                <span>15-25</span>
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <div class="option-letter">C</div>
+                                <span>Above 30-35</span>
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <div class="option-letter">D</div>
+                                <span>Exactly 20</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="question-container" data-question="5" style="display: none;">
+                        <div class="question-text" style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            5. What's the maximum recommended total portfolio allocation to volatile markets (IPOs, penny stocks, crypto combined)?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <div class="option-letter">A</div>
+                                <span>5-10%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <div class="option-letter">B</div>
+                                <span>25%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <div class="option-letter">C</div>
+                                <span>50%</span>
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <div class="option-letter">D</div>
+                                <span>As much as you want</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quiz-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                    <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">Previous</button>
+                    <div id="questionInfo">
+                        <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                    </div>
+                    <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled style="background: #10b981; color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">Next</button>
+                </div>
+
+                <div id="quizResults" class="quiz-results" style="display: none; text-align: center; margin-top: 30px;">
+                    <h3>Quiz Complete!</h3>
+                    <div id="scoreDisplay"></div>
+                    <div id="passedButtons" style="display: none;">
+                        <p style="color: #10b981; margin: 20px 0;">Excellent! You understand volatile markets!</p>
+                        <button class="quiz-btn" onclick="retakeQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">Retake Quiz</button>
+                    </div>
+                    <div id="failedButtons" style="display: none;">
+                        <p style="color: #ef4444; margin: 20px 0;">You need at least 60% (3/5) to pass. Review and try again!</p>
+                        <button class="quiz-btn" onclick="retakeQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">Retake Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 22 Task - Volatile Market Analysis</h2>
+            <h3>Research and plan trades for each volatile market type!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Research one opportunity in each category (IPO, Penny Stock, Crypto) and create a detailed trading plan with risk management. Practice on your demo account!</p>
+            </div>
+
+            <textarea id="taskResponse" placeholder="VOLATILE MARKETS TRADING PLAN
+
+Date: [Today's Date]
+
+PART 1: IPO ANALYSIS
+═══════════════════════════════════════
+
+Recent/Upcoming IPO Selected: [Company Name]
+IPO Price: $[X]
+Current Price: $[X]
+Days Since IPO: [X]
+
+Why This IPO:
+[Your research and reasoning]
+
+Trading Plan:
+Entry Strategy: [Wait for base / Day trade / Avoid]
+Entry Price Target: $[X]
+Stop Loss: $[X] ([%] risk)
+Take Profit: $[X] ([%] gain)
+Position Size: [% of portfolio - max 1%]
+Platform to trade: [eToro/Robinhood/Other]
+
+Risk Assessment:
+[Identify main risks]
+
+PART 2: PENNY STOCK ANALYSIS
+═══════════════════════════════════════
+
+Penny Stock Selected: [Ticker]
+Current Price: $[X]
+Average Volume: [X shares]
+Market Cap: $[X]
+
+Catalyst/Pattern Identified:
+[News event / Technical pattern / Other]
+
+Trading Plan:
+Entry: $[X]
+Stop Loss: $[X] (max -10%)
+Target: $[X] (+20-30%)
+Time Frame: [Intraday only / Swing]
+Position Size: [% of portfolio - max 2%]
+
+Red Flags Checked:
+□ Under $0.50? [Yes/No]
+□ Low volume? [Yes/No]
+□ No news? [Yes/No]
+□ Pump scheme signs? [Yes/No]
+
+PART 3: CRYPTOCURRENCY ANALYSIS
+═══════════════════════════════════════
+
+Crypto Selected: [Bitcoin/Ethereum/Other]
+Current Price: $[X]
+24hr Change: [%]
+Market Cap: $[X]
+
+Strategy Type:
+□ Trend Following
+□ Range Trading
+□ Scalping
+□ HODL
+
+Trading Plan:
+Entry Trigger: [Technical signal]
+Entry Price: $[X]
+Stop Loss: $[X] ([%])
+Target: $[X] ([%])
+Position Size: [% of portfolio - max 5%]
+Platform: [eToro/Coinbase/Binance]
+
+Volatility Assessment:
+Current volatility: [Low/Medium/High/Extreme]
+Risk tolerance match: [Yes/No]
+
+PART 4: SCALPING SETUP (OPTIONAL ADVANCED)
+═══════════════════════════════════════
+
+Stock for Scalping: [TSLA/SPY/Other]
+Timeframe: [1min/5min]
+Indicators: [List them]
+
+Scalping Rules:
+Entry Signal: [Specific trigger]
+Profit Target: [0.5-1%]
+Stop Loss: [0.25%]
+Max Hold Time: [5 minutes]
+Daily Trade Limit: [X trades]
+
+Practice Results (if attempted):
+Trades Taken: [X]
+Winners: [X]
+Losers: [X]
+Net P&L: $[+/-X]
+
+PART 5: RISK MANAGEMENT PLAN
+═══════════════════════════════════════
+
+Total Portfolio Allocation to Volatile Markets:
+IPOs: [%]
+Penny Stocks: [%]
+Crypto: [%]
+Total: [% - should be under 10%]
+
+Rules I Will Follow:
+1. [Your rule #1]
+2. [Your rule #2]
+3. [Your rule #3]
+
+Biggest Risk Identified:
+[What scares you most about these markets]
+
+How I'll Protect Myself:
+[Your protection strategy]
+
+KEY LESSONS FROM DAY 22:
+1. [Most important thing about IPOs]
+2. [Most important thing about penny stocks]
+3. [Most important thing about crypto]
+4. [What volatility trading taught me]"></textarea>
+            
+            <button class="completion-button" onclick="submitTask()">Submit Volatility Analysis</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="section">
+            <h2>👀 Sneak Peek: Day 23</h2>
+            <p><strong>Tomorrow:</strong> Hedge Funds & Copy Trading - Learn how to copy successful traders automatically!</p>
+            <p>Discover eToro's revolutionary copy trading feature and other platforms where you can mirror the pros!</p>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white;">
+            <h2>🎉 Day 22 Complete - Volatility Mastered!</h2>
+            <p>You now understand the highest risk/reward markets in trading!</p>
+            <button class="completion-button" style="background: white; color: #dc2626;" onclick="completeDay22()">Complete Day 22 ✓</button>
+            <button class="completion-button" style="background: white; color: #dc2626;" onclick="proceedToDay23()">Preview Day 23 →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['a', 'c', 'b', 'c', 'a'];
+        let quizCompleted = false;
+        let quizScore = 0;
+        let taskSubmitted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            document.getElementById('totalQuestions').textContent = correctAnswers.length;
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectQuizOption(this);
+                });
+            });
+        }
+
+        function selectQuizOption(selectedOption) {
+            const questionContainer = selectedOption.closest('.question-container');
+            const options = questionContainer.querySelectorAll('.quiz-option');
+            
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                opt.style.background = 'white';
+                opt.style.color = '#1a1a1a';
+                const letter = opt.querySelector('.option-letter');
+                letter.style.background = '#667eea';
+                letter.style.color = 'white';
+            });
+            
+            selectedOption.classList.add('selected');
+            selectedOption.style.background = '#667eea';
+            selectedOption.style.color = 'white';
+            const selectedLetter = selectedOption.querySelector('.option-letter');
+            selectedLetter.style.background = 'white';
+            selectedLetter.style.color = '#667eea';
+            
+            const questionIndex = parseInt(questionContainer.dataset.question) - 1;
+            userAnswers[questionIndex] = selectedOption.dataset.answer;
+            
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                questions[currentQuestionIndex].style.display = 'none';
+                currentQuestionIndex++;
+                questions[currentQuestionIndex].style.display = 'block';
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (userAnswers[currentQuestionIndex]) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+                
+                if (currentQuestionIndex === questions.length - 1) {
+                    document.getElementById('nextBtn').textContent = 'Submit Quiz';
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex > 0) {
+                questions[currentQuestionIndex].style.display = 'none';
+                currentQuestionIndex--;
+                questions[currentQuestionIndex].style.display = 'block';
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('nextBtn').textContent = 'Next';
+                document.getElementById('nextBtn').disabled = false;
+                
+                if (currentQuestionIndex === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            quizCompleted = true;
+            
+            document.getElementById('quizQuestions').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = (score / correctAnswers.length * 100).toFixed(0);
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+            `;
+            
+            if (score >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('failedButtons').style.display = 'none';
+            } else {
+                document.getElementById('passedButtons').style.display = 'none';
+                document.getElementById('failedButtons').style.display = 'block';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizCompleted = false;
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach((q, index) => {
+                q.style.display = index === 0 ? 'block' : 'none';
+            });
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                opt.style.background = 'white';
+                opt.style.color = '#1a1a1a';
+                const letter = opt.querySelector('.option-letter');
+                letter.style.background = '#667eea';
+                letter.style.color = 'white';
+            });
+            
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 500) {
+                showTaskStatus('Please complete all sections of your analysis (minimum 500 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Volatility analysis submitted successfully! Remember: Practice these strategies on your DEMO account only!', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+
+        function completeDay22() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% (3/5) before marking Day 22 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your volatility analysis before completing Day 22.');
+                return;
+            }
+            
+            alert('🎉 Congratulations! Day 22 completed! You understand volatile markets. Remember to practice on demo only! Day 23 unlocks in 24 hours.');
+        }
+
+        function proceedToDay23() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements (quiz 60%+ and task submission) before proceeding to Day 23.');
+                return;
+            }
+            
+            alert('Day 23: Hedge Funds & Copy Trading will be available in 24 hours!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

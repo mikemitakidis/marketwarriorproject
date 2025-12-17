@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 28: Global Economic Indicators | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            height: 100%;
+            width: 93.33%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .indicator-card {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .indicator-card h4 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .calendar-table th,
+        .calendar-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .calendar-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+        }
+        
+        .calendar-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .impact-high {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .impact-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        
+        .impact-low {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .calculator-section {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+        
+        .calc-input {
+            margin: 15px 0;
+        }
+        
+        .calc-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .calc-input input,
+        .calc-input select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .calc-button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-button:hover {
+            background: #5b21b6;
+            transform: translateY(-2px);
+        }
+        
+        .calc-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .quiz-option {
+            background: #f8fafc;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .quiz-option:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border: 2px solid #667eea;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: white;
+            color: #dc2626;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">🔥 PHASE 4: ADVANCED MARKETS - FINAL DAY!</div>
+            <div class="day-badge">DAY 28 OF 30</div>
+            <h1>🌍 Start Small, Realistic Expectations & Global Economic Indicators</h1>
+            <p>Master patience, set realistic goals, understand global markets, and commit to continuous education!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – Complete Trading Mastery</h2>
+            <p>Welcome to <strong>Day 28</strong> - the final day of Phase 4!</p>
+            <p>Today covers FOUR critical topics: <strong>Starting Small, Setting Realistic Expectations, Understanding Global Economic Indicators, and Committing to Continuous Education</strong>. This comprehensive day prepares you for long-term success!</p>
+            
+            <div class="highlight-box">
+                <h4>💡 Today's Complete Curriculum</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>🎯 Start Small - Why patience pays</li>
+                    <li>📊 Realistic Expectations - The truth about returns</li>
+                    <li>🌍 Global Economic Indicators - Market movers</li>
+                    <li>📚 Continuous Education - Never stop learning</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Master these four pillars for trading success!</strong></p>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ What You'll Master Today:</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>Small account advantages</strong></li>
+                    <li><strong>Professional return expectations</strong></li>
+                    <li><strong>Economic calendar mastery</strong></li>
+                    <li><strong>Lifelong learning plan</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                Video player will load here
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Part 1: Start Small - The Professional's Path</h2>
+            
+            <div class="highlight-box">
+                <h4>💰 Why Starting Small Wins</h4>
+                <p><strong>Professional trader progression:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li><strong>Months 1-6:</strong> Demo only ($100k virtual)</li>
+                    <li><strong>Months 7-12:</strong> $500-$1000 real account</li>
+                    <li><strong>Year 2:</strong> $5,000-$10,000 (if profitable)</li>
+                    <li><strong>Year 3+:</strong> Scale gradually with profits</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Remember:</strong> 90% who start big lose everything in 90 days!</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ The Small Account Advantage</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Less emotional pressure = Better decisions</li>
+                    <li>Mistakes are cheap lessons</li>
+                    <li>Focus on % returns, not $ amounts</li>
+                    <li>Build confidence without fear</li>
+                    <li>Develop discipline when stakes are low</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ Starting Small Success Formula</h4>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>Master one strategy completely</li>
+                    <li>Trade one market initially</li>
+                    <li>Risk only 1% per trade</li>
+                    <li>Focus on consistency, not home runs</li>
+                    <li>Reinvest profits, withdraw none for 1 year</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Part 2: Realistic Expectations - The Truth</h2>
+            
+            <div class="info-box">
+                <h4>🎯 Reality Check: Professional Returns</h4>
+                <table style="width: 100%; margin: 15px 0;">
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Trader Level</th>
+                        <th style="text-align: left; padding: 8px;">Annual Return</th>
+                        <th style="text-align: left; padding: 8px;">Monthly Average</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Beginner (Year 1)</td>
+                        <td style="padding: 8px; color: #dc2626;">-20% to 0%</td>
+                        <td style="padding: 8px;">Learning phase</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Developing (Year 2)</td>
+                        <td style="padding: 8px; color: #f59e0b;">0% to 20%</td>
+                        <td style="padding: 8px;">0-1.5%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Profitable (Year 3+)</td>
+                        <td style="padding: 8px; color: #10b981;">20% to 50%</td>
+                        <td style="padding: 8px;">1.5-4%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Professional</td>
+                        <td style="padding: 8px; color: #667eea;">30% to 60%</td>
+                        <td style="padding: 8px;">2.5-5%</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="warning-box">
+                <h4>🚫 Unrealistic Expectations to Avoid</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>❌ "Double my account every month"</li>
+                    <li>❌ "Turn $1000 into $100,000 in a year"</li>
+                    <li>❌ "Win every trade"</li>
+                    <li>❌ "Get rich quick"</li>
+                    <li>❌ "Quit my job after 3 months"</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ Realistic 90-Day Goals</h4>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li><strong>Month 1:</strong> Don't lose money (break even is success!)</li>
+                    <li><strong>Month 2:</strong> Achieve 40% win rate</li>
+                    <li><strong>Month 3:</strong> Make 2-5% profit</li>
+                    <li><strong>Celebrate:</strong> Small consistent gains!</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Part 3: Global Economic Indicators</h2>
+            
+            <div class="indicator-card">
+                <h4>1️⃣ GDP (Gross Domestic Product)</h4>
+                <p><strong>What it measures:</strong> Total economic output and growth</p>
+                <p><strong>Released:</strong> Quarterly (3 readings: Advance, Preliminary, Final)</p>
+                <p><strong>Healthy range:</strong> 2-3% annual growth</p>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <p><strong>Market Impact:</strong></p>
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li>GDP ↑ Better than expected → Stocks ↑, Currency ↑</li>
+                        <li>GDP ↓ Worse than expected → Stocks ↓, Currency ↓</li>
+                        <li>Recession = 2 quarters negative GDP</li>
+                    </ul>
+                </div>
+                
+                <p style="margin-top: 15px;"><strong>Trading tip:</strong> Trade the revision more than initial release!</p>
+            </div>
+
+            <div class="indicator-card">
+                <h4>2️⃣ CPI (Consumer Price Index) - Inflation</h4>
+                <p><strong>What it measures:</strong> Price changes, inflation rate</p>
+                <p><strong>Released:</strong> Monthly (usually 2nd week)</p>
+                <p><strong>Target:</strong> Central banks target 2% annual</p>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <p><strong>Market Impact:</strong></p>
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li>CPI ↑ High inflation → Rates likely ↑ → Stocks ↓, Bonds ↓</li>
+                        <li>CPI ↓ Low inflation → Rates likely ↓ → Stocks ↑, Bonds ↑</li>
+                        <li>Gold typically rises with inflation</li>
+                    </ul>
+                </div>
+                
+                <p style="margin-top: 15px;"><strong>Trading tip:</strong> Core CPI (ex-food/energy) matters more!</p>
+            </div>
+
+            <div class="indicator-card">
+                <h4>3️⃣ NFP (Non-Farm Payrolls) - Jobs Report</h4>
+                <p><strong>What it measures:</strong> Monthly job creation</p>
+                <p><strong>Released:</strong> First Friday of month, 8:30 AM EST</p>
+                <p><strong>Healthy range:</strong> 150K-250K jobs/month</p>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <p><strong>Market Impact:</strong></p>
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li>NFP ↑ Strong jobs → USD ↑, Stocks mixed</li>
+                        <li>NFP ↓ Weak jobs → USD ↓, Stocks ↓ (recession fear)</li>
+                        <li>Unemployment rate equally important</li>
+                    </ul>
+                </div>
+                
+                <p style="margin-top: 15px;"><strong>Trading tip:</strong> Most volatile day of month - reduce positions!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💰 Part 2: Central Bank Indicators</h2>
+            
+            <h3>Interest Rate Decisions</h3>
+            
+            <div class="info-box">
+                <h4>🏛️ Major Central Banks:</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Federal Reserve (Fed) - USA:</strong> 8 meetings/year</li>
+                    <li><strong>European Central Bank (ECB) - Europe:</strong> 8 meetings/year</li>
+                    <li><strong>Bank of England (BoE) - UK:</strong> 8 meetings/year</li>
+                    <li><strong>Bank of Japan (BoJ) - Japan:</strong> 8 meetings/year</li>
+                </ul>
+                
+                <p style="margin-top: 15px;"><strong>Impact:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Rate ↑ = Currency ↑, Stocks ↓, Bonds ↓</li>
+                    <li>Rate ↓ = Currency ↓, Stocks ↑, Bonds ↑</li>
+                    <li>Forward guidance often more important than actual decision</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Trading Central Bank Days</h4>
+                <p><strong>Rules for safety:</strong></p>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>Close positions before announcement</li>
+                    <li>Wait 30 minutes after for volatility to settle</li>
+                    <li>Trade the trend that emerges, not the initial spike</li>
+                    <li>Watch for statement changes, not just rates</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📅 Part 3: Economic Calendar</h2>
+            
+            <h3>Weekly Economic Schedule</h3>
+            
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Time (EST)</th>
+                        <th>Indicator</th>
+                        <th>Impact</th>
+                        <th>Trading Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Monday</td>
+                        <td>10:00 AM</td>
+                        <td>Manufacturing PMI</td>
+                        <td class="impact-medium">Medium</td>
+                        <td>Watch for trend</td>
+                    </tr>
+                    <tr>
+                        <td>Tuesday</td>
+                        <td>10:00 AM</td>
+                        <td>Consumer Confidence</td>
+                        <td class="impact-medium">Medium</td>
+                        <td>Affects retail stocks</td>
+                    </tr>
+                    <tr>
+                        <td>Wednesday</td>
+                        <td>2:00 PM</td>
+                        <td>Fed Minutes</td>
+                        <td class="impact-high">High</td>
+                        <td>Reduce positions</td>
+                    </tr>
+                    <tr>
+                        <td>Thursday</td>
+                        <td>8:30 AM</td>
+                        <td>Jobless Claims</td>
+                        <td class="impact-low">Low</td>
+                        <td>Minor adjustments</td>
+                    </tr>
+                    <tr>
+                        <td>Friday</td>
+                        <td>8:30 AM</td>
+                        <td>NFP (1st Friday)</td>
+                        <td class="impact-high">HIGH</td>
+                        <td>Stay flat or hedge</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <h4>✅ Pro Calendar Tips</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Use <strong>Forex Factory</strong> or <strong>Investing.com</strong> calendar</li>
+                    <li>Filter for high-impact events only</li>
+                    <li>Set alerts 30 minutes before releases</li>
+                    <li>Note consensus vs actual for surprises</li>
+                    <li>Track same indicator over months for trends</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌐 Part 4: Global Indicators</h2>
+            
+            <h3>Regional Economic Data</h3>
+            
+            <div class="indicator-card">
+                <h4>🇺🇸 United States</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>ISM Manufacturing/Services PMI</li>
+                    <li>Retail Sales</li>
+                    <li>Housing Starts</li>
+                    <li>Consumer Confidence</li>
+                    <li>Initial Jobless Claims (weekly)</li>
+                </ul>
+            </div>
+
+            <div class="indicator-card">
+                <h4>🇪🇺 Europe</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>German IFO Business Climate</li>
+                    <li>Eurozone CPI</li>
+                    <li>PMI Composite</li>
+                    <li>ECB Rate Decision</li>
+                    <li>EU Unemployment Rate</li>
+                </ul>
+            </div>
+
+            <div class="indicator-card">
+                <h4>🇨🇳 China/Asia</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>China GDP (quarterly)</li>
+                    <li>Caixin PMI</li>
+                    <li>Japanese Tankan Survey</li>
+                    <li>RBA Rate Decision (Australia)</li>
+                    <li>China Trade Balance</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 Part 5: Trading Economic Releases</h2>
+            
+            <h3>News Trading Strategies</h3>
+            
+            <div class="highlight-box">
+                <h4>🎯 Strategy 1: Fade the Spike</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li>Wait for initial knee-jerk reaction</li>
+                    <li>Enter opposite direction after 5-15 minutes</li>
+                    <li>Target: 50% retracement of spike</li>
+                    <li>Stop: Beyond spike high/low</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Best for:</strong> NFP, CPI overreactions</p>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 Strategy 2: Breakout Continuation</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li>Mark range before news</li>
+                    <li>Wait for clear break with volume</li>
+                    <li>Enter on first pullback</li>
+                    <li>Target: Range width projection</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Best for:</strong> Central bank surprises</p>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 Strategy 3: Pre-Position (Advanced)</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li>Analyze consensus vs whisper numbers</li>
+                    <li>Position small 1 hour before</li>
+                    <li>Use options for limited risk</li>
+                    <li>Exit immediately on release</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Warning:</strong> High risk, only with experience!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧮 Economic Impact Calculator</h2>
+            
+            <div class="calculator-section">
+                <h4>Calculate Market Movement Potential</h4>
+                
+                <div class="calc-input">
+                    <label>Select Indicator:</label>
+                    <select id="indicator">
+                        <option value="nfp">NFP (Jobs Report)</option>
+                        <option value="cpi">CPI (Inflation)</option>
+                        <option value="gdp">GDP Growth</option>
+                        <option value="rates">Interest Rate Decision</option>
+                    </select>
+                </div>
+                
+                <div class="calc-input">
+                    <label>Consensus Expectation:</label>
+                    <input type="number" id="consensus" placeholder="e.g., 200" step="0.1">
+                </div>
+                
+                <div class="calc-input">
+                    <label>Actual Result:</label>
+                    <input type="number" id="actual" placeholder="e.g., 250" step="0.1">
+                </div>
+                
+                <div class="calc-input">
+                    <label>Asset to Trade:</label>
+                    <select id="asset">
+                        <option value="spy">S&P 500 (SPY)</option>
+                        <option value="usd">US Dollar Index</option>
+                        <option value="gold">Gold</option>
+                        <option value="bonds">10Y Treasury</option>
+                    </select>
+                </div>
+                
+                <button class="calc-button" onclick="calculateImpact()">Calculate Impact</button>
+                
+                <div class="calc-result" id="impactResult"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 Part 6: Continuous Education - Never Stop Learning</h2>
+            
+            <div class="highlight-box">
+                <h4>🎓 Your Ongoing Education Plan</h4>
+                <p><strong>Daily (30 minutes):</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Read market news and analysis</li>
+                    <li>Review one trading concept</li>
+                    <li>Watch educational videos</li>
+                    <li>Update your trading journal</li>
+                </ul>
+                
+                <p style="margin-top: 15px;"><strong>Weekly (2 hours):</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Deep dive into one new strategy</li>
+                    <li>Backtest and analyze trades</li>
+                    <li>Join trading webinars</li>
+                    <li>Review and improve your plan</li>
+                </ul>
+                
+                <p style="margin-top: 15px;"><strong>Monthly (Full day):</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Complete performance review</li>
+                    <li>Read one trading book</li>
+                    <li>Take an advanced course</li>
+                    <li>Network with other traders</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>📖 Essential Resources for Continuous Learning</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Books:</strong> Market Wizards, Trading in the Zone, Technical Analysis</li>
+                    <li><strong>Websites:</strong> Investopedia, BabyPips, TradingView Ideas</li>
+                    <li><strong>YouTube:</strong> Rayner Teo, The Trading Channel, SMB Capital</li>
+                    <li><strong>Podcasts:</strong> Chat with Traders, Better System Trader</li>
+                    <li><strong>Communities:</strong> r/Forex, EliteTrader, Trade2Win</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ The 1% Better Rule</h4>
+                <p>Improve just 1% each week:</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Week 1: Better entry timing</li>
+                    <li>Week 2: Improved stop placement</li>
+                    <li>Week 3: Enhanced risk management</li>
+                    <li>Week 4: Stronger emotional control</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Result:</strong> 52% improvement per year = Trading mastery!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 Extra Learning Notes</h2>
+            
+            <div class="highlight-box">
+                <h4>🎯 The Complete Trader's Mindset</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Start Small:</strong> Protect capital while learning</li>
+                    <li><strong>Think Realistic:</strong> Aim for consistent base hits, not home runs</li>
+                    <li><strong>Stay Informed:</strong> Economic indicators drive everything</li>
+                    <li><strong>Keep Learning:</strong> Markets evolve, so must you</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 Remember These Truths</h4>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>90% of traders fail because they start too big</li>
+                    <li>Profitable traders average 20-50% annually, not 1000%</li>
+                    <li>Economic news creates the best opportunities</li>
+                    <li>Education is the only investment that always pays</li>
+                    <li>Patience and discipline beat intelligence every time</li>
+                </ol>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Final Reality Check</h4>
+                <p>Trading is a BUSINESS, not a lottery ticket. Treat it professionally:</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Minimum 1-2 years to become profitable</li>
+                    <li>Expect to lose money initially (tuition fee)</li>
+                    <li>Success requires daily commitment</li>
+                    <li>Most quit before breakthrough - don't be them!</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <h2>📝 Day 28 Quiz - Test Your Knowledge</h2>
+            
+            <div id="quizQuestions">
+                <div class="question-container active" data-question="1">
+                    <div class="question-text">1. Which indicator is released on the first Friday of each month?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>GDP</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>CPI</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>NFP (Non-Farm Payrolls)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Interest Rates</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="2">
+                    <div class="question-text">2. What happens to currency when interest rates increase?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Currency strengthens (goes up)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Currency weakens (goes down)</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>No effect</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Random movement</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="3">
+                    <div class="question-text">3. What is the central bank's typical inflation target?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>0%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>2%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>5%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>10%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="4">
+                    <div class="question-text">4. How many quarters of negative GDP indicate a recession?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>1 quarter</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>2 consecutive quarters</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>3 quarters</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>4 quarters</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="5">
+                    <div class="question-text">5. What should you do before high-impact news?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Increase position size</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Reduce or close positions</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Add more leverage</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Ignore the news</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-navigation">
+                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
+                <div id="questionInfo">
+                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+                <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+            </div>
+
+            <div id="quizResults" class="quiz-results" style="display: none; text-align: center; margin-top: 30px;">
+                <h3>Quiz Complete!</h3>
+                <div id="scoreDisplay"></div>
+                <div id="passedButtons" style="display: none;">
+                    <p style="color: #059669; font-size: 1.2em; margin: 20px 0;">✅ Excellent! You understand economic indicators!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+                <div id="failedButtons" style="display: none;">
+                    <p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review and try again!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 28 Task - Economic Calendar Analysis</h2>
+            <h3>Analyze next week's economic events and plan your trading!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Research next week's economic calendar and create a trading plan for major releases. Include expected market reactions and your strategy!</p>
+            </div>
+
+            <textarea id="taskResponse" placeholder="ECONOMIC CALENDAR TRADING PLAN
+
+Date: [Today's Date]
+Week of: [Next Week's Dates]
+Source: [ForexFactory/Investing.com/Other]
+
+═══════════════════════════════════════
+HIGH IMPACT EVENTS NEXT WEEK
+═══════════════════════════════════════
+
+EVENT #1:
+Date & Time: [Day, Time EST]
+Indicator: [e.g., US CPI]
+Previous: [Last month's number]
+Consensus: [Market expectation]
+Importance: [High/Medium/Low]
+
+Expected Market Reaction:
+- If ABOVE consensus: [How markets might react]
+- If BELOW consensus: [How markets might react]
+- If AS EXPECTED: [Likely market response]
+
+My Trading Plan:
+- Asset to trade: [EUR/USD, S&P, Gold, etc.]
+- Strategy: [Fade spike/Breakout/Stay flat]
+- Entry criteria: [Specific conditions]
+- Risk management: [Position size, stops]
+- Time frame: [How long to hold]
+
+═══════════════════════════════════════
+
+EVENT #2:
+Date & Time: [Day, Time EST]
+Indicator: [e.g., ECB Rate Decision]
+Previous: [Current rate]
+Consensus: [Expected decision]
+Importance: [High/Medium/Low]
+
+Expected Market Reaction:
+- If HAWKISH: [Market response]
+- If DOVISH: [Market response]
+- If NEUTRAL: [Market response]
+
+My Trading Plan:
+[Same structure as above]
+
+═══════════════════════════════════════
+
+EVENT #3:
+Date & Time: [Day, Time EST]
+Indicator: [e.g., NFP]
+Previous: [Last month]
+Consensus: [Expectation]
+Importance: HIGH
+
+Expected Market Reaction:
+[Analysis based on current market context]
+
+My Trading Plan:
+[Same structure as above]
+
+═══════════════════════════════════════
+WEEKLY RISK ASSESSMENT
+═══════════════════════════════════════
+
+Total High-Impact Events: [Number]
+Riskiest Day: [Day with most events]
+Safest Trading Window: [Time periods between events]
+
+Position Sizing Plan:
+- Monday: [Normal/Reduced/Flat]
+- Tuesday: [Normal/Reduced/Flat]
+- Wednesday: [Normal/Reduced/Flat]
+- Thursday: [Normal/Reduced/Flat]
+- Friday: [Normal/Reduced/Flat]
+
+═══════════════════════════════════════
+ECONOMIC THEMES TO WATCH
+═══════════════════════════════════════
+
+Current Market Focus:
+1. [e.g., Inflation concerns]
+2. [e.g., Growth slowdown]
+3. [e.g., Central bank policy]
+
+How This Affects Trading:
+- Stocks: [Bullish/Bearish bias]
+- Bonds: [Rising/Falling yields expected]
+- Dollar: [Strengthening/Weakening trend]
+- Gold: [Safe haven demand high/low]
+
+═══════════════════════════════════════
+PREPARATION CHECKLIST
+═══════════════════════════════════════
+
+□ Calendar alerts set for all high-impact events
+□ Consensus numbers noted for comparison
+□ Position sizes reduced before major releases
+□ Stop losses tightened on existing positions
+□ Practice account ready for news trading
+□ Alternative scenarios planned (surprise outcomes)
+
+═══════════════════════════════════════
+KEY LESSONS FROM DAY 28
+═══════════════════════════════════════
+
+Top 3 Takeaways:
+1. [Most important learning about indicators]
+2. [Key insight about market reactions]
+3. [Personal rule for news trading]
+
+Economic Indicator I'll Focus On:
+[Which one and why]
+
+My News Trading Rule:
+[Personal guideline for economic releases]"></textarea>
+            
+            <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()" style="background: #10b981; color: white; padding: 15px 40px; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; display: block; margin: 20px auto;">Submit Economic Analysis</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; text-align: center;">
+            <h2>👀 Phase 5 Begins Tomorrow!</h2>
+            <p><strong>Day 29: SMART Goals Setting & Review</strong></p>
+            <p>Create your personalized 90-day trading success plan!</p>
+        </div>
+
+        <div class="completion-section">
+            <h2>🎉 PHASE 4 COMPLETE - Advanced Markets Mastered!</h2>
+            <p>You now understand the global forces that move markets!</p>
+            <button class="completion-button" onclick="completeDay28()">Complete Day 28 ✓</button>
+            <button class="completion-button" onclick="proceedToDay29()">Enter Phase 5 →</button>
+        </div>
+    </div>
+
+    <script>
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['c', 'a', 'b', 'b', 'b'];
+        let quizCompleted = false;
+        let quizScore = 0;
+        let taskSubmitted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            document.getElementById('totalQuestions').textContent = correctAnswers.length;
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const container = this.closest('.question-container');
+                    container.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    const questionNum = parseInt(container.dataset.question);
+                    userAnswers[questionNum - 1] = this.dataset.answer;
+                    
+                    document.getElementById('nextBtn').disabled = false;
+                });
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < 4) {
+                document.querySelectorAll('.question-container').forEach(q => {
+                    q.classList.remove('active');
+                });
+                currentQuestionIndex++;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                
+                if (currentQuestionIndex === 4) {
+                    document.getElementById('nextBtn').textContent = 'Submit';
+                }
+                
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (!userAnswers[currentQuestionIndex]) {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                document.querySelectorAll('.question-container').forEach(q => {
+                    q.classList.remove('active');
+                });
+                currentQuestionIndex--;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                
+                if (currentQuestionIndex === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+                
+                document.getElementById('nextBtn').textContent = 'Next';
+                document.getElementById('nextBtn').disabled = false;
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            quizCompleted = true;
+            
+            document.getElementById('quizQuestions').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = (score / correctAnswers.length) * 100;
+            const resultHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+                <p>${score >= 3 ? 'Excellent! You understand economic indicators!' : 'Review the material and try again. Need 60% to pass.'}</p>
+            `;
+            document.getElementById('scoreDisplay').innerHTML = resultHTML;
+            
+            if (score >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('failedButtons').style.display = 'none';
+            } else {
+                document.getElementById('passedButtons').style.display = 'none';
+                document.getElementById('failedButtons').style.display = 'block';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizCompleted = false;
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach(q => q.classList.remove('active'));
+            questions[0].classList.add('active');
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
+
+        function calculateImpact() {
+            const indicator = document.getElementById('indicator').value;
+            const consensus = parseFloat(document.getElementById('consensus').value);
+            const actual = parseFloat(document.getElementById('actual').value);
+            const asset = document.getElementById('asset').value;
+            
+            if (!consensus || !actual) {
+                alert('Please enter both consensus and actual values');
+                return;
+            }
+            
+            const surprise = ((actual - consensus) / consensus * 100).toFixed(2);
+            const beat = actual > consensus;
+            
+            let impact = '';
+            let direction = '';
+            let magnitude = '';
+            
+            if (Math.abs(surprise) > 20) {
+                magnitude = 'MAJOR';
+            } else if (Math.abs(surprise) > 10) {
+                magnitude = 'Significant';
+            } else if (Math.abs(surprise) > 5) {
+                magnitude = 'Moderate';
+            } else {
+                magnitude = 'Minor';
+            }
+            
+            // Determine market impact based on indicator and asset
+            if (indicator === 'nfp') {
+                if (beat) {
+                    if (asset === 'spy') direction = '↑ Bullish (strong economy)';
+                    if (asset === 'usd') direction = '↑ Dollar strengthens';
+                    if (asset === 'gold') direction = '↓ Gold weakens';
+                    if (asset === 'bonds') direction = '↓ Bonds fall (yields up)';
+                } else {
+                    if (asset === 'spy') direction = '↓ Bearish (weak economy)';
+                    if (asset === 'usd') direction = '↓ Dollar weakens';
+                    if (asset === 'gold') direction = '↑ Gold rallies (safe haven)';
+                    if (asset === 'bonds') direction = '↑ Bonds rally (yields down)';
+                }
+            }
+            
+            const resultHTML = `
+                <h4>${magnitude} Market Impact Expected!</h4>
+                <p><strong>Surprise:</strong> ${beat ? '+' : ''}${surprise}% ${beat ? 'beat' : 'miss'}</p>
+                <p><strong>Expected:</strong> ${consensus}</p>
+                <p><strong>Actual:</strong> ${actual}</p>
+                <p style="margin-top: 15px; font-size: 1.2em; font-weight: bold; color: ${beat ? '#10b981' : '#ef4444'};">
+                    Market Direction: ${direction}
+                </p>
+                <p style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 8px;">
+                    <strong>Trading Tip:</strong> ${magnitude === 'MAJOR' ? 'Expect high volatility! Consider staying flat or using tight stops.' : 'Normal volatility expected. Trade your plan with proper risk management.'}
+                </p>
+            `;
+            
+            const resultDiv = document.getElementById('impactResult');
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 600) {
+                showTaskStatus('Please complete your economic calendar analysis (minimum 600 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Economic analysis submitted! Use this process every week!', 'success');
+            showTaskSubmitted();
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Analysis Submitted ✓';
+            submitBtn.style.backgroundColor = '#059669';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+        }
+
+        function completeDay28() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% (3/5) before marking Day 28 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your economic analysis before completing Day 28.');
+                return;
+            }
+            
+            alert('🎉 PHASE 4 COMPLETE! You understand global market forces! Day 29 unlocks in 24 hours.');
+        }
+
+        function proceedToDay29() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements (quiz 60%+ and task) before proceeding to Phase 5.');
+                return;
+            }
+            
+            alert('Phase 5 begins tomorrow with Day 29: SMART Goals Setting & Review!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
