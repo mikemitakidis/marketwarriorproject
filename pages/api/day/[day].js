@@ -1,7 +1,7 @@
 // Use correct relative imports.  The API route lives under
 // pages/api/day/[day].js.  The lib directory is at the root
 // of the project so we only need to traverse three levels up.
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/day/[day]
@@ -31,21 +31,51 @@ export default async function handler(req, res) {
   }
   const userId = user.id;
   const supabase = getServiceSupabase();
+
+  // Check payment status first
+  const gate = await getGateStatus(userId);
+  if (!gate.hasPaid) {
+    return res.status(403).json({ error: 'Payment required', redirect: '/pay' });
+  }
+  if (!gate.welcomeCompleted) {
+    return res.status(403).json({ error: 'Please complete onboarding first', redirect: '/welcome' });
+  }
+
   // Check whether the day is unlocked using progress table
-  const { data: progress, error: progError } = await supabase
+  let { data: progress, error: progError } = await supabase
     .from('challenge_progress')
     .select('*')
     .eq('user_id', userId)
     .eq('day', dayNum)
     .single();
+
+  // For day 1, auto-create progress record if it doesn't exist
+  if ((progError || !progress) && dayNum === 1) {
+    const { error: insertError } = await supabase
+      .from('challenge_progress')
+      .upsert({ user_id: userId, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
+
+    if (!insertError) {
+      // Re-fetch the progress record
+      const { data: newProgress } = await supabase
+        .from('challenge_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('day', dayNum)
+        .single();
+      progress = newProgress;
+      progError = null;
+    }
+  }
+
   if (progError || !progress) {
-    return res.status(403).json({ error: 'No progress record found for day' });
+    return res.status(403).json({ error: 'Day not available yet. Complete previous days first.' });
   }
   // Check if day is unlocked using the unlocked boolean
   if (!progress.unlocked) {
-    return res.status(403).json({ error: 'Day is locked' });
+    return res.status(403).json({ error: 'Day is locked. Complete previous days first.' });
   }
-  // Additional check: ensure previous day (if any) has been completed and passed
+  // Additional check: ensure previous day (if any) has been completed
   if (dayNum > 1) {
     const { data: prevProgress, error: prevErr } = await supabase
       .from('challenge_progress')
@@ -53,31 +83,8 @@ export default async function handler(req, res) {
       .eq('user_id', userId)
       .eq('day', dayNum - 1)
       .single();
-    if (prevErr || !prevProgress || !prevProgress.completed_at) {
-      return res.status(403).json({ error: 'Previous day not completed' });
-    }
-    // Check pass threshold in quiz_results
-    const { data: prevResult, error: resultErr } = await supabase
-      .from('quiz_results')
-      .select('score, total')
-      .eq('user_id', userId)
-      .eq('day', dayNum - 1)
-      .single();
-    if (!resultErr && prevResult) {
-      const passRate = prevResult.score / prevResult.total;
-      if (passRate < 0.6) {
-        return res.status(403).json({ error: 'Previous day quiz not passed' });
-      }
-    }
-    // Ensure task submission exists for previous day
-    const { data: taskRow, error: taskErr } = await supabase
-      .from('task_submissions')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('day', dayNum - 1)
-      .single();
-    if (taskErr || !taskRow) {
-      return res.status(403).json({ error: 'Previous day task not submitted' });
+    if (prevErr || !prevProgress || !prevProgress.completed) {
+      return res.status(403).json({ error: 'Complete the previous day first' });
     }
   }
   // Fetch lesson content (service role only)
