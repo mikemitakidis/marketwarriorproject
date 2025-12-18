@@ -1,99 +1,169 @@
-import { useEffect, useState } from 'react';
-import { getUserFromJwt, getUserProfile } from '../../lib/auth';
-import { getServiceSupabase } from '../../lib/supabase';
+import Head from 'next/head';
+import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
 
 /**
  * Admin Forum Moderation Page.
  *
- * This page lists all forum posts with their statuses and allows
- * administrators to moderate them.  Only users with is_admin=true are
- * permitted to access this page.  Non‑admins will see an access
- * denied message.  The UI is intentionally simple and does not yet
- * implement full moderation actions; it is a foundation for future
- * development.
+ * Lists all forum threads for admin moderation.
+ * Only users with is_admin=true can access this page.
  */
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromJwt(req);
-    const profile = await getUserProfile(user.id);
-    if (!profile || !profile.is_admin) {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return { redirect: { destination: '/login', permanent: false } };
+    }
+
+    const supabase = getServiceSupabase();
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.is_admin) {
       return {
-        props: {
-          accessDenied: true,
-        },
+        props: { accessDenied: true, threads: [] },
       };
     }
-    // Fetch all posts with their statuses for admin overview
-    const supabase = getServiceSupabase();
-    const { data: posts, error } = await supabase
-      .from('forum_posts')
-      .select(
-        'id, title, author_name, status, is_pinned, is_locked, created_at, forum_categories:category_id(name)'
-      )
+
+    // Fetch all threads with author info
+    const { data: threads, error } = await supabase
+      .from('forum_threads')
+      .select(`
+        id,
+        title,
+        body,
+        is_pinned,
+        is_locked,
+        created_at,
+        author:author_id (full_name)
+      `)
       .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
+
+    if (error) {
+      console.error('Error fetching threads:', error);
+      throw new Error(error.message);
+    }
+
     return {
       props: {
-        posts,
         accessDenied: false,
+        threads: (threads || []).map(t => ({
+          ...t,
+          authorName: t.author?.full_name || 'Anonymous',
+        })),
       },
     };
   } catch (err) {
-    console.error(err);
+    console.error('Admin forum error:', err);
     return {
-      props: {
-        accessDenied: true,
-      },
+      props: { accessDenied: true, threads: [] },
     };
   }
 }
 
-export default function AdminForumPage({ posts, accessDenied }) {
+export default function AdminForumPage({ threads, accessDenied }) {
   if (accessDenied) {
-    return <div style={{ padding: '20px' }}>Access Denied</div>;
+    return (
+      <div style={{
+        padding: '40px',
+        textAlign: 'center',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+        background: '#0f172a',
+        color: 'white',
+        minHeight: '100vh'
+      }}>
+        <h1>Access Denied</h1>
+        <p style={{ color: '#94a3b8' }}>You do not have permission to access this page.</p>
+        <a href="/dashboard" style={{ color: '#667eea' }}>Return to Dashboard</a>
+      </div>
+    );
   }
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
-      <h1>Forum Moderation</h1>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr style={{ background: '#333', color: '#fff' }}>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Title</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Author</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Category</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Status</th>
-            <th style={{ padding: '10px' }}>Pinned</th>
-            <th style={{ padding: '10px' }}>Locked</th>
-            <th style={{ padding: '10px' }}>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts && posts.length > 0 ? (
-            posts.map((post) => (
-              <tr key={post.id} style={{ borderBottom: '1px solid #444' }}>
-                <td style={{ padding: '10px' }}>
-                  <a href={`/community/post/${post.id}`} style={{ color: '#89c9f9' }}>
-                    {post.title}
-                  </a>
-                </td>
-                <td style={{ padding: '10px' }}>{post.author_name}</td>
-                <td style={{ padding: '10px' }}>{post.forum_categories?.name}</td>
-                <td style={{ padding: '10px' }}>{post.status}</td>
-                <td style={{ padding: '10px', textAlign: 'center' }}>{post.is_pinned ? '📌' : ''}</td>
-                <td style={{ padding: '10px', textAlign: 'center' }}>{post.is_locked ? '🔒' : ''}</td>
-                <td style={{ padding: '10px' }}>{new Date(post.created_at).toLocaleDateString()}</td>
-              </tr>
-            ))
-          ) : (
+    <>
+      <Head>
+        <title>Forum Moderation - Admin - Market Warrior</title>
+      </Head>
+
+      <style jsx global>{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #0f172a;
+          color: white;
+          min-height: 100vh;
+        }
+      `}</style>
+
+      <style jsx>{`
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .header { margin-bottom: 24px; }
+        .back-link { color: #667eea; text-decoration: none; }
+        h1 { margin-top: 16px; font-size: 2rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #1e293b; color: #94a3b8; font-weight: 600; }
+        tr:hover { background: #1e293b; }
+        .link { color: #667eea; text-decoration: none; }
+        .link:hover { text-decoration: underline; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
+        .badge-pinned { background: #fbbf24; color: #78350f; }
+        .badge-locked { background: #64748b; color: white; }
+        .note { margin-top: 24px; color: #64748b; font-size: 0.875rem; }
+      `}</style>
+
+      <div className="container">
+        <div className="header">
+          <a href="/admin" className="back-link">← Admin Dashboard</a>
+          <h1>Forum Moderation</h1>
+        </div>
+
+        <table>
+          <thead>
             <tr>
-              <td colSpan={7} style={{ padding: '10px' }}>No posts found</td>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Status</th>
+              <th>Created</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-      <p style={{ marginTop: '20px', fontSize: '14px', color: '#999' }}>
-        Note: Moderation actions (pin, lock, hide, delete) will be added in a future milestone.
-      </p>
-    </div>
+          </thead>
+          <tbody>
+            {threads && threads.length > 0 ? (
+              threads.map((thread) => (
+                <tr key={thread.id}>
+                  <td>
+                    <a href={`/community/post/${thread.id}`} className="link">
+                      {thread.title}
+                    </a>
+                  </td>
+                  <td>{thread.authorName}</td>
+                  <td>
+                    {thread.is_pinned && <span className="badge badge-pinned">📌 Pinned</span>}
+                    {' '}
+                    {thread.is_locked && <span className="badge badge-locked">🔒 Locked</span>}
+                    {!thread.is_pinned && !thread.is_locked && <span style={{ color: '#64748b' }}>Normal</span>}
+                  </td>
+                  <td>{new Date(thread.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', color: '#64748b' }}>
+                  No threads found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <p className="note">
+          Note: Moderation actions (pin, lock, delete) will be added in a future update.
+        </p>
+      </div>
+    </>
   );
 }
