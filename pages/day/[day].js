@@ -64,17 +64,19 @@ export async function getServerSideProps({ req, params }) {
         return { redirect: { destination: '/dashboard', permanent: false } };
       }
 
-      // Check quiz was passed (60% threshold)
-      const { data: quizResult } = await supabase
-        .from('quiz_results')
-        .select('score, total')
+      // Check quiz was passed (60% threshold) - using quiz_attempts table!
+      const { data: quizAttempt } = await supabase
+        .from('quiz_attempts')
+        .select('score, max_score, passed')
         .eq('user_id', user.id)
         .eq('day', dayNum - 1)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (quizResult) {
-        const passRate = quizResult.score / quizResult.total;
-        if (passRate < 0.6) {
+      if (quizAttempt) {
+        const passed = quizAttempt.passed || (quizAttempt.max_score > 0 && quizAttempt.score / quizAttempt.max_score >= 0.6);
+        if (!passed) {
           return { redirect: { destination: '/dashboard', permanent: false } };
         }
       }
@@ -85,6 +87,7 @@ export async function getServerSideProps({ req, params }) {
         .select('id')
         .eq('user_id', user.id)
         .eq('day', dayNum - 1)
+        .limit(1)
         .single();
 
       if (!taskSubmission) {
@@ -99,12 +102,19 @@ export async function getServerSideProps({ req, params }) {
       .eq('day', dayNum)
       .single();
 
-    // Fetch quiz questions (without correct answers)
-    const { data: quizQuestions } = await supabase
+    // Fetch quiz questions (without correct answers) - using correct column names!
+    const { data: rawQuizQuestions } = await supabase
       .from('quiz_questions')
-      .select('id, question, options')
+      .select('id, question_text, options')
       .eq('day', dayNum)
-      .order('id');
+      .order('order_index');
+
+    // Transform to frontend format
+    const quizQuestions = (rawQuizQuestions || []).map(q => ({
+      id: q.id,
+      question: q.question_text,
+      options: q.options,
+    }));
 
     // Check if already completed
     const isCompleted = progress?.completed || false;

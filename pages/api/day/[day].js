@@ -1,38 +1,28 @@
-// Use correct relative imports.  The API route lives under
-// pages/api/day/[day].js.  The lib directory is at the root
-// of the project so we only need to traverse three levels up.
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/day/[day]
  *
- * Returns the lesson content, quiz questions (excluding correct
- * answers) and task prompt for a given day.  It ensures the user is
- * authenticated, has purchased access, and that the requested day is
- * unlocked based on their progress.  Client‑side code should call
- * this endpoint to load content rather than reading directly from
- * Supabase.
+ * Returns the lesson content, quiz questions, and task prompt for a given day.
+ * Ensures user is authenticated, paid, and has access to the day.
  */
 export default async function handler(req, res) {
-  const {
-    query: { day },
-  } = req;
+  const { query: { day } } = req;
   const dayNum = parseInt(day, 10);
-  // Validate day number: accept days 1 through 30.  If you need
-  // additional days simply adjust the upper bound here.  The
-  // existence of content for a day is checked later when loading
-  // from the database, so this prevents invalid routes (e.g. /day/0).
+
   if (isNaN(dayNum) || dayNum < 1 || dayNum > 30) {
     return res.status(400).json({ error: 'Invalid day' });
   }
+
   const user = await getUserFromRequest(req);
   if (!user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
+
   const userId = user.id;
   const supabase = getServiceSupabase();
 
-  // Check payment status first
+  // Check payment and onboarding status
   const gate = await getGateStatus(userId);
   if (!gate.hasPaid) {
     return res.status(403).json({ error: 'Payment required', redirect: '/pay' });
@@ -41,7 +31,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Please complete onboarding first', redirect: '/welcome' });
   }
 
-  // Check whether the day is unlocked using progress table
+  // Get progress for this day
   let { data: progress, error: progError } = await supabase
     .from('challenge_progress')
     .select('*')
@@ -49,14 +39,20 @@ export default async function handler(req, res) {
     .eq('day', dayNum)
     .single();
 
-  // For day 1, auto-create progress record if it doesn't exist
+  // For day 1, auto-create progress if doesn't exist
   if ((progError || !progress) && dayNum === 1) {
-    const { error: insertError } = await supabase
-      .from('challenge_progress')
-      .upsert({ user_id: userId, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
+    // First check if day 1 content exists
+    const { data: day1Content } = await supabase
+      .from('course_content')
+      .select('day')
+      .eq('day', 1)
+      .maybeSingle();
 
-    if (!insertError) {
-      // Re-fetch the progress record
+    if (day1Content) {
+      await supabase
+        .from('challenge_progress')
+        .upsert({ user_id: userId, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
+
       const { data: newProgress } = await supabase
         .from('challenge_progress')
         .select('*')
@@ -71,34 +67,38 @@ export default async function handler(req, res) {
   if (progError || !progress) {
     return res.status(403).json({ error: 'Day not available yet. Complete previous days first.' });
   }
-  // Check if day is unlocked using the unlocked boolean
+
   if (!progress.unlocked) {
     return res.status(403).json({ error: 'Day is locked. Complete previous days first.' });
   }
-  // Additional check: ensure previous day (if any) has been completed with quiz passed and task submitted
+
+  // For days > 1, verify previous day requirements
   if (dayNum > 1) {
-    const { data: prevProgress, error: prevErr } = await supabase
+    const { data: prevProgress } = await supabase
       .from('challenge_progress')
       .select('*')
       .eq('user_id', userId)
       .eq('day', dayNum - 1)
       .single();
-    if (prevErr || !prevProgress || !prevProgress.completed) {
+
+    if (!prevProgress || !prevProgress.completed) {
       return res.status(403).json({ error: 'Complete the previous day first' });
     }
 
-    // Check quiz was passed (60% threshold)
-    const { data: quizResult } = await supabase
-      .from('quiz_results')
-      .select('score, total')
+    // Check quiz was passed (using quiz_attempts - correct table!)
+    const { data: quizAttempt } = await supabase
+      .from('quiz_attempts')
+      .select('score, max_score, passed')
       .eq('user_id', userId)
       .eq('day', dayNum - 1)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
       .single();
 
-    if (quizResult) {
-      const passRate = quizResult.score / quizResult.total;
-      if (passRate < 0.6) {
-        return res.status(403).json({ error: 'You must pass the Day ' + (dayNum - 1) + ' quiz (60%) to continue' });
+    if (quizAttempt) {
+      const passed = quizAttempt.passed || (quizAttempt.max_score > 0 && quizAttempt.score / quizAttempt.max_score >= 0.6);
+      if (!passed) {
+        return res.status(403).json({ error: `Pass Day ${dayNum - 1} quiz (60%) to continue` });
       }
     }
 
@@ -108,34 +108,44 @@ export default async function handler(req, res) {
       .select('id')
       .eq('user_id', userId)
       .eq('day', dayNum - 1)
+      .limit(1)
       .single();
 
     if (!taskSubmission) {
-      return res.status(403).json({ error: 'Complete the Day ' + (dayNum - 1) + ' task to continue' });
+      return res.status(403).json({ error: `Complete Day ${dayNum - 1} task to continue` });
     }
   }
-  // Fetch lesson content (service role only)
-  const { data: contentRow, error: contentErr } = await supabase
+
+  // Fetch lesson content
+  const { data: content, error: contentErr } = await supabase
     .from('course_content')
-    .select('*')
+    .select('title, html_content, video_url, task_prompt')
     .eq('day', dayNum)
     .single();
-  if (contentErr || !contentRow) {
-    return res.status(404).json({ error: 'Content not found' });
+
+  if (contentErr || !content) {
+    return res.status(404).json({ error: 'Content not found for this day' });
   }
-  // Fetch quiz questions (excluding correct answers)
-  const { data: quizRows, error: quizErr } = await supabase
+
+  // Fetch quiz questions (using correct column: question_text, NOT question)
+  const { data: quizRows } = await supabase
     .from('quiz_questions')
-    .select('id, question, options')
+    .select('id, question_text, options')
     .eq('day', dayNum)
-    .order('id');
-  if (quizErr) {
-    return res.status(500).json({ error: 'Could not load quiz' });
-  }
+    .order('order_index');
+
+  // Transform quiz questions for frontend
+  const quizQuestions = (quizRows || []).map(q => ({
+    id: q.id,
+    question: q.question_text,
+    options: q.options,
+  }));
+
   return res.status(200).json({
-    lessonHtml: contentRow.html_content,
-    videoUrl: contentRow.video_url,
-    quizQuestions: quizRows || [],
-    taskPrompt: contentRow.task_prompt,
+    title: content.title,
+    lessonHtml: content.html_content,
+    videoUrl: content.video_url,
+    quizQuestions,
+    taskPrompt: content.task_prompt,
   });
 }

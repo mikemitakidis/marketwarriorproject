@@ -24,7 +24,7 @@ export async function getServerSideProps({ req }) {
 
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('full_name, email, challenge_start_date')
+      .select('full_name, email, paid_at')
       .eq('id', user.id)
       .single();
 
@@ -34,10 +34,10 @@ export async function getServerSideProps({ req }) {
       .eq('user_id', user.id)
       .order('day', { ascending: true });
 
-    // Get quiz results for average calculation
-    const { data: quizResults } = await supabase
-      .from('quiz_results')
-      .select('score, total')
+    // Get quiz attempts for average calculation (using correct table: quiz_attempts!)
+    const { data: quizAttempts } = await supabase
+      .from('quiz_attempts')
+      .select('score, max_score')
       .eq('user_id', user.id);
 
     // Calculate stats
@@ -55,13 +55,13 @@ export async function getServerSideProps({ req }) {
     const daysCompleted = completedDays.length;
     const overallProgress = Math.round((daysCompleted / 30) * 100);
 
-    // Calculate average quiz score
+    // Calculate average quiz score (using max_score instead of total!)
     let avgQuizScore = 0;
-    if (quizResults && quizResults.length > 0) {
-      const totalPercentage = quizResults.reduce((sum, r) => {
-        return sum + (r.total > 0 ? (r.score / r.total) * 100 : 0);
+    if (quizAttempts && quizAttempts.length > 0) {
+      const totalPercentage = quizAttempts.reduce((sum, r) => {
+        return sum + (r.max_score > 0 ? (r.score / r.max_score) * 100 : 0);
       }, 0);
-      avgQuizScore = Math.round(totalPercentage / quizResults.length);
+      avgQuizScore = Math.round(totalPercentage / quizAttempts.length);
     }
 
     return {

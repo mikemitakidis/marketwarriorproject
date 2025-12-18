@@ -36,11 +36,12 @@ export default async function handler(req, res) {
 
     if (existingProfile) {
       // Profile exists, update it (preserves has_paid)
+      // Note: only update full_name - no terms_accepted_at column in user_profiles!
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
           full_name: fullName.trim(),
-          terms_accepted_at: now,
+          full_name_locked: true, // Lock the name after setting
         })
         .eq('id', user.id);
 
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
         .insert({
           id: user.id,
           full_name: fullName.trim(),
-          terms_accepted_at: now,
+          full_name_locked: true,
         });
 
       if (profileError) {
