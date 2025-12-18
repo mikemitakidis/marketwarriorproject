@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       mode: 'payment',
       // Allow promotion codes so that coupons can be tested and applied.
       allow_promotion_codes: true,
-      success_url: `${req.headers.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${req.headers.origin}/welcome?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/`,
       metadata: { userId },
     });

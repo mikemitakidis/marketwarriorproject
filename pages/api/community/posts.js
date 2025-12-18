@@ -1,42 +1,37 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 
 /**
- * API endpoint for listing and creating forum posts.
+ * API endpoint for listing and creating forum threads.
  *
- * GET: Returns published posts filtered by optional category slug and day
- * number. Accepts query params `category` and `day`. Does not require auth.
- *
- * POST: Creates a new post. Requires authentication via cookie.
- * Body JSON must include `category_slug`, `title`, `content`, `author_name`
- * and optionally `day_number`.
+ * GET: Returns all threads with author info.
+ * POST: Creates a new thread. Requires authentication and payment.
  */
 export default async function handler(req, res) {
   const supabase = getServiceSupabase();
 
   if (req.method === 'GET') {
     try {
-      const { category, day } = req.query;
-      let query = supabase
-        .from('forum_posts')
-        .select(
-          'id, title, author_name, created_at, likes_count, comments_count, views_count, day_number, is_pinned, forum_categories:category_id (slug, name)'
-        )
-        .eq('status', 'published')
+      const { data: threads, error } = await supabase
+        .from('forum_threads')
+        .select(`
+          id,
+          title,
+          body,
+          is_pinned,
+          is_locked,
+          created_at,
+          author:author_id (full_name)
+        `)
         .order('is_pinned', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-      if (category) {
-        query = query.eq('forum_categories.slug', category);
-      }
-      if (day) {
-        query = query.eq('day_number', Number(day));
-      }
-
-      const { data, error } = await query;
       if (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Error fetching threads:', error);
+        return res.status(500).json({ error: 'Failed to fetch threads' });
       }
-      return res.status(200).json(data);
+
+      return res.status(200).json(threads || []);
     } catch (err) {
       console.error('community/posts GET error:', err);
       return res.status(500).json({ error: err.message });
@@ -49,43 +44,36 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
-      const { category_slug, title, content, author_name, day_number } = req.body;
-      if (!category_slug || !title || !content || !author_name) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      // Check if user has paid
+      const gate = await getGateStatus(user.id);
+      if (!gate.hasPaid) {
+        return res.status(403).json({ error: 'Payment required to post' });
       }
 
-      // Find category id by slug
-      const { data: cat, error: catErr } = await supabase
-        .from('forum_categories')
-        .select('id, slug')
-        .eq('slug', category_slug)
-        .single();
-
-      if (catErr || !cat) {
-        return res.status(400).json({ error: 'Invalid category' });
+      const { title, body } = req.body;
+      if (!title || !body) {
+        return res.status(400).json({ error: 'Title and body are required' });
       }
 
-      const { data: post, error } = await supabase
-        .from('forum_posts')
+      const { data: thread, error } = await supabase
+        .from('forum_threads')
         .insert({
-          user_id: user.id,
-          category_id: cat.id,
-          title,
-          content,
-          author_name,
-          day_number: day_number || null,
+          author_id: user.id,
+          title: title.trim(),
+          body: body.trim(),
         })
         .select()
         .single();
 
       if (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Error creating thread:', error);
+        return res.status(500).json({ error: 'Failed to create thread' });
       }
 
-      return res.status(201).json(post);
+      return res.status(201).json(thread);
     } catch (err) {
       console.error('community/posts POST error:', err);
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(500).json({ error: err.message });
     }
   } else {
     return res.status(405).json({ error: 'Method not allowed' });

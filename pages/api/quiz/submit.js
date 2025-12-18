@@ -3,56 +3,103 @@ import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth'
 /**
  * API route: /api/quiz/submit
  *
- * Accepts a POST request with `{ day: number, answers: { [questionId]: option } }`.
- * The service fetches the correct answers from the database, computes the
- * score, and stores the result in `quiz_results`.  The score is
- * returned to the client.  This route should only be called from the
- * client after the user completes the quiz; direct access to the
- * correct answers in the database is restricted via RLS.
+ * Accepts POST with `{ day: number, answers: { [questionId]: selectedOption } }`.
+ * Computes the score and stores the result in `quiz_attempts`.
+ * Returns score to the client.
  */
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
   try {
     const { day, answers } = req.body;
-    if (!day || !answers) throw new Error('Missing day or answers');
+    if (!day || !answers) {
+      return res.status(400).json({ error: 'Missing day or answers' });
+    }
+
     const user = await getUserFromRequest(req);
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
     const userId = user.id;
     const supabase = getServiceSupabase();
+
     // Fetch quiz questions with correct answers for the day
+    // Schema: quiz_questions has correct_option, question_text, options (jsonb)
     const { data: questions, error: qErr } = await supabase
       .from('quiz_questions')
-      .select('id, correct_answer')
+      .select('id, correct_option')
       .eq('day', day);
-    if (qErr || !questions) throw new Error('Could not load quiz questions');
+
+    if (qErr) {
+      console.error('Error fetching questions:', qErr);
+      return res.status(500).json({ error: 'Could not load quiz questions' });
+    }
+
+    if (!questions || questions.length === 0) {
+      return res.status(404).json({ error: 'No quiz questions found for this day' });
+    }
+
+    // Calculate score
     let score = 0;
     questions.forEach((q) => {
-      const ans = answers[q.id];
-      if (ans && ans.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) {
+      const userAnswer = answers[q.id];
+      if (userAnswer && userAnswer.trim().toLowerCase() === q.correct_option.trim().toLowerCase()) {
         score += 1;
       }
     });
+
     const total = questions.length;
-    // Save result
-    const { error: upErr } = await supabase
-      .from('quiz_results')
-      .upsert({ user_id: userId, day, score, total }, { onConflict: 'user_id,day' });
-    if (upErr) console.error('Error saving quiz result', upErr);
-    // Determine pass/fail (>=60%) and update progress if passed
-    const passRate = total > 0 ? score / total : 0;
-    if (passRate >= 0.6) {
-      // Mark day passed; do not mark completed; the task submission will complete
+    const passed = total > 0 && (score / total) >= 0.6;
+
+    // Save result to quiz_attempts (correct table name from schema!)
+    const { error: insertErr } = await supabase
+      .from('quiz_attempts')
+      .upsert({
+        user_id: userId,
+        day: day,
+        answers: answers,
+        score: score,
+        max_score: total,
+        passed: passed,
+        submitted_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day' });
+
+    if (insertErr) {
+      console.error('Error saving quiz attempt:', insertErr);
+      // Try insert if upsert fails (might not have unique constraint)
+      const { error: fallbackErr } = await supabase
+        .from('quiz_attempts')
+        .insert({
+          user_id: userId,
+          day: day,
+          answers: answers,
+          score: score,
+          max_score: total,
+          passed: passed,
+          submitted_at: new Date().toISOString(),
+        });
+
+      if (fallbackErr) {
+        console.error('Error inserting quiz attempt:', fallbackErr);
+      }
+    }
+
+    // Update challenge_progress if passed
+    if (passed) {
       await supabase
         .from('challenge_progress')
         .update({ quiz_passed: true })
         .eq('user_id', userId)
         .eq('day', day);
     }
-    return res.status(200).json({ score, total, passed: passRate >= 0.6 });
+
+    return res.status(200).json({ score, total, passed });
+
   } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: err.message });
+    console.error('Quiz submit error:', err);
+    return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
