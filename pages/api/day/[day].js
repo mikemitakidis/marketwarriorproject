@@ -75,7 +75,7 @@ export default async function handler(req, res) {
   if (!progress.unlocked) {
     return res.status(403).json({ error: 'Day is locked. Complete previous days first.' });
   }
-  // Additional check: ensure previous day (if any) has been completed
+  // Additional check: ensure previous day (if any) has been completed with quiz passed and task submitted
   if (dayNum > 1) {
     const { data: prevProgress, error: prevErr } = await supabase
       .from('challenge_progress')
@@ -85,6 +85,33 @@ export default async function handler(req, res) {
       .single();
     if (prevErr || !prevProgress || !prevProgress.completed) {
       return res.status(403).json({ error: 'Complete the previous day first' });
+    }
+
+    // Check quiz was passed (60% threshold)
+    const { data: quizResult } = await supabase
+      .from('quiz_results')
+      .select('score, total')
+      .eq('user_id', userId)
+      .eq('day', dayNum - 1)
+      .single();
+
+    if (quizResult) {
+      const passRate = quizResult.score / quizResult.total;
+      if (passRate < 0.6) {
+        return res.status(403).json({ error: 'You must pass the Day ' + (dayNum - 1) + ' quiz (60%) to continue' });
+      }
+    }
+
+    // Check task was submitted
+    const { data: taskSubmission } = await supabase
+      .from('task_submissions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('day', dayNum - 1)
+      .single();
+
+    if (!taskSubmission) {
+      return res.status(403).json({ error: 'Complete the Day ' + (dayNum - 1) + ' task to continue' });
     }
   }
   // Fetch lesson content (service role only)

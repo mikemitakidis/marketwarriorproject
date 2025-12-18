@@ -51,7 +51,7 @@ export async function getServerSideProps({ req, params }) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
-    // For days > 1, check if previous day is completed
+    // For days > 1, check if previous day is completed with quiz passed and task submitted
     if (dayNum > 1) {
       const { data: prevProgress } = await supabase
         .from('challenge_progress')
@@ -61,6 +61,33 @@ export async function getServerSideProps({ req, params }) {
         .single();
 
       if (!prevProgress?.completed) {
+        return { redirect: { destination: '/dashboard', permanent: false } };
+      }
+
+      // Check quiz was passed (60% threshold)
+      const { data: quizResult } = await supabase
+        .from('quiz_results')
+        .select('score, total')
+        .eq('user_id', user.id)
+        .eq('day', dayNum - 1)
+        .single();
+
+      if (quizResult) {
+        const passRate = quizResult.score / quizResult.total;
+        if (passRate < 0.6) {
+          return { redirect: { destination: '/dashboard', permanent: false } };
+        }
+      }
+
+      // Check task was submitted
+      const { data: taskSubmission } = await supabase
+        .from('task_submissions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('day', dayNum - 1)
+        .single();
+
+      if (!taskSubmission) {
         return { redirect: { destination: '/dashboard', permanent: false } };
       }
     }

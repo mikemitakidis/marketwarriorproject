@@ -27,17 +27,41 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
 
     // Update user_profiles with full name and terms acceptance
-    const { error: profileError } = await supabase
+    // Use update instead of upsert to preserve existing has_paid value
+    const { data: existingProfile } = await supabase
       .from('user_profiles')
-      .upsert({
-        id: user.id,
-        full_name: fullName.trim(),
-        terms_accepted_at: now,
-      }, { onConflict: 'id' });
+      .select('id')
+      .eq('id', user.id)
+      .single();
 
-    if (profileError) {
-      console.error('Error updating profile:', profileError);
-      return res.status(500).json({ error: 'Failed to save profile' });
+    if (existingProfile) {
+      // Profile exists, update it (preserves has_paid)
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: fullName.trim(),
+          terms_accepted_at: now,
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+        return res.status(500).json({ error: 'Failed to save profile' });
+      }
+    } else {
+      // No profile yet, create one
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: user.id,
+          full_name: fullName.trim(),
+          terms_accepted_at: now,
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        return res.status(500).json({ error: 'Failed to save profile' });
+      }
     }
 
     // Mark welcome as completed in user_onboarding

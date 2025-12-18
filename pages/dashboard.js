@@ -34,6 +34,12 @@ export async function getServerSideProps({ req }) {
       .eq('user_id', user.id)
       .order('day', { ascending: true });
 
+    // Get quiz results for average calculation
+    const { data: quizResults } = await supabase
+      .from('quiz_results')
+      .select('score, total')
+      .eq('user_id', user.id);
+
     // Calculate stats
     const progressRows = progress || [];
     const completedDays = progressRows.filter(r => r.completed).map(r => r.day);
@@ -49,6 +55,15 @@ export async function getServerSideProps({ req }) {
     const daysCompleted = completedDays.length;
     const overallProgress = Math.round((daysCompleted / 30) * 100);
 
+    // Calculate average quiz score
+    let avgQuizScore = 0;
+    if (quizResults && quizResults.length > 0) {
+      const totalPercentage = quizResults.reduce((sum, r) => {
+        return sum + (r.total > 0 ? (r.score / r.total) * 100 : 0);
+      }, 0);
+      avgQuizScore = Math.round(totalPercentage / quizResults.length);
+    }
+
     return {
       props: {
         user: {
@@ -60,7 +75,7 @@ export async function getServerSideProps({ req }) {
           currentDay,
           daysCompleted,
           overallProgress,
-          avgQuizScore: 0,
+          avgQuizScore,
         },
         unlockedDays,
         completedDays,
