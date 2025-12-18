@@ -2,7 +2,7 @@
 // body.  This helper collects all chunks of the incoming stream
 // into a Buffer so that Stripe can verify the signature.
 import Stripe from 'stripe';
-import { getServiceSupabase } from '../../../lib/supabase';
+const { getServiceSupabase } = require('../../../lib/serverAuth');
 
 export const config = {
   api: {

@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
-import { getServiceSupabase } from '../../../lib/supabase';
-const { getUserFromRequest } = require('../../../lib/serverAuth');
+const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
 
 /**
  * API route: /api/checkout/stripe
