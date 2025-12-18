@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { getServiceSupabase } from '../lib/supabase';
-import { supabaseClient } from '../lib/supabase';
-import { getUserFromJwt, getUserProfile } from '../lib/auth';
 import { useEffect, useState } from 'react';
+import { getUserFromRequest } from '../lib/serverAuth';
 
 /**
  * Dashboard page.
@@ -11,47 +10,56 @@ import { useEffect, useState } from 'react';
  * This page renders the provided dashboard template and overlays
  * dynamic content such as progress, unlocked days, and journal
  * integration.  The page uses `getServerSideProps` to verify the
- * Supabase JWT and fetch the user’s progress on the server before
+ * user session and fetch the user's progress on the server before
  * rendering.  Client‑side code can then hydrate additional data.
  */
 export async function getServerSideProps({ req }) {
   try {
-    // Validate JWT and get user id
-    const user = await getUserFromJwt(req);
+    // Validate user from cookies/JWT
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      };
+    }
+
     const supabase = getServiceSupabase();
+
     // Fetch progress for the user
     const { data: progressRows, error } = await supabase
       .from('challenge_progress')
-      .select('day, available_at, completed_at, quiz_passed')
+      .select('day, unlocked, completed, completed_at, quiz_passed')
       .eq('user_id', user.id);
-    if (error) throw new Error('Failed to load progress');
-    // Determine which days are unlocked
-    const nowIso = new Date().toISOString();
-    const unlockedDays = progressRows
-      .filter((r) => r.available_at && r.available_at <= nowIso)
+
+    if (error) {
+      console.error('Failed to load progress:', error);
+    }
+
+    // Determine which days are unlocked and completed
+    const rows = progressRows || [];
+    const unlockedDays = rows
+      .filter((r) => r.unlocked)
       .map((r) => r.day);
-    const completedDays = progressRows
-      .filter((r) => r.completed_at)
+    const completedDays = rows
+      .filter((r) => r.completed)
       .map((r) => r.day);
-    const nextUnlockTime = (() => {
-      const futureRows = progressRows.filter((r) => r.available_at && r.available_at > nowIso);
-      if (futureRows.length === 0) return null;
-      futureRows.sort((a, b) => (a.available_at > b.available_at ? 1 : -1));
-      return futureRows[0].available_at;
-    })();
+
     // Load dashboard template
     const filePath = path.join(process.cwd(), 'templates', 'dashboard.html');
     const html = fs.readFileSync(filePath, 'utf8');
+
     return {
       props: {
         html,
         unlockedDays,
         completedDays,
-        nextUnlockTime,
       },
     };
   } catch (err) {
-    console.error(err);
+    console.error('Dashboard error:', err);
     // Redirect unauthenticated users to login
     return {
       redirect: {
@@ -62,8 +70,7 @@ export async function getServerSideProps({ req }) {
   }
 }
 
-export default function DashboardPage({ html, unlockedDays, completedDays, nextUnlockTime }) {
-  // Additional client‑side state could be managed here (e.g. journal entries)
+export default function DashboardPage({ html, unlockedDays = [], completedDays = [] }) {
   // Wire up action card links after render.
   useEffect(() => {
     // Continue Learning: direct user to the first incomplete day
@@ -82,17 +89,11 @@ export default function DashboardPage({ html, unlockedDays, completedDays, nextU
     const communityLink = document.querySelector('a.action-card:nth-of-type(3)');
     if (communityLink) communityLink.setAttribute('href', '/community');
   }, [unlockedDays, completedDays]);
+
   return (
     <div>
       {/* Render the static dashboard markup */}
       <div dangerouslySetInnerHTML={{ __html: html }} />
-      {/* Example: display progress at the bottom */}
-      <div style={{ padding: '20px', background: '#f9fafb' }}>
-        <h2>Your Progress</h2>
-        <p>Completed days: {completedDays.join(', ') || 'None'}</p>
-        <p>Unlocked days: {unlockedDays.join(', ')}</p>
-        {nextUnlockTime && <p>Next unlock at: {nextUnlockTime}</p>}
-      </div>
     </div>
   );
 }

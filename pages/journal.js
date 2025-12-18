@@ -1,32 +1,45 @@
 import { useEffect, useState } from 'react';
-import { supabaseClient } from '../lib/supabase';
-import { getUserFromJwt } from '../lib/auth';
-import { getServiceSupabase } from '../lib/supabase';
+import { getSupabaseClient, getServiceSupabase } from '../lib/supabase';
+import { getUserFromRequest } from '../lib/serverAuth';
 import Head from 'next/head';
 
 /**
  * Paid trading journal page.
  *
  * This page is available to paid users and integrates with the
- * `trading_journal` table in Supabase.  Users must be authenticated
- * and have an active subscription (has_paid && access_expires_at > now)
- * to access this page.  Entries are synced across devices via
- * Supabase.
+ * `trading_journal_entries` table in Supabase.  Users must be authenticated
+ * and have paid to access this page.
  */
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromJwt(req);
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      };
+    }
+
     const supabase = getServiceSupabase();
     // Fetch user profile to verify payment
     const { data: profile, error } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('has_paid')
       .eq('id', user.id)
       .single();
-    if (error || !profile) throw new Error('Profile not found');
-    const now = new Date().toISOString();
-    const hasAccess = profile.has_paid && (!profile.access_expires_at || profile.access_expires_at >= now);
-    if (!hasAccess) {
+
+    if (error || !profile) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      };
+    }
+
+    if (!profile.has_paid) {
       return {
         redirect: {
           destination: '/free-journal',
@@ -34,8 +47,22 @@ export async function getServerSideProps({ req }) {
         },
       };
     }
-    return { props: {} };
+
+    // Fetch existing journal entries
+    const { data: entries } = await supabase
+      .from('trading_journal_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    return {
+      props: {
+        userId: user.id,
+        initialEntries: entries || [],
+      },
+    };
   } catch (err) {
+    console.error('Journal error:', err);
     return {
       redirect: {
         destination: '/login',
@@ -45,43 +72,37 @@ export async function getServerSideProps({ req }) {
   }
 }
 
-export default function JournalPage() {
-  const [session, setSession] = useState(null);
-  const [entries, setEntries] = useState([]);
-  const [form, setForm] = useState({ symbol: '', direction: '', result: '' });
+export default function JournalPage({ userId, initialEntries = [] }) {
+  const [entries, setEntries] = useState(initialEntries);
+  const [form, setForm] = useState({ symbol: '', side: 'buy', notes: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  useEffect(() => {
-    const sess = supabaseClient.auth.session();
-    setSession(sess);
-    const { data: listener } = supabaseClient.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-    });
-    return () => listener?.unsubscribe();
-  }, []);
-  useEffect(() => {
-    async function loadEntries() {
-      if (!session) return;
-      const { data, error } = await supabaseClient
-        .from('trading_journal')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-      if (error) setError(error.message);
-      else setEntries(data);
-    }
-    loadEntries();
-  }, [session]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    const { symbol, direction, result } = form;
-    const { data, error } = await supabaseClient
-      .from('trading_journal')
-      .insert({ user_id: session.user.id, symbol, direction, result });
-    if (error) setError(error.message);
-    else setEntries([data[0], ...entries]);
-    setForm({ symbol: '', direction: '', result: '' });
+    setError(null);
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError('Unable to connect. Please refresh.');
+      setLoading(false);
+      return;
+    }
+
+    const { symbol, side, notes } = form;
+    const { data, error: insertError } = await supabase
+      .from('trading_journal_entries')
+      .insert({ user_id: userId, symbol, side, notes })
+      .select()
+      .single();
+
+    if (insertError) {
+      setError(insertError.message);
+    } else if (data) {
+      setEntries([data, ...entries]);
+      setForm({ symbol: '', side: 'buy', notes: '' });
+    }
     setLoading(false);
   }
   return (
@@ -91,30 +112,29 @@ export default function JournalPage() {
       </Head>
       <h1 className="text-3xl font-bold mb-4">Your Trading Journal</h1>
       <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 flex-wrap gap-2">
           <input
             type="text"
-            placeholder="Symbol"
+            placeholder="Symbol (e.g., AAPL)"
             value={form.symbol}
             onChange={(e) => setForm({ ...form, symbol: e.target.value })}
             required
             className="border p-2"
           />
+          <select
+            value={form.side}
+            onChange={(e) => setForm({ ...form, side: e.target.value })}
+            className="border p-2"
+          >
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
           <input
             type="text"
-            placeholder="Direction (Buy/Sell)"
-            value={form.direction}
-            onChange={(e) => setForm({ ...form, direction: e.target.value })}
-            required
-            className="border p-2"
-          />
-          <input
-            type="text"
-            placeholder="Result"
-            value={form.result}
-            onChange={(e) => setForm({ ...form, result: e.target.value })}
-            required
-            className="border p-2"
+            placeholder="Notes"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            className="border p-2 flex-1"
           />
           <button type="submit" disabled={loading} className="bg-green-600 text-white px-4 py-2">
             {loading ? 'Saving…' : 'Add Entry'}
@@ -128,7 +148,8 @@ export default function JournalPage() {
         <ul>
           {entries.map((entry) => (
             <li key={entry.id} className="border-b py-2">
-              <span className="font-medium">{entry.symbol}</span> – {entry.direction} ({entry.result})
+              <span className="font-medium">{entry.symbol}</span> – {entry.side.toUpperCase()}
+              {entry.notes && <span className="text-gray-500 ml-2">({entry.notes})</span>}
             </li>
           ))}
         </ul>
