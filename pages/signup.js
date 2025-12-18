@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { supabaseClient } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
 import { useState } from 'react';
 
 /**
  * Signup page.
  *
  * Renders the `signup.html` template and wires up Supabase
- * registration.  Users can sign up via email OTP/magic link or
+ * registration.  Users can sign up via email/password or
  * through Google OAuth.  If the email already exists the user
  * account will be reused to avoid duplicate profiles.
  */
@@ -19,15 +19,47 @@ export async function getStaticProps() {
 
 export default function SignupPage({ html }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   async function handleEmailSignup(e) {
     e.preventDefault();
-    const { error } = await supabaseClient.auth.signInWithOtp({ email });
-    if (error) setMessage(error.message);
-    else setMessage('Check your email for the signup link!');
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || 'Signup failed');
+      } else {
+        setMessage('Account created! Please check your email to confirm, then login.');
+      }
+    } catch (err) {
+      setMessage('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
+
   async function handleGoogle() {
-    const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage('Unable to connect. Please refresh the page.');
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
     if (error) setMessage(error.message);
   }
   return (

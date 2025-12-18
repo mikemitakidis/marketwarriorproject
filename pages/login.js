@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { supabaseClient } from '../lib/supabase';
-import { useState } from 'react';
+import { getSupabaseClient } from '../lib/supabase';
+import { useState, useEffect } from 'react';
 
 /**
  * Login page.
@@ -22,15 +22,48 @@ export async function getStaticProps() {
 
 export default function LoginPage({ html }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   async function handleEmailLogin(e) {
     e.preventDefault();
-    const { error } = await supabaseClient.auth.signInWithOtp({ email });
-    if (error) setMessage(error.message);
-    else setMessage('Check your email for the magic link!');
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || 'Login failed');
+      } else {
+        // Redirect to next page based on gate status
+        window.location.href = data.next || '/dashboard';
+      }
+    } catch (err) {
+      setMessage('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
+
   async function handleGoogle() {
-    const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage('Unable to connect. Please refresh the page.');
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
     if (error) setMessage(error.message);
   }
   // Replace placeholder forms in HTML with React forms after the
