@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+}
+
+/* Card styles */
+.card {
+  @apply bg-gray-900 border border-gray-800 rounded-xl p-6;
+}
+
+/* Input styles */
+.input {
+  @apply w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500;
+}
+
+/* Day content styling */
+.day-content h1, .day-content h2, .day-content h3 {
+  @apply text-emerald-400 font-bold mt-6 mb-3;
+}
+
+.day-content h1 { @apply text-2xl; }
+.day-content h2 { @apply text-xl; }
+.day-content h3 { @apply text-lg; }
+
+.day-content p {
+  @apply mb-4 text-gray-300 leading-relaxed;
+}
+
+.day-content ul, .day-content ol {
+  @apply mb-4 ml-6 text-gray-300;
+}
+
+.day-content li {
+  @apply mb-2;
+}
+
+.day-content ul li {
+  @apply list-disc;
+}
+
+.day-content ol li {
+  @apply list-decimal;
+}
+
+.day-content strong, .day-content b {
+  @apply text-white font-semibold;
+}
+
+.day-content a {
+  @apply text-emerald-400 hover:text-emerald-300 underline;
+}
+
+.day-content blockquote {
+  @apply border-l-4 border-emerald-500 pl-4 my-4 italic text-gray-400;
+}
+
+.day-content code {
+  @apply bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono text-sm;
+}
+
+.day-content pre {
+  @apply bg-gray-800 p-4 rounded-lg overflow-x-auto my-4;
+}
+
+.day-content table {
+  @apply w-full border-collapse my-4;
+}
+
+.day-content th, .day-content td {
+  @apply border border-gray-700 px-4 py-2 text-left;
+}
+
+.day-content th {
+  @apply bg-gray-800 font-semibold;
+}
+
+/* Quiz styles */
+.quiz-option {
+  @apply w-full text-left p-4 rounded-lg border-2 transition-all duration-200;
+}
+
+.quiz-option-default {
+  @apply border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800;
+}
+
+.quiz-option-selected {
+  @apply border-emerald-500 bg-emerald-900/30;
+}
+
+.quiz-option-correct {
+  @apply border-emerald-500 bg-emerald-900/50;
+}
+
+.quiz-option-incorrect {
+  @apply border-red-500 bg-red-900/50;
+}

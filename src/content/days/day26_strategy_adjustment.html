@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 26: Adjusting Your Strategy Based on Results | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            height: 100%;
+            width: 86.67%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .strategy-card {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .adjustment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .adjustment-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .adjustment-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102,126,234,0.2);
+        }
+        
+        .optimization-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .optimization-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .optimization-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .optimization-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .decision-tree {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+        }
+        
+        .tree-node {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .tree-node::before {
+            content: '→';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .quiz-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .quiz-option:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: 600;
+        }
+        
+        .quiz-option.selected .option-letter {
+            background: white;
+            color: #667eea;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .submit-btn {
+            background: #10b981;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .submit-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16,185,129,0.3);
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: white;
+            color: #dc2626;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">🔥 PHASE 4: ADVANCED MARKETS</div>
+            <div class="day-badge">DAY 26 OF 30</div>
+            <h1>🔧 Adjusting Your Strategy Based on Results</h1>
+            <p>Use data to optimize your trading system. Turn weaknesses into strengths!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – Evolution Through Data</h2>
+            <p>Welcome to <strong>Day 26</strong> of your Market Warrior journey!</p>
+            <p>Today you'll learn the most important skill: <strong>Strategy Optimization</strong>. Using your Day 25 performance data, you'll identify what's working, eliminate what's failing, and create your personalized trading system!</p>
+            
+            <div class="highlight-box">
+                <h4>💡 The Power of Adaptation</h4>
+                <p><strong>Study of successful traders shows:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Year 1: Average strategy, 40% win rate</li>
+                    <li>Year 2: After adjustments, 55% win rate</li>
+                    <li>Year 3: Optimized system, 65% win rate</li>
+                    <li>Difference: Same trader, evolved strategy!</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>The secret:</strong> They adjusted based on data, not emotion!</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Critical Rule</h4>
+                <p>Continue testing ALL adjustments on your demo account for at least 3 months before considering them validated. Never rush strategy changes to real money!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                <p>Strategy Optimization Masterclass - Loading...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Part 1: Analyzing What Works</h2>
+            
+            <h3>The 80/20 Rule in Trading</h3>
+            <p>Based on your Day 25 analysis, you'll typically find that 20% of your strategies produce 80% of your profits!</p>
+            
+            <div class="strategy-card">
+                <h4>🎯 Identifying Your Edge</h4>
+                <p><strong>Questions to answer from your data:</strong></p>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Which setups have >60% win rate?</li>
+                    <li>What timeframe works best for you?</li>
+                    <li>Which assets are you most profitable with?</li>
+                    <li>What market conditions suit your style?</li>
+                    <li>When are you most disciplined?</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Action:</strong> Double down on what works!</p>
+            </div>
+
+            <h3>Common Winning Patterns</h3>
+            
+            <div class="optimization-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>If This Works...</th>
+                            <th>Then Focus On...</th>
+                            <th>And Eliminate...</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Morning trades profitable</td>
+                            <td>9:30-11:30am only</td>
+                            <td>Afternoon trading</td>
+                        </tr>
+                        <tr>
+                            <td>Trend following succeeds</td>
+                            <td>Strong trending markets</td>
+                            <td>Range-bound trades</td>
+                        </tr>
+                        <tr>
+                            <td>Small positions win more</td>
+                            <td>0.5-1% risk max</td>
+                            <td>Large positions</td>
+                        </tr>
+                        <tr>
+                            <td>Quick trades profitable</td>
+                            <td>Day trading/scalping</td>
+                            <td>Swing positions</td>
+                        </tr>
+                        <tr>
+                            <td>Technical analysis works</td>
+                            <td>Chart patterns</td>
+                            <td>News trading</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚫 Part 2: Eliminating What Fails</h2>
+            
+            <div class="warning-box">
+                <h4>❌ The Hardest Part: Letting Go</h4>
+                <p>If your data shows consistent losses from certain strategies, STOP using them - even if they "should" work!</p>
+            </div>
+
+            <h3>Common Losing Patterns to Cut</h3>
+            
+            <div class="adjustment-grid">
+                <div class="adjustment-item">
+                    <h4>📉 Overtrading</h4>
+                    <p><strong>Sign:</strong> Win rate drops after 3+ trades</p>
+                    <p><strong>Fix:</strong> Hard limit of 2-3 trades/day</p>
+                </div>
+                <div class="adjustment-item">
+                    <h4>😤 Revenge Trading</h4>
+                    <p><strong>Sign:</strong> Bigger losses follow initial loss</p>
+                    <p><strong>Fix:</strong> Stop after 2 consecutive losses</p>
+                </div>
+                <div class="adjustment-item">
+                    <h4>⏰ Bad Timing</h4>
+                    <p><strong>Sign:</strong> Specific hours show losses</p>
+                    <p><strong>Fix:</strong> Trade only profitable hours</p>
+                </div>
+                <div class="adjustment-item">
+                    <h4>📊 Wrong Markets</h4>
+                    <p><strong>Sign:</strong> Certain assets always lose</p>
+                    <p><strong>Fix:</strong> Stick to winning assets</p>
+                </div>
+                <div class="adjustment-item">
+                    <h4>🎲 No Edge Trades</h4>
+                    <p><strong>Sign:</strong> Random entry trades fail</p>
+                    <p><strong>Fix:</strong> Strict entry criteria</p>
+                </div>
+                <div class="adjustment-item">
+                    <h4>📱 FOMO Entries</h4>
+                    <p><strong>Sign:</strong> Chase trades lose</p>
+                    <p><strong>Fix:</strong> Wait for pullbacks</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Part 3: The Optimization Process</h2>
+            
+            <div class="decision-tree">
+                <h3>Strategy Adjustment Decision Tree</h3>
+                
+                <div class="tree-node">
+                    <strong>Strategy has 60%+ win rate?</strong>
+                    <p>YES → Keep and increase allocation</p>
+                    <p>NO → Continue to next check</p>
+                </div>
+                
+                <div class="tree-node">
+                    <strong>Strategy has positive expectancy?</strong>
+                    <p>YES → Tweak for improvement</p>
+                    <p>NO → Continue to next check</p>
+                </div>
+                
+                <div class="tree-node">
+                    <strong>Can identify why it fails?</strong>
+                    <p>YES → Fix the specific issue</p>
+                    <p>NO → Continue to next check</p>
+                </div>
+                
+                <div class="tree-node">
+                    <strong>Tested for 50+ trades?</strong>
+                    <p>YES → Eliminate completely</p>
+                    <p>NO → Test 50 more trades</p>
+                </div>
+            </div>
+
+            <h3>Making Adjustments</h3>
+            
+            <div class="success-box">
+                <h4>✅ The A/B Testing Method</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Identify one variable to change</strong> (entry, exit, position size)</li>
+                    <li><strong>Test original vs modified for 20 trades each</strong></li>
+                    <li><strong>Compare results objectively</strong></li>
+                    <li><strong>Keep winner, discard loser</strong></li>
+                    <li><strong>Repeat with next variable</strong></li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Never change multiple variables at once!</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Part 4: Creating Your Personal Trading System</h2>
+            
+            <div class="highlight-box">
+                <h4>📋 Your Optimized Trading Rules</h4>
+                <p>Based on your data, create specific rules:</p>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Trading Hours:</strong> Only when you're profitable</li>
+                    <li><strong>Asset Focus:</strong> Top 3-5 performing instruments</li>
+                    <li><strong>Strategy Focus:</strong> 2-3 proven setups maximum</li>
+                    <li><strong>Position Sizing:</strong> Based on win rate data</li>
+                    <li><strong>Daily Limits:</strong> Max trades and max loss</li>
+                    <li><strong>Entry Criteria:</strong> Minimum confirmations required</li>
+                    <li><strong>Exit Rules:</strong> Based on what maximizes profits</li>
+                </ul>
+            </div>
+
+            <h3>Example Optimized System</h3>
+            
+            <div class="strategy-card">
+                <h4>🏆 "The Morning Momentum System"</h4>
+                <p><strong>Based on 3 months of demo data showing:</strong></p>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>65% win rate from 9:30-11:00am</li>
+                    <li>Best with tech stocks and EUR/USD</li>
+                    <li>Breakout patterns most profitable</li>
+                </ul>
+                <br>
+                <p><strong>Optimized Rules:</strong></p>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>Trade only 9:30-11:00am EST</li>
+                    <li>Focus: AAPL, TSLA, NVDA, EUR/USD</li>
+                    <li>Setup: Breakout above previous day high</li>
+                    <li>Confirmation: Volume spike + RSI >60</li>
+                    <li>Risk: 0.5% per trade (smaller size, higher win rate)</li>
+                    <li>Target: 1.5R minimum (based on average winner)</li>
+                    <li>Max 2 trades per day</li>
+                    <li>Stop if down 1% for the day</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 Part 5: Continuous Improvement Cycle</h2>
+            
+            <div class="info-box">
+                <h4>🔄 The Monthly Evolution Process</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Week 1-3:</strong> Execute current system strictly</li>
+                    <li><strong>Week 4:</strong> Analyze monthly data</li>
+                    <li><strong>Identify:</strong> One thing to improve</li>
+                    <li><strong>Test:</strong> Improvement for next month</li>
+                    <li><strong>Compare:</strong> Results vs previous month</li>
+                    <li><strong>Decide:</strong> Keep or revert change</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Small improvements compound into major success!</strong></p>
+            </div>
+
+            <h3>Tracking Improvements</h3>
+            
+            <div class="optimization-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Change Made</th>
+                            <th>Result</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Month 1</td>
+                            <td>Reduce position size to 1%</td>
+                            <td>Win rate +10%</td>
+                            <td>Keep</td>
+                        </tr>
+                        <tr>
+                            <td>Month 2</td>
+                            <td>Add MACD confirmation</td>
+                            <td>No improvement</td>
+                            <td>Remove</td>
+                        </tr>
+                        <tr>
+                            <td>Month 3</td>
+                            <td>Stop afternoon trading</td>
+                            <td>Losses -40%</td>
+                            <td>Keep</td>
+                        </tr>
+                        <tr>
+                            <td>Month 4</td>
+                            <td>Increase R:R to 1:3</td>
+                            <td>Profit +25%</td>
+                            <td>Keep</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <h2>📝 Day 26 Quiz - Test Your Knowledge</h2>
+            
+            <div id="quizQuestions">
+                <div class="question-container active" data-question="1">
+                    <div class="question-text">1. What percentage of your strategies typically produce most of your profits?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>20% produce 80% of profits</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>50% produce 50% of profits</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>80% produce 20% of profits</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>All strategies equal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="2">
+                    <div class="question-text">2. When testing strategy adjustments, how should you proceed?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Change everything at once</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Change one variable at a time</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Never make adjustments</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Random changes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="3">
+                    <div class="question-text">3. How many trades should you test before eliminating a strategy?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>5 trades</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>10 trades</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>50+ trades</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>1 trade</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="4">
+                    <div class="question-text">4. If data shows you lose after 3 trades per day, what should you do?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Trade more to practice</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Limit yourself to 2-3 trades maximum</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Ignore the data</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Stop trading completely</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="5">
+                    <div class="question-text">5. How long should you test adjustments on demo before considering them validated?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>1 week</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>1 month</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>At least 3 months</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>1 day</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px;">Previous</button>
+                <div id="questionInfo">
+                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+                <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled style="background: #10b981; color: white; padding: 12px 30px; border: none; border-radius: 10px;">Next</button>
+            </div>
+
+            <div id="quizResults" class="quiz-results" style="display: none; text-align: center; margin-top: 30px;">
+                <h3>Quiz Complete!</h3>
+                <div id="scoreDisplay"></div>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 26 Task - Create Your Optimized Trading System</h2>
+            <h3>Based on your Day 25 data, design your personalized strategy!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Using your performance analysis from Day 25, create your optimized trading system. Identify what to keep, eliminate, and improve. Test this on your demo account!</p>
+            </div>
+
+            <textarea id="taskResponse" placeholder="MY OPTIMIZED TRADING SYSTEM
+
+Date: [Today's Date]
+Based on: [X days/weeks] of demo trading data
+Platform: [eToro/Trading 212/Other]
+
+═══════════════════════════════════════
+PART 1: WHAT'S WORKING (KEEP & EXPAND)
+═══════════════════════════════════════
+
+Top 3 Profitable Patterns:
+1. [Pattern/Strategy]: Win Rate [%] | Avg Profit [%]
+   Why it works: [Your analysis]
+   Expansion plan: [How to do more of this]
+
+2. [Pattern/Strategy]: Win Rate [%] | Avg Profit [%]
+   Why it works: [Your analysis]
+   Expansion plan: [How to do more of this]
+
+3. [Pattern/Strategy]: Win Rate [%] | Avg Profit [%]
+   Why it works: [Your analysis]
+   Expansion plan: [How to do more of this]
+
+Best Trading Conditions:
+- Time of day: [When you're most profitable]
+- Market condition: [Trending/Range/Volatile]
+- Asset class: [What works best]
+- Position size: [Optimal size based on data]
+
+═══════════════════════════════════════
+PART 2: WHAT'S FAILING (ELIMINATE)
+═══════════════════════════════════════
+
+Bottom 3 Losing Patterns:
+1. [Pattern/Strategy]: Win Rate [%] | Avg Loss [%]
+   Why it fails: [Your analysis]
+   Elimination plan: [How to avoid completely]
+
+2. [Pattern/Strategy]: Win Rate [%] | Avg Loss [%]
+   Why it fails: [Your analysis]
+   Elimination plan: [How to avoid completely]
+
+3. [Pattern/Strategy]: Win Rate [%] | Avg Loss [%]
+   Why it fails: [Your analysis]
+   Elimination plan: [How to avoid completely]
+
+Behaviors to Stop:
+□ [Bad habit #1] - Cost me $[X] on demo
+□ [Bad habit #2] - Reduced win rate by [%]
+□ [Bad habit #3] - Caused [specific problem]
+
+═══════════════════════════════════════
+PART 3: OPTIMIZED TRADING RULES
+═══════════════════════════════════════
+
+MY PERSONAL TRADING SYSTEM
+
+System Name: [Give it a memorable name]
+
+Trading Hours: [Specific times only]
+- Why: [Data showing these are profitable]
+
+Assets to Trade:
+1. [Asset #1] - [Why it works for you]
+2. [Asset #2] - [Why it works for you]
+3. [Asset #3] - [Why it works for you]
+
+Entry Criteria (ALL must be met):
+□ [Criteria #1]
+□ [Criteria #2]
+□ [Criteria #3]
+□ [Criteria #4]
+
+Exit Rules:
+- Take Profit: [Specific target based on data]
+- Stop Loss: [Specific level based on data]
+- Time Exit: [If applicable]
+
+Position Sizing:
+- Standard size: [%] of demo account
+- Reduced size when: [Conditions]
+- Never exceed: [%] per trade
+
+Daily Limits:
+- Maximum trades: [Number]
+- Maximum loss: [%] then stop
+- Winning streak rule: [What to do]
+
+═══════════════════════════════════════
+PART 4: TESTING PLAN
+═══════════════════════════════════════
+
+A/B Test #1 (Next Week):
+Original: [Current approach]
+Test: [Modified approach]
+Metric to measure: [Win rate/Profit/etc]
+
+A/B Test #2 (Week After):
+Original: [Current approach]
+Test: [Modified approach]
+Metric to measure: [Win rate/Profit/etc]
+
+Success Metrics:
+- Target Win Rate: [%]
+- Target Risk/Reward: [X:X]
+- Target Monthly Return: [%]
+- Maximum Drawdown: [%]
+
+═══════════════════════════════════════
+PART 5: PSYCHOLOGICAL ADJUSTMENTS
+═══════════════════════════════════════
+
+Based on emotional performance data:
+
+New Emotional Rules:
+1. [Rule based on your weakness]
+2. [Rule based on your weakness]
+3. [Rule based on your strength]
+
+Pre-Trade Checklist:
+□ Am I in optimal trading hours?
+□ Does this meet ALL entry criteria?
+□ Is my emotional state neutral?
+□ Have I checked the daily limit?
+□ Is risk management in place?
+
+═══════════════════════════════════════
+PART 6: 30-DAY IMPLEMENTATION PLAN
+═══════════════════════════════════════
+
+Week 1: Focus on [Primary improvement]
+Week 2: Focus on [Secondary improvement]
+Week 3: Focus on [Consistency]
+Week 4: Full review and adjust
+
+Expected Results:
+- Win rate improvement: [Current]% → [Target]%
+- Average R:R improvement: [Current] → [Target]
+- Drawdown reduction: [Current]% → [Target]%
+- Monthly return target: [%]
+
+═══════════════════════════════════════
+PART 7: COMMITMENT STATEMENT
+═══════════════════════════════════════
+
+I commit to:
+✓ Following this system for 30 days minimum
+✓ Not changing rules mid-test
+✓ Tracking every trade
+✓ Weekly reviews of performance
+✓ Monthly system optimization
+✓ Staying on demo until consistently profitable
+
+System Start Date: [Date]
+First Review Date: [Date + 1 week]
+Full Evaluation Date: [Date + 1 month]
+
+Key Lesson from Day 26:
+[Most important realization about optimization]
+
+Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months before considering real money."></textarea>
+            
+            <button class="submit-btn" onclick="submitTask()">Submit Optimized System</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; text-align: center;">
+            <h2>👀 Sneak Peek: Day 27</h2>
+            <p>Tomorrow: <strong>Trade Journaling & Performance Tracking</strong></p>
+            <p>Master the art of documentation for continuous improvement!</p>
+        </div>
+
+        <div class="completion-section">
+            <h2>🎉 Day 26 Complete - Strategy Optimized!</h2>
+            <p>You now know how to evolve your trading based on real data!</p>
+            <button class="completion-button" onclick="completeDay26()">Complete Day 26 ✓</button>
+            <button class="completion-button" onclick="proceedToDay27()">Preview Day 27 →</button>
+        </div>
+    </div>
+
+    <script>
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['a', 'b', 'c', 'b', 'c'];
+        let quizCompleted = false;
+        let quizScore = 0;
+        let taskSubmitted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            document.getElementById('totalQuestions').textContent = correctAnswers.length;
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectQuizOption(this);
+                });
+            });
+        }
+
+        function selectQuizOption(selectedOption) {
+            const questionContainer = selectedOption.closest('.question-container');
+            const options = questionContainer.querySelectorAll('.quiz-option');
+            
+            options.forEach(opt => opt.classList.remove('selected'));
+            selectedOption.classList.add('selected');
+            
+            const questionIndex = parseInt(questionContainer.dataset.question) - 1;
+            userAnswers[questionIndex] = selectedOption.dataset.answer;
+            
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                questions[currentQuestionIndex].classList.remove('active');
+                currentQuestionIndex++;
+                questions[currentQuestionIndex].classList.add('active');
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (userAnswers[currentQuestionIndex]) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+                
+                if (currentQuestionIndex === questions.length - 1) {
+                    document.getElementById('nextBtn').textContent = 'Submit Quiz';
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            const questions = document.querySelectorAll('.question-container');
+            
+            if (currentQuestionIndex > 0) {
+                questions[currentQuestionIndex].classList.remove('active');
+                currentQuestionIndex--;
+                questions[currentQuestionIndex].classList.add('active');
+                
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                document.getElementById('nextBtn').textContent = 'Next';
+                document.getElementById('nextBtn').disabled = false;
+                
+                if (currentQuestionIndex === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            quizCompleted = true;
+            
+            document.getElementById('quizQuestions').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = (score / correctAnswers.length * 100).toFixed(0);
+            const resultHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+                <p>${score >= 3 ? 'Excellent! You understand strategy optimization!' : 'Review the material and try again. Need 60% to pass.'}</p>
+                <button onclick="retakeQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">Retake Quiz</button>
+            `;
+            document.getElementById('scoreDisplay').innerHTML = resultHTML;
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizCompleted = false;
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach(q => q.classList.remove('active'));
+            questions[0].classList.add('active');
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 600) {
+                showTaskStatus('Please complete your optimized trading system (minimum 600 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Optimized system submitted! Test this for 30 days on your demo account!', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+
+        function completeDay26() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% (3/5) before marking Day 26 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your optimized system before completing Day 26.');
+                return;
+            }
+            
+            alert('🎉 Day 26 completed! Your strategy is now optimized based on data. Day 27 unlocks in 24 hours.');
+        }
+
+        function proceedToDay27() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements before proceeding to Day 27.');
+                return;
+            }
+            
+            alert('Day 27: Trade Journaling & Performance Tracking will be available in 24 hours!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+    </script>
+</body>
+</html>
