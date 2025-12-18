@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * Login Page - IDENTICAL to templates/login.html
+ */
 export default function LoginPage() {
-  const [mode, setMode] = useState('login'); // 'login', 'register', 'reset'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -11,14 +15,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [supabase, setSupabase] = useState(null);
   const [ready, setReady] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(false);
 
   useEffect(() => {
-    // Initialize Supabase client
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    console.log('Supabase URL:', url ? 'SET' : 'MISSING');
-    console.log('Supabase Key:', key ? 'SET' : 'MISSING');
 
     if (url && key) {
       setSupabase(createClient(url, key));
@@ -27,10 +28,14 @@ export default function LoginPage() {
       setMessage({ type: 'error', text: 'Configuration error. Please contact support.' });
     }
 
-    // Check URL params
     const params = new URLSearchParams(window.location.search);
     if (params.get('register') === 'true') setMode('register');
+    if (params.get('affiliate') === 'true') {
+      setMode('register');
+      setIsAffiliate(true);
+    }
     if (params.get('error')) setMessage({ type: 'error', text: 'Authentication failed. Please try again.' });
+    if (params.get('reset') === 'true') setMessage({ type: 'success', text: 'Password updated! You can now login with your new password.' });
   }, []);
 
   const handleLogin = async (e) => {
@@ -41,7 +46,6 @@ export default function LoginPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // 1. Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -50,7 +54,6 @@ export default function LoginPage() {
       if (error) throw error;
       if (!data.session) throw new Error('No session returned');
 
-      // 2. Set server-side cookies
       const res = await fetch('/api/auth/set-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,13 +66,14 @@ export default function LoginPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Session error');
 
-      // 3. Redirect based on user status
-      setMessage({ type: 'success', text: 'Success! Redirecting...' });
-      window.location.href = json.next || '/dashboard';
+      setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
+      setTimeout(() => {
+        window.location.href = json.next || '/dashboard';
+      }, 1000);
 
     } catch (err) {
       console.error('Login error:', err);
-      setMessage({ type: 'error', text: err.message || 'Login failed' });
+      setMessage({ type: 'error', text: err.message || 'Invalid email or password' });
       setLoading(false);
     }
   };
@@ -91,25 +95,30 @@ export default function LoginPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-      console.log('Redirect URL:', redirectUrl);
+      const redirectUrl = isAffiliate
+        ? `${window.location.origin}/dashboard?affiliate=new`
+        : `${window.location.origin}/welcome`;
 
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: { is_affiliate: isAffiliate }
         },
       });
 
       if (error) throw error;
 
-      // Check if email already exists
       if (data.user?.identities?.length === 0) {
-        setMessage({ type: 'error', text: 'Email already registered. Please login.' });
+        setMessage({ type: 'error', text: 'Email already registered. Please login instead.' });
         setMode('login');
       } else {
-        setMessage({ type: 'success', text: 'Check your email to confirm your account!' });
+        if (isAffiliate) {
+          setMessage({ type: 'success', text: 'Affiliate account created! Check your email to verify.' });
+        } else {
+          setMessage({ type: 'success', text: 'Account created! Check your email to verify, then complete your purchase.' });
+        }
       }
 
     } catch (err) {
@@ -129,10 +138,10 @@ export default function LoginPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/login?reset=true`,
       });
       if (error) throw error;
-      setMessage({ type: 'success', text: 'Check your email for reset link!' });
+      setMessage({ type: 'success', text: 'Password reset link sent! Check your email inbox.' });
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Failed to send reset email' });
     } finally {
@@ -146,7 +155,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/welcome`,
         },
       });
       if (error) throw error;
@@ -158,15 +167,20 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>{mode === 'register' ? 'Register' : 'Login'} - Market Warrior</title>
+        <title>{isAffiliate ? 'Become an Affiliate' : mode === 'register' ? 'Register' : 'Login'} - Market Warrior</title>
+        <link rel="icon" type="image/png" href="/logo.png" />
       </Head>
 
       <style jsx global>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        body {
           min-height: 100vh;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -175,114 +189,206 @@ export default function LoginPage() {
       `}</style>
 
       <style jsx>{`
-        .container {
+        .login-container {
           background: white;
-          padding: 40px;
-          border-radius: 20px;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-          max-width: 420px;
+          padding: 50px;
+          border-radius: 25px;
+          box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+          max-width: 450px;
           width: 100%;
+          text-align: center;
         }
-        h1 { text-align: center; color: #1e293b; margin-bottom: 8px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 24px; }
-        .tabs {
+        .logo {
+          width: 100px;
+          height: auto;
+          margin-bottom: 20px;
+          border-radius: 15px;
+        }
+        h1 {
+          color: #1e293b;
+          margin-bottom: 10px;
+          font-size: 2em;
+        }
+        .subtitle {
+          color: #64748b;
+          margin-bottom: 30px;
+        }
+        .form-group {
+          margin-bottom: 20px;
+          text-align: left;
+        }
+        label {
+          display: block;
+          margin-bottom: 8px;
+          color: #374151;
+          font-weight: 600;
+        }
+        input {
+          width: 100%;
+          padding: 15px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 1em;
+          transition: border-color 0.3s;
+        }
+        input:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+        .btn {
+          width: 100%;
+          padding: 15px;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.1em;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s;
+          margin-bottom: 15px;
+        }
+        .btn-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .btn-google {
+          background: white;
+          color: #1e293b;
+          border: 2px solid #e5e7eb;
           display: flex;
-          margin-bottom: 24px;
-          border-radius: 8px;
-          overflow: hidden;
-          border: 2px solid #e2e8f0;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
         }
-        .tab {
+        .btn-google:hover {
+          background: #f8fafc;
+          border-color: #667eea;
+        }
+        .divider {
+          display: flex;
+          align-items: center;
+          margin: 25px 0;
+          color: #94a3b8;
+        }
+        .divider::before, .divider::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: #e5e7eb;
+        }
+        .divider span {
+          padding: 0 15px;
+          font-size: 0.9em;
+        }
+        .links {
+          margin-top: 25px;
+          color: #64748b;
+        }
+        .links a {
+          color: #667eea;
+          text-decoration: none;
+          font-weight: 600;
+        }
+        .links a:hover {
+          text-decoration: underline;
+        }
+        .message {
+          padding: 15px;
+          border-radius: 10px;
+          margin-bottom: 20px;
+        }
+        .message.error {
+          background: #fef2f2;
+          color: #dc2626;
+          border: 1px solid #fecaca;
+        }
+        .message.success {
+          background: #f0fdf4;
+          color: #16a34a;
+          border: 1px solid #bbf7d0;
+        }
+        .spinner {
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          border: 3px solid rgba(255,255,255,0.3);
+          border-top-color: white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-right: 10px;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .forgot-password {
+          text-align: right;
+          margin-bottom: 20px;
+        }
+        .forgot-password a {
+          color: #667eea;
+          text-decoration: none;
+          font-size: 0.9em;
+          cursor: pointer;
+        }
+        .forgot-password a:hover {
+          text-decoration: underline;
+        }
+        .tab-buttons {
+          display: flex;
+          margin-bottom: 25px;
+          border-radius: 10px;
+          overflow: hidden;
+          border: 2px solid #e5e7eb;
+        }
+        .tab-btn {
           flex: 1;
           padding: 12px;
           border: none;
           background: #f8fafc;
-          cursor: pointer;
-          font-weight: 600;
           color: #64748b;
-        }
-        .tab.active {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-        }
-        .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; }
-        input {
-          width: 100%;
-          padding: 12px;
-          border: 2px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 16px;
-        }
-        input:focus { outline: none; border-color: #667eea; }
-        .btn {
-          width: 100%;
-          padding: 14px;
-          border: none;
-          border-radius: 8px;
-          font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          margin-bottom: 12px;
+          transition: all 0.3s;
         }
-        .btn-primary {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+        .tab-btn.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
         }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-google {
-          background: white;
-          border: 2px solid #e2e8f0;
-          color: #1e293b;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
+        @media (max-width: 480px) {
+          .login-container {
+            padding: 35px 25px;
+          }
+          h1 {
+            font-size: 1.6em;
+          }
         }
-        .divider {
-          text-align: center;
-          color: #94a3b8;
-          margin: 20px 0;
-          position: relative;
-        }
-        .divider::before, .divider::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          width: 40%;
-          height: 1px;
-          background: #e2e8f0;
-        }
-        .divider::before { left: 0; }
-        .divider::after { right: 0; }
-        .message {
-          padding: 12px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-        .message.error { background: #fef2f2; color: #dc2626; }
-        .message.success { background: #f0fdf4; color: #16a34a; }
-        .links { text-align: center; margin-top: 20px; color: #64748b; }
-        .links a { color: #667eea; text-decoration: none; cursor: pointer; }
-        .forgot { text-align: right; margin-bottom: 16px; }
-        .forgot a { color: #667eea; font-size: 14px; cursor: pointer; }
       `}</style>
 
-      <div className="container">
-        <h1>Market Warrior</h1>
-        <p className="subtitle">{mode === 'register' ? 'Create your account' : 'Welcome back'}</p>
+      <div className="login-container">
+        <img src="/logo.png" alt="Market Warrior" className="logo" onError={(e) => e.target.style.display = 'none'} />
+        <h1>{isAffiliate ? 'Become an Affiliate' : 'Welcome Back!'}</h1>
+        <p className="subtitle">
+          {isAffiliate
+            ? 'Sign up free to earn 25% commission on referrals'
+            : 'Continue your trading journey'}
+        </p>
 
         {message.text && <div className={`message ${message.type}`}>{message.text}</div>}
 
-        {!ready && !message.text && <div className="message">Loading...</div>}
-
         {mode !== 'reset' && (
-          <div className="tabs">
-            <button className={`tab ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>
+          <div className="tab-buttons">
+            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>
               Login
             </button>
-            <button className={`tab ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>
+            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>
               Register
             </button>
           </div>
@@ -291,18 +397,31 @@ export default function LoginPage() {
         {mode === 'login' && (
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label>Email Address</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
             </div>
-            <div className="forgot">
+            <div className="forgot-password">
               <a onClick={() => setMode('reset')}>Forgot password?</a>
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading || !ready}>
-              {loading ? 'Signing in...' : 'Login'}
+              {loading ? <><span className="spinner"></span>Logging in...</> : 'Login to Challenge'}
             </button>
           </form>
         )}
@@ -310,44 +429,74 @@ export default function LoginPage() {
         {mode === 'register' && (
           <form onSubmit={handleRegister}>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label>Email Address</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
-              <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <label>Create Password</label>
+              <input
+                type="password"
+                placeholder="Min 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading || !ready}>
-              {loading ? 'Creating account...' : 'Register'}
+              {loading ? <><span className="spinner"></span>Creating account...</> : isAffiliate ? 'Create Affiliate Account' : 'Create Account'}
             </button>
+            <p style={{ marginTop: '10px', color: '#64748b', fontSize: '0.9em' }}>
+              By registering, you agree to our <Link href="/terms" style={{ color: '#667eea' }}>Terms</Link> and <Link href="/privacy" style={{ color: '#667eea' }}>Privacy Policy</Link>
+            </p>
           </form>
         )}
 
         {mode === 'reset' && (
           <form onSubmit={handleReset}>
-            <p style={{ marginBottom: 16, color: '#64748b' }}>Enter your email to receive a reset link.</p>
+            <p style={{ color: '#64748b', marginBottom: '20px' }}>
+              Enter your email and we&apos;ll send you a link to reset your password.
+            </p>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label>Email Address</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading || !ready}>
-              {loading ? 'Sending...' : 'Send Reset Link'}
+              {loading ? <><span className="spinner"></span>Sending...</> : 'Send Reset Link'}
             </button>
-            <div className="links">
-              <a onClick={() => setMode('login')}>← Back to Login</a>
-            </div>
+            <p className="links" style={{ marginTop: '20px' }}>
+              <a onClick={() => setMode('login')} style={{ cursor: 'pointer' }}>← Back to Login</a>
+            </p>
           </form>
         )}
 
         {mode !== 'reset' && (
           <>
-            <div className="divider">or</div>
+            <div className="divider"><span>or continue with</span></div>
             <button className="btn btn-google" onClick={handleGoogle} disabled={!ready}>
-              <svg width="18" height="18" viewBox="0 0 24 24">
+              <svg width="20" height="20" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -359,7 +508,8 @@ export default function LoginPage() {
         )}
 
         <div className="links">
-          <p><a href="/">← Back to Home</a></p>
+          {!isAffiliate && <p>Don&apos;t have access? <Link href="/#pricing">Purchase Challenge - $39.99</Link></p>}
+          <p style={{ marginTop: '10px' }}><Link href="/">← Back to Home</Link></p>
         </div>
       </div>
     </>
