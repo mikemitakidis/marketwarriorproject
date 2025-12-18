@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Warrior - Developer Package</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        h1 { color: #667eea; font-size: 2.5em; margin-bottom: 10px; }
+        h2 { color: #f59e0b; font-size: 1.8em; margin: 40px 0 20px; padding-top: 20px; border-top: 2px solid #334155; }
+        h3 { color: #10b981; font-size: 1.3em; margin: 30px 0 15px; }
+        .intro { background: #1e293b; padding: 30px; border-radius: 12px; margin-bottom: 40px; }
+        .intro p { margin: 10px 0; }
+        .file-section { background: #1e293b; border-radius: 12px; margin-bottom: 30px; overflow: hidden; }
+        .file-header { background: #334155; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .file-name { font-weight: 700; color: #667eea; font-size: 1.1em; }
+        .copy-btn { background: #667eea; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .copy-btn:hover { background: #5a67d8; }
+        .code-block { padding: 20px; overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Monaco', 'Consolas', monospace; font-size: 13px; color: #94a3b8; }
+        .toc { background: #1e293b; padding: 30px; border-radius: 12px; margin-bottom: 40px; }
+        .toc ul { list-style: none; }
+        .toc li { padding: 8px 0; }
+        .toc a { color: #667eea; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; margin-left: 10px; }
+        .badge.html { background: #ef4444; color: white; }
+        .badge.spec { background: #10b981; color: white; }
+        .warning { background: #7c2d12; border: 1px solid #ea580c; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .warning strong { color: #fb923c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Market Warrior - Developer Package</h1>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Complete corrected files and specifications</p>
+        
+        <div class="intro">
+            <h3>📦 What's Included</h3>
+            <p>This package contains corrected HTML pages and detailed developer specifications.</p>
+            <p>Generated: <strong>December 17, 2024</strong></p>
+            
+            <div class="warning">
+                <strong>⚠️ IMPORTANT:</strong> The original HTML files were mockups without real backend integration. These corrected versions include proper Supabase authentication. Your developer needs to:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> with real values</li>
+                    <li>Create the required database tables</li>
+                    <li>Set up Stripe webhook endpoints</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="toc">
+            <h3>📋 Table of Contents</h3>
+            <ul>
+                <li><a href="#login-spec">1. LOGIN_SPEC.md</a> <span class="badge spec">Specification</span></li>
+                <li><a href="#login-html">2. login.html</a> <span class="badge html">HTML</span></li>
+                <li><a href="#signup-spec">3. SIGNUP_SPEC.md</a> <span class="badge spec">Specification</span></li>
+                <li><a href="#signup-html">4. signup.html</a> <span class="badge html">HTML</span></li>
+                <li><a href="#welcome-html">5. welcome.html</a> <span class="badge html">HTML</span></li>
+                <li><a href="#dashboard-spec">6. DASHBOARD_SPEC.md</a> <span class="badge spec">Specification</span></li>
+                <li><a href="#admin-spec">7. ADMIN_PANEL_SPEC.md</a> <span class="badge spec">Specification</span></li>
+            </ul>
+        </div>
+
+        <!-- LOGIN SPEC -->
+        <h2 id="login-spec">1. LOGIN_SPEC.md</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">LOGIN_SPEC.md</span>
+                <button class="copy-btn" onclick="copyCode('login-spec-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="login-spec-code"># LOGIN PAGE - Developer Specification
+
+## Page: `/login`
+
+## Purpose
+Simple login for EXISTING users who have already:
+1. Paid via Stripe
+2. Created account via signup page
+3. Agreed to terms via welcome page
+
+## User Flow
+``````
+User visits /login → Enters email + password → Click "Login"
+→ Supabase authenticates → Check user status in database
+→ If all good → /dashboard
+→ If not paid → /#pricing
+→ If not agreed → /welcome
+``````
+
+## Form Fields
+| Field | Type | Validation | Required |
+|-------|------|------------|----------|
+| Email | email | Valid email format | Yes |
+| Password | password | Min 8 characters | Yes |
+| Remember Me | checkbox | None | No |
+
+## Error Messages
+| Error Code | User Message |
+|------------|--------------|
+| invalid_credentials | "Invalid email or password" |
+| email_not_confirmed | "Please check your email to confirm your account" |
+| too_many_requests | "Too many attempts. Please wait 15 minutes" |
+
+## Security Requirements
+- Rate limit: 5 attempts per 15 minutes per IP
+- No user enumeration (same error for wrong email vs wrong password)
+- HTTPS only
+- Secure session cookies
+
+## Redirect Logic
+``````javascript
+if (!user.has_paid) {
+  redirect('/#pricing');
+} else if (!user.agreed_to_terms) {
+  redirect('/welcome');
+} else {
+  redirect('/dashboard');
+}
+`````</pre>
+            </div>
+        </div>
+
+        <!-- LOGIN HTML -->
+        <h2 id="login-html">2. login.html</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">login.html</span>
+                <button class="copy-btn" onclick="copyCode('login-html-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="login-html-code">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Login - Market Warrior&lt;/title&gt;
+    &lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;
+    &lt;style&gt;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 440px;
+        }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo img { width: 80px; height: 80px; border-radius: 16px; margin-bottom: 15px; }
+        .logo h1 {
+            color: white;
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo p { color: #94a3b8; margin-top: 8px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; color: #e2e8f0; margin-bottom: 8px; font-weight: 500; }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 1em;
+        }
+        .form-group input:focus { outline: none; border-color: #667eea; }
+        .form-group input::placeholder { color: #64748b; }
+        .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .remember-me { display: flex; align-items: center; gap: 8px; color: #94a3b8; cursor: pointer; }
+        .forgot-link { color: #667eea; text-decoration: none; font-size: 0.9em; }
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .signup-link { text-align: center; margin-top: 30px; color: #94a3b8; }
+        .signup-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .message-box { padding: 14px 18px; border-radius: 10px; margin-bottom: 24px; display: none; }
+        .message-box.error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; display: block; }
+        .message-box.success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; display: block; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="login-container"&gt;
+        &lt;div class="logo"&gt;
+            &lt;img src="/logo.png" alt="Market Warrior" onerror="this.style.display='none'"&gt;
+            &lt;h1&gt;Market Warrior&lt;/h1&gt;
+            &lt;p&gt;Welcome back, trader!&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="message-box" id="messageBox"&gt;&lt;/div&gt;
+        &lt;form id="loginForm"&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="email"&gt;Email Address&lt;/label&gt;
+                &lt;input type="email" id="email" placeholder="Enter your email" required&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="password"&gt;Password&lt;/label&gt;
+                &lt;input type="password" id="password" placeholder="Enter your password" required&gt;
+            &lt;/div&gt;
+            &lt;div class="form-options"&gt;
+                &lt;label class="remember-me"&gt;
+                    &lt;input type="checkbox" id="rememberMe"&gt; Remember me
+                &lt;/label&gt;
+                &lt;a href="/forgot-password" class="forgot-link"&gt;Forgot password?&lt;/a&gt;
+            &lt;/div&gt;
+            &lt;button type="submit" class="btn-login" id="loginBtn"&gt;Login&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;p class="signup-link"&gt;Don't have an account? &lt;a href="/#pricing"&gt;Get Started&lt;/a&gt;&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        // CONFIGURATION - Replace these values
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        function showMessage(text, type = 'error') {
+            messageBox.textContent = text;
+            messageBox.className = `message-box ${type}`;
+        }
+
+        // Check if already logged in
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) await handleSuccessfulAuth(session.user);
+        }
+        checkSession();
+
+        loginForm.addEventListener('submit', async (e) =&gt; {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                
+                if (error) {
+                    if (error.message.includes('Invalid login')) showMessage('Invalid email or password.');
+                    else if (error.message.includes('Email not confirmed')) showMessage('Please check your email to confirm your account.');
+                    else showMessage(error.message);
+                    return;
+                }
+                
+                if (data.user) await handleSuccessfulAuth(data.user);
+            } catch (err) {
+                showMessage('Connection error. Please try again.');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+
+        async function handleSuccessfulAuth(user) {
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('has_paid, agreed_to_terms')
+                .eq('id', user.id)
+                .single();
+            
+            if (error || !userData) {
+                showMessage('Account issue. Please contact support.');
+                await supabase.auth.signOut();
+                return;
+            }
+            
+            if (!userData.has_paid) window.location.href = '/#pricing';
+            else if (!userData.agreed_to_terms) window.location.href = '/welcome';
+            else window.location.href = '/dashboard';
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            </div>
+        </div>
+
+        <!-- SIGNUP SPEC -->
+        <h2 id="signup-spec">3. SIGNUP_SPEC.md</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">SIGNUP_SPEC.md</span>
+                <button class="copy-btn" onclick="copyCode('signup-spec-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="signup-spec-code"># SIGNUP PAGE - Developer Specification
+
+## Page: `/signup`
+
+## Purpose
+Account creation for users who have ALREADY PAID via Stripe.
+This is NOT a public registration page.
+
+## Access Control
+**Requires valid Stripe session ID in URL:**
+`````
+/signup?session_id=cs_live_abc123...
+``````
+If no session_id or invalid → Redirect to `/#pricing`
+
+## User Flow
+``````
+User pays on landing page (Stripe Checkout)
+→ Stripe redirects to /signup?session_id=cs_xxx
+→ Page validates session_id with Stripe API (SERVER-SIDE)
+→ If valid + not already used: Show form, pre-fill email
+→ User creates password
+→ Account created in Supabase + users table
+→ Redirect to /welcome
+``````
+
+## Stripe Session Validation (SERVER-SIDE - CRITICAL)
+``````javascript
+// POST /api/verify-stripe-session
+const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+// Validate:
+// 1. Session exists
+// 2. payment_status === 'paid'
+// 3. Session not already used (check database)
+// 4. Session not expired (24 hour limit)
+``````
+
+## Form Fields
+| Field | Type | Validation |
+|-------|------|------------|
+| Email | email | From Stripe (readonly) |
+| Full Name | text | 2-100 characters |
+| Password | password | Min 8 chars, 1 upper, 1 number |
+| Confirm Password | password | Must match |
+
+## Database Tables Required
+
+### users
+``````sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  has_paid BOOLEAN DEFAULT false,
+  agreed_to_terms BOOLEAN DEFAULT false,
+  terms_agreed_at TIMESTAMPTZ,
+  challenge_start_date TIMESTAMPTZ,
+  cookies_consent BOOLEAN DEFAULT false,
+  cookies_consent_date TIMESTAMPTZ,
+  stripe_session_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+``````
+
+### used_stripe_sessions
+``````sql
+CREATE TABLE used_stripe_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT UNIQUE NOT NULL,
+  user_id UUID REFERENCES users(id),
+  used_at TIMESTAMPTZ DEFAULT NOW()
+);
+`````</pre>
+            </div>
+        </div>
+
+        <!-- SIGNUP HTML -->
+        <h2 id="signup-html">4. signup.html</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">signup.html</span>
+                <button class="copy-btn" onclick="copyCode('signup-html-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="signup-html-code">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Create Account - Market Warrior&lt;/title&gt;
+    &lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;
+    &lt;style&gt;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .signup-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 480px;
+        }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 {
+            color: white;
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .payment-confirmed {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #6ee7b7;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; color: #e2e8f0; margin-bottom: 8px; }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 1em;
+        }
+        .form-group input:focus { outline: none; border-color: #667eea; }
+        .form-group input:read-only { background: rgba(255, 255, 255, 0.03); color: #94a3b8; }
+        .password-requirements {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .password-requirements h4 { color: #e2e8f0; font-size: 0.9em; margin-bottom: 12px; }
+        .requirement { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: #64748b; font-size: 0.9em; }
+        .requirement.met { color: #10b981; }
+        .btn-signup {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-signup:disabled { opacity: 0.6; cursor: not-allowed; }
+        .message-box { padding: 14px; border-radius: 10px; margin-bottom: 24px; display: none; }
+        .message-box.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; display: block; }
+        .message-box.success { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; display: block; }
+        .loading-state { text-align: center; padding: 60px 20px; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="signup-container"&gt;
+        &lt;div class="logo"&gt;&lt;h1&gt;Market Warrior&lt;/h1&gt;&lt;p style="color:#94a3b8"&gt;Create your account&lt;/p&gt;&lt;/div&gt;
+        
+        &lt;div class="loading-state" id="loadingState"&gt;
+            &lt;div class="spinner"&gt;&lt;/div&gt;
+            &lt;p style="color:#94a3b8"&gt;Verifying your payment...&lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div id="formContainer" class="hidden"&gt;
+            &lt;div class="payment-confirmed"&gt;✅ &lt;div&gt;&lt;strong&gt;Payment Confirmed!&lt;/strong&gt;&lt;br&gt;&lt;span style="font-size:0.9em"&gt;Complete your account setup below&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+            &lt;div class="message-box" id="messageBox"&gt;&lt;/div&gt;
+            &lt;form id="signupForm"&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label&gt;Email Address&lt;/label&gt;
+                    &lt;input type="email" id="email" readonly&gt;
+                &lt;/div&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label&gt;Full Name&lt;/label&gt;
+                    &lt;input type="text" id="fullName" placeholder="Enter your full name" required&gt;
+                &lt;/div&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label&gt;Password&lt;/label&gt;
+                    &lt;input type="password" id="password" placeholder="Create a strong password" required&gt;
+                &lt;/div&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label&gt;Confirm Password&lt;/label&gt;
+                    &lt;input type="password" id="confirmPassword" placeholder="Confirm your password" required&gt;
+                &lt;/div&gt;
+                &lt;div class="password-requirements"&gt;
+                    &lt;h4&gt;Password must have:&lt;/h4&gt;
+                    &lt;div class="requirement" id="req-length"&gt;&lt;span&gt;○&lt;/span&gt; At least 8 characters&lt;/div&gt;
+                    &lt;div class="requirement" id="req-upper"&gt;&lt;span&gt;○&lt;/span&gt; At least 1 uppercase letter&lt;/div&gt;
+                    &lt;div class="requirement" id="req-number"&gt;&lt;span&gt;○&lt;/span&gt; At least 1 number&lt;/div&gt;
+                    &lt;div class="requirement" id="req-match"&gt;&lt;span&gt;○&lt;/span&gt; Passwords match&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;button type="submit" class="btn-signup" id="signupBtn"&gt;Create Account&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let stripeSessionData = null;
+
+        // Verify Stripe session on load
+        async function init() {
+            const sessionId = new URLSearchParams(window.location.search).get('session_id');
+            if (!sessionId) { window.location.href = '/#pricing'; return; }
+            
+            try {
+                const response = await fetch('/api/verify-stripe-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                
+                if (!response.ok || !data.valid) throw new Error('Invalid session');
+                
+                stripeSessionData = data;
+                document.getElementById('email').value = data.email;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('formContainer').classList.remove('hidden');
+            } catch (err) {
+                window.location.href = '/#pricing?error=invalid_session';
+            }
+        }
+        init();
+
+        // Password validation
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        function checkPassword() {
+            const p = password.value;
+            const c = confirmPassword.value;
+            const checks = {
+                length: p.length &gt;= 8,
+                upper: /[A-Z]/.test(p),
+                number: /[0-9]/.test(p),
+                match: p === c &amp;&amp; p.length &gt; 0
+            };
+            
+            ['length', 'upper', 'number', 'match'].forEach(key =&gt; {
+                const el = document.getElementById('req-' + key);
+                el.classList.toggle('met', checks[key]);
+                el.querySelector('span').textContent = checks[key] ? '✓' : '○';
+            });
+            
+            return checks.length &amp;&amp; checks.upper &amp;&amp; checks.number &amp;&amp; checks.match;
+        }
+        
+        password.addEventListener('input', checkPassword);
+        confirmPassword.addEventListener('input', checkPassword);
+
+        // Form submit
+        document.getElementById('signupForm').addEventListener('submit', async (e) =&gt; {
+            e.preventDefault();
+            const messageBox = document.getElementById('messageBox');
+            const signupBtn = document.getElementById('signupBtn');
+            const fullName = document.getElementById('fullName').value.trim();
+            
+            if (!checkPassword()) {
+                messageBox.textContent = 'Please meet all password requirements.';
+                messageBox.className = 'message-box error';
+                return;
+            }
+            
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating Account...';
+            
+            try {
+                // Create auth user
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: stripeSessionData.email,
+                    password: password.value
+                });
+                
+                if (authError) throw authError;
+                
+                // Insert user record
+                await supabase.from('users').insert({
+                    id: authData.user.id,
+                    email: stripeSessionData.email,
+                    full_name: fullName,
+                    has_paid: true,
+                    stripe_session_id: stripeSessionData.session_id
+                });
+                
+                // Mark session used
+                await fetch('/api/mark-session-used', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: stripeSessionData.session_id, user_id: authData.user.id })
+                });
+                
+                messageBox.textContent = 'Account created! Redirecting...';
+                messageBox.className = 'message-box success';
+                setTimeout(() =&gt; window.location.href = '/welcome', 1500);
+            } catch (err) {
+                messageBox.textContent = err.message || 'Error creating account.';
+                messageBox.className = 'message-box error';
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            </div>
+        </div>
+
+        <!-- WELCOME HTML -->
+        <h2 id="welcome-html">5. welcome.html (with Cookies Consent)</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">welcome.html</span>
+                <button class="copy-btn" onclick="copyCode('welcome-html-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="welcome-html-code">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Welcome - Market Warrior&lt;/title&gt;
+    &lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;
+    &lt;style&gt;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+            padding: 40px 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 40px; }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+        }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; color: #e2e8f0; margin-bottom: 8px; }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 1em;
+        }
+        .checkboxes { margin: 30px 0; }
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .checkbox-item.checked { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+        .checkbox-item input { width: 22px; height: 22px; }
+        .checkbox-item label { color: #e2e8f0; cursor: pointer; flex: 1; }
+        .checkbox-item label a { color: #667eea; }
+        .checkbox-item.cookies-consent { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .checkbox-item.cookies-consent.checked { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+        .btn-start {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+        .message-box { padding: 14px; border-radius: 10px; margin-bottom: 24px; display: none; }
+        .message-box.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; display: block; }
+        .message-box.success { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; display: block; }
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .loading-overlay.hidden { display: none; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="loading-overlay" id="loadingOverlay"&gt;&lt;div class="spinner"&gt;&lt;/div&gt;&lt;/div&gt;
+    
+    &lt;div class="container"&gt;
+        &lt;h1&gt;Welcome to Market Warrior! 🏆&lt;/h1&gt;
+        &lt;p class="subtitle"&gt;Let's get you set up for your 30-day trading journey&lt;/p&gt;
+        
+        &lt;div class="card"&gt;
+            &lt;div class="message-box" id="messageBox"&gt;&lt;/div&gt;
+            &lt;form id="welcomeForm"&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label&gt;Your Full Name (for certificate)&lt;/label&gt;
+                    &lt;input type="text" id="fullName" placeholder="Enter your full name" required&gt;
+                &lt;/div&gt;
+                
+                &lt;div class="checkboxes"&gt;
+                    &lt;div class="checkbox-item" id="box1"&gt;
+                        &lt;input type="checkbox" id="agreeTerms"&gt;
+                        &lt;label for="agreeTerms"&gt;I agree to the &lt;a href="/terms" target="_blank"&gt;Terms of Service&lt;/a&gt;&lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;div class="checkbox-item" id="box2"&gt;
+                        &lt;input type="checkbox" id="agreePrivacy"&gt;
+                        &lt;label for="agreePrivacy"&gt;I agree to the &lt;a href="/privacy" target="_blank"&gt;Privacy Policy&lt;/a&gt;&lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;div class="checkbox-item" id="box3"&gt;
+                        &lt;input type="checkbox" id="agreeDisclaimer"&gt;
+                        &lt;label for="agreeDisclaimer"&gt;I understand this is for educational purposes only, not financial advice&lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;div class="checkbox-item" id="box4"&gt;
+                        &lt;input type="checkbox" id="agreeRisk"&gt;
+                        &lt;label for="agreeRisk"&gt;I understand trading involves risk and I may lose money&lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;div class="checkbox-item" id="box5"&gt;
+                        &lt;input type="checkbox" id="agreeCommitment"&gt;
+                        &lt;label for="agreeCommitment"&gt;I commit to completing one lesson per day for 30 days&lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;!-- COOKIES CONSENT --&gt;
+                    &lt;div class="checkbox-item cookies-consent" id="box6"&gt;
+                        &lt;input type="checkbox" id="agreeCookies"&gt;
+                        &lt;label for="agreeCookies"&gt;🍪 I consent to cookies to enhance my experience. &lt;a href="/privacy#cookies" target="_blank"&gt;Learn more&lt;/a&gt;&lt;/label&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                
+                &lt;button type="submit" class="btn-start" id="startBtn" disabled&gt;🚀 Start My 30-Day Challenge&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        const checkboxes = ['agreeTerms', 'agreePrivacy', 'agreeDisclaimer', 'agreeRisk', 'agreeCommitment', 'agreeCookies'];
+
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+            
+            currentUser = session.user;
+            const { data: userData } = await supabase.from('users').select('full_name, has_paid, agreed_to_terms').eq('id', currentUser.id).single();
+            
+            if (!userData?.has_paid) { window.location.href = '/#pricing'; return; }
+            if (userData?.agreed_to_terms) { window.location.href = '/dashboard'; return; }
+            if (userData?.full_name) document.getElementById('fullName').value = userData.full_name;
+            
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        init();
+
+        // Checkbox handling
+        function updateCheckboxes() {
+            let allChecked = true;
+            checkboxes.forEach((id, i) =&gt; {
+                const checked = document.getElementById(id).checked;
+                document.getElementById(`box${i+1}`).classList.toggle('checked', checked);
+                if (!checked) allChecked = false;
+            });
+            document.getElementById('startBtn').disabled = !allChecked;
+        }
+        
+        checkboxes.forEach(id =&gt; document.getElementById(id).addEventListener('change', updateCheckboxes));
+
+        // Form submit
+        document.getElementById('welcomeForm').addEventListener('submit', async (e) =&gt; {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value.trim();
+            const messageBox = document.getElementById('messageBox');
+            const startBtn = document.getElementById('startBtn');
+            
+            if (fullName.length &lt; 2) {
+                messageBox.textContent = 'Please enter a valid name.';
+                messageBox.className = 'message-box error';
+                return;
+            }
+            
+            if (!confirm('Ready to start your 30-day challenge?')) return;
+            
+            startBtn.disabled = true;
+            startBtn.textContent = 'Setting up...';
+            
+            try {
+                const now = new Date().toISOString();
+                await supabase.from('users').update({
+                    full_name: fullName,
+                    agreed_to_terms: true,
+                    terms_agreed_at: now,
+                    challenge_start_date: now,
+                    cookies_consent: document.getElementById('agreeCookies').checked,
+                    cookies_consent_date: now
+                }).eq('id', currentUser.id);
+                
+                document.cookie = `cookies_consent=true; max-age=${365*24*60*60}; path=/; SameSite=Lax`;
+                
+                messageBox.textContent = 'Welcome aboard! Redirecting...';
+                messageBox.className = 'message-box success';
+                setTimeout(() =&gt; window.location.href = '/dashboard', 1500);
+            } catch (err) {
+                messageBox.textContent = 'Error. Please try again.';
+                messageBox.className = 'message-box error';
+                startBtn.disabled = false;
+                startBtn.textContent = '🚀 Start My 30-Day Challenge';
+            }
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SPEC -->
+        <h2 id="dashboard-spec">6. DASHBOARD_SPEC.md</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">DASHBOARD_SPEC.md</span>
+                <button class="copy-btn" onclick="copyCode('dashboard-spec-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="dashboard-spec-code"># DASHBOARD PAGE - Developer Specification
+
+## Page: `/dashboard`
+
+## Page Protection
+````javascript
+// Middleware check
+if (!session) redirect('/login?session=expired');
+if (!user.has_paid) redirect('/#pricing');
+if (!user.agreed_to_terms) redirect('/welcome');
+````
+
+## UI Components
+
+### 1. HEADER
+- Logo, User name, Avatar, Logout button
+
+### 2. WELCOME SECTION  
+- Greeting with first name
+- Current day number
+- Motivational quote (random)
+- Countdown to next day unlock
+
+### 3. STATS GRID (4 cards)
+| Card | Data |
+|------|------|
+| Current Day | min(max_unlocked + 1, 30) |
+| Days Completed | COUNT(completed_days) |
+| Avg Quiz Score | AVG(quiz_scores) |
+| Overall Progress | (completed / 30) * 100 |
+
+### 4. QUICK ACTIONS
+- Continue Learning → /day/{next}
+- Community Forum → /community
+- Trading Journal → /journal
+- Refer & Earn → /affiliate
+
+### 5. DAY CIRCLES (by phase)
+- Phase 1 (Days 1-7): Trading Foundations
+- Phase 2 (Days 8-14): Technical Analysis
+- Phase 3 (Days 15-21): Advanced Strategies
+- Phase 4 (Days 22-28): Portfolio Management
+- Phase 5 (Days 29-30): Assessment
+
+### 6. CERTIFICATE SECTION
+- Shows only when all 30 days completed
+
+## Day States
+| State | Visual | Click |
+|-------|--------|-------|
+| Completed | Green ✓ | Go to day |
+| Current | Purple ▶ | Go to day |
+| Locked | Gray 🔒 | Show message |
+
+## Day Unlock Logic
+````javascript
+function isDayUnlocked(day, startDate, completed) {
+  if (day === 1) return true;
+  const unlockTime = new Date(startDate.getTime() + ((day-1) * 24*60*60*1000));
+  if (new Date() &lt; unlockTime) return false;
+  return completed.includes(day - 1);
+}
+````
+
+## Database Tables
+
+### user_progress
+````sql
+CREATE TABLE user_progress (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  day_number INT,
+  completed_at TIMESTAMPTZ,
+  quiz_passed BOOLEAN,
+  UNIQUE(user_id, day_number)
+);
+````
+
+### quiz_attempts
+````sql
+CREATE TABLE quiz_attempts (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  day_number INT,
+  score INT,
+  passed BOOLEAN,
+  attempted_at TIMESTAMPTZ DEFAULT NOW()
+);
+```</pre>
+            </div>
+        </div>
+
+        <!-- ADMIN SPEC -->
+        <h2 id="admin-spec">7. ADMIN_PANEL_SPEC.md (Summary)</h2>
+        <div class="file-section">
+            <div class="file-header">
+                <span class="file-name">ADMIN_PANEL_SPEC.md</span>
+                <button class="copy-btn" onclick="copyCode('admin-spec-code')">📋 Copy</button>
+            </div>
+            <div class="code-block">
+                <pre id="admin-spec-code"># ADMIN PANEL - Summary Specification
+
+## Access Control
+Only users with `role: 'admin'` can access
+
+## 11 Sections
+
+### 1. DASHBOARD
+- Total users, Active users, Completed users
+- Revenue total, Today's signups
+- Recent activity feed, Revenue chart
+
+### 2. SITE SETTINGS
+- Challenge price, Logo URL
+- Maintenance mode, Allow signups
+- Enable affiliates, Access period
+
+### 3. CONTENT EDITOR
+- Select day (1-30)
+- Edit title, YouTube URL
+- Rich text editor for content
+- Quiz questions editor
+- Task description
+
+### 4. USER MANAGEMENT
+- Search/filter users
+- Export CSV
+- Per user: View, Unlock day, Certificate, Delete
+
+### 5. PROMO CODES
+- Create/edit/delete promo codes
+- Track usage, Set expiry
+
+### 6. AFFILIATE PROGRAM
+- Create affiliates
+- Set commission rates
+- Process payouts
+
+### 7. ANALYTICS
+- Traffic, Conversions, Revenue
+- Funnel visualization
+- Geographic data
+
+### 8. EMAIL CAMPAIGNS
+- Send to segments (All, Active, Stuck, etc.)
+- Templates with variables
+- Track open/click rates
+
+### 9. COMMUNITY
+- Moderate forum posts
+- Pin/unpin, Hide, Delete
+
+### 10. LIVE FEED
+- Real-time activity stream
+
+### 11. CERTIFICATES
+- Template management
+- View/revoke issued certificates
+
+## Security
+- Admin role check on all routes
+- Audit logging
+- Session timeout (30 min)
+- Re-auth for destructive actions</pre>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; padding: 30px; background: #1e293b; border-radius: 12px; text-align: center;">
+            <h3 style="color: #10b981;">✅ Package Complete</h3>
+            <p style="color: #94a3b8;">Save this HTML file and share with your developer. Each section has a copy button.</p>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(elementId) {
+            const codeElement = document.getElementById(elementId);
+            const text = codeElement.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.background = '#667eea'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
