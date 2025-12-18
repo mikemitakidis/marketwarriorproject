@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * Login/Register page with full authentication functionality.
- * Matches the template design exactly.
+ *
+ * Flow:
+ * - Register: Create account → Confirm email → /auth/callback → /pay → /welcome → /dashboard
+ * - Login: Sign in → Set cookies → Check status → Redirect appropriately
  */
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState('login');
@@ -16,7 +19,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [supabase, setSupabase] = useState(null);
 
-  // Initialize Supabase client on mount
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -24,10 +26,13 @@ export default function LoginPage() {
       setSupabase(createClient(url, key));
     }
 
-    // Check URL params for register mode
+    // Check URL params
     const params = new URLSearchParams(window.location.search);
     if (params.get('register') === 'true') {
       setActiveTab('register');
+    }
+    if (params.get('error')) {
+      setError('Authentication failed. Please try again.');
     }
   }, []);
 
@@ -57,6 +62,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -64,34 +70,26 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      // Check user status
-      const { data: userData } = await supabase
-        .from('users')
-        .select('has_paid, agreed_to_terms')
-        .eq('id', data.user.id)
-        .single();
+      // Set HTTP-only cookies by calling our API
+      const sessionRes = await fetch('/api/auth/set-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      });
 
-      if (!userData || !userData.has_paid) {
-        showSuccess('Redirecting to checkout...');
-        // Redirect to Stripe checkout
-        const response = await fetch('/api/checkout/stripe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() }),
-        });
-        const checkoutData = await response.json();
-        if (checkoutData.url) {
-          window.location.href = checkoutData.url;
-        } else {
-          showError('Failed to start checkout. Please try again.');
-        }
-        return;
+      const sessionData = await sessionRes.json();
+
+      if (!sessionRes.ok) {
+        throw new Error(sessionData.error || 'Failed to create session');
       }
 
       showSuccess('Login successful! Redirecting...');
-      setTimeout(() => {
-        window.location.href = userData.agreed_to_terms ? '/dashboard' : '/welcome';
-      }, 1000);
+
+      // Redirect to the appropriate page based on user status
+      window.location.href = sessionData.next || '/dashboard';
 
     } catch (err) {
       showError(err.message || 'Invalid email or password');
@@ -126,18 +124,18 @@ export default function LoginPage() {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/welcome`,
+          // Redirect to auth callback which handles session and redirects to /pay
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (error) throw error;
 
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        // Email already exists
         showError('This email is already registered. Please login instead.');
         setActiveTab('login');
       } else {
-        showSuccess('Account created! Check your email to verify, then complete your purchase.');
+        showSuccess('Account created! Check your email (including spam folder) to verify your account.');
       }
 
     } catch (err) {
@@ -159,7 +157,7 @@ export default function LoginPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/login?reset=true`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       });
 
       if (error) throw error;
@@ -183,7 +181,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/welcome`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
