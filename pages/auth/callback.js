@@ -33,12 +33,16 @@ export default function AuthCallback() {
 
 export async function getServerSideProps(ctx) {
   const { code, token_hash, type, next } = ctx.query || {};
-  const supabase = getAnonSupabase();
 
   try {
+    const supabase = getAnonSupabase();
     let session = null;
+
     if (token_hash && type) {
-      const { data, error } = await supabase.auth.verifyOtp({ token_hash: String(token_hash), type: String(type) });
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: String(token_hash),
+        type: String(type)
+      });
       if (error) throw error;
       session = data?.session || null;
     } else if (code) {
@@ -54,6 +58,8 @@ export async function getServerSideProps(ctx) {
       return { redirect: { destination: dest, permanent: false } };
     }
 
+    // No code or token_hash in URL - just render the page
+    // The client-side useEffect will handle hash-based tokens
     return { props: {} };
   } catch (e) {
     console.error('Auth callback error:', e);
