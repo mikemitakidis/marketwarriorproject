@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { supabaseClient } from '../../lib/supabase';
 
 /**
  * Day content page.
@@ -11,6 +10,9 @@ import { supabaseClient } from '../../lib/supabase';
  * The server handles all entitlement checks (ownership, unlocks, RLS)
  * and returns only the data the user is allowed to see.  Users must
  * submit the quiz and tasks via the provided endpoints to progress.
+ *
+ * Authentication is handled via HTTP-only cookies, so no Authorization
+ * headers are needed - cookies are automatically sent with fetch requests.
  */
 export default function Day() {
   const router = useRouter();
@@ -26,16 +28,19 @@ export default function Day() {
     if (!day) return;
     async function load() {
       try {
-        // Fetch the day data with authorization header
-        let token;
-        try {
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          token = session?.access_token;
-        } catch (e) {}
+        // Cookies are automatically sent with fetch requests
         const res = await fetch(`/api/day/${day}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
         });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+          const text = await res.text();
+          try {
+            const json = JSON.parse(text);
+            throw new Error(json.error || res.statusText);
+          } catch {
+            throw new Error(text || res.statusText);
+          }
+        }
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -50,22 +55,15 @@ export default function Day() {
   async function submitQuiz() {
     setSubmissionStatus('Submitting…');
     try {
-      let token;
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        token = session?.access_token;
-      } catch (e) {}
       const res = await fetch('/api/quiz/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ day: Number(day), answers: quizAnswers }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || res.statusText);
-      setSubmissionStatus(`Quiz score: ${json.score}/${json.total}`);
+      setSubmissionStatus(`Quiz score: ${json.score}/${json.total}${json.passed ? ' - Passed!' : ' - Try again'}`);
     } catch (err) {
       setSubmissionStatus(`Error: ${err.message}`);
     }
@@ -74,22 +72,15 @@ export default function Day() {
   async function submitTask() {
     setSubmissionStatus('Submitting task…');
     try {
-      let token;
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        token = session?.access_token;
-      } catch (e) {}
       const res = await fetch('/api/task/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ day: Number(day), response: taskResponse }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || res.statusText);
-      setSubmissionStatus('Task submitted successfully!');
+      setSubmissionStatus('Task submitted successfully! Next day unlocked.');
     } catch (err) {
       setSubmissionStatus(`Error: ${err.message}`);
     }

@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
-import { getUserFromJwt } from '../../../lib/auth';
-import { getServiceSupabase } from '../../../lib/supabase';
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/checkout/stripe
@@ -15,7 +14,10 @@ import { getServiceSupabase } from '../../../lib/supabase';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const user = await getUserFromJwt(req);
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
     const userId = user.id;
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {

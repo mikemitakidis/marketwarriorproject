@@ -1,47 +1,48 @@
-import { getServiceSupabase } from '../../../lib/supabase';
-import { getUserFromJwt, getUserProfile } from '../../../lib/auth';
-import bcrypt from 'bcryptjs';
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/admin/users
  *
- * Returns a list of users for the admin panel.  This route should
- * only be accessible to administrators.  For simplicity this
- * implementation relies on a header `x-admin` to gate access.
+ * Returns a list of users for the admin panel.
+ * Only accessible to administrators (is_admin = true in user_profiles).
  */
 export default async function handler(req, res) {
   try {
-    // Verify JWT and fetch user profile
-    const user = await getUserFromJwt(req);
-    const profile = await getUserProfile(user.id);
-    // Check email allow list
-    const allowList = process.env.ADMIN_EMAIL_ALLOWLIST ? process.env.ADMIN_EMAIL_ALLOWLIST.split(',') : [];
-    const emailAllowed = allowList.includes(user.email);
-    // Check is_admin flag
-    const isAdminFlag = profile?.is_admin === true;
-    // Check admin password gate
-    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-    const providedPassword = req.headers['x-admin-password'] || req.headers['admin-password'];
-    let passwordOk = false;
-    if (adminPasswordHash && providedPassword) {
-      try {
-        passwordOk = await bcrypt.compare(providedPassword, adminPasswordHash);
-      } catch (e) {
-        passwordOk = false;
-      }
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' });
     }
-    if (!emailAllowed || !isAdminFlag || !passwordOk) {
+
+    const supabase = getServiceSupabase();
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin, email')
+      .eq('id', user.id)
+      .single();
+
+    // Check email allow list
+    const allowList = process.env.ADMIN_EMAIL_ALLOWLIST
+      ? process.env.ADMIN_EMAIL_ALLOWLIST.split(',').map(e => e.trim().toLowerCase())
+      : [];
+    const emailAllowed = allowList.includes((user.email || '').toLowerCase());
+
+    // Must be on allow list AND have is_admin flag
+    if (!emailAllowed || !profile?.is_admin) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const supabase = getServiceSupabase();
+
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id, email, is_admin, created_at')
+      .select('id, email, full_name, is_admin, has_paid, created_at')
       .order('created_at', { ascending: false });
+
     if (error) throw new Error('Failed to fetch users');
+
     return res.status(200).json({ users: data });
   } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: err.message });
+    console.error('admin/users error:', err);
+    return res.status(500).json({ error: err.message });
   }
 }

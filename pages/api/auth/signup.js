@@ -1,6 +1,6 @@
-const { getAnonSupabase } = require('../../../lib/serverAuth');
+import { getAnonSupabase } from '../../../lib/serverAuth';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     const { email, password } = req.body || {};
@@ -24,6 +24,7 @@ module.exports = async function handler(req, res) {
         : 'Account created. Check your inbox to confirm your email before logging in.'
     });
   } catch (e) {
+    console.error('signup error:', e);
     return res.status(500).json({ error: e?.message || 'Server error' });
   }
-};
+}

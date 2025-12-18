@@ -1,6 +1,6 @@
-const { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } = require('../../../lib/serverAuth');
+import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     const { access_token, refresh_token, next } = req.body || {};
@@ -14,6 +14,7 @@ module.exports = async function handler(req, res) {
     const gate = await getGateStatus(data.user.id);
     return res.status(200).json({ ok: true, next: determineNextRoute(gate, next) });
   } catch (e) {
+    console.error('set-session error:', e);
     return res.status(500).json({ error: e.message || 'Server error' });
   }
-};
+}

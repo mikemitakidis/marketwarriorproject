@@ -1,6 +1,6 @@
-const { getAnonSupabase } = require('../../../lib/serverAuth');
+import { getAnonSupabase } from '../../../lib/serverAuth';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const provider = (req.query.provider || 'google').toString();
     const next = (req.query.next || '/pay').toString();
@@ -23,6 +23,7 @@ module.exports = async function handler(req, res) {
     res.writeHead(302, { Location: data.url });
     res.end();
   } catch (e) {
+    console.error('oauth error:', e);
     res.status(500).send(e.message || 'Server error');
   }
-};
+}

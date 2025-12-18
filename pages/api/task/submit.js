@@ -1,5 +1,4 @@
-import { getServiceSupabase } from '../../../lib/supabase';
-import { getUserFromJwt } from '../../../lib/auth';
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/task/submit
@@ -19,7 +18,8 @@ export default async function handler(req, res) {
   try {
     const { day, response: taskResponse } = req.body;
     if (!day || !taskResponse) throw new Error('Missing day or response');
-    const user = await getUserFromJwt(req);
+    const user = await getUserFromRequest(req);
+    if (!user) throw new Error('Not authenticated');
     const userId = user.id;
     const supabase = getServiceSupabase();
     // Ensure quiz is passed before accepting task
@@ -39,22 +39,19 @@ export default async function handler(req, res) {
     if (insertErr) throw new Error('Could not save task');
     // Mark day as completed and schedule next day
     const now = new Date();
-    // Completed_at update
+    // Mark current day as completed
     await supabase
       .from('challenge_progress')
-      .update({ completed_at: now.toISOString() })
+      .update({ completed: true, completed_at: now.toISOString() })
       .eq('user_id', userId)
       .eq('day', day);
-    // Determine next day available_at based on server time: challenge_start_date + day*24h
+    // Unlock the next day
     const nextDay = Number(day) + 1;
     if (nextDay <= 30) {
-      // Compute available_at: current time + 24 hours (server time).  In production this
-      // should be based on `challenge_start_date` + (nextDay-1)*24h to ensure
-      // consistent unlock schedule.
-      const availableAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      // Create/update progress for next day with unlocked = true
       await supabase
         .from('challenge_progress')
-        .upsert({ user_id: userId, day: nextDay, available_at: availableAt }, { onConflict: 'user_id,day' });
+        .upsert({ user_id: userId, day: nextDay, unlocked: true }, { onConflict: 'user_id,day' });
     }
     return res.status(200).json({ success: true });
   } catch (err) {
