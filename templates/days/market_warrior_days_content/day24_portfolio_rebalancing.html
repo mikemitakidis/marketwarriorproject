@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 24: Portfolio Rebalancing Basics | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            height: 100%;
+            width: 80%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .portfolio-card {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .portfolio-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .rebalance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .rebalance-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .rebalance-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102,126,234,0.2);
+        }
+        
+        .calculator-tool {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            color: white;
+        }
+        
+        .calc-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .calc-input {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .calc-input label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .calc-input input {
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .calc-button {
+            background: white;
+            color: #667eea;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .pie-chart {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 50%;
+            background: conic-gradient(
+                #10b981 0deg 108deg,
+                #3b82f6 108deg 216deg,
+                #f59e0b 216deg 288deg,
+                #ef4444 288deg 360deg
+            );
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 350px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .submit-btn {
+            background: #10b981;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .submit-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16,185,129,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">🔥 PHASE 4: ADVANCED MARKETS</div>
+            <div class="day-badge">DAY 24 OF 30</div>
+            <h1>⚖️ Portfolio Rebalancing Basics</h1>
+            <p>Master the art of portfolio optimization. Keep your investments balanced like the pros!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – The Secret to Long-Term Success</h2>
+            <p>Welcome to <strong>Day 24</strong> of your Market Warrior journey!</p>
+            <p>Today you'll learn <strong>Portfolio Rebalancing</strong> - the discipline that separates amateur traders from professional fund managers. This is how you maintain optimal risk/reward over time!</p>
+            
+            <div class="highlight-box">
+                <h4>💡 Why Rebalancing Matters</h4>
+                <p><strong>A real example:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>January: Your portfolio is 60% stocks, 40% bonds</li>
+                    <li>December: After stock gains, it's now 75% stocks, 25% bonds</li>
+                    <li>Your risk increased without you realizing!</li>
+                    <li>Rebalancing = selling winners, buying losers = disciplined profit-taking</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Studies show:</strong> Rebalanced portfolios earn 1.5% more annually with less risk!</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Practice on Demo First</h4>
+                <p>Master rebalancing on your demo account for 6+ months. Track every adjustment and its impact before using real money!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                <p>Portfolio Management Masterclass - Loading...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Part 1: Understanding Portfolio Allocation</h2>
+            
+            <h3>The Classic 60/40 Portfolio</h3>
+            
+            <div class="portfolio-card">
+                <h4>Traditional Balanced Portfolio</h4>
+                <div class="pie-chart"></div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>Stocks (60%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        <span>Bonds (40%)</span>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px;">Average return: 8-10% annually | Risk: Moderate</p>
+            </div>
+
+            <h3>Modern Portfolio Allocations</h3>
+            
+            <div class="comparison-table">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Portfolio Type</th>
+                            <th>Allocation</th>
+                            <th>Risk Level</th>
+                            <th>Expected Return</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Conservative</strong></td>
+                            <td>30% Stocks, 60% Bonds, 10% Cash</td>
+                            <td>Low</td>
+                            <td>4-6%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Balanced</strong></td>
+                            <td>60% Stocks, 30% Bonds, 10% Alternatives</td>
+                            <td>Medium</td>
+                            <td>7-10%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Growth</strong></td>
+                            <td>80% Stocks, 15% Bonds, 5% Crypto</td>
+                            <td>High</td>
+                            <td>10-15%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Aggressive</strong></td>
+                            <td>70% Stocks, 20% Crypto, 10% Options</td>
+                            <td>Very High</td>
+                            <td>15-25%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Part 2: When & How to Rebalance</h2>
+            
+            <h3>Rebalancing Triggers</h3>
+            
+            <div class="rebalance-grid">
+                <div class="rebalance-item">
+                    <h4>📅 Calendar Method</h4>
+                    <p>Rebalance every:</p>
+                    <ul style="list-style: none; padding: 10px 0;">
+                        <li>• Quarterly (4x/year)</li>
+                        <li>• Semi-annually (2x/year)</li>
+                        <li>• Annually (1x/year)</li>
+                    </ul>
+                    <p style="color: #10b981; margin-top: 10px;">Most popular: Annual</p>
+                </div>
+                <div class="rebalance-item">
+                    <h4>📊 Threshold Method</h4>
+                    <p>Rebalance when allocation drifts:</p>
+                    <ul style="list-style: none; padding: 10px 0;">
+                        <li>• 5% from target (aggressive)</li>
+                        <li>• 10% from target (moderate)</li>
+                        <li>• 15% from target (relaxed)</li>
+                    </ul>
+                    <p style="color: #10b981; margin-top: 10px;">Recommended: 10%</p>
+                </div>
+                <div class="rebalance-item">
+                    <h4>🎯 Hybrid Method</h4>
+                    <p>Check quarterly, act if:</p>
+                    <ul style="list-style: none; padding: 10px 0;">
+                        <li>• 12 months passed OR</li>
+                        <li>• 10% drift occurred</li>
+                        <li>• Major market event</li>
+                    </ul>
+                    <p style="color: #10b981; margin-top: 10px;">Best of both!</p>
+                </div>
+            </div>
+
+            <h3>The Rebalancing Process</h3>
+            
+            <div class="success-box">
+                <h4>✅ Step-by-Step Rebalancing</h4>
+                <ol style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Calculate current allocation:</strong> What % is each asset now?</li>
+                    <li><strong>Compare to target:</strong> How far off are you?</li>
+                    <li><strong>Identify trades needed:</strong> What to sell/buy?</li>
+                    <li><strong>Execute systematically:</strong> Sell winners first, then buy losers</li>
+                    <li><strong>Document everything:</strong> Track for tax and performance</li>
+                </ol>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 Pro Tip: Use New Money to Rebalance</h4>
+                <p>Instead of selling (triggers taxes/fees), use new deposits to buy underweight assets. This is called "rebalancing through contributions"!</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧮 Interactive Rebalancing Calculator</h2>
+            
+            <div class="calculator-tool">
+                <h4>📊 Calculate Your Rebalancing Needs</h4>
+                <p style="margin-bottom: 20px;">Enter your current portfolio to see what adjustments are needed!</p>
+                
+                <div class="calc-input-group">
+                    <div class="calc-input">
+                        <label>Portfolio Value ($)</label>
+                        <input type="number" id="portfolioValue" placeholder="10000" value="10000">
+                    </div>
+                    <div class="calc-input">
+                        <label>Current Stocks (%)</label>
+                        <input type="number" id="currentStocks" placeholder="70" value="70">
+                    </div>
+                    <div class="calc-input">
+                        <label>Target Stocks (%)</label>
+                        <input type="number" id="targetStocks" placeholder="60" value="60">
+                    </div>
+                    <div class="calc-input">
+                        <label>Current Bonds (%)</label>
+                        <input type="number" id="currentBonds" placeholder="30" value="30">
+                    </div>
+                </div>
+                
+                <button class="calc-button" onclick="calculateRebalancing()">Calculate Rebalancing</button>
+                
+                <div id="rebalanceResult" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: none; color: #1e293b;">
+                    <h5 style="margin-bottom: 15px;">📈 Rebalancing Actions Required:</h5>
+                    <div id="rebalanceContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💰 Part 3: Tax-Efficient Rebalancing</h2>
+            
+            <div class="warning-box">
+                <h4>⚠️ Tax Considerations (For Future Reference)</h4>
+                <p>When you move from demo to real trading, remember:</p>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Selling winners = capital gains tax</li>
+                    <li>Use tax-advantaged accounts when possible</li>
+                    <li>Consider tax-loss harvesting</li>
+                    <li>Rebalance less frequently in taxable accounts</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>For now:</strong> Practice freely on demo without tax concerns!</p>
+            </div>
+
+            <h3>Smart Rebalancing Strategies</h3>
+            
+            <div class="portfolio-card">
+                <h4>🎯 Strategy 1: Core-Satellite Approach</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Core (80%):</strong> Index funds, rarely rebalanced</li>
+                    <li><strong>Satellite (20%):</strong> Active trades, frequently adjusted</li>
+                </ul>
+                <p><strong>Benefit:</strong> Reduces taxes while staying flexible</p>
+            </div>
+
+            <div class="portfolio-card">
+                <h4>🎯 Strategy 2: Tolerance Bands</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Set wider bands for volatile assets (±15%)</li>
+                    <li>Tighter bands for stable assets (±5%)</li>
+                    <li>Only rebalance assets outside bands</li>
+                </ul>
+                <p><strong>Benefit:</strong> Reduces unnecessary trading</p>
+            </div>
+
+            <div class="portfolio-card">
+                <h4>🎯 Strategy 3: Opportunistic Rebalancing</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>Rebalance during market extremes</li>
+                    <li>Buy during crashes (March 2020)</li>
+                    <li>Sell during euphoria (2021 peaks)</li>
+                </ul>
+                <p><strong>Benefit:</strong> Enhanced returns through timing</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Part 4: Rebalancing Tools & Platforms</h2>
+            
+            <div class="info-box">
+                <h4>🛠️ Where to Practice Rebalancing (Demo Accounts)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>eToro:</strong> Portfolio analytics show allocation drift, copy portfolios auto-rebalance</li>
+                    <li><strong>Trading 212:</strong> Pies feature for automatic rebalancing</li>
+                    <li><strong>Interactive Brokers:</strong> Portfolio rebalancing tool</li>
+                    <li><strong>Fidelity:</strong> Automatic rebalancing for managed accounts</li>
+                    <li><strong>Vanguard:</strong> Personal Advisor Services includes rebalancing</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Practice tip:</strong> Start manual to understand the process, then explore automatic tools</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Day 24 Quiz - Test Your Knowledge</h2>
+            <p style="margin-bottom: 20px; color: #64748b;">Test your understanding of portfolio rebalancing. You need 60% (3/5) to pass.</p>
+            
+            <div style="background: #f8fafc; border-radius: 15px; padding: 30px;">
+                <div id="quizQuestions">
+                    <!-- Question 1 -->
+                    <div class="question-container" data-question="1">
+                        <div style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            <strong>1.</strong> How much MORE do rebalanced portfolios typically earn annually?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <span class="option-letter">A)</span> 0.5%
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <span class="option-letter">B)</span> 1.5%
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <span class="option-letter">C)</span> 5%
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <span class="option-letter">D)</span> 10%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div class="question-container" data-question="2">
+                        <div style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            <strong>2.</strong> What is the classic balanced portfolio allocation?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <span class="option-letter">A)</span> 80% Stocks, 20% Bonds
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <span class="option-letter">B)</span> 60% Stocks, 40% Bonds
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <span class="option-letter">C)</span> 50% Stocks, 50% Bonds
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <span class="option-letter">D)</span> 40% Stocks, 60% Bonds
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <div class="question-container" data-question="3">
+                        <div style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            <strong>3.</strong> What is the recommended threshold drift percentage for moderate rebalancing?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <span class="option-letter">A)</span> 5%
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <span class="option-letter">B)</span> 10%
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <span class="option-letter">C)</span> 15%
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <span class="option-letter">D)</span> 20%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <div class="question-container" data-question="4">
+                        <div style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            <strong>4.</strong> What does rebalancing help you do automatically?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <span class="option-letter">A)</span> Buy high and sell low
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <span class="option-letter">B)</span> Buy low and sell high
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <span class="option-letter">C)</span> Maximize risk exposure
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <span class="option-letter">D)</span> Avoid all market losses
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question 5 -->
+                    <div class="question-container" data-question="5">
+                        <div style="font-size: 1.2em; margin-bottom: 20px; color: #1e293b;">
+                            <strong>5.</strong> Which rebalancing method combines time-based and threshold-based triggers?
+                        </div>
+                        <div class="quiz-options" style="display: grid; gap: 12px;">
+                            <div class="quiz-option" data-answer="a">
+                                <span class="option-letter">A)</span> Calendar Method
+                            </div>
+                            <div class="quiz-option" data-answer="b">
+                                <span class="option-letter">B)</span> Threshold Method
+                            </div>
+                            <div class="quiz-option" data-answer="c">
+                                <span class="option-letter">C)</span> Hybrid Method
+                            </div>
+                            <div class="quiz-option" data-answer="d">
+                                <span class="option-letter">D)</span> Dynamic Method
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="scoreDisplay" style="text-align: center; margin-top: 20px;"></div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button onclick="submitQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">Submit Quiz</button>
+                </div>
+                
+                <div id="passedButtons" style="display: none; text-align: center; margin-top: 20px;">
+                    <p style="color: #10b981; font-weight: 600;">✅ Quiz passed! Complete the task below to finish Day 24.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 24 Task - Create Your Rebalancing Plan</h2>
+            <h3>Design a rebalancing strategy for your demo portfolio!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Create a detailed rebalancing plan for your demo portfolio. Include target allocations, rebalancing triggers, and simulate a rebalancing event.</p>
+            </div>
+
+            <textarea id="taskResponse" placeholder="PORTFOLIO REBALANCING PLAN
+
+Date: [Today's Date]
+Demo Account Platform: [eToro/Trading 212/Other]
+
+PART 1: CURRENT PORTFOLIO ANALYSIS
+═══════════════════════════════════════
+
+Current Portfolio Value: $[X] (demo funds)
+
+Current Allocation:
+- Stocks: [%] ($[amount])
+  * Tech stocks: [%]
+  * Healthcare: [%]
+  * Finance: [%]
+  * Other: [%]
+- Bonds/Bond ETFs: [%] ($[amount])
+- Crypto: [%] ($[amount])
+- Commodities: [%] ($[amount])
+- Cash: [%] ($[amount])
+
+Performance Since Start:
+- Total Return: [%]
+- Best Performer: [Asset] (+[%])
+- Worst Performer: [Asset] (-[%])
+
+PART 2: TARGET ALLOCATION
+═══════════════════════════════════════
+
+Investment Goals:
+[Your goals - growth/income/balanced]
+
+Risk Tolerance:
+[Conservative/Moderate/Aggressive]
+
+Target Portfolio Allocation:
+- Stocks: [%]
+  * Large Cap: [%]
+  * Small Cap: [%]
+  * International: [%]
+- Bonds: [%]
+- Alternative Assets: [%]
+- Cash Reserve: [%]
+
+Why This Allocation:
+[Your reasoning based on goals and risk]
+
+PART 3: REBALANCING STRATEGY
+═══════════════════════════════════════
+
+Rebalancing Method:
+□ Calendar (Quarterly/Annual)
+□ Threshold ([X]% drift)
+□ Hybrid (Both)
+
+Specific Rules:
+1. Check portfolio every [timeframe]
+2. Rebalance when [trigger condition]
+3. Minimum trade size: $[amount]
+4. Maximum trades per rebalancing: [X]
+
+Rebalancing Steps:
+1. [First action]
+2. [Second action]
+3. [Third action]
+4. [Documentation process]
+
+PART 4: SIMULATED REBALANCING
+═══════════════════════════════════════
+
+Scenario: After 6 months, stocks up 20%, bonds down 5%
+
+Current vs Target:
+Asset | Current | Target | Difference | Action
+------|---------|--------|------------|--------
+Stocks | [75%] | [60%] | [+15%] | [Sell $X]
+Bonds | [20%] | [30%] | [-10%] | [Buy $X]
+Cash | [5%] | [10%] | [-5%] | [Add $X]
+
+Trades Required:
+1. Sell: [Asset] - $[Amount]
+2. Sell: [Asset] - $[Amount]
+3. Buy: [Asset] - $[Amount]
+4. Buy: [Asset] - $[Amount]
+
+Estimated Costs:
+- Trading fees: $[X]
+- Spread costs: $[X]
+- Tax impact: N/A (demo)
+
+PART 5: MONITORING PLAN
+═══════════════════════════════════════
+
+Weekly Review:
+- Check allocation drift
+- Note market conditions
+- Document major changes
+
+Monthly Analysis:
+- Calculate performance
+- Compare to benchmarks
+- Assess if rebalancing needed
+
+Quarterly Decision:
+- Full portfolio review
+- Execute rebalancing if triggered
+- Adjust strategy if needed
+
+Tools I'll Use:
+- [Platform's portfolio analyzer]
+- [Spreadsheet tracking]
+- [Rebalancing calculator]
+
+KEY LESSONS FROM DAY 24:
+1. [Most important rebalancing principle]
+2. [How rebalancing improves returns]
+3. [Risk management through rebalancing]"></textarea>
+            
+            <button class="submit-btn" onclick="submitTask()">Submit Rebalancing Plan</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; text-align: center;">
+            <h2>👀 Sneak Peek: Day 25</h2>
+            <p>Tomorrow: <strong>Monitoring Virtual Portfolio Performance</strong></p>
+            <p>Learn professional techniques to track, measure, and improve your trading results!</p>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white; text-align: center;">
+            <h2>🎉 Day 24 Complete - Portfolio Master!</h2>
+            <p>You now understand professional portfolio management!</p>
+            <button class="submit-btn" style="background: white; color: #dc2626;" onclick="completeDay24()">Complete Day 24 ✓</button>
+            <button class="submit-btn" style="background: white; color: #dc2626;" onclick="proceedToDay25()">Preview Day 25 →</button>
+        </div>
+    </div>
+
+    <script>
+        let taskSubmitted = false;
+        let quizCompleted = false;
+        let quizScore = 0;
+        let userAnswers = [];
+        let correctAnswers = ['b', 'b', 'b', 'b', 'c']; // Answers for 5 questions
+
+        // Setup quiz options click handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.style.cssText = 'background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s;';
+                option.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    const questionIndex = parseInt(questionContainer.dataset.question) - 1;
+                    
+                    // Remove selection from siblings
+                    questionContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.style.border = '2px solid #e5e7eb';
+                        opt.style.background = 'white';
+                    });
+                    
+                    // Mark this as selected
+                    this.style.border = '2px solid #667eea';
+                    this.style.background = '#f0f4ff';
+                    
+                    // Store answer
+                    userAnswers[questionIndex] = this.dataset.answer;
+                });
+            });
+        }
+
+        function submitQuiz() {
+            // Check all questions answered
+            if (userAnswers.filter(a => a).length < 5) {
+                alert('⚠️ Please answer all 5 questions before submitting!');
+                return;
+            }
+            
+            // Calculate score
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            const percentage = (score / correctAnswers.length * 100).toFixed(0);
+            
+            // Show results
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+            `;
+            
+            // Show correct/incorrect for each question
+            document.querySelectorAll('.question-container').forEach((container, index) => {
+                const options = container.querySelectorAll('.quiz-option');
+                options.forEach(opt => {
+                    const answer = opt.dataset.answer;
+                    if (answer === correctAnswers[index]) {
+                        opt.style.border = '2px solid #10b981';
+                        opt.style.background = '#d1fae5';
+                    } else if (answer === userAnswers[index] && userAnswers[index] !== correctAnswers[index]) {
+                        opt.style.border = '2px solid #ef4444';
+                        opt.style.background = '#fee2e2';
+                    }
+                    opt.style.pointerEvents = 'none';
+                });
+            });
+            
+            if (score >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                quizCompleted = true;
+            } else {
+                alert('📚 You need at least 60% (3/5) to pass. Review the material and refresh the page to try again!');
+            }
+        }
+
+        function calculateRebalancing() {
+            const portfolioValue = parseFloat(document.getElementById('portfolioValue').value);
+            const currentStocks = parseFloat(document.getElementById('currentStocks').value);
+            const targetStocks = parseFloat(document.getElementById('targetStocks').value);
+            const currentBonds = parseFloat(document.getElementById('currentBonds').value);
+            const targetBonds = 100 - targetStocks;
+            
+            if (!portfolioValue || !currentStocks || !targetStocks) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const currentStockValue = portfolioValue * (currentStocks / 100);
+            const targetStockValue = portfolioValue * (targetStocks / 100);
+            const stockDifference = targetStockValue - currentStockValue;
+            
+            const currentBondValue = portfolioValue * (currentBonds / 100);
+            const targetBondValue = portfolioValue * (targetBonds / 100);
+            const bondDifference = targetBondValue - currentBondValue;
+            
+            let resultHTML = `
+                <p><strong>Portfolio Value:</strong> $${portfolioValue.toLocaleString()}</p>
+                <hr style="margin: 15px 0;">
+                <p><strong>Stocks:</strong></p>
+                <p>Current: ${currentStocks}% ($${currentStockValue.toFixed(2)})</p>
+                <p>Target: ${targetStocks}% ($${targetStockValue.toFixed(2)})</p>
+                <p style="color: ${stockDifference < 0 ? '#dc2626' : '#10b981'};">
+                    Action: ${stockDifference < 0 ? 'SELL' : 'BUY'} $${Math.abs(stockDifference).toFixed(2)}
+                </p>
+                <hr style="margin: 15px 0;">
+                <p><strong>Bonds:</strong></p>
+                <p>Current: ${currentBonds}% ($${currentBondValue.toFixed(2)})</p>
+                <p>Target: ${targetBonds}% ($${targetBondValue.toFixed(2)})</p>
+                <p style="color: ${bondDifference < 0 ? '#dc2626' : '#10b981'};">
+                    Action: ${bondDifference < 0 ? 'SELL' : 'BUY'} $${Math.abs(bondDifference).toFixed(2)}
+                </p>
+            `;
+            
+            document.getElementById('rebalanceContent').innerHTML = resultHTML;
+            document.getElementById('rebalanceResult').style.display = 'block';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 500) {
+                showTaskStatus('Please complete all sections (minimum 500 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Rebalancing plan submitted! Practice this monthly on your demo account!', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+
+        function completeDay24() {
+            if (!quizCompleted) {
+                alert('⚠️ Please complete the quiz correctly before completing Day 24.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your rebalancing plan before completing Day 24.');
+                return;
+            }
+            
+            alert('🎉 Day 24 completed! You understand portfolio rebalancing. Day 25 unlocks in 24 hours.');
+        }
+
+        function proceedToDay25() {
+            alert('Day 25: Monitoring Virtual Portfolio Performance will be available in 24 hours!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+    </script>
+</body>
+</html>
