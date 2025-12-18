@@ -98,6 +98,7 @@ export default function LandingPage() {
         .logo-text {
           font-size: 1.5em;
           font-weight: 700;
+          color: white;
         }
 
         .nav-menu {

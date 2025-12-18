@@ -1,18 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
+import { createClient } from '@supabase/supabase-js';
 
-/**
- * Welcome / Onboarding page.
- *
- * Users land here after payment to enter their name and accept terms
- * before accessing the dashboard. This is a required step in the flow:
- * Register -> Confirm Email -> Payment -> Welcome -> Dashboard
- *
- * Once completed, terms acceptance persists in user_profiles and the user
- * is never shown this page again (redirected to dashboard).
- */
 export async function getServerSideProps({ req }) {
   try {
     const user = await getUserFromRequest(req);
@@ -32,14 +23,31 @@ export async function getServerSideProps({ req }) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
-    return { props: { userEmail: user.email } };
+    // Get user's affiliate code
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('affiliate_code')
+      .eq('id', user.id)
+      .single();
+
+    return {
+      props: {
+        userEmail: user.email,
+        affiliateCode: profile?.affiliate_code || ''
+      }
+    };
   } catch (err) {
     console.error('Welcome SSR error:', err);
     return { redirect: { destination: '/login', permanent: false } };
   }
 }
 
-export default function WelcomePage({ userEmail }) {
+export default function WelcomePage({ userEmail, affiliateCode }) {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [agreements, setAgreements] = useState({
@@ -51,6 +59,7 @@ export default function WelcomePage({ userEmail }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [copyText, setCopyText] = useState('Copy');
 
   const allAgreed = Object.values(agreements).every(Boolean) && fullName.trim().length >= 2;
 
@@ -90,6 +99,16 @@ export default function WelcomePage({ userEmail }) {
     }
   };
 
+  const copyAffiliateLink = () => {
+    const link = `https://marketwarrior.club/?ref=${affiliateCode}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopyText('✓ Copied!');
+      setTimeout(() => setCopyText('Copy'), 2000);
+    }).catch(() => {
+      alert('Failed to copy. Please copy manually.');
+    });
+  };
+
   return (
     <>
       <Head>
@@ -98,9 +117,14 @@ export default function WelcomePage({ userEmail }) {
       </Head>
 
       <style jsx global>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           min-height: 100vh;
           padding: 40px 20px;
@@ -116,72 +140,31 @@ export default function WelcomePage({ userEmail }) {
           box-shadow: 0 30px 80px rgba(0,0,0,0.3);
           overflow: hidden;
         }
+
         .header {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
           padding: 50px 40px;
           text-align: center;
         }
-        .logo { font-size: 80px; margin-bottom: 20px; }
-        h1 { font-size: 2.5em; margin-bottom: 15px; }
-        .subtitle { font-size: 1.2em; opacity: 0.95; }
-        .content { padding: 50px 40px; }
 
-        /* Intro Section */
-        .intro-section {
-          background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-          padding: 30px;
-          border-radius: 20px;
-          margin-bottom: 30px;
-          border-left: 5px solid #0284c7;
+        .logo {
+          font-size: 80px;
+          margin-bottom: 20px;
         }
-        .intro-section h2 { color: #0369a1; margin-bottom: 15px; font-size: 1.5em; }
-        .intro-section p { color: #075985; line-height: 1.8; margin-bottom: 15px; }
-        .intro-section strong { color: #0c4a6e; }
 
-        /* Instructions Section */
-        .instructions-section {
-          background: #f8fafc;
-          padding: 30px;
-          border-radius: 20px;
-          margin-bottom: 30px;
+        h1 {
+          font-size: 2.5em;
+          margin-bottom: 15px;
         }
-        .instructions-section h2 { color: #1e293b; margin-bottom: 20px; font-size: 1.5em; }
-        .instructions-section h3 { color: #667eea; margin: 20px 0 10px; font-size: 1.2em; }
-        .instructions-section p { color: #475569; line-height: 1.8; margin-bottom: 10px; }
-        .instructions-section ul { margin: 10px 0 20px 20px; }
-        .instructions-section li { color: #475569; line-height: 1.8; margin-bottom: 8px; }
 
-        /* Rewards Section */
-        .rewards-section {
-          background: linear-gradient(135deg, #fef3c7, #fde68a);
-          padding: 30px;
-          border-radius: 20px;
-          margin-bottom: 30px;
-          border-left: 5px solid #fbbf24;
+        .subtitle {
+          font-size: 1.2em;
+          opacity: 0.95;
         }
-        .rewards-section h2 { color: #92400e; margin-bottom: 15px; font-size: 1.5em; }
-        .rewards-section h3 { color: #78350f; margin: 15px 0 10px; font-size: 1.1em; }
-        .rewards-section p { color: #78350f; line-height: 1.8; margin-bottom: 10px; }
-        .rewards-section ul { margin: 10px 0 15px 20px; }
-        .rewards-section li { color: #78350f; line-height: 1.8; margin-bottom: 8px; }
 
-        /* Disclaimer Section */
-        .disclaimer-section {
-          background: #fef2f2;
-          padding: 30px;
-          border-radius: 20px;
-          margin-bottom: 30px;
-          border-left: 5px solid #ef4444;
-        }
-        .disclaimer-section h2 { color: #991b1b; margin-bottom: 15px; font-size: 1.3em; }
-        .disclaimer-section h3 { color: #b91c1c; margin: 15px 0 10px; font-size: 1.1em; }
-        .disclaimer-section p { color: #7f1d1d; line-height: 1.8; margin-bottom: 10px; font-size: 0.95em; }
-
-        .divider {
-          border: none;
-          border-top: 2px solid #e2e8f0;
-          margin: 30px 0;
+        .content {
+          padding: 50px 40px;
         }
 
         .welcome-message {
@@ -191,24 +174,48 @@ export default function WelcomePage({ userEmail }) {
           margin-bottom: 40px;
           border-left: 5px solid #fbbf24;
         }
-        .welcome-message h2 { color: #92400e; margin-bottom: 15px; }
-        .welcome-message p { color: #78350f; line-height: 1.8; }
+
+        .welcome-message h2 {
+          color: #92400e;
+          margin-bottom: 15px;
+        }
+
+        .welcome-message p {
+          color: #78350f;
+          line-height: 1.8;
+        }
+
         .name-section {
           background: #f8fafc;
           padding: 30px;
           border-radius: 20px;
           margin-bottom: 40px;
         }
-        .name-section h3 { color: #1e293b; margin-bottom: 20px; }
+
+        .name-section h3 {
+          color: #1e293b;
+          margin-bottom: 20px;
+        }
+
+        .name-input {
+          display: flex;
+          gap: 15px;
+          margin-top: 20px;
+        }
+
         .name-input input {
-          width: 100%;
+          flex: 1;
           padding: 15px 20px;
           border: 2px solid #cbd5e1;
           border-radius: 10px;
           font-size: 1.1em;
-          margin-top: 10px;
         }
-        .name-input input:focus { outline: none; border-color: #667eea; }
+
+        .name-input input:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
         .warning-box {
           background: #fee2e2;
           border: 2px solid #ef4444;
@@ -216,9 +223,21 @@ export default function WelcomePage({ userEmail }) {
           border-radius: 15px;
           margin-top: 20px;
         }
-        .warning-box strong { color: #991b1b; }
-        .terms-section { margin: 40px 0; }
-        .terms-section h3 { color: #1e293b; margin-bottom: 25px; font-size: 1.8em; }
+
+        .warning-box strong {
+          color: #991b1b;
+        }
+
+        .terms-section {
+          margin: 40px 0;
+        }
+
+        .terms-section h3 {
+          color: #1e293b;
+          margin-bottom: 25px;
+          font-size: 1.8em;
+        }
+
         .term-item {
           background: white;
           border: 2px solid #e2e8f0;
@@ -226,14 +245,26 @@ export default function WelcomePage({ userEmail }) {
           border-radius: 15px;
           margin-bottom: 20px;
         }
-        .term-item h4 { color: #667eea; margin-bottom: 15px; font-size: 1.3em; }
-        .term-item ul { list-style: none; padding-left: 0; }
+
+        .term-item h4 {
+          color: #667eea;
+          margin-bottom: 15px;
+          font-size: 1.3em;
+        }
+
+        .term-item ul {
+          list-style: none;
+          padding-left: 0;
+        }
+
         .term-item li {
-          padding: 8px 0 8px 25px;
+          padding: 8px 0;
+          padding-left: 25px;
           position: relative;
           color: #475569;
           line-height: 1.6;
         }
+
         .term-item li:before {
           content: "•";
           position: absolute;
@@ -241,6 +272,7 @@ export default function WelcomePage({ userEmail }) {
           color: #667eea;
           font-weight: 700;
         }
+
         .highlight {
           background: #fef3c7;
           padding: 3px 8px;
@@ -248,39 +280,115 @@ export default function WelcomePage({ userEmail }) {
           font-weight: 600;
           color: #92400e;
         }
+
         .agreement-section {
           background: #f8fafc;
           padding: 30px;
           border-radius: 20px;
           margin: 40px 0;
         }
-        .agreement-section h3 { color: #1e293b; margin-bottom: 25px; }
+
+        .agreement-section h3 {
+          color: #1e293b;
+          margin-bottom: 25px;
+        }
+
         .checkbox-item {
           padding: 15px;
           margin: 15px 0;
           background: white;
           border-radius: 10px;
           display: flex;
-          align-items: flex-start;
+          align-items: start;
           gap: 15px;
           border: 2px solid #e2e8f0;
           transition: all 0.3s;
           cursor: pointer;
         }
-        .checkbox-item:hover { border-color: #667eea; }
+
+        .checkbox-item:hover {
+          border-color: #667eea;
+        }
+
         .checkbox-item input[type="checkbox"] {
           width: 24px;
           height: 24px;
           margin-top: 3px;
           cursor: pointer;
-          flex-shrink: 0;
         }
+
         .checkbox-item label {
           flex: 1;
           cursor: pointer;
           color: #475569;
           line-height: 1.6;
         }
+
+        .affiliate-section {
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          padding: 30px;
+          border-radius: 20px;
+          margin: 40px 0;
+          text-align: center;
+        }
+
+        .affiliate-section h3 {
+          color: #92400e;
+          margin-bottom: 20px;
+        }
+
+        .commission-badge {
+          display: inline-block;
+          background: white;
+          padding: 20px 40px;
+          border-radius: 15px;
+          margin: 20px 0;
+        }
+
+        .commission-rate {
+          font-size: 3em;
+          font-weight: 700;
+          color: #92400e;
+        }
+
+        .commission-text {
+          color: #78350f;
+          font-weight: 600;
+        }
+
+        .affiliate-link {
+          background: white;
+          padding: 15px;
+          border-radius: 10px;
+          margin: 20px 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .affiliate-link input {
+          flex: 1;
+          padding: 10px;
+          border: 2px solid #fbbf24;
+          border-radius: 8px;
+          font-family: 'Courier New', monospace;
+          background: #fef3c7;
+        }
+
+        .copy-button {
+          padding: 10px 20px;
+          background: #fbbf24;
+          border: none;
+          border-radius: 8px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .copy-button:hover {
+          background: #f59e0b;
+        }
+
         .start-button {
           width: 100%;
           padding: 20px;
@@ -294,15 +402,18 @@ export default function WelcomePage({ userEmail }) {
           transition: all 0.3s;
           margin-top: 30px;
         }
+
         .start-button:hover:not(:disabled) {
           background: #5568d3;
           transform: translateY(-2px);
           box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
+
         .start-button:disabled {
           background: #cbd5e1;
           cursor: not-allowed;
         }
+
         .error-message {
           background: #fee2e2;
           color: #dc2626;
@@ -311,9 +422,19 @@ export default function WelcomePage({ userEmail }) {
           margin-top: 20px;
           text-align: center;
         }
+
         @media (max-width: 768px) {
-          .content { padding: 30px 20px; }
-          h1 { font-size: 2em; }
+          .content {
+            padding: 30px 20px;
+          }
+
+          h1 {
+            font-size: 2em;
+          }
+
+          .name-input {
+            flex-direction: column;
+          }
         }
       `}</style>
 
@@ -325,72 +446,16 @@ export default function WelcomePage({ userEmail }) {
         </div>
 
         <div className="content">
-          {/* Intro Section */}
-          <div className="intro-section">
-            <h2>Welcome to the Market Warrior 30-Day Trading Challenge</h2>
-            <p><strong>Your ultimate, well-structured 30-day, hands-on journey, designed for beginners, that turns trading curiosity into powerful market expertise!</strong></p>
-            <p><strong>Every single day is a new victory!</strong> You will unlock engaging, power-packed modules filled with essential trading insights, practical assignments, real-world examples, and interactive quizzes designed to accelerate your progress.</p>
-            <p>We have simplified the path to trading mastery - guiding you step-by-step from opening your no-risk demo account, mastering chart patterns, and controlling risk, to understanding global market dynamics and crafting your own winning trading strategy.</p>
-            <p>No fluff, no confusion—just straightforward, actionable tasks that rapidly build your skills, confidence, and market knowledge. Each daily achievement brings you closer to becoming a disciplined, insightful, and profitable trader.</p>
-            <p>If you're ready to beat the markets, create powerful trading habits, and discover what you're truly capable of, this is your ideal starting point.</p>
-            <p><strong>Your transformation into a Market Warrior starts today!</strong></p>
+          <div className="welcome-message">
+            <h2>🏆 Congratulations on Your Purchase!</h2>
+            <p>You've just taken the first step towards becoming a confident, professional trader. Over the next 30 days, you'll learn everything you need to start trading successfully.</p>
+            <p style={{ marginTop: '15px' }}><strong>What happens next:</strong> After accepting the terms below, Day 1 will unlock immediately. Each subsequent day unlocks automatically after 24 hours.</p>
           </div>
 
-          {/* Challenge Instructions */}
-          <div className="instructions-section">
-            <h2>Challenge Instructions</h2>
-            <p><strong>Welcome, future Market Warrior!</strong> Here's how you'll maximise your journey through this transformative 30-day challenge and forge your path to trading mastery:</p>
-
-            <h3>Your Daily Mission Briefing:</h3>
-            <p>Each day, your dedicated Market Warrior dashboard will unlock your day's Power-Packed Module. This isn't just theory – it's a strategic blend of:</p>
-            <ul>
-              <li><strong>Core Concept Breakdowns:</strong> Clear, concise explanations of the day's essential trading principles.</li>
-              <li><strong>Actionable Examples:</strong> Real-world scenarios that bring concepts to life and show you exactly how to apply them.</li>
-              <li><strong>Hands-On Daily Tasks:</strong> Practical exercises designed to immediately cement your learning. These are crucial for building muscle memory and confidence!</li>
-              <li><strong>Interactive Quizzes:</strong> Quick, engaging checks to ensure you've absorbed the key takeaways and are ready for the next step.</li>
-            </ul>
-
-            <h3>Mastering Your Progress:</h3>
-            <ul>
-              <li><strong>Dedicated Learning Hub:</strong> All your daily modules, resources, and progress tracking will be accessible through your personalised Market Warrior portal. Learn at your own pace, but aim to complete daily to build consistent habits.</li>
-              <li><strong>No-Risk Practice Ground:</strong> From Day 1, you'll be guided to set up and utilise a risk-free demo trading account. This is your essential sandbox – practice every strategy, make mistakes, and build confidence without risking a single penny of real capital.</li>
-              <li><strong>The Power of Journaling:</strong> We'll show you exactly how to maintain a comprehensive trading journal. This isn't just note-taking, it's your data scientist, revealing patterns in your trades, identifying emotional triggers, and accelerating your improvement.</li>
-              <li><strong>Community Access:</strong> Connect, share insights, and get support from fellow Market Warriors in our exclusive Market Warrior Community. Learn from others, celebrate successes, and never feel alone on your journey.</li>
-            </ul>
-
-            <h3>What You'll Need to Succeed:</h3>
-            <ul>
-              <li><strong>A Computer/Tablet/Mobile with Internet Access:</strong> Your portal and trading platforms are online.</li>
-              <li><strong>Around 30-50 Minutes Per Day:</strong> This challenge is designed for daily engagement. Consistency is your secret weapon! While you can flex your learning time, aim to tackle each day's module and task to build momentum.</li>
-              <li><strong>A Commitment to Learn and Grow:</strong> Bring your ambition, your discipline, and your readiness to transform. We provide the map; you walk the path.</li>
-            </ul>
-          </div>
-
-          {/* Rewards Section */}
-          <div className="rewards-section">
-            <h2>Rewards & Recognition</h2>
-            <p>Your dedication doesn't go unnoticed. The Market Warrior Challenge is designed to transform your trading skills, and we believe in celebrating every step of that journey. Here's what awaits you:</p>
-
-            <h3>The Ultimate Reward: True Trading Confidence & Skill</h3>
-            <p>The greatest reward is the profound confidence you'll gain in your ability to analyse markets, strategise trades, and manage risk. You'll finish with a solid, actionable trading plan and the discipline to execute it, setting you up for long-term success. This is a skillset that stays with you forever.</p>
-
-            <h3>Official Certificate of Completion</h3>
-            <p>Upon completing all 30 days of the Market Warrior Challenge, you'll receive a personalised Certificate of Completion. This is a testament to your commitment, your perseverance, and the comprehensive trading foundation you've built. Proudly display your achievement – it's a mark of a true Market Warrior!</p>
-
-            <h3>Ongoing Growth & Support</h3>
-            <p>Your journey doesn't end on Day 30. As a Market Warrior, you'll gain access to our exclusive community, a vibrant hub where learning never stops. Here, you'll discover:</p>
-            <ul>
-              <li>New strategies and advanced insights directly from experienced traders.</li>
-              <li>Real-time market discussions and analysis.</li>
-              <li>A supportive network to share ideas, celebrate wins, and navigate challenges together.</li>
-            </ul>
-            <p>We're committed to your sustained success, continuously providing value as you evolve in your trading career.</p>
-          </div>
-
-          {/* Name Section */}
           <div className="name-section">
             <h3>📝 Enter Your Full Name</h3>
             <p>This name will appear on your Certificate of Completion at the end of the challenge.</p>
+
             <div className="name-input">
               <input
                 type="text"
@@ -400,40 +465,19 @@ export default function WelcomePage({ userEmail }) {
                 required
               />
             </div>
+
             <div className="warning-box">
               <strong>⚠️ IMPORTANT:</strong> Your name cannot be changed later. Make sure it's spelled correctly!
             </div>
           </div>
 
-          <hr className="divider" />
-
-          {/* Disclaimer Section */}
-          <div className="disclaimer-section">
-            <h2>📌 Disclaimer</h2>
-            <p>The Market Warrior Challenge is designed exclusively for educational and informational purposes. It aims to enhance your understanding of trading strategies, financial markets, risk management, and analytical methods.</p>
-
-            <h3>⚠️ Important Notices:</h3>
-            <p><strong>Virtual Trading Only:</strong> All trading activities and tasks within the Market Warrior Challenge must be executed with virtual (demo) funds. The challenge explicitly does not recommend or encourage the use of real money.</p>
-            <p><strong>Educational Purpose Only:</strong> The content provided—including examples, tasks, quizzes, and other educational materials—should not be interpreted as financial advice, trading recommendations, or investment guidance.</p>
-            <p><strong>Risk Disclosure:</strong> Trading financial markets involves substantial risk and can result in significant financial loss. Even virtual trading simulations cannot fully replicate the emotional and financial consequences of real trading.</p>
-            <p><strong>Personal Responsibility:</strong> Participants acknowledge that all decisions and outcomes in real trading scenarios remain their sole responsibility. Always consult a professional financial advisor before making decisions involving real money.</p>
-
-            <h3>⚠️ General Information & Independence Notice</h3>
-            <p>The material provided through the Market Warrior Challenge is for general information purposes only. It does not take into account your personal circumstances or objectives. Nothing within this material is (or should be considered to be) financial, investment, or other advice on which reliance should be placed.</p>
-            <p>No opinion expressed in this material constitutes a recommendation by Market Warrior or the author that any particular investment, security, transaction, or investment strategy is suitable for any specific individual.</p>
-            <p>This material has not been prepared under legal requirements designed to promote the independence of investment research.</p>
-          </div>
-
-          <hr className="divider" />
-
-          {/* Terms Section */}
           <div className="terms-section">
             <h3>📋 Terms & Conditions</h3>
             <p style={{ marginBottom: '20px', color: '#64748b' }}>Please read carefully before proceeding</p>
 
             <div className="term-item">
               <h4>1. Virtual Trading Recommendation</h4>
-              <p>We <strong>strongly recommend</strong> using only <span className="highlight">demo/virtual accounts</span> during this challenge.</p>
+              <p>We <strong>strongly recommend</strong> using only <span className="highlight">demo/virtual accounts</span> during this challenge. Practice with virtual money until you're consistently profitable for at least 6 months.</p>
               <ul>
                 <li>All lessons are designed for demo account practice</li>
                 <li>Never risk real money until you're ready</li>
@@ -448,32 +492,107 @@ export default function WelcomePage({ userEmail }) {
               <ul>
                 <li>Refund requests must be made within 72 hours</li>
                 <li>After 3 days, all sales are final</li>
+                <li>Refunds processed within 5-7 business days</li>
                 <li>Contact support@marketwarrior.club for refunds</li>
               </ul>
             </div>
 
             <div className="term-item">
-              <h4>3. 120-Day Access Period</h4>
-              <p>You have <span className="highlight">120 days (4 months)</span> of platform access starting from today.</p>
+              <h4>3. Device Limitations</h4>
+              <p>Your account can be used on <span className="highlight">up to 2 devices</span> (laptop, desktop, mobile, tablet).</p>
               <ul>
-                <li>Access starts from payment date</li>
-                <li>Complete the 30-day challenge at your own pace</li>
-                <li>Certificate remains valid forever</li>
+                <li>Maximum 2 devices allowed per account</li>
+                <li>Devices are automatically registered on first login</li>
+                <li>Contact support to reset devices if needed</li>
+                <li>Account sharing is prohibited</li>
               </ul>
             </div>
 
             <div className="term-item">
-              <h4>4. Risk Disclosure</h4>
+              <h4>4. 120-Day Access Period</h4>
+              <p>You have <span className="highlight">120 days (4 months)</span> of platform access starting from today.</p>
+              <ul>
+                <li>Access starts from payment date</li>
+                <li>Complete the 30-day challenge at your own pace</li>
+                <li>Access automatically expires after 120 days</li>
+                <li>Certificate remains valid forever</li>
+                <li>No extensions after 120 days</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>5. Name Cannot Be Changed</h4>
+              <p>The name you enter below is <span className="highlight">permanent</span> and will be used for:</p>
+              <ul>
+                <li>Your certificate of completion</li>
+                <li>Community forum posts</li>
+                <li>All official documentation</li>
+                <li>Cannot be changed after submission</li>
+                <li>Double-check spelling before submitting</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>6. Content Protection</h4>
+              <p>All course materials are copyrighted and protected.</p>
+              <ul>
+                <li>Do not share, copy, or distribute course content</li>
+                <li>Screenshots and recording are prohibited</li>
+                <li>For personal use only</li>
+                <li>Violations may result in account termination</li>
+                <li>No refund if account is terminated for violations</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>7. Challenge Structure</h4>
+              <p>The challenge operates on a <span className="highlight">time-based unlock system</span>.</p>
+              <ul>
+                <li>Day 1 unlocks immediately upon agreement</li>
+                <li>Day 2 unlocks 24 hours after Day 1</li>
+                <li>Each day unlocks automatically (no action needed)</li>
+                <li>You must complete quizzes (60%+) to proceed</li>
+                <li>You must submit tasks to proceed to next day</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>8. Educational Disclaimer</h4>
+              <p>This is an <span className="highlight">educational program</span>, not financial advice.</p>
+              <ul>
+                <li>Content is for educational purposes only</li>
+                <li>Not personalized financial or investment advice</li>
+                <li>Trading involves risk of loss</li>
+                <li>Past performance doesn't guarantee future results</li>
+                <li>Consult a licensed financial advisor before trading real money</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>9. Community Guidelines</h4>
+              <p>When participating in the community forum:</p>
+              <ul>
+                <li>Be respectful to other members</li>
+                <li>No spam or promotional content</li>
+                <li>No financial advice or "hot tips"</li>
+                <li>Admin reserves right to moderate/remove content</li>
+                <li>Violations may result in forum ban</li>
+              </ul>
+            </div>
+
+            <div className="term-item">
+              <h4>10. Risk Disclosure</h4>
               <p>Trading and investing carry significant risk.</p>
               <ul>
                 <li>You can lose 100% of your investment</li>
                 <li>Only trade with money you can afford to lose</li>
+                <li>Market Warrior is not liable for any losses</li>
                 <li>No guarantees of profit or success</li>
+                <li>Your results will vary based on your decisions</li>
               </ul>
             </div>
           </div>
 
-          {/* Agreement Section */}
           <div className="agreement-section">
             <h3>✅ I Agree To:</h3>
 
@@ -501,12 +620,34 @@ export default function WelcomePage({ userEmail }) {
               <input type="checkbox" checked={agreements.risk} onChange={() => {}} />
               <label>I understand trading involves risk and I may lose money</label>
             </div>
+          </div>
 
-            <p style={{ marginTop: '20px', color: '#64748b', fontSize: '0.95em' }}>
-              By engaging with the Market Warrior Challenge, you confirm acceptance and agreement to these conditions. Always prioritise education, responsible learning, and disciplined trading practices.
+          <div className="affiliate-section">
+            <h3>💰 Your Affiliate Link</h3>
+            <p style={{ color: '#78350f', marginBottom: '15px' }}>
+              Share your unique link and earn passive income!
             </p>
-            <p style={{ marginTop: '10px', color: '#667eea', fontWeight: '600' }}>
-              Enjoy your journey and happy learning!
+
+            <div className="commission-badge">
+              <div className="commission-rate">30%</div>
+              <p className="commission-text">Commission Per Sale</p>
+            </div>
+
+            <p style={{ color: '#78350f', fontSize: '0.95em' }}>
+              You get <strong>30% commission</strong> (5% bonus over base 25%) for every person who signs up through your link!
+            </p>
+
+            <div className="affiliate-link">
+              <input
+                type="text"
+                value={`https://marketwarrior.club/?ref=${affiliateCode || 'YOUR_CODE'}`}
+                readOnly
+              />
+              <button className="copy-button" onClick={copyAffiliateLink}>{copyText}</button>
+            </div>
+
+            <p style={{ color: '#78350f', fontSize: '0.95em' }}>
+              Track your earnings in your dashboard. Automatic payouts via Stripe!
             </p>
           </div>
 
