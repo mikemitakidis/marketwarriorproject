@@ -1,5 +1,5 @@
 import { getServiceSupabase } from '../../../lib/supabase';
-import { getUserFromJwt } from '../../../lib/auth';
+const { getUserFromRequest } = require('../../../lib/serverAuth');
 
 /**
  * API route: /api/quiz/submit
@@ -18,7 +18,8 @@ export default async function handler(req, res) {
   try {
     const { day, answers } = req.body;
     if (!day || !answers) throw new Error('Missing day or answers');
-    const user = await getUserFromJwt(req);
+    const user = await getUserFromRequest(req);
+    if (!user) throw new Error('Not authenticated');
     const userId = user.id;
     const supabase = getServiceSupabase();
     // Fetch quiz questions with correct answers for the day

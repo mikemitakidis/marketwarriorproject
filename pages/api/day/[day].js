@@ -2,7 +2,7 @@
 // pages/api/day/[day].js.  The lib directory is at the root
 // of the project so we only need to traverse three levels up.
 import { getServiceSupabase } from '../../../lib/supabase';
-import { getUserFromJwt } from '../../../lib/auth';
+const { getUserFromRequest } = require('../../../lib/serverAuth');
 
 /**
  * API route: /api/day/[day]
@@ -26,11 +26,9 @@ export default async function handler(req, res) {
   if (isNaN(dayNum) || dayNum < 1 || dayNum > 30) {
     return res.status(400).json({ error: 'Invalid day' });
   }
-  let user;
-  try {
-    user = await getUserFromJwt(req);
-  } catch (err) {
-    return res.status(401).json({ error: err.message });
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
   }
   const userId = user.id;
   const supabase = getServiceSupabase();
@@ -44,8 +42,8 @@ export default async function handler(req, res) {
   if (progError || !progress) {
     return res.status(403).json({ error: 'No progress record found for day' });
   }
-  const nowIso = new Date().toISOString();
-  if (progress.available_at > nowIso) {
+  // Check if day is unlocked using the unlocked boolean
+  if (!progress.unlocked) {
     return res.status(403).json({ error: 'Day is locked' });
   }
   // Additional check: ensure previous day (if any) has been completed and passed

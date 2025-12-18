@@ -98,7 +98,7 @@ export default async function handler(req, res) {
       .from('user_profiles')
       .upsert({ id: metadataUserId, has_paid: true, challenge_start_date: now.toISOString() }, { onConflict: 'id' });
     // Grant access: create progress rows for day 1 with immediate availability
-    await supabase.from('challenge_progress').upsert({ user_id: metadataUserId, day: 1, available_at: now.toISOString() }, { onConflict: 'user_id,day' });
+    await supabase.from('challenge_progress').upsert({ user_id: metadataUserId, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
     // Do not prepopulate other days; progress will be inserted as user completes tasks
   }
   res.status(200).json({ received: true });
