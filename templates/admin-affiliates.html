@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Management - Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.3em;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-back {
+            background: rgba(102, 126, 234, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 20px 40px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-box-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .stat-box-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        .stat-box.green .stat-box-value { color: #10b981; }
+        .stat-box.blue .stat-box-value { color: #3b82f6; }
+        .stat-box.purple .stat-box-value { color: #a78bfa; }
+
+        /* Filters & Actions */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select option {
+            background: #1e293b;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Table */
+        .table-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .affiliates-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .affiliates-table th {
+            text-align: left;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.3);
+            color: #94a3b8;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .affiliates-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .affiliates-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .affiliate-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .affiliate-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1em;
+        }
+
+        .affiliate-info h4 {
+            color: white;
+            margin-bottom: 3px;
+        }
+
+        .affiliate-info p {
+            color: #64748b;
+            font-size: 0.85em;
+        }
+
+        .affiliate-code {
+            font-family: 'SF Mono', Monaco, monospace;
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .type-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .type-badge.paid {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .type-badge.free {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .type-badge.manual {
+            background: rgba(167, 139, 250, 0.2);
+            color: #a78bfa;
+        }
+
+        .commission-rate {
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .earnings {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-action:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-action.edit { color: #3b82f6; }
+        .btn-action.delete { color: #ef4444; }
+        .btn-action.payout { color: #10b981; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-header h2 {
+            color: white;
+            font-size: 1.3em;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group select option {
+            background: #1e293b;
+        }
+
+        .form-group small {
+            display: block;
+            color: #64748b;
+            margin-top: 5px;
+            font-size: 0.85em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: #94a3b8;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-bar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-container {
+                overflow-x: auto;
+            }
+            .affiliates-table {
+                min-width: 800px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>⚙️ Admin Panel - <span>Affiliate Management</span></h1>
+        <a href="admin.html" class="btn-back">← Back to Admin</a>
+    </header>
+
+    <div class="container">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="stat-box-value" id="totalAffiliates">12</div>
+                <div class="stat-box-label">Total Affiliates</div>
+            </div>
+            <div class="stat-box green">
+                <div class="stat-box-value" id="activeAffiliates">8</div>
+                <div class="stat-box-label">Active (with referrals)</div>
+            </div>
+            <div class="stat-box blue">
+                <div class="stat-box-value" id="totalReferrals">47</div>
+                <div class="stat-box-label">Total Referrals</div>
+            </div>
+            <div class="stat-box purple">
+                <div class="stat-box-value" id="pendingPayouts">$234.50</div>
+                <div class="stat-box-label">Pending Payouts</div>
+            </div>
+            <div class="stat-box green">
+                <div class="stat-box-value" id="totalPaid">$1,250.00</div>
+                <div class="stat-box-label">Total Paid Out</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Type:</label>
+                    <select id="filterType" onchange="filterAffiliates()">
+                        <option value="all">All Types</option>
+                        <option value="paid">Paid Users (30%)</option>
+                        <option value="free">Free Affiliates (25%)</option>
+                        <option value="manual">Manual (Custom)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Search:</label>
+                    <input type="text" id="searchInput" placeholder="Name, email, code..." oninput="filterAffiliates()">
+                </div>
+            </div>
+            <button class="btn-add" onclick="openAddModal()">
+                ➕ Add Affiliate
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table class="affiliates-table">
+                <thead>
+                    <tr>
+                        <th>Affiliate</th>
+                        <th>Code / Link</th>
+                        <th>Type</th>
+                        <th>Commission</th>
+                        <th>Referrals</th>
+                        <th>Earnings</th>
+                        <th>Pending</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="affiliatesBody">
+                    <!-- Sample data -->
+                    <tr data-type="paid">
+                        <td>
+                            <div class="affiliate-name">
+                                <div class="affiliate-avatar">JD</div>
+                                <div class="affiliate-info">
+                                    <h4>John Doe</h4>
+                                    <p>john@example.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="affiliate-code">JOHND4X2</span></td>
+                        <td><span class="type-badge paid">Paid User</span></td>
+                        <td><span class="commission-rate">30%</span></td>
+                        <td>12</td>
+                        <td><span class="earnings">$143.96</span></td>
+                        <td>$47.99</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-action edit" title="Edit" onclick="openEditModal('john')">✏️</button>
+                                <button class="btn-action payout" title="Process Payout" onclick="processPayout('john')">💳</button>
+                                <button class="btn-action delete" title="Delete" onclick="deleteAffiliate('john')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-type="free">
+                        <td>
+                            <div class="affiliate-name">
+                                <div class="affiliate-avatar">SM</div>
+                                <div class="affiliate-info">
+                                    <h4>Sarah Miller</h4>
+                                    <p>sarah@blog.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="affiliate-code">SARAHM9K</span></td>
+                        <td><span class="type-badge free">Free Affiliate</span></td>
+                        <td><span class="commission-rate">25%</span></td>
+                        <td>8</td>
+                        <td><span class="earnings">$79.98</span></td>
+                        <td>$29.99</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-action edit" title="Edit" onclick="openEditModal('sarah')">✏️</button>
+                                <button class="btn-action payout" title="Process Payout" onclick="processPayout('sarah')">💳</button>
+                                <button class="btn-action delete" title="Delete" onclick="deleteAffiliate('sarah')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-type="manual">
+                        <td>
+                            <div class="affiliate-name">
+                                <div class="affiliate-avatar">TF</div>
+                                <div class="affiliate-info">
+                                    <h4>TradingFluencer</h4>
+                                    <p>partner@tradingfluencer.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="affiliate-code">TRADEFLU</span></td>
+                        <td><span class="type-badge manual">Manual</span></td>
+                        <td><span class="commission-rate">40%</span></td>
+                        <td>27</td>
+                        <td><span class="earnings">$431.89</span></td>
+                        <td>$156.52</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-action edit" title="Edit" onclick="openEditModal('trade')">✏️</button>
+                                <button class="btn-action payout" title="Process Payout" onclick="processPayout('trade')">💳</button>
+                                <button class="btn-action delete" title="Delete" onclick="deleteAffiliate('trade')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="affiliateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Affiliate</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="affName" placeholder="Full name or brand name">
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="affEmail" placeholder="email@example.com">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Affiliate Type</label>
+                        <select id="affType" onchange="updateCommissionField()">
+                            <option value="paid">Paid User (30%)</option>
+                            <option value="free">Free Affiliate (25%)</option>
+                            <option value="manual">Manual (Custom %)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Commission Rate (%)</label>
+                        <input type="number" id="affCommission" value="30" min="1" max="100">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Affiliate Code</label>
+                    <input type="text" id="affCode" placeholder="Leave blank to auto-generate" maxlength="12">
+                    <small>Custom code for their referral link (max 12 characters, alphanumeric)</small>
+                </div>
+                <div class="form-group">
+                    <label>Referral Link Preview</label>
+                    <input type="text" id="affLinkPreview" readonly value="https://marketwarrior.club/?ref=">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveAffiliate()">Save Affiliate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filter affiliates
+        function filterAffiliates() {
+            const type = document.getElementById('filterType').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#affiliatesBody tr');
+            
+            rows.forEach(row => {
+                const rowType = row.dataset.type;
+                const text = row.textContent.toLowerCase();
+                
+                const typeMatch = type === 'all' || rowType === type;
+                const searchMatch = !search || text.includes(search);
+                
+                row.style.display = typeMatch && searchMatch ? '' : 'none';
+            });
+        }
+        
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Affiliate';
+            document.getElementById('affName').value = '';
+            document.getElementById('affEmail').value = '';
+            document.getElementById('affType').value = 'manual';
+            document.getElementById('affCommission').value = '30';
+            document.getElementById('affCode').value = '';
+            updateLinkPreview();
+            document.getElementById('affiliateModal').classList.add('active');
+        }
+        
+        function openEditModal(id) {
+            document.getElementById('modalTitle').textContent = 'Edit Affiliate';
+            // In real app, populate with actual data
+            document.getElementById('affiliateModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('affiliateModal').classList.remove('active');
+        }
+        
+        // Update commission based on type
+        function updateCommissionField() {
+            const type = document.getElementById('affType').value;
+            const commissionInput = document.getElementById('affCommission');
+            
+            if (type === 'paid') {
+                commissionInput.value = 30;
+                commissionInput.readOnly = true;
+            } else if (type === 'free') {
+                commissionInput.value = 25;
+                commissionInput.readOnly = true;
+            } else {
+                commissionInput.readOnly = false;
+            }
+        }
+        
+        // Update link preview
+        function updateLinkPreview() {
+            const code = document.getElementById('affCode').value || 'AUTO_GENERATED';
+            document.getElementById('affLinkPreview').value = `https://marketwarrior.club/?ref=${code.toUpperCase()}`;
+        }
+        
+        document.getElementById('affCode').addEventListener('input', updateLinkPreview);
+        
+        // Save affiliate
+        function saveAffiliate() {
+            const name = document.getElementById('affName').value;
+            const email = document.getElementById('affEmail').value;
+            const type = document.getElementById('affType').value;
+            const commission = document.getElementById('affCommission').value;
+            const code = document.getElementById('affCode').value;
+            
+            if (!name || !email) {
+                alert('Please fill in name and email');
+                return;
+            }
+            
+            // In real app, save to database
+            alert(`Affiliate saved!\n\nName: ${name}\nEmail: ${email}\nType: ${type}\nCommission: ${commission}%\nCode: ${code || 'Auto-generated'}`);
+            closeModal();
+        }
+        
+        // Process payout
+        function processPayout(id) {
+            if (confirm('Process payout for this affiliate?')) {
+                alert('Payout processed successfully!');
+            }
+        }
+        
+        // Delete affiliate
+        function deleteAffiliate(id) {
+            if (confirm('Are you sure you want to delete this affiliate? This cannot be undone.')) {
+                alert('Affiliate deleted.');
+            }
+        }
+        
+        // Close modal on background click
+        document.getElementById('affiliateModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>
