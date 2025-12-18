@@ -1,4 +1,4 @@
-const { getUserFromRequest, getServiceSupabase } = require('../../../lib/serverAuth');
+import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/welcome/complete
@@ -7,7 +7,7 @@ const { getUserFromRequest, getServiceSupabase } = require('../../../lib/serverA
  * Saves the user's full name to user_profiles and marks
  * welcome_completed in user_onboarding table.
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -59,4 +59,4 @@ module.exports = async function handler(req, res) {
     console.error('Welcome complete error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
-};
+}

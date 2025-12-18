@@ -1,4 +1,4 @@
-const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API endpoint for listing and creating forum posts.
@@ -10,32 +10,37 @@ const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverA
  * Body JSON must include `category_slug`, `title`, `content`, `author_name`
  * and optionally `day_number`.
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const supabase = getServiceSupabase();
 
   if (req.method === 'GET') {
-    const { category, day } = req.query;
-    let query = supabase
-      .from('forum_posts')
-      .select(
-        'id, title, author_name, created_at, likes_count, comments_count, views_count, day_number, is_pinned, forum_categories:category_id (slug, name)'
-      )
-      .eq('status', 'published')
-      .order('is_pinned', { ascending: false })
-      .order('created_at', { ascending: false });
+    try {
+      const { category, day } = req.query;
+      let query = supabase
+        .from('forum_posts')
+        .select(
+          'id, title, author_name, created_at, likes_count, comments_count, views_count, day_number, is_pinned, forum_categories:category_id (slug, name)'
+        )
+        .eq('status', 'published')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
 
-    if (category) {
-      query = query.eq('forum_categories.slug', category);
-    }
-    if (day) {
-      query = query.eq('day_number', Number(day));
-    }
+      if (category) {
+        query = query.eq('forum_categories.slug', category);
+      }
+      if (day) {
+        query = query.eq('day_number', Number(day));
+      }
 
-    const { data, error } = await query;
-    if (error) {
-      return res.status(500).json({ error: error.message });
+      const { data, error } = await query;
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+      return res.status(200).json(data);
+    } catch (err) {
+      console.error('community/posts GET error:', err);
+      return res.status(500).json({ error: err.message });
     }
-    return res.status(200).json(data);
 
   } else if (req.method === 'POST') {
     try {
@@ -79,9 +84,10 @@ module.exports = async function handler(req, res) {
 
       return res.status(201).json(post);
     } catch (err) {
+      console.error('community/posts POST error:', err);
       return res.status(401).json({ error: 'Unauthorized' });
     }
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-};
+}

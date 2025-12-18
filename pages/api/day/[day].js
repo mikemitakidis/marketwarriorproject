@@ -1,7 +1,7 @@
 // Use correct relative imports.  The API route lives under
 // pages/api/day/[day].js.  The lib directory is at the root
 // of the project so we only need to traverse three levels up.
-const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/day/[day]

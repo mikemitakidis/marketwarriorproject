@@ -1,4 +1,4 @@
-const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/quiz/submit

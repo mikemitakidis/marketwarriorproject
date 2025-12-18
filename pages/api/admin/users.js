@@ -1,4 +1,4 @@
-const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/admin/users
@@ -6,7 +6,7 @@ const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverA
  * Returns a list of users for the admin panel.
  * Only accessible to administrators (is_admin = true in user_profiles).
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({ users: data });
   } catch (err) {
-    console.error(err);
+    console.error('admin/users error:', err);
     return res.status(500).json({ error: err.message });
   }
-};
+}

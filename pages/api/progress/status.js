@@ -1,4 +1,4 @@
-const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverAuth');
+import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/progress/status
@@ -6,7 +6,7 @@ const { getServiceSupabase, getUserFromRequest } = require('../../../lib/serverA
  * Returns the challenge progress for the authenticated user.
  * Uses cookie-based auth via getUserFromRequest.
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({ completedDays, unlockedDays, nextUnlockTime: null });
   } catch (err) {
-    console.error(err);
+    console.error('progress/status error:', err);
     return res.status(500).json({ error: err.message });
   }
-};
+}
