@@ -1,14 +1,13 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import fs from 'fs';
+import path from 'path';
 import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../../lib/serverAuth';
 
 /**
- * Day content page with server-side gate logic.
- *
- * Flow: Users must be authenticated, paid, and have completed welcome.
- * Day 1 is always available for paid users. Other days unlock as previous
- * days are completed.
+ * Day content page that loads templates directly.
+ * Renders the exact HTML template while adding functional quiz/task handling.
  */
 export async function getServerSideProps({ req, params }) {
   try {
@@ -51,7 +50,7 @@ export async function getServerSideProps({ req, params }) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
-    // For days > 1, check if previous day is completed with quiz passed and task submitted
+    // For days > 1, check if previous day is completed
     if (dayNum > 1) {
       const { data: prevProgress } = await supabase
         .from('challenge_progress')
@@ -64,7 +63,7 @@ export async function getServerSideProps({ req, params }) {
         return { redirect: { destination: '/dashboard', permanent: false } };
       }
 
-      // Check quiz was passed (60% threshold) - using quiz_attempts table!
+      // Check quiz was passed (60% threshold)
       const { data: quizAttempt } = await supabase
         .from('quiz_attempts')
         .select('score, max_score, passed')
@@ -95,26 +94,23 @@ export async function getServerSideProps({ req, params }) {
       }
     }
 
-    // Fetch lesson content
-    const { data: content } = await supabase
-      .from('course_content')
-      .select('title, html_content, video_url, task_prompt')
-      .eq('day', dayNum)
-      .single();
+    // Load template file
+    const templatesDir = path.join(process.cwd(), 'templates', 'days');
+    let templateHtml = '';
 
-    // Fetch quiz questions (without correct answers) - using correct column names!
-    const { data: rawQuizQuestions } = await supabase
-      .from('quiz_questions')
-      .select('id, question_text, options')
-      .eq('day', dayNum)
-      .order('order_index');
+    // Try different file naming patterns
+    const patterns = [
+      `day${dayNum}.html`,
+      `day${dayNum}_*.html`,
+    ];
 
-    // Transform to frontend format
-    const quizQuestions = (rawQuizQuestions || []).map(q => ({
-      id: q.id,
-      question: q.question_text,
-      options: q.options,
-    }));
+    const files = fs.readdirSync(templatesDir);
+    let templateFile = files.find(f => f === `day${dayNum}.html`) ||
+                       files.find(f => f.startsWith(`day${dayNum}_`) && f.endsWith('.html'));
+
+    if (templateFile) {
+      templateHtml = fs.readFileSync(path.join(templatesDir, templateFile), 'utf8');
+    }
 
     // Check if already completed
     const isCompleted = progress?.completed || false;
@@ -122,8 +118,7 @@ export async function getServerSideProps({ req, params }) {
     return {
       props: {
         day: dayNum,
-        content: content || null,
-        quizQuestions: quizQuestions || [],
+        templateHtml,
         isCompleted,
         userName: gate.fullName || 'Trader',
       },
@@ -134,14 +129,85 @@ export async function getServerSideProps({ req, params }) {
   }
 }
 
-export default function DayPage({ day, content, quizQuestions, isCompleted, userName }) {
+export default function DayPage({ day, templateHtml, isCompleted, userName }) {
   const router = useRouter();
+  const contentRef = useRef(null);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [taskResponse, setTaskResponse] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [taskSubmitted, setTaskSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Extract content from template
+  const extractContent = (html) => {
+    if (!html) return { styles: '', bodyContent: '', title: '' };
+
+    // Extract styles from <style> tags
+    const styleMatches = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
+    const styles = styleMatches.map(s => s.replace(/<\/?style[^>]*>/gi, '')).join('\n');
+
+    // Extract body content
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    let bodyContent = bodyMatch ? bodyMatch[1] : html;
+
+    // Remove any script tags for security (we'll handle quiz/task via React)
+    bodyContent = bodyContent.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+    // Extract title
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1] : `Day ${day}`;
+
+    return { styles, bodyContent, title };
+  };
+
+  const { styles, bodyContent, title } = extractContent(templateHtml);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      // Setup quiz functionality after content loads
+      setupQuizHandlers();
+      setupTaskHandlers();
+    }
+  }, [bodyContent]);
+
+  const setupQuizHandlers = () => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    // Find all quiz options and attach handlers
+    const quizOptions = container.querySelectorAll('.quiz-option, [data-quiz-option]');
+    quizOptions.forEach((option, idx) => {
+      option.addEventListener('click', (e) => {
+        // Get question ID from parent or data attribute
+        const question = option.closest('.quiz-question, [data-question-id]');
+        const questionId = question?.dataset?.questionId || `q${Math.floor(idx / 4)}`;
+        const value = option.dataset?.value || option.textContent?.trim();
+
+        // Update state
+        setQuizAnswers(prev => ({ ...prev, [questionId]: value }));
+
+        // Visual feedback
+        const siblings = question?.querySelectorAll('.quiz-option, [data-quiz-option]');
+        siblings?.forEach(s => s.classList.remove('selected'));
+        option.classList.add('selected');
+      });
+    });
+  };
+
+  const setupTaskHandlers = () => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    // Find task textarea if exists
+    const taskTextarea = container.querySelector('.task-textarea, #taskResponse, [name="task"]');
+    if (taskTextarea) {
+      taskTextarea.addEventListener('input', (e) => {
+        setTaskResponse(e.target.value);
+      });
+    }
+  };
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -161,6 +227,11 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit quiz');
       setQuizResult(data);
+      if (data.passed) {
+        setSuccess('Quiz passed! You can now complete the task.');
+      } else {
+        setError(`Score: ${data.score}/${data.total}. You need 60% to pass. Review and try again.`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -185,7 +256,7 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit task');
       setTaskSubmitted(true);
-      // Refresh page to show next day availability
+      setSuccess('Day completed! Redirecting to dashboard...');
       setTimeout(() => router.push('/dashboard'), 2000);
     } catch (err) {
       setError(err.message);
@@ -196,45 +267,76 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
 
   const canSubmitTask = quizResult?.passed || isCompleted;
 
+  // If no template content, show database-driven fallback
+  if (!templateHtml) {
+    return (
+      <>
+        <Head>
+          <title>Day {day} - Market Warrior</title>
+        </Head>
+        <style jsx global>{`
+          body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
+        `}</style>
+        <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px', textAlign: 'center' }}>
+          <h1>Day {day} Content</h1>
+          <p>Content for this day is being prepared. Please check back soon!</p>
+          <a href="/dashboard" style={{ color: '#3b82f6' }}>← Back to Dashboard</a>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
-        <title>Day {day} - Market Warrior</title>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title}</title>
+        <link rel="icon" type="image/png" href="/logo.png" />
       </Head>
 
-      <style jsx global>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #0f172a;
-          color: white;
-          min-height: 100vh;
-        }
-      `}</style>
+      {/* Inject template styles */}
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
 
-      <style jsx>{`
-        .header {
+      {/* Additional functional styles */}
+      <style jsx global>{`
+        .mw-header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 12px 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 16px 24px;
-          background: #1e293b;
-          border-bottom: 1px solid #334155;
+          z-index: 9999;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .logo {
+        .mw-header a {
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 1.2em;
           display: flex;
           align-items: center;
-          gap: 12px;
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #667eea;
-          text-decoration: none;
+          gap: 10px;
         }
-        .logo img { width: 40px; height: 40px; border-radius: 8px; }
-        .user-section { display: flex; align-items: center; gap: 16px; }
-        .user-name { color: #94a3b8; }
-        .logout-btn {
-          background: #ef4444;
+        .mw-header img {
+          width: 35px;
+          height: 35px;
+          border-radius: 8px;
+        }
+        .mw-header-right {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+        .mw-header-right span {
+          color: rgba(255,255,255,0.9);
+        }
+        .mw-logout-btn {
+          background: rgba(255,255,255,0.2);
           color: white;
           border: none;
           padding: 8px 16px;
@@ -242,292 +344,207 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
           cursor: pointer;
           font-weight: 500;
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 24px; }
-        .back-link {
-          color: #667eea;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 24px;
+        .mw-logout-btn:hover {
+          background: rgba(255,255,255,0.3);
         }
-        .back-link:hover { text-decoration: underline; }
-        .day-header {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          padding: 32px;
-          border-radius: 16px;
-          margin-bottom: 24px;
+        .mw-content-wrapper {
+          padding-top: 70px;
         }
-        .day-header h1 { font-size: 2rem; margin-bottom: 8px; }
-        .day-header p { opacity: 0.9; }
-        .section {
-          background: #1e293b;
-          padding: 24px;
-          border-radius: 12px;
-          border: 1px solid #334155;
-          margin-bottom: 24px;
+        .mw-controls {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 9998;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
-        .section h2 {
-          font-size: 1.5rem;
-          margin-bottom: 16px;
-          color: #667eea;
-        }
-        .lesson-content {
-          line-height: 1.8;
-          color: #cbd5e1;
-        }
-        .lesson-content h3 { color: white; margin: 20px 0 10px; }
-        .lesson-content p { margin-bottom: 12px; }
-        .lesson-content ul, .lesson-content ol { margin: 12px 0 12px 24px; }
-        .lesson-content li { margin-bottom: 8px; }
-        .video-container {
-          position: relative;
-          padding-bottom: 56.25%;
-          margin: 16px 0;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-        .video-container iframe {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-        .quiz-question {
-          background: #0f172a;
-          padding: 20px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-        }
-        .quiz-question p { font-weight: 600; margin-bottom: 12px; }
-        .quiz-option {
-          display: block;
-          padding: 12px;
-          margin: 8px 0;
-          background: #1e293b;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .quiz-option:hover { background: #334155; }
-        .quiz-option input { margin-right: 12px; }
-        .btn {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+        .mw-btn {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
           border: none;
-          padding: 14px 28px;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
+          padding: 15px 30px;
+          border-radius: 10px;
+          font-size: 1em;
+          font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+          transition: all 0.3s;
         }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary {
-          background: #334155;
+        .mw-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
-        .result-box {
-          padding: 16px;
-          border-radius: 8px;
-          margin-top: 16px;
+        .mw-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
-        .result-box.success { background: #166534; color: #bbf7d0; }
-        .result-box.fail { background: #991b1b; color: #fecaca; }
-        .error-box {
-          background: #991b1b;
-          color: #fecaca;
-          padding: 12px;
-          border-radius: 8px;
-          margin-bottom: 16px;
+        .mw-btn-success {
+          background: linear-gradient(135deg, #10b981, #059669);
         }
-        .task-textarea {
-          width: 100%;
-          min-height: 150px;
-          padding: 16px;
-          border: 2px solid #334155;
-          border-radius: 8px;
-          background: #0f172a;
-          color: white;
-          font-size: 1rem;
-          resize: vertical;
-          margin-bottom: 16px;
-        }
-        .task-textarea:focus { outline: none; border-color: #667eea; }
-        .completed-badge {
-          display: inline-block;
-          background: #22c55e;
-          color: white;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 0.875rem;
-          margin-left: 12px;
-        }
-        .no-content {
+        .mw-message {
+          position: fixed;
+          top: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 15px 30px;
+          border-radius: 10px;
+          font-weight: 600;
+          z-index: 9999;
+          max-width: 90%;
           text-align: center;
-          padding: 40px;
-          color: #94a3b8;
         }
-        @media (max-width: 768px) {
-          .container { padding: 16px; }
-          .day-header { padding: 24px; }
+        .mw-message.error {
+          background: #fef2f2;
+          color: #dc2626;
+          border: 1px solid #fecaca;
+        }
+        .mw-message.success {
+          background: #f0fdf4;
+          color: #16a34a;
+          border: 1px solid #bbf7d0;
+        }
+        .mw-completed-badge {
+          position: fixed;
+          top: 80px;
+          right: 20px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          padding: 10px 20px;
+          border-radius: 25px;
+          font-weight: 700;
+          z-index: 9998;
+        }
+        .quiz-option.selected {
+          background: linear-gradient(135deg, #667eea, #764ba2) !important;
+          color: white !important;
+          border-color: #667eea !important;
+        }
+        .mw-task-input {
+          position: fixed;
+          bottom: 80px;
+          right: 20px;
+          width: 350px;
+          z-index: 9998;
+          background: white;
+          border-radius: 15px;
+          padding: 20px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          display: none;
+        }
+        .mw-task-input.visible {
+          display: block;
+        }
+        .mw-task-input textarea {
+          width: 100%;
+          min-height: 120px;
+          padding: 15px;
+          border: 2px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 1em;
+          resize: vertical;
+          margin-bottom: 15px;
+        }
+        .mw-task-input textarea:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+        .mw-task-input h4 {
+          margin-bottom: 15px;
+          color: #1e293b;
         }
       `}</style>
 
-      <header className="header">
-        <a href="/dashboard" className="logo">
+      {/* Fixed Header */}
+      <header className="mw-header">
+        <a href="/dashboard">
           <img src="/logo.png" alt="" onError={(e) => e.target.style.display = 'none'} />
-          <span>Market Warrior</span>
+          Market Warrior
         </a>
-        <div className="user-section">
-          <span className="user-name">{userName}</span>
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        <div className="mw-header-right">
+          <span>{userName}</span>
+          <button className="mw-logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </header>
 
-      <div className="container">
-        <a href="/dashboard" className="back-link">← Back to Dashboard</a>
+      {/* Messages */}
+      {error && <div className="mw-message error">{error}</div>}
+      {success && <div className="mw-message success">{success}</div>}
 
-        <div className="day-header">
-          <h1>
-            Day {day}
-            {isCompleted && <span className="completed-badge">Completed</span>}
-          </h1>
-          <p>{content?.title || `Day ${day} Lesson`}</p>
-        </div>
+      {/* Completed Badge */}
+      {isCompleted && <div className="mw-completed-badge">✓ Day Completed</div>}
 
-        {error && <div className="error-box">{error}</div>}
+      {/* Template Content */}
+      <div className="mw-content-wrapper">
+        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: bodyContent }} />
+      </div>
 
-        {!content ? (
-          <div className="section no-content">
-            <h2>Content Coming Soon</h2>
-            <p>The content for Day {day} is being prepared. Check back soon!</p>
-          </div>
-        ) : (
-          <>
-            {/* Lesson Section */}
-            <div className="section">
-              <h2>Lesson</h2>
-              {content.video_url && (
-                <div className="video-container">
-                  <iframe
-                    src={content.video_url}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              )}
-              <div
-                className="lesson-content"
-                dangerouslySetInnerHTML={{ __html: content.html_content || '<p>No lesson content available.</p>' }}
-              />
-            </div>
+      {/* Task Input Panel */}
+      <div className={`mw-task-input ${canSubmitTask && !taskSubmitted && !isCompleted ? 'visible' : ''}`}>
+        <h4>📝 Daily Task</h4>
+        <textarea
+          placeholder="Write your task response here..."
+          value={taskResponse}
+          onChange={(e) => setTaskResponse(e.target.value)}
+        />
+        <button
+          className="mw-btn mw-btn-success"
+          onClick={submitTask}
+          disabled={submitting || !taskResponse.trim()}
+          style={{ width: '100%' }}
+        >
+          {submitting ? 'Submitting...' : 'Submit Task & Complete Day'}
+        </button>
+      </div>
 
-            {/* Quiz Section */}
-            {quizQuestions.length > 0 && (
-              <div className="section">
-                <h2>Quiz</h2>
-                {quizQuestions.map((q) => (
-                  <div key={q.id} className="quiz-question">
-                    <p>{q.question}</p>
-                    {q.options?.map((opt, idx) => (
-                      <label key={idx} className="quiz-option">
-                        <input
-                          type="radio"
-                          name={`q${q.id}`}
-                          value={opt}
-                          checked={quizAnswers[q.id] === opt}
-                          onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: opt })}
-                          disabled={quizResult?.passed || isCompleted}
-                        />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                ))}
-
-                {!quizResult && !isCompleted && (
-                  <button
-                    className="btn"
-                    onClick={submitQuiz}
-                    disabled={submitting || Object.keys(quizAnswers).length < quizQuestions.length}
-                  >
-                    {submitting ? 'Submitting...' : 'Submit Quiz'}
-                  </button>
-                )}
-
-                {quizResult && (
-                  <div className={`result-box ${quizResult.passed ? 'success' : 'fail'}`}>
-                    <strong>Score: {quizResult.score}/{quizResult.total}</strong>
-                    {quizResult.passed
-                      ? ' - Great job! You passed. Complete the task below to unlock the next day.'
-                      : ' - You need 60% to pass. Review the lesson and try again.'}
-                  </div>
-                )}
-
-                {isCompleted && (
-                  <div className="result-box success">
-                    <strong>Quiz completed!</strong> You've already passed this day's quiz.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Task Section */}
-            {content.task_prompt && (
-              <div className="section">
-                <h2>Daily Task</h2>
-                <p style={{ marginBottom: 16, color: '#cbd5e1' }}>{content.task_prompt}</p>
-
-                {taskSubmitted ? (
-                  <div className="result-box success">
-                    <strong>Task submitted!</strong> Day {day} completed. Redirecting to dashboard...
-                  </div>
-                ) : isCompleted ? (
-                  <div className="result-box success">
-                    <strong>Task already completed!</strong> You've finished this day.
-                  </div>
-                ) : (
-                  <>
-                    <textarea
-                      className="task-textarea"
-                      placeholder="Write your task response here..."
-                      value={taskResponse}
-                      onChange={(e) => setTaskResponse(e.target.value)}
-                      disabled={!canSubmitTask}
-                    />
-                    <button
-                      className="btn"
-                      onClick={submitTask}
-                      disabled={submitting || !canSubmitTask || !taskResponse.trim()}
-                    >
-                      {submitting ? 'Submitting...' : 'Submit Task & Complete Day'}
-                    </button>
-                    {!canSubmitTask && (
-                      <p style={{ marginTop: 12, color: '#94a3b8', fontSize: '0.875rem' }}>
-                        Pass the quiz first to unlock the task submission.
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
-              <button className="btn btn-secondary" onClick={() => router.push('/dashboard')}>
-                Back to Dashboard
-              </button>
-              {isCompleted && day < 30 && (
-                <button className="btn" onClick={() => router.push(`/day/${day + 1}`)}>
-                  Continue to Day {day + 1}
-                </button>
-              )}
-            </div>
-          </>
+      {/* Floating Controls */}
+      <div className="mw-controls">
+        {!quizResult && !isCompleted && (
+          <button
+            className="mw-btn"
+            onClick={submitQuiz}
+            disabled={submitting || Object.keys(quizAnswers).length === 0}
+          >
+            {submitting ? 'Submitting...' : 'Submit Quiz'}
+          </button>
         )}
+
+        {quizResult && (
+          <div style={{
+            background: quizResult.passed ? '#f0fdf4' : '#fef2f2',
+            color: quizResult.passed ? '#16a34a' : '#dc2626',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: '600',
+            textAlign: 'center'
+          }}>
+            {quizResult.passed ? `✓ Passed! ${quizResult.score}/${quizResult.total}` : `✗ ${quizResult.score}/${quizResult.total} - Need 60%`}
+          </div>
+        )}
+
+        {taskSubmitted && (
+          <div style={{
+            background: '#f0fdf4',
+            color: '#16a34a',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: '600'
+          }}>
+            ✓ Day Completed!
+          </div>
+        )}
+
+        <a href="/dashboard" style={{
+          background: 'rgba(0,0,0,0.1)',
+          color: '#1e293b',
+          padding: '12px 24px',
+          borderRadius: '10px',
+          textDecoration: 'none',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          ← Dashboard
+        </a>
       </div>
     </>
   );
