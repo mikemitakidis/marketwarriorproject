@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../lib/serverAuth';
 
 export default function AuthCallback() {
   useEffect(() => {
@@ -31,7 +32,6 @@ export default function AuthCallback() {
 }
 
 export async function getServerSideProps(ctx) {
-  const { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } = require('../../lib/serverAuth');
   const { code, token_hash, type, next } = ctx.query || {};
   const supabase = getAnonSupabase();
 
@@ -56,6 +56,7 @@ export async function getServerSideProps(ctx) {
 
     return { props: {} };
   } catch (e) {
+    console.error('Auth callback error:', e);
     return { redirect: { destination: '/login?error=callback', permanent: false } };
   }
 }

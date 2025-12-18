@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-const { getUserFromRequest, getGateStatus } = require('../lib/serverAuth');
+import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
 
 /**
  * Welcome / Onboarding page.
