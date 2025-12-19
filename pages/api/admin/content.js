@@ -59,9 +59,8 @@ async function handleGet(req, res, supabase) {
       .eq('day', parseInt(day))
       .single();
 
-    if (error) {
-      return res.status(404).json({ error: 'Day not found' });
-    }
+    // Return empty object if day doesn't exist yet (editor can create it)
+    const dayData = content || { day: parseInt(day), title: '', html_content: '', video_url: '', task_prompt: '' };
 
     const { data: quizQuestions } = await supabase
       .from('quiz_questions')
@@ -70,7 +69,7 @@ async function handleGet(req, res, supabase) {
       .order('id');
 
     return res.status(200).json({
-      content,
+      day: dayData,
       quizQuestions: quizQuestions || [],
     });
   }
@@ -110,16 +109,19 @@ async function handlePut(req, res, supabase) {
     return res.status(400).json({ error: 'Day number required' });
   }
 
-  const updates = { updated_at: new Date().toISOString() };
-  if (title !== undefined) updates.title = title;
-  if (html_content !== undefined) updates.html_content = html_content;
-  if (video_url !== undefined) updates.video_url = video_url;
-  if (task_prompt !== undefined) updates.task_prompt = task_prompt;
+  // Use upsert to create or update
+  const contentData = {
+    day: parseInt(day),
+    title: title || `Day ${day} Lesson`,
+    html_content: html_content || '',
+    video_url: video_url || null,
+    task_prompt: task_prompt || 'Complete the daily task.',
+    updated_at: new Date().toISOString(),
+  };
 
   const { data, error } = await supabase
     .from('course_content')
-    .update(updates)
-    .eq('day', parseInt(day))
+    .upsert(contentData, { onConflict: 'day' })
     .select()
     .single();
 

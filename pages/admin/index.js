@@ -365,36 +365,43 @@ export default function AdminPanel() {
             <div>
               <h1 style={styles.pageTitle}>Course Content</h1>
 
-              {days.length === 0 ? (
-                <div style={styles.emptyState}>
-                  <p>No content in database. Go to Import tab to import content from templates.</p>
-                </div>
-              ) : (
-                <div style={styles.card}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Day</th>
-                        <th>Title</th>
-                        <th>Video</th>
-                        <th>Quiz Questions</th>
-                        <th>Updated</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {days.map(day => (
-                        <tr key={day.day}>
-                          <td>Day {day.day}</td>
-                          <td>{day.title}</td>
-                          <td>{day.video_url ? 'Yes' : 'No'}</td>
-                          <td>{day.quiz_count || 0}</td>
-                          <td>{day.updated_at ? new Date(day.updated_at).toLocaleDateString() : '-'}</td>
+              <div style={styles.card}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Title</th>
+                      <th>Video</th>
+                      <th>Quiz Questions</th>
+                      <th>Updated</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 30 }, (_, i) => {
+                      const dayNum = i + 1;
+                      const dayData = days.find(d => d.day === dayNum);
+                      return (
+                        <tr key={dayNum}>
+                          <td>Day {dayNum}</td>
+                          <td>{dayData?.title || <span style={{color: '#94a3b8'}}>Not imported</span>}</td>
+                          <td>{dayData?.video_url ? 'Yes' : 'No'}</td>
+                          <td>{dayData?.quiz_count || 0}</td>
+                          <td>{dayData?.updated_at ? new Date(dayData.updated_at).toLocaleDateString() : '-'}</td>
+                          <td>
+                            <button
+                              style={styles.smallButton}
+                              onClick={() => router.push(`/admin/content/${dayNum}`)}
+                            >
+                              Edit
+                            </button>
+                          </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
