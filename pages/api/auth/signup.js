@@ -1,4 +1,4 @@
-import { getAnonSupabase } from '../../../lib/serverAuth';
+import { getAnonSupabase, getServiceSupabase } from '../../../lib/serverAuth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -14,6 +14,18 @@ export default async function handler(req, res) {
       options: { emailRedirectTo: redirectTo }
     });
     if (error) return res.status(400).json({ error: error.message });
+
+    // Create user_profiles entry with email
+    if (data?.user?.id) {
+      const serviceSupabase = getServiceSupabase();
+      await serviceSupabase
+        .from('user_profiles')
+        .upsert({
+          id: data.user.id,
+          email: email,
+          created_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+    }
 
     // If email confirmation is ON, session will likely be null.
     return res.status(200).json({
