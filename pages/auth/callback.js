@@ -3,21 +3,34 @@ import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } fr
 
 export default function AuthCallback() {
   useEffect(() => {
-    // Handles rare cases where Supabase returns tokens in the URL hash.
+    // Handles cases where Supabase returns tokens in the URL hash.
     const hash = window.location.hash || '';
     if (!hash) return;
-    const params = new URLSearchParams(hash.replace(/^#/, ''));
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    const next = new URLSearchParams(window.location.search).get('next') || '/pay';
+    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const access_token = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
+    // Check for recovery type in both hash and query string
+    const type = hashParams.get('type') || queryParams.get('type');
+    const next = queryParams.get('next') || '/pay';
+
     if (!access_token || !refresh_token) return;
 
+    // First set the session
     fetch('/api/auth/set-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ access_token, refresh_token, next })
     }).then(async (r) => {
       const j = await r.json().catch(() => ({}));
+
+      // If this is password recovery, go to reset password page
+      if (type === 'recovery') {
+        window.location.replace('/reset-password');
+        return;
+      }
+
       if (r.ok && j?.next) window.location.replace(j.next);
       else window.location.replace('/login');
     });
