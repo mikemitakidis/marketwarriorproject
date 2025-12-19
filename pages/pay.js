@@ -60,11 +60,6 @@ export default function PayPage({ userEmail }) {
   }, []);
 
   const handleCheckout = async () => {
-    if (!stripe) {
-      setError('Payment system is loading. Please wait...');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
@@ -81,7 +76,17 @@ export default function PayPage({ userEmail }) {
         throw new Error(data.error || 'Failed to start checkout');
       }
 
-      // Redirect to Stripe Checkout
+      // If Stripe not configured, API grants access and returns redirect
+      if (data.bypass && data.redirect) {
+        window.location.href = data.redirect;
+        return;
+      }
+
+      // Normal Stripe checkout flow
+      if (!stripe) {
+        throw new Error('Payment system not ready. Please refresh and try again.');
+      }
+
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: data.id,
       });
@@ -265,9 +270,9 @@ export default function PayPage({ userEmail }) {
         <button
           className="btn btn-primary"
           onClick={handleCheckout}
-          disabled={loading || !stripe}
+          disabled={loading}
         >
-          {loading ? 'Loading...' : !stripe ? 'Initializing...' : 'Proceed to Checkout'}
+          {loading ? 'Processing...' : 'Proceed to Checkout'}
         </button>
 
         <div className="guarantee">
