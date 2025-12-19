@@ -26,6 +26,28 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const TEMPLATES_DIR = path.join(__dirname, '../templates/days/market_warrior_days_content');
 
 /**
+ * Find the file for a given day number (handles different naming patterns)
+ */
+function findDayFile(dayNum) {
+  // Try exact match first
+  const exactPath = path.join(TEMPLATES_DIR, `day${dayNum}.html`);
+  if (fs.existsSync(exactPath)) {
+    return exactPath;
+  }
+
+  // Try pattern with suffix (e.g., day15_risk_management.html)
+  const files = fs.readdirSync(TEMPLATES_DIR);
+  const pattern = new RegExp(`^day${dayNum}[_.]`);
+  const matchingFile = files.find(f => pattern.test(f) && f.endsWith('.html'));
+
+  if (matchingFile) {
+    return path.join(TEMPLATES_DIR, matchingFile);
+  }
+
+  return null;
+}
+
+/**
  * Extract title from HTML
  */
 function extractTitle(html) {
@@ -149,9 +171,9 @@ function extractTaskPrompt(html) {
  * Process a single day file
  */
 async function processDayFile(dayNum) {
-  const filePath = path.join(TEMPLATES_DIR, `day${dayNum}.html`);
+  const filePath = findDayFile(dayNum);
 
-  if (!fs.existsSync(filePath)) {
+  if (!filePath) {
     console.log(`  Day ${dayNum}: File not found, skipping`);
     return null;
   }

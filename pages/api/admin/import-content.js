@@ -55,11 +55,30 @@ export default async function handler(req, res) {
   }
 }
 
+function findDayFile(templatesDir, dayNum) {
+  // Try exact match first
+  const exactPath = path.join(templatesDir, `day${dayNum}.html`);
+  if (fs.existsSync(exactPath)) {
+    return exactPath;
+  }
+
+  // Try pattern with suffix (e.g., day15_risk_management.html)
+  const files = fs.readdirSync(templatesDir);
+  const pattern = new RegExp(`^day${dayNum}[_.]`);
+  const matchingFile = files.find(f => pattern.test(f) && f.endsWith('.html'));
+
+  if (matchingFile) {
+    return path.join(templatesDir, matchingFile);
+  }
+
+  return null;
+}
+
 async function importDay(supabase, dayNum) {
   const templatesDir = path.join(process.cwd(), 'templates/days/market_warrior_days_content');
-  const filePath = path.join(templatesDir, `day${dayNum}.html`);
+  const filePath = findDayFile(templatesDir, dayNum);
 
-  if (!fs.existsSync(filePath)) {
+  if (!filePath) {
     return { day: dayNum, success: false, error: 'File not found' };
   }
 
