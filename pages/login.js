@@ -91,7 +91,7 @@ export default function LoginPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = `${window.location.origin}/auth/callback?next=/pay`;
       console.log('Redirect URL:', redirectUrl);
 
       const { data, error } = await supabase.auth.signUp({
@@ -129,7 +129,7 @@ export default function LoginPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/pay`,
       });
       if (error) throw error;
       setMessage({ type: 'success', text: 'Check your email for reset link!' });
@@ -146,7 +146,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/pay`,
         },
       });
       if (error) throw error;

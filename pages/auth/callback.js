@@ -53,7 +53,7 @@ export async function getServerSideProps(ctx) {
 
     if (session) {
       setAuthCookies(ctx.res, session);
-      const gate = await getGateStatus(session.user.id);
+      const gate = await getGateStatus(session.user.id, session.user.email);
       const dest = determineNextRoute(gate, next ? String(next) : undefined);
       return { redirect: { destination: dest, permanent: false } };
     }
