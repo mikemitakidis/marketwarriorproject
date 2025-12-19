@@ -1,14 +1,14 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import Head from 'next/head';
-import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../../lib/serverAuth';
+import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../../lib/serverAuth';
 
 /**
  * Day content page with server-side gate logic.
  *
  * Flow: Users must be authenticated, paid, and have completed welcome.
- * Day 1 is always available for paid users. Other days unlock as previous
- * days are completed.
+ * Days unlock based on time since welcome_completed_at (24 hours per day).
+ * User can access any unlocked day without completing previous days.
  */
 export async function getServerSideProps({ req, params }) {
   try {
@@ -32,68 +32,27 @@ export async function getServerSideProps({ req, params }) {
 
     const supabase = getServiceSupabase();
 
-    // Ensure day 1 progress exists for the user
-    if (dayNum === 1) {
-      await supabase
-        .from('challenge_progress')
-        .upsert({ user_id: user.id, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
-    }
+    // Get time-based unlock status
+    const challengeStatus = await getUserChallengeStatus(user.id);
+    const { unlockedDays } = challengeStatus;
 
-    // Check if day is unlocked
-    const { data: progress } = await supabase
-      .from('challenge_progress')
-      .select('unlocked, completed')
-      .eq('user_id', user.id)
-      .eq('day', dayNum)
-      .single();
-
-    if (!progress?.unlocked && dayNum !== 1) {
+    // Check if this day is unlocked based on time
+    if (!unlockedDays.includes(dayNum)) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
-    // For days > 1, check if previous day is completed with quiz passed and task submitted
-    if (dayNum > 1) {
-      const { data: prevProgress } = await supabase
-        .from('challenge_progress')
-        .select('completed')
-        .eq('user_id', user.id)
-        .eq('day', dayNum - 1)
-        .single();
+    // Ensure progress record exists for this day
+    await supabase
+      .from('challenge_progress')
+      .upsert({ user_id: user.id, day: dayNum, unlocked: true }, { onConflict: 'user_id,day' });
 
-      if (!prevProgress?.completed) {
-        return { redirect: { destination: '/dashboard', permanent: false } };
-      }
-
-      // Check quiz was passed (60% threshold) - using quiz_attempts table!
-      const { data: quizAttempt } = await supabase
-        .from('quiz_attempts')
-        .select('score, max_score, passed')
-        .eq('user_id', user.id)
-        .eq('day', dayNum - 1)
-        .order('submitted_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (quizAttempt) {
-        const passed = quizAttempt.passed || (quizAttempt.max_score > 0 && quizAttempt.score / quizAttempt.max_score >= 0.6);
-        if (!passed) {
-          return { redirect: { destination: '/dashboard', permanent: false } };
-        }
-      }
-
-      // Check task was submitted
-      const { data: taskSubmission } = await supabase
-        .from('task_submissions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('day', dayNum - 1)
-        .limit(1)
-        .single();
-
-      if (!taskSubmission) {
-        return { redirect: { destination: '/dashboard', permanent: false } };
-      }
-    }
+    // Get progress for this day
+    const { data: progress } = await supabase
+      .from('challenge_progress')
+      .select('completed, quiz_passed, task_submitted')
+      .eq('user_id', user.id)
+      .eq('day', dayNum)
+      .single();
 
     // Fetch lesson content
     const { data: content } = await supabase
@@ -138,6 +97,9 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
   const router = useRouter();
   const [quizAnswers, setQuizAnswers] = useState({});
   const [taskResponse, setTaskResponse] = useState('');
+  const [taskFile, setTaskFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [taskSubmitted, setTaskSubmitted] = useState(false);
@@ -168,6 +130,43 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
     }
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('File size must be less than 50MB');
+      return;
+    }
+
+    setTaskFile(file);
+    setUploadingFile(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('day', day);
+
+      const res = await fetch('/api/upload/task-file', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to upload file');
+
+      setUploadedFileUrl(data.url);
+    } catch (err) {
+      setError(err.message);
+      setTaskFile(null);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const submitTask = async () => {
     if (!taskResponse.trim()) {
       setError('Please write your task response before submitting');
@@ -180,7 +179,11 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ day, response: taskResponse }),
+        body: JSON.stringify({
+          day,
+          response: taskResponse,
+          attachmentUrl: uploadedFileUrl || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit task');
@@ -498,10 +501,43 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
                       onChange={(e) => setTaskResponse(e.target.value)}
                       disabled={!canSubmitTask}
                     />
+
+                    {/* File Upload Section */}
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ display: 'block', marginBottom: 8, color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Attach file (optional - PDF, Word, images, video up to 50MB)
+                      </label>
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        disabled={!canSubmitTask || uploadingFile}
+                        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.mp4,.mov,.avi"
+                        style={{
+                          padding: 12,
+                          background: '#0f172a',
+                          border: '2px solid #334155',
+                          borderRadius: 8,
+                          color: 'white',
+                          width: '100%',
+                          cursor: canSubmitTask ? 'pointer' : 'not-allowed',
+                        }}
+                      />
+                      {uploadingFile && (
+                        <p style={{ marginTop: 8, color: '#667eea', fontSize: '0.875rem' }}>
+                          Uploading file...
+                        </p>
+                      )}
+                      {uploadedFileUrl && (
+                        <p style={{ marginTop: 8, color: '#22c55e', fontSize: '0.875rem' }}>
+                          ✓ File uploaded: {taskFile?.name}
+                        </p>
+                      )}
+                    </div>
+
                     <button
                       className="btn"
                       onClick={submitTask}
-                      disabled={submitting || !canSubmitTask || !taskResponse.trim()}
+                      disabled={submitting || uploadingFile || !canSubmitTask || !taskResponse.trim()}
                     >
                       {submitting ? 'Submitting...' : 'Submit Task & Complete Day'}
                     </button>

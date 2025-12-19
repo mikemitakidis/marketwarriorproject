@@ -1,4 +1,4 @@
-import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../lib/serverAuth';
+import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../lib/serverAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
@@ -19,7 +19,7 @@ export async function getServerSideProps({ req }) {
       return { redirect: { destination: '/welcome', permanent: false } };
     }
 
-    // Get user profile and progress
+    // Get user profile
     const supabase = getServiceSupabase();
 
     const { data: profile } = await supabase
@@ -28,34 +28,22 @@ export async function getServerSideProps({ req }) {
       .eq('id', user.id)
       .single();
 
-    const { data: progress } = await supabase
-      .from('challenge_progress')
-      .select('day, unlocked, completed, completed_at')
-      .eq('user_id', user.id)
-      .order('day', { ascending: true });
+    // Get time-based unlock status
+    const challengeStatus = await getUserChallengeStatus(user.id);
+    const { unlockedDays, completedDays } = challengeStatus;
 
-    // Get quiz attempts for average calculation (using correct table: quiz_attempts!)
+    // Get quiz attempts for average calculation
     const { data: quizAttempts } = await supabase
       .from('quiz_attempts')
       .select('score, max_score')
       .eq('user_id', user.id);
 
-    // Calculate stats
-    const progressRows = progress || [];
-    const completedDays = progressRows.filter(r => r.completed).map(r => r.day);
-    const unlockedDays = progressRows.filter(r => r.unlocked).map(r => r.day);
-
-    // If no progress yet, day 1 should be unlocked
-    if (unlockedDays.length === 0) {
-      unlockedDays.push(1);
-    }
-
     // Current day is the first unlocked but not completed, or day 1
-    const currentDay = unlockedDays.find(d => !completedDays.includes(d)) || 1;
+    const currentDay = unlockedDays.find(d => !completedDays.includes(d)) || unlockedDays[unlockedDays.length - 1] || 1;
     const daysCompleted = completedDays.length;
     const overallProgress = Math.round((daysCompleted / 30) * 100);
 
-    // Calculate average quiz score (using max_score instead of total!)
+    // Calculate average quiz score
     let avgQuizScore = 0;
     if (quizAttempts && quizAttempts.length > 0) {
       const totalPercentage = quizAttempts.reduce((sum, r) => {

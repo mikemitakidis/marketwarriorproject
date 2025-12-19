@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { day, response: taskResponse } = req.body;
+    const { day, response: taskResponse, attachmentUrl } = req.body;
     if (!day || !taskResponse) {
       return res.status(400).json({ error: 'Missing day or response' });
     }
@@ -47,13 +47,14 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Pass the quiz (60%) before submitting the task' });
     }
 
-    // Insert task submission (using correct column name: submission_text)
+    // Insert task submission (using correct column names from schema)
     const { error: insertErr } = await supabase
       .from('task_submissions')
       .insert({
         user_id: userId,
         day: day,
         submission_text: taskResponse,
+        attachment_url: attachmentUrl || null,
         status: 'submitted',
       });
 
