@@ -97,6 +97,9 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
   const router = useRouter();
   const [quizAnswers, setQuizAnswers] = useState({});
   const [taskResponse, setTaskResponse] = useState('');
+  const [taskFile, setTaskFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [taskSubmitted, setTaskSubmitted] = useState(false);
@@ -127,6 +130,43 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
     }
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('File size must be less than 50MB');
+      return;
+    }
+
+    setTaskFile(file);
+    setUploadingFile(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('day', day);
+
+      const res = await fetch('/api/upload/task-file', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to upload file');
+
+      setUploadedFileUrl(data.url);
+    } catch (err) {
+      setError(err.message);
+      setTaskFile(null);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const submitTask = async () => {
     if (!taskResponse.trim()) {
       setError('Please write your task response before submitting');
@@ -139,7 +179,11 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ day, response: taskResponse }),
+        body: JSON.stringify({
+          day,
+          response: taskResponse,
+          attachmentUrl: uploadedFileUrl || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit task');
@@ -457,10 +501,43 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
                       onChange={(e) => setTaskResponse(e.target.value)}
                       disabled={!canSubmitTask}
                     />
+
+                    {/* File Upload Section */}
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ display: 'block', marginBottom: 8, color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Attach file (optional - PDF, Word, images, video up to 50MB)
+                      </label>
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        disabled={!canSubmitTask || uploadingFile}
+                        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.mp4,.mov,.avi"
+                        style={{
+                          padding: 12,
+                          background: '#0f172a',
+                          border: '2px solid #334155',
+                          borderRadius: 8,
+                          color: 'white',
+                          width: '100%',
+                          cursor: canSubmitTask ? 'pointer' : 'not-allowed',
+                        }}
+                      />
+                      {uploadingFile && (
+                        <p style={{ marginTop: 8, color: '#667eea', fontSize: '0.875rem' }}>
+                          Uploading file...
+                        </p>
+                      )}
+                      {uploadedFileUrl && (
+                        <p style={{ marginTop: 8, color: '#22c55e', fontSize: '0.875rem' }}>
+                          ✓ File uploaded: {taskFile?.name}
+                        </p>
+                      )}
+                    </div>
+
                     <button
                       className="btn"
                       onClick={submitTask}
-                      disabled={submitting || !canSubmitTask || !taskResponse.trim()}
+                      disabled={submitting || uploadingFile || !canSubmitTask || !taskResponse.trim()}
                     >
                       {submitting ? 'Submitting...' : 'Submit Task & Complete Day'}
                     </button>
