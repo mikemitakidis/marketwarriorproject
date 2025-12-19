@@ -2,6 +2,40 @@ import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth'
 import fs from 'fs';
 import path from 'path';
 
+// Official day titles
+const DAY_TITLES = {
+  1: 'Introduction to Trading and Types of Financial Markets',
+  2: 'Setting Up a Virtual/Demo Account',
+  3: 'Essential Trading Terms & Order Types',
+  4: 'Investment vs Trading - Understanding the Difference',
+  5: 'Market Indexes',
+  6: 'Stop Loss, Take Profit, Leverage & Margin',
+  7: 'Reading Price Charts & Candlestick Basics',
+  8: 'Trend Lines & Chart Patterns',
+  9: 'Moving Averages & Support/Resistance',
+  10: 'Chart Patterns',
+  11: 'Key Indicators - RSI, MACD, MAs & Economic Cycle',
+  12: 'Introduction to Fundamental Analysis',
+  13: 'Stock Research & Key Financial Ratios',
+  14: 'Simulated Trading Exercise',
+  15: 'Risk Management & Position Sizing',
+  16: 'Moving Averages & Crossovers Strategy',
+  17: 'Fibonacci Retracements & Advanced Chart Analysis',
+  18: 'Backtesting Strategies & Chart Review',
+  19: 'Creating a Trading Plan & ROI',
+  20: 'Trading Psychology – Emotional Mastery',
+  21: 'Dividends, Bonds & Fixed Income Assets',
+  22: 'IPOs, Penny Stocks, Crypto & Market Volatility',
+  23: 'Hedge Funds & Copy Trading',
+  24: 'Portfolio Rebalancing Basics',
+  25: 'Monitoring Virtual Portfolio Performance',
+  26: 'Adjusting Your Strategy Based on Results',
+  27: 'Trade Journaling & Performance Tracking',
+  28: 'Global Economic Indicators',
+  29: 'SMART Goals Setting & Review',
+  30: 'Final Assessment & Graduation',
+};
+
 /**
  * API route: /api/admin/import-content
  *
@@ -85,7 +119,8 @@ async function importDay(supabase, dayNum) {
   try {
     const html = fs.readFileSync(filePath, 'utf-8');
 
-    const title = extractTitle(html) || `Day ${dayNum} Lesson`;
+    // Use official titles from DAY_TITLES mapping
+    const title = DAY_TITLES[dayNum] || extractTitle(html) || `Day ${dayNum} Lesson`;
     const content = extractMainContent(html);
     const taskPrompt = extractTaskPrompt(html);
     const quizQuestions = extractQuizQuestions(html, dayNum);
