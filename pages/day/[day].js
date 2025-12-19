@@ -61,17 +61,17 @@ export async function getServerSideProps({ req, params }) {
       .eq('day', dayNum)
       .single();
 
-    // Fetch quiz questions (without correct answers) - using correct column names!
+    // Fetch quiz questions (without correct answers)
     const { data: rawQuizQuestions } = await supabase
       .from('quiz_questions')
-      .select('id, question_text, options')
+      .select('id, question, options')
       .eq('day', dayNum)
-      .order('order_index');
+      .order('id');
 
     // Transform to frontend format
     const quizQuestions = (rawQuizQuestions || []).map(q => ({
       id: q.id,
-      question: q.question_text,
+      question: q.question,
       options: q.options,
     }));
 
@@ -440,9 +440,9 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
                         <input
                           type="radio"
                           name={`q${q.id}`}
-                          value={opt}
-                          checked={quizAnswers[q.id] === opt}
-                          onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: opt })}
+                          value={idx}
+                          checked={quizAnswers[q.id] === idx}
+                          onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: idx })}
                           disabled={quizResult?.passed || isCompleted}
                         />
                         {opt}
