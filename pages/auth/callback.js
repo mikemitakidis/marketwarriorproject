@@ -53,6 +53,12 @@ export async function getServerSideProps(ctx) {
 
     if (session) {
       setAuthCookies(ctx.res, session);
+
+      // If this is a password recovery, redirect to reset password page
+      if (type === 'recovery') {
+        return { redirect: { destination: '/reset-password', permanent: false } };
+      }
+
       const gate = await getGateStatus(session.user.id, session.user.email);
       const dest = determineNextRoute(gate, next ? String(next) : undefined);
       return { redirect: { destination: dest, permanent: false } };
