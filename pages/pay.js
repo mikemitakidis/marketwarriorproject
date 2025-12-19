@@ -18,18 +18,6 @@ export async function getServerSideProps({ req }) {
 
     const gate = await getGateStatus(user.id);
 
-    // Check if Stripe is configured - if not, bypass payment
-    const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID);
-    const bypassPayment = !stripeConfigured || process.env.DEV_BYPASS_ENABLED === 'true';
-
-    // If payment is bypassed (no Stripe), skip to welcome/dashboard
-    if (bypassPayment) {
-      if (!gate.welcomeCompleted) {
-        return { redirect: { destination: '/welcome', permanent: false } };
-      }
-      return { redirect: { destination: '/dashboard', permanent: false } };
-    }
-
     // If already paid, redirect to next step
     if (gate.hasPaid) {
       if (!gate.welcomeCompleted) {
@@ -93,7 +81,6 @@ export default function PayPage({ userEmail }) {
         throw new Error(data.error || 'Failed to start checkout');
       }
 
-      // Redirect to Stripe Checkout
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: data.id,
       });

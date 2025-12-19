@@ -23,10 +23,8 @@ export default async function handler(req, res) {
     if (!stripeSecretKey) {
       return res.status(500).json({ error: 'Stripe is not configured' });
     }
-    // Determine the active price ID.  First attempt to read from
-    // app_settings table, falling back to the environment variable if
-    // no setting exists.  Only the service role key can query
-    // app_settings due to RLS.
+
+    // Determine the active price ID
     let priceId = process.env.STRIPE_PRICE_ID || '';
     try {
       const supabase = getServiceSupabase();
@@ -44,6 +42,7 @@ export default async function handler(req, res) {
     if (!priceId || !priceId.startsWith('price_')) {
       return res.status(500).json({ error: 'Invalid price configuration' });
     }
+
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -54,7 +53,6 @@ export default async function handler(req, res) {
         },
       ],
       mode: 'payment',
-      // Allow promotion codes so that coupons can be tested and applied.
       allow_promotion_codes: true,
       success_url: `${req.headers.origin}/welcome?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/`,
@@ -62,7 +60,7 @@ export default async function handler(req, res) {
     });
     return res.status(200).json({ id: session.id });
   } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: err.message });
+    console.error('Stripe checkout error:', err);
+    return res.status(500).json({ error: err.message });
   }
 }
