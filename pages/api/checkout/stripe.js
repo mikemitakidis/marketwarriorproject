@@ -20,6 +20,9 @@ export default async function handler(req, res) {
     }
     const userId = user.id;
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
 
     // Determine the active price ID
     let priceId = process.env.STRIPE_PRICE_ID || '';
@@ -36,36 +39,10 @@ export default async function handler(req, res) {
     } catch (err) {
       // ignore read errors and fall back to env
     }
-
-    // If Stripe is not configured, grant access directly and redirect
-    if (!stripeSecretKey || !priceId || !priceId.startsWith('price_')) {
-      const supabase = getServiceSupabase();
-      const now = new Date().toISOString();
-
-      // Grant access
-      await supabase.from('user_profiles').upsert({
-        id: userId,
-        has_paid: true,
-        paid_at: now,
-      }, { onConflict: 'id' });
-
-      // Mark welcome as not completed so they go through onboarding
-      await supabase.from('user_onboarding').upsert({
-        user_id: userId,
-        welcome_completed: false,
-      }, { onConflict: 'user_id' });
-
-      // Create day 1 progress
-      await supabase.from('challenge_progress').upsert({
-        user_id: userId,
-        day: 1,
-        unlocked: true,
-      }, { onConflict: 'user_id,day' });
-
-      return res.status(200).json({ bypass: true, redirect: '/welcome' });
+    if (!priceId || !priceId.startsWith('price_')) {
+      return res.status(500).json({ error: 'Invalid price configuration' });
     }
 
-    // Normal Stripe checkout flow
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -84,6 +61,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ id: session.id });
   } catch (err) {
     console.error('Stripe checkout error:', err);
-    return res.status(500).json({ error: `Stripe error: ${err.message}` });
+    return res.status(500).json({ error: err.message });
   }
 }
