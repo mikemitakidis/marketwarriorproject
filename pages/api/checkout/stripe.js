@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     const userId = user.id;
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
-      return res.status(500).json({ error: 'Stripe is not configured' });
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY is not set in environment variables' });
     }
     // Determine the active price ID.  First attempt to read from
     // app_settings table, falling back to the environment variable if
@@ -41,8 +41,11 @@ export default async function handler(req, res) {
     } catch (err) {
       // ignore read errors and fall back to env
     }
-    if (!priceId || !priceId.startsWith('price_')) {
-      return res.status(500).json({ error: 'Invalid price configuration' });
+    if (!priceId) {
+      return res.status(500).json({ error: 'STRIPE_PRICE_ID is not set. Please set it in environment variables or app_settings.' });
+    }
+    if (!priceId.startsWith('price_')) {
+      return res.status(500).json({ error: `Invalid STRIPE_PRICE_ID format: "${priceId}". It must start with "price_"` });
     }
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
@@ -62,7 +65,7 @@ export default async function handler(req, res) {
     });
     return res.status(200).json({ id: session.id });
   } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: err.message });
+    console.error('Stripe checkout error:', err);
+    return res.status(500).json({ error: `Stripe error: ${err.message}` });
   }
 }
