@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     if (error || !data?.user) return res.status(401).json({ error: 'Invalid token' });
 
     setAuthCookies(res, { access_token, refresh_token });
-    const gate = await getGateStatus(data.user.id);
+    const gate = await getGateStatus(data.user.id, data.user.email);
     return res.status(200).json({ ok: true, next: determineNextRoute(gate, next) });
   } catch (e) {
     console.error('set-session error:', e);
