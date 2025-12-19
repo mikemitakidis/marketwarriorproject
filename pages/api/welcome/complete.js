@@ -18,13 +18,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const { fullName } = req.body || {};
+    const { fullName, agreements } = req.body || {};
     if (!fullName || fullName.trim().length < 2) {
       return res.status(400).json({ error: 'Full name is required' });
     }
 
     const supabase = getServiceSupabase();
     const now = new Date().toISOString();
+    const userEmail = user.email;
 
     // Update user_profiles with full name and terms acceptance
     // Use update instead of upsert to preserve existing has_paid value
@@ -65,11 +66,17 @@ export default async function handler(req, res) {
       }
     }
 
-    // Mark welcome as completed in user_onboarding
+    // Mark welcome as completed in user_onboarding with agreements and email
     const { error: onboardingError } = await supabase
       .from('user_onboarding')
       .upsert({
         user_id: user.id,
+        email: userEmail,
+        agree1: agreements?.agree1 || false,
+        agree2: agreements?.agree2 || false,
+        agree3: agreements?.agree3 || false,
+        agree4: agreements?.agree4 || false,
+        agree5: agreements?.agree5 || false,
         welcome_completed: true,
         welcome_completed_at: now,
       }, { onConflict: 'user_id' });

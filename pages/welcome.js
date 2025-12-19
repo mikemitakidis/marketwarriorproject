@@ -77,7 +77,16 @@ export default function WelcomePage({ userEmail }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ fullName: fullName.trim() }),
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          agreements: {
+            agree1: agreements.terms,
+            agree2: agreements.education,
+            agree3: agreements.namePermanent,
+            agree4: agreements.accessPeriod,
+            agree5: agreements.risk,
+          },
+        }),
       });
 
       const data = await res.json();
