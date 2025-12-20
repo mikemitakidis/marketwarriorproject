@@ -18,28 +18,30 @@ export default async function handler(req, res) {
   try {
     const adminUser = await getUserFromRequest(req);
     if (!adminUser) {
+      console.log('[ADMIN] No user found in request');
       return res.status(401).json({ error: 'Not authenticated' });
     }
+
+    console.log('[ADMIN] User from request:', adminUser.id, adminUser.email);
 
     const supabase = getServiceSupabase();
 
     // Check if user is admin
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('is_admin, email')
       .eq('id', adminUser.id)
       .single();
 
-    // Check email allow list
-    const allowList = process.env.ADMIN_EMAIL_ALLOWLIST
-      ? process.env.ADMIN_EMAIL_ALLOWLIST.split(',').map(e => e.trim().toLowerCase())
-      : [];
-    const emailAllowed = allowList.length === 0 || allowList.includes((adminUser.email || '').toLowerCase());
+    console.log('[ADMIN] Profile lookup:', JSON.stringify(profile), 'Error:', profileError?.message);
 
-    // Must be on allow list AND have is_admin flag
-    if (!emailAllowed || !profile?.is_admin) {
+    // Only check is_admin flag
+    if (!profile?.is_admin) {
+      console.log('[ADMIN] Access denied - is_admin:', profile?.is_admin);
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    console.log('[ADMIN] Access granted for:', adminUser.email);
 
     const { userId, search } = req.query;
 
