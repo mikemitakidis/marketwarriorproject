@@ -72,8 +72,14 @@ function extractContentFromHTML(html) {
     lessonContent = removeSectionByClass(lessonContent, 'video-placeholder');
     lessonContent = removeSectionByClass(lessonContent, 'task-section');
     lessonContent = removeSectionByClass(lessonContent, 'quiz-container');
+    lessonContent = removeSectionByClass(lessonContent, 'quiz-results');
     lessonContent = removeSectionByClass(lessonContent, 'sneak-peek');
     lessonContent = removeSectionByClass(lessonContent, 'completion-section');
+
+    // Remove quiz-related elements by ID
+    lessonContent = lessonContent.replace(/<div[^>]*id="quizResults"[^>]*>[\s\S]*?<\/div>/gi, '');
+    lessonContent = lessonContent.replace(/<div[^>]*id="quizContent"[^>]*>[\s\S]*?<\/div>/gi, '');
+    lessonContent = lessonContent.replace(/<div[^>]*id="quizReview"[^>]*>[\s\S]*?<\/div>/gi, '');
 
     // Remove the video section (section containing only video placeholder)
     lessonContent = lessonContent.replace(/<div class="section">\s*<h2>[^<]*Video[^<]*<\/h2>\s*<\/div>/gi, '');
