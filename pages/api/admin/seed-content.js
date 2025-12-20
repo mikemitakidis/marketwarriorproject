@@ -331,13 +331,22 @@ export default async function handler(req, res) {
 
           // Insert new quiz questions
           if (extracted.quizQuestions.length > 0) {
-            const quizData = extracted.quizQuestions.map((q, idx) => ({
-              day: dayNum,
-              question: q.question,
-              options: q.options,
-              correct_option: q.correctOption,
-              order_num: idx + 1,
-            }));
+            // Convert options array to object format {"A":"..","B":"..","C":"..","D":".."}
+            // Convert correct answer index (0,1,2,3) to letter (A,B,C,D)
+            const letters = ['A', 'B', 'C', 'D'];
+            const quizData = extracted.quizQuestions.map((q, idx) => {
+              const optionsObj = {};
+              q.options.forEach((opt, i) => {
+                optionsObj[letters[i]] = opt;
+              });
+              return {
+                day: dayNum,
+                question_text: q.question,
+                options: optionsObj,
+                correct_option: letters[q.correctOption] || 'A',
+                order_index: idx + 1,
+              };
+            });
 
             const { error: quizError } = await supabase
               .from('quiz_questions')

@@ -42,14 +42,17 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'No quiz questions found for this day' });
     }
 
-    // Calculate score - compare answer indices
+    // Calculate score - compare answer letters
+    // userAnswer is an index (0, 1, 2, 3), correct_option is a letter ('A', 'B', 'C', 'D')
+    const letters = ['A', 'B', 'C', 'D'];
     let score = 0;
     questions.forEach((q) => {
       const userAnswer = answers[q.id];
-      // userAnswer is the index the user selected (0, 1, 2, 3)
-      // correct_option is the correct index from the database
-      if (userAnswer !== undefined && userAnswer !== null && parseInt(userAnswer) === q.correct_option) {
-        score += 1;
+      if (userAnswer !== undefined && userAnswer !== null) {
+        const userLetter = letters[parseInt(userAnswer)];
+        if (userLetter === q.correct_option) {
+          score += 1;
+        }
       }
     });
 
