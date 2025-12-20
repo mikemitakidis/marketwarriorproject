@@ -50,15 +50,24 @@ export async function getServerSideProps({ req, params }) {
 
     const { data: rawQuizQuestions } = await supabase
       .from('quiz_questions')
-      .select('id, question, options')
+      .select('id, question_text, options')
       .eq('day', dayNum)
-      .order('id');
+      .order('order_index');
 
-    const quizQuestions = (rawQuizQuestions || []).map(q => ({
-      id: q.id,
-      question: q.question,
-      options: q.options,
-    }));
+    // Convert options from {"A":"..","B":".."} to array ["..",".."]
+    const quizQuestions = (rawQuizQuestions || []).map(q => {
+      const optionsArray = [];
+      if (q.options) {
+        ['A', 'B', 'C', 'D'].forEach(letter => {
+          if (q.options[letter]) optionsArray.push(q.options[letter]);
+        });
+      }
+      return {
+        id: q.id,
+        question: q.question_text,
+        options: optionsArray,
+      };
+    });
 
     return {
       props: {
