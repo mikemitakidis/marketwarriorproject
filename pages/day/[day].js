@@ -232,6 +232,325 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, quiz
           background: #f5f7fa;
           color: #1e293b;
         }
+
+        /* Lesson Content Styles - from HTML templates */
+        .lesson-content h2 {
+          color: #1e293b;
+          margin: 30px 0 20px;
+          font-size: 1.8em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .lesson-content h3 {
+          color: #3b82f6;
+          font-size: 1.4em;
+          margin: 25px 0 15px;
+        }
+        .lesson-content h4 {
+          color: #3b82f6;
+          font-size: 1.2em;
+          margin: 20px 0 10px;
+        }
+        .lesson-content p {
+          margin-bottom: 15px;
+          color: #475569;
+        }
+        .lesson-content ul, .lesson-content ol {
+          margin: 15px 0 15px 25px;
+        }
+        .lesson-content li {
+          margin-bottom: 8px;
+        }
+        .lesson-content strong {
+          color: #1e293b;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+          background: #f8fafc;
+          border: 2px solid #3b82f6;
+          border-radius: 12px;
+          padding: 25px;
+          margin: 25px 0;
+          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Market Cards Grid */
+        .market-comparison {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 25px;
+          margin: 30px 0;
+        }
+        .market-card {
+          background: #f8fafc;
+          padding: 25px;
+          border-radius: 15px;
+          border-left: 5px solid #3b82f6;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .market-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .market-card h4 {
+          color: #3b82f6;
+          margin-bottom: 15px;
+          font-size: 1.3em;
+        }
+
+        /* Market Visual Box */
+        .market-visual {
+          text-align: center;
+          margin: 40px 0;
+          padding: 30px;
+          background: white;
+          border-radius: 20px;
+          border: 2px solid #3b82f6;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .market-visual h3 {
+          color: #3b82f6;
+          margin-bottom: 20px;
+        }
+
+        /* Market Icons Grid */
+        .market-icons {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 20px;
+          margin: 20px 0;
+        }
+        .market-icon {
+          text-align: center;
+          padding: 20px;
+          background: #f8fafc;
+          border-radius: 15px;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+        }
+        .market-icon:hover {
+          background: #f1f5f9;
+          transform: scale(1.05);
+          border-color: #3b82f6;
+        }
+        .market-icon span {
+          font-size: 2.5em;
+          display: block;
+          margin-bottom: 10px;
+        }
+        .market-icon h5 {
+          color: #1e293b;
+          font-weight: 600;
+        }
+
+        /* Why Popular Section */
+        .why-popular {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 40px;
+          border-radius: 20px;
+          margin: 40px 0;
+        }
+        .why-popular h2 {
+          color: white !important;
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .why-popular .market-card {
+          background: rgba(255,255,255,0.15);
+          color: white;
+          border-left-color: white;
+        }
+        .why-popular .market-card h4 {
+          color: white !important;
+        }
+        .why-popular .market-card p {
+          color: rgba(255,255,255,0.9);
+        }
+        .why-popular ul {
+          list-style: none;
+          padding: 0;
+        }
+        .why-popular li {
+          padding: 10px 0;
+          padding-left: 25px;
+          position: relative;
+        }
+        .why-popular li::before {
+          content: '•';
+          position: absolute;
+          left: 0;
+          color: white;
+        }
+
+        /* Safety Warning */
+        .safety-warning {
+          background: #fef2f2;
+          color: #dc2626;
+          padding: 20px;
+          border-radius: 10px;
+          border-left: 5px solid #dc2626;
+          margin: 20px 0;
+          font-weight: 600;
+        }
+
+        /* Interactive Element */
+        .interactive-element {
+          background: rgba(59, 130, 246, 0.1);
+          border: 2px dashed #3b82f6;
+          border-radius: 15px;
+          padding: 25px;
+          margin: 25px 0;
+          text-align: center;
+        }
+        .interactive-element h4 {
+          color: #3b82f6;
+          margin-bottom: 15px;
+        }
+
+        /* Tables */
+        .lesson-content table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+          margin: 20px 0;
+        }
+        .lesson-content thead tr {
+          background: linear-gradient(135deg, #1e293b, #475569);
+          color: white;
+        }
+        .lesson-content th {
+          padding: 18px 15px;
+          text-align: left;
+          font-weight: 600;
+        }
+        .lesson-content td {
+          padding: 16px 15px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .lesson-content tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .lesson-content tbody tr:hover {
+          background: #f1f5f9;
+        }
+
+        /* Extra Learning Notes */
+        .extra-notes {
+          background: white;
+          padding: 40px;
+          border-radius: 20px;
+          border-left: 6px solid #3b82f6;
+          margin: 40px 0;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Sneak Peek from HTML */
+        .lesson-content .sneak-peek,
+        div[class*="sneak"] {
+          background: linear-gradient(135deg, #7c3aed, #5b21b6) !important;
+          color: white !important;
+          padding: 30px;
+          border-radius: 15px;
+          margin: 40px 0;
+          text-align: center;
+        }
+        .lesson-content .sneak-peek h2,
+        .lesson-content .sneak-peek p {
+          color: white !important;
+        }
+
+        /* Completion Section from HTML */
+        .lesson-content .completion-section {
+          background: linear-gradient(135deg, #059669, #047857) !important;
+          color: white !important;
+          padding: 30px;
+          border-radius: 15px;
+          text-align: center;
+          margin: 40px 0;
+        }
+        .lesson-content .completion-section h2,
+        .lesson-content .completion-section p {
+          color: white !important;
+        }
+        .lesson-content .completion-button {
+          background: #3b82f6;
+          color: white;
+          padding: 15px 30px;
+          border: none;
+          border-radius: 25px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          margin: 10px;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-block;
+        }
+        .lesson-content .completion-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Video Placeholder */
+        .video-placeholder {
+          background: #111;
+          border-radius: 15px;
+          aspect-ratio: 16/9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 1.2em;
+        }
+
+        /* Task Section from HTML */
+        .lesson-content .task-section {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          color: #92400e;
+          padding: 30px;
+          border-radius: 15px;
+          border-left: 6px solid #f59e0b;
+          margin: 40px 0;
+        }
+        .lesson-content .task-section h2 {
+          color: #92400e;
+        }
+
+        /* Quiz Container from HTML */
+        .lesson-content .quiz-container {
+          background: white;
+          padding: 30px;
+          border-radius: 15px;
+          border-left: 6px solid #10b981;
+          margin: 30px 0;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .lesson-content .quiz-header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .lesson-content .quiz-header h2 {
+          color: #065f46;
+        }
+
+        /* Rewards Section */
+        .rewards-section {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 40px;
+          border-radius: 20px;
+          margin: 40px 0;
+        }
+        .rewards-section h2 {
+          color: white !important;
+        }
       `}</style>
 
       <div className="container">

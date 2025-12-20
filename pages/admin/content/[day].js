@@ -12,6 +12,7 @@ export default function ContentEditor() {
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [editMode, setEditMode] = useState('visual'); // 'visual' or 'html'
 
   // Content state
   const [title, setTitle] = useState('');
@@ -409,42 +410,73 @@ export default function ContentEditor() {
           <div style={styles.formGroup}>
             <label style={styles.label}>Lesson Content</label>
 
-            {/* Toolbar */}
-            <div style={styles.toolbar}>
-              <button type="button" style={styles.toolBtn} onClick={insertHeading} title="Heading (H3)">H3</button>
-              <button type="button" style={styles.toolBtn} onClick={insertParagraph} title="Paragraph">¶</button>
-              <span style={styles.toolDivider}>|</span>
-              <button type="button" style={styles.toolBtn} onClick={() => execCommand('bold')} title="Bold"><b>B</b></button>
-              <button type="button" style={styles.toolBtn} onClick={() => execCommand('italic')} title="Italic"><i>I</i></button>
-              <button type="button" style={styles.toolBtn} onClick={() => execCommand('underline')} title="Underline"><u>U</u></button>
-              <span style={styles.toolDivider}>|</span>
-              <button type="button" style={styles.toolBtn} onClick={() => execCommand('insertUnorderedList')} title="Bullet List">• List</button>
-              <button type="button" style={styles.toolBtn} onClick={() => execCommand('insertOrderedList')} title="Numbered List">1. List</button>
-              <span style={styles.toolDivider}>|</span>
-              <button type="button" style={styles.toolBtn} onClick={insertLink} title="Insert Link">🔗 Link</button>
-              <button type="button" style={styles.toolBtn} onClick={insertImage} title="Insert Image">📷 Image</button>
-              <button type="button" style={styles.toolBtn} onClick={insertTable} title="Insert Table">📊 Table</button>
-              <span style={styles.toolDivider}>|</span>
+            {/* Mode Toggle */}
+            <div style={styles.editorModeToggle}>
               <button
                 type="button"
-                style={{...styles.toolBtn, background: showPreview ? '#667eea' : '#f1f5f9', color: showPreview ? 'white' : '#1e293b'}}
+                style={{...styles.modeBtn, background: editMode === 'visual' ? '#3b82f6' : '#e2e8f0', color: editMode === 'visual' ? 'white' : '#475569'}}
+                onClick={() => setEditMode('visual')}
+              >
+                Visual Editor
+              </button>
+              <button
+                type="button"
+                style={{...styles.modeBtn, background: editMode === 'html' ? '#3b82f6' : '#e2e8f0', color: editMode === 'html' ? 'white' : '#475569'}}
+                onClick={() => setEditMode('html')}
+              >
+                HTML Source
+              </button>
+              <button
+                type="button"
+                style={{...styles.modeBtn, background: showPreview ? '#10b981' : '#e2e8f0', color: showPreview ? 'white' : '#475569'}}
                 onClick={() => setShowPreview(!showPreview)}
               >
-                👁️ Preview
+                Preview
               </button>
             </div>
 
-            {showPreview ? (
-              <div style={styles.preview} dangerouslySetInnerHTML={{ __html: htmlContent }} />
-            ) : (
-              <div
-                ref={editorRef}
-                contentEditable
-                style={styles.editor}
-                dangerouslySetInnerHTML={{ __html: htmlContent }}
-                onInput={updateHtmlContent}
-                onBlur={updateHtmlContent}
+            {editMode === 'visual' && !showPreview && (
+              <>
+                {/* Toolbar */}
+                <div style={styles.toolbar}>
+                  <button type="button" style={styles.toolBtn} onClick={insertHeading} title="Heading (H3)">H3</button>
+                  <button type="button" style={styles.toolBtn} onClick={insertParagraph} title="Paragraph">¶</button>
+                  <span style={styles.toolDivider}>|</span>
+                  <button type="button" style={styles.toolBtn} onClick={() => execCommand('bold')} title="Bold"><b>B</b></button>
+                  <button type="button" style={styles.toolBtn} onClick={() => execCommand('italic')} title="Italic"><i>I</i></button>
+                  <button type="button" style={styles.toolBtn} onClick={() => execCommand('underline')} title="Underline"><u>U</u></button>
+                  <span style={styles.toolDivider}>|</span>
+                  <button type="button" style={styles.toolBtn} onClick={() => execCommand('insertUnorderedList')} title="Bullet List">• List</button>
+                  <button type="button" style={styles.toolBtn} onClick={() => execCommand('insertOrderedList')} title="Numbered List">1. List</button>
+                  <span style={styles.toolDivider}>|</span>
+                  <button type="button" style={styles.toolBtn} onClick={insertLink} title="Insert Link">🔗 Link</button>
+                  <button type="button" style={styles.toolBtn} onClick={insertImage} title="Insert Image">📷 Image</button>
+                  <button type="button" style={styles.toolBtn} onClick={insertTable} title="Insert Table">📊 Table</button>
+                </div>
+
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  style={styles.editor}
+                  dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  onInput={updateHtmlContent}
+                  onBlur={updateHtmlContent}
+                />
+              </>
+            )}
+
+            {editMode === 'html' && !showPreview && (
+              <textarea
+                style={styles.htmlEditor}
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                placeholder="Enter HTML content directly..."
+                spellCheck={false}
               />
+            )}
+
+            {showPreview && (
+              <div style={styles.preview} dangerouslySetInnerHTML={{ __html: htmlContent }} />
             )}
           </div>
 
@@ -717,6 +749,33 @@ const styles = {
     lineHeight: '1.7',
     outline: 'none',
     background: 'white',
+  },
+  editorModeToggle: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '12px',
+  },
+  modeBtn: {
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease',
+  },
+  htmlEditor: {
+    width: '100%',
+    minHeight: '500px',
+    padding: '16px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontFamily: 'Monaco, Menlo, Consolas, monospace',
+    lineHeight: '1.5',
+    resize: 'vertical',
+    background: '#1e293b',
+    color: '#e2e8f0',
   },
   preview: {
     minHeight: '400px',
