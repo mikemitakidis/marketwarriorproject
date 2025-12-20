@@ -39,7 +39,7 @@ export default function ContentEditor() {
         return;
       }
 
-      const res = await fetch('/api/admin/users');
+      const res = await fetch('/api/admin/users', { credentials: 'include' });
       if (res.status === 403 || res.status === 401) {
         router.push('/dashboard');
         return;
@@ -57,7 +57,7 @@ export default function ContentEditor() {
     setLoading(true);
     try {
       // Load day content
-      const contentRes = await fetch(`/api/admin/content?day=${day}`);
+      const contentRes = await fetch(`/api/admin/content?day=${day}`, { credentials: 'include' });
       const contentData = await contentRes.json();
 
       if (contentData.day) {
@@ -68,7 +68,7 @@ export default function ContentEditor() {
       }
 
       // Load quiz questions
-      const quizRes = await fetch(`/api/admin/quiz?day=${day}`);
+      const quizRes = await fetch(`/api/admin/quiz?day=${day}`, { credentials: 'include' });
       const quizData = await quizRes.json();
       setQuizQuestions(quizData.questions || []);
 
@@ -87,6 +87,7 @@ export default function ContentEditor() {
       const res = await fetch('/api/admin/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           day: parseInt(day),
           title,
@@ -189,6 +190,7 @@ export default function ContentEditor() {
       fetch('/api/admin/quiz', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ id: q.id }),
       });
     }
@@ -208,6 +210,7 @@ export default function ContentEditor() {
           await fetch('/api/admin/quiz', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
               day: parseInt(day),
               question: q.question,
@@ -220,6 +223,7 @@ export default function ContentEditor() {
           await fetch('/api/admin/quiz', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
               id: q.id,
               question: q.question,

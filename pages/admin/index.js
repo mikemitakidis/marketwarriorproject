@@ -29,7 +29,7 @@ export default function AdminPanel() {
         return;
       }
 
-      const res = await fetch('/api/admin/users');
+      const res = await fetch('/api/admin/users', { credentials: 'include' });
       if (res.status === 403 || res.status === 401) {
         router.push('/dashboard');
         return;
@@ -47,8 +47,8 @@ export default function AdminPanel() {
     setLoading(true);
     try {
       const [usersRes, daysRes] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/content'),
+        fetch('/api/admin/users', { credentials: 'include' }),
+        fetch('/api/admin/content', { credentials: 'include' }),
       ]);
 
       const usersData = await usersRes.json();
@@ -82,6 +82,7 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/import-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({}),
       });
 
@@ -100,7 +101,7 @@ export default function AdminPanel() {
   async function loadUserDetails(userId) {
     setSelectedUser(userId);
     try {
-      const res = await fetch(`/api/admin/users?userId=${userId}`);
+      const res = await fetch(`/api/admin/users?userId=${userId}`, { credentials: 'include' });
       const data = await res.json();
       setUserDetails(data);
     } catch (err) {
@@ -115,6 +116,7 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/unlock-all-days', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ userId }),
       });
 
