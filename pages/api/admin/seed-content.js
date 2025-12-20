@@ -12,6 +12,43 @@ import path from 'path';
  * GET: Check current content status
  */
 
+// Helper function to remove a section by class name (handles nested divs properly)
+function removeSectionByClass(html, className) {
+  const regex = new RegExp(`<div\\s+class="${className}"[^>]*>`, 'gi');
+  let result = html;
+  let match;
+
+  while ((match = regex.exec(html)) !== null) {
+    const startIdx = match.index;
+    let depth = 1;
+    let endIdx = startIdx + match[0].length;
+
+    // Find the matching closing tag
+    while (depth > 0 && endIdx < html.length) {
+      const openTag = html.indexOf('<div', endIdx);
+      const closeTag = html.indexOf('</div>', endIdx);
+
+      if (closeTag === -1) break;
+
+      if (openTag !== -1 && openTag < closeTag) {
+        depth++;
+        endIdx = openTag + 4;
+      } else {
+        depth--;
+        endIdx = closeTag + 6;
+      }
+    }
+
+    // Remove this section
+    result = result.substring(0, startIdx) + result.substring(endIdx);
+    // Reset regex to search from beginning since we modified the string
+    regex.lastIndex = 0;
+    html = result;
+  }
+
+  return result;
+}
+
 // Helper to extract content from HTML
 function extractContentFromHTML(html) {
   // Extract title from <title> tag
@@ -23,34 +60,31 @@ function extractContentFromHTML(html) {
   const videoMatch = html.match(/src="(https:\/\/www\.youtube\.com\/embed\/[^"]+)"/i);
   const videoUrl = videoMatch ? videoMatch[1] : null;
 
-  // IMPORTANT: Extract the FULL HTML content with all styling classes intact
-  // Look for everything inside <div class="container"> up to the <script> tags
+  // Extract the content inside <div class="container">
   let lessonContent = '';
-
-  // Method 1: Get everything between container and script
   const containerMatch = html.match(/<div class="container">([\s\S]*?)<script/i);
+
   if (containerMatch) {
     lessonContent = containerMatch[1];
 
-    // Remove only the day-header (we'll render that separately)
-    lessonContent = lessonContent.replace(/<div class="day-header">[\s\S]*?<\/div>\s*<\/div>/gi, '');
+    // Remove sections that are rendered by the day page component
+    lessonContent = removeSectionByClass(lessonContent, 'day-header');
+    lessonContent = removeSectionByClass(lessonContent, 'video-placeholder');
+    lessonContent = removeSectionByClass(lessonContent, 'task-section');
+    lessonContent = removeSectionByClass(lessonContent, 'quiz-container');
+    lessonContent = removeSectionByClass(lessonContent, 'sneak-peek');
+    lessonContent = removeSectionByClass(lessonContent, 'completion-section');
 
-    // Remove video placeholder (we'll use the actual YouTube embed)
-    lessonContent = lessonContent.replace(/<div class="video-placeholder">[\s\S]*?<\/div>/gi, '');
+    // Remove the video section (section containing only video placeholder)
+    lessonContent = lessonContent.replace(/<div class="section">\s*<h2>[^<]*Video[^<]*<\/h2>\s*<\/div>/gi, '');
 
     // Remove HTML comments
     lessonContent = lessonContent.replace(/<!--[\s\S]*?-->/g, '');
 
-    // Remove quiz-container section (we'll render quiz separately from database)
-    lessonContent = lessonContent.replace(/<div class="quiz-container">[\s\S]*?<div class="quiz-navigation">[\s\S]*?<\/div>\s*<\/div>/gi, '');
-
-    // Also try alternate quiz removal pattern
-    lessonContent = lessonContent.replace(/<div class="quiz-container"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi, '');
-
     // Remove empty section wrappers
     lessonContent = lessonContent.replace(/<div class="section">\s*<\/div>/gi, '');
 
-    // Clean up extra whitespace but preserve structure
+    // Clean up multiple blank lines
     lessonContent = lessonContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
   }
 
