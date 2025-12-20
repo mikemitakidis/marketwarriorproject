@@ -245,7 +245,7 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
           cursor: pointer;
           font-weight: 500;
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
         .back-link {
           color: #667eea;
           text-decoration: none;
@@ -286,9 +286,12 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
         .video-container {
           position: relative;
           padding-bottom: 56.25%;
-          margin: 16px 0;
-          border-radius: 8px;
+          margin: 24px 0;
+          border-radius: 12px;
           overflow: hidden;
+          background: #0f172a;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          min-height: 400px;
         }
         .video-container iframe {
           position: absolute;
@@ -296,6 +299,7 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, user
           left: 0;
           width: 100%;
           height: 100%;
+          border: none;
         }
         .quiz-question {
           background: #0f172a;
