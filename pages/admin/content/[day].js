@@ -476,7 +476,7 @@ export default function ContentEditor() {
             )}
 
             {showPreview && (
-              <div style={styles.preview} dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div className="preview-container" dangerouslySetInnerHTML={{ __html: htmlContent }} />
             )}
           </div>
 
@@ -579,6 +579,279 @@ export default function ContentEditor() {
       <style jsx global>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; }
+
+        /* Preview Container Styles - Match day page templates exactly */
+        .preview-container {
+          min-height: 400px;
+          padding: 30px;
+          border: 2px solid #3b82f6;
+          border-radius: 12px;
+          background: #f5f7fa;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #1e293b;
+        }
+
+        .preview-container h2 {
+          color: #1e293b;
+          margin: 30px 0 20px;
+          font-size: 1.8em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .preview-container h3 {
+          color: #3b82f6;
+          font-size: 1.4em;
+          margin: 25px 0 15px;
+        }
+        .preview-container h4 {
+          color: #3b82f6;
+          font-size: 1.2em;
+          margin: 20px 0 10px;
+        }
+        .preview-container p {
+          margin-bottom: 15px;
+          color: #475569;
+        }
+        .preview-container ul, .preview-container ol {
+          margin: 15px 0 15px 25px;
+        }
+        .preview-container li {
+          margin-bottom: 8px;
+        }
+        .preview-container strong {
+          color: #1e293b;
+        }
+
+        /* Highlight Box */
+        .preview-container .highlight-box {
+          background: #f8fafc;
+          border: 2px solid #3b82f6;
+          border-radius: 12px;
+          padding: 25px;
+          margin: 25px 0;
+          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Market Cards Grid */
+        .preview-container .market-comparison {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 25px;
+          margin: 30px 0;
+        }
+        .preview-container .market-card {
+          background: #f8fafc;
+          padding: 25px;
+          border-radius: 15px;
+          border-left: 5px solid #3b82f6;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .preview-container .market-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .preview-container .market-card h4 {
+          color: #3b82f6;
+          margin-bottom: 15px;
+          font-size: 1.3em;
+        }
+
+        /* Market Visual Box */
+        .preview-container .market-visual {
+          text-align: center;
+          margin: 40px 0;
+          padding: 30px;
+          background: white;
+          border-radius: 20px;
+          border: 2px solid #3b82f6;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .preview-container .market-visual h3 {
+          color: #3b82f6;
+          margin-bottom: 20px;
+        }
+
+        /* Market Icons Grid */
+        .preview-container .market-icons {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 20px;
+          margin: 20px 0;
+        }
+        .preview-container .market-icon {
+          text-align: center;
+          padding: 20px;
+          background: #f8fafc;
+          border-radius: 15px;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+        }
+        .preview-container .market-icon:hover {
+          background: #f1f5f9;
+          transform: scale(1.05);
+          border-color: #3b82f6;
+        }
+        .preview-container .market-icon span {
+          font-size: 2.5em;
+          display: block;
+          margin-bottom: 10px;
+        }
+        .preview-container .market-icon h5 {
+          color: #1e293b;
+          font-weight: 600;
+        }
+
+        /* Why Popular Section */
+        .preview-container .why-popular {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 40px;
+          border-radius: 20px;
+          margin: 40px 0;
+        }
+        .preview-container .why-popular h2 {
+          color: white !important;
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .preview-container .why-popular .market-card {
+          background: rgba(255,255,255,0.15);
+          color: white;
+          border-left-color: white;
+        }
+        .preview-container .why-popular .market-card h4 {
+          color: white !important;
+        }
+        .preview-container .why-popular .market-card p {
+          color: rgba(255,255,255,0.9);
+        }
+
+        /* Safety Warning */
+        .preview-container .safety-warning {
+          background: #fef2f2;
+          color: #dc2626;
+          padding: 20px;
+          border-radius: 10px;
+          border-left: 5px solid #dc2626;
+          margin: 20px 0;
+          font-weight: 600;
+        }
+
+        /* Interactive Element */
+        .preview-container .interactive-element {
+          background: rgba(59, 130, 246, 0.1);
+          border: 2px dashed #3b82f6;
+          border-radius: 15px;
+          padding: 25px;
+          margin: 25px 0;
+          text-align: center;
+        }
+
+        /* Tables */
+        .preview-container table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+          margin: 20px 0;
+        }
+        .preview-container thead tr {
+          background: linear-gradient(135deg, #1e293b, #475569);
+          color: white;
+        }
+        .preview-container th {
+          padding: 18px 15px;
+          text-align: left;
+          font-weight: 600;
+        }
+        .preview-container td {
+          padding: 16px 15px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .preview-container tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .preview-container tbody tr:hover {
+          background: #f1f5f9;
+        }
+
+        /* Extra Learning Notes */
+        .preview-container .extra-notes {
+          background: white;
+          padding: 40px;
+          border-radius: 20px;
+          border-left: 6px solid #3b82f6;
+          margin: 40px 0;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Sneak Peek */
+        .preview-container .sneak-peek {
+          background: linear-gradient(135deg, #7c3aed, #5b21b6) !important;
+          color: white !important;
+          padding: 30px;
+          border-radius: 15px;
+          margin: 40px 0;
+          text-align: center;
+        }
+        .preview-container .sneak-peek h2,
+        .preview-container .sneak-peek p {
+          color: white !important;
+        }
+
+        /* Completion Section */
+        .preview-container .completion-section {
+          background: linear-gradient(135deg, #059669, #047857) !important;
+          color: white !important;
+          padding: 30px;
+          border-radius: 15px;
+          text-align: center;
+          margin: 40px 0;
+        }
+        .preview-container .completion-section h2,
+        .preview-container .completion-section p {
+          color: white !important;
+        }
+
+        /* Task Section */
+        .preview-container .task-section {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          color: #92400e;
+          padding: 30px;
+          border-radius: 15px;
+          border-left: 6px solid #f59e0b;
+          margin: 40px 0;
+        }
+        .preview-container .task-section h2 {
+          color: #92400e;
+        }
+
+        /* Section Styling */
+        .preview-container .section {
+          background: white;
+          padding: 30px;
+          border-radius: 20px;
+          margin-bottom: 30px;
+          border-left: 6px solid #3b82f6;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Rewards Section */
+        .preview-container .rewards-section {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 40px;
+          border-radius: 20px;
+          margin: 40px 0;
+        }
+        .preview-container .rewards-section h2 {
+          color: white !important;
+        }
       `}</style>
     </>
   );
