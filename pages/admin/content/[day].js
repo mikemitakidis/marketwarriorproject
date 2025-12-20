@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { supabase } from '../../../lib/supabase';
+import { getSupabaseClient } from '../../../lib/supabase';
 
 export default function ContentEditor() {
   const router = useRouter();
@@ -33,6 +33,11 @@ export default function ContentEditor() {
 
   async function checkAdminAndLoad() {
     try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        router.push('/login');
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
