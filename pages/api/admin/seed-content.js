@@ -114,15 +114,20 @@ function extractContentFromHTML(html) {
     }
   }
 
-  // Extract quiz questions using a simpler, more robust approach
+  // Extract quiz questions - only from HTML body, not JavaScript
   const quizQuestions = [];
 
-  // Find all question-container divs with data-question attribute
-  const questionStartRegex = /<div\s+class="question-container[^"]*"[^>]*data-question="(\d+)"[^>]*>/gi;
+  // Get only the HTML portion before <script> tags to avoid matching JS template literals
+  const scriptIdx = html.indexOf('<script');
+  const htmlBody = scriptIdx > 0 ? html.substring(0, scriptIdx) : html;
+
+  // Find all question-container divs with data-question attribute (only in HTML body)
+  // Made more flexible to handle different attribute orders and spacing
+  const questionStartRegex = /<div[^>]*class="question-container[^"]*"[^>]*data-question="(\d+)"[^>]*>/gi;
   let qStartMatch;
   const questionPositions = [];
 
-  while ((qStartMatch = questionStartRegex.exec(html)) !== null) {
+  while ((qStartMatch = questionStartRegex.exec(htmlBody)) !== null) {
     questionPositions.push({
       questionNum: parseInt(qStartMatch[1]),
       startIdx: qStartMatch.index,
@@ -135,9 +140,9 @@ function extractContentFromHTML(html) {
     let depth = 1;
     let endIdx = qPos.tagEndIdx;
 
-    while (depth > 0 && endIdx < html.length) {
-      const openTag = html.indexOf('<div', endIdx);
-      const closeTag = html.indexOf('</div>', endIdx);
+    while (depth > 0 && endIdx < htmlBody.length) {
+      const openTag = htmlBody.indexOf('<div', endIdx);
+      const closeTag = htmlBody.indexOf('</div>', endIdx);
 
       if (closeTag === -1) break;
 
@@ -150,7 +155,7 @@ function extractContentFromHTML(html) {
       }
     }
 
-    const questionHtml = html.substring(qPos.tagEndIdx, endIdx - 6);
+    const questionHtml = htmlBody.substring(qPos.tagEndIdx, endIdx - 6);
 
     // Extract question text
     const qTextMatch = questionHtml.match(/<div class="question-text">([^<]+)<\/div>/i);
