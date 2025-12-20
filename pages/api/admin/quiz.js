@@ -67,13 +67,31 @@ async function handleGet(req, res, supabase) {
     .from('quiz_questions')
     .select('*')
     .eq('day', parseInt(day))
-    .order('id');
+    .order('order_index');
 
   if (error) {
     return res.status(500).json({ error: error.message });
   }
 
-  return res.status(200).json({ questions: questions || [] });
+  // Convert to format expected by frontend (question_text -> question, options object -> array)
+  const formattedQuestions = (questions || []).map(q => {
+    const optionsArray = [];
+    if (q.options && typeof q.options === 'object') {
+      ['A', 'B', 'C', 'D'].forEach(letter => {
+        if (q.options[letter]) optionsArray.push(q.options[letter]);
+      });
+    }
+    return {
+      id: q.id,
+      day: q.day,
+      question: q.question_text,
+      options: optionsArray,
+      correct_option: ['A', 'B', 'C', 'D'].indexOf(q.correct_option),
+      order_index: q.order_index,
+    };
+  });
+
+  return res.status(200).json({ questions: formattedQuestions });
 }
 
 async function handlePost(req, res, supabase) {
@@ -87,13 +105,31 @@ async function handlePost(req, res, supabase) {
     return res.status(400).json({ error: 'Options must be an array with at least 2 choices' });
   }
 
+  // Convert options array to object format {"A":"..","B":".."}
+  const letters = ['A', 'B', 'C', 'D'];
+  const optionsObj = {};
+  options.forEach((opt, i) => {
+    optionsObj[letters[i]] = opt;
+  });
+
+  // Get max order_index for this day
+  const { data: existing } = await supabase
+    .from('quiz_questions')
+    .select('order_index')
+    .eq('day', parseInt(day))
+    .order('order_index', { ascending: false })
+    .limit(1);
+
+  const nextOrder = (existing?.[0]?.order_index || 0) + 1;
+
   const { data, error } = await supabase
     .from('quiz_questions')
     .insert({
       day: parseInt(day),
-      question,
-      options,
-      correct_option: parseInt(correct_option),
+      question_text: question,
+      options: optionsObj,
+      correct_option: letters[parseInt(correct_option)] || 'A',
+      order_index: nextOrder,
     })
     .select()
     .single();
@@ -112,10 +148,23 @@ async function handlePut(req, res, supabase) {
     return res.status(400).json({ error: 'Question ID required' });
   }
 
+  const letters = ['A', 'B', 'C', 'D'];
   const updates = {};
-  if (question !== undefined) updates.question = question;
-  if (options !== undefined) updates.options = options;
-  if (correct_option !== undefined) updates.correct_option = parseInt(correct_option);
+
+  if (question !== undefined) updates.question_text = question;
+
+  if (options !== undefined) {
+    // Convert options array to object format
+    const optionsObj = {};
+    options.forEach((opt, i) => {
+      optionsObj[letters[i]] = opt;
+    });
+    updates.options = optionsObj;
+  }
+
+  if (correct_option !== undefined) {
+    updates.correct_option = letters[parseInt(correct_option)] || 'A';
+  }
 
   const { data, error } = await supabase
     .from('quiz_questions')
