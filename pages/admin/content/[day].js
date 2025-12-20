@@ -24,6 +24,7 @@ export default function ContentEditor() {
   const [savingQuiz, setSavingQuiz] = useState(false);
 
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     if (day) {
@@ -247,6 +248,75 @@ export default function ContentEditor() {
     setSavingQuiz(false);
   }
 
+  async function seedFromHTML() {
+    if (!confirm(`Import Day ${day} content from HTML file? This will overwrite current content.`)) {
+      return;
+    }
+
+    setSeeding(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const res = await fetch('/api/admin/seed-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ daysToSeed: [parseInt(day)] }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const seeded = data.results?.seeded || [];
+        if (seeded.length > 0) {
+          setMessage({
+            type: 'success',
+            text: `Imported: ${seeded[0].title} (${seeded[0].quizQuestions} quiz questions)`
+          });
+          loadContent();
+        } else {
+          setMessage({ type: 'error', text: 'No HTML file found for this day' });
+        }
+      } else {
+        throw new Error(data.error || 'Failed to import');
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    }
+    setSeeding(false);
+  }
+
+  async function seedAllDays() {
+    if (!confirm('Import ALL 30 days from HTML files? This will overwrite all existing content.')) {
+      return;
+    }
+
+    setSeeding(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const res = await fetch('/api/admin/seed-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({}), // No daysToSeed = seed all
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage({
+          type: 'success',
+          text: `Imported ${data.results?.seeded?.length || 0} days successfully!`
+        });
+        loadContent();
+      } else {
+        throw new Error(data.error || 'Failed to import');
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    }
+    setSeeding(false);
+  }
+
   if (loading) {
     return (
       <div style={styles.loading}>
@@ -273,6 +343,20 @@ export default function ContentEditor() {
             <h1 style={styles.title}>Edit Day {day}</h1>
           </div>
           <div style={styles.headerRight}>
+            <button
+              style={{...styles.importBtn, opacity: seeding ? 0.6 : 1}}
+              onClick={seedFromHTML}
+              disabled={seeding}
+            >
+              {seeding ? 'Importing...' : 'Import Day from HTML'}
+            </button>
+            <button
+              style={{...styles.importAllBtn, opacity: seeding ? 0.6 : 1}}
+              onClick={seedAllDays}
+              disabled={seeding}
+            >
+              Import All 30 Days
+            </button>
             <select
               style={styles.daySelect}
               value={day}
@@ -497,6 +581,11 @@ const styles = {
     alignItems: 'center',
     gap: '20px',
   },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
   backBtn: {
     background: '#f1f5f9',
     border: 'none',
@@ -517,6 +606,26 @@ const styles = {
     border: '1px solid #e2e8f0',
     fontSize: '14px',
     cursor: 'pointer',
+  },
+  importBtn: {
+    background: '#f59e0b',
+    color: 'white',
+    border: 'none',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  importAllBtn: {
+    background: '#8b5cf6',
+    color: 'white',
+    border: 'none',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
   },
   message: {
     padding: '15px 20px',

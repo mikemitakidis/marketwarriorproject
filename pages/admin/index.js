@@ -66,6 +66,9 @@ export default function AdminPanel() {
   // Certificates state
   const [certificates, setCertificates] = useState([]);
 
+  // Seeding state
+  const [seedingContent, setSeedingContent] = useState(false);
+
   useEffect(() => {
     checkAdmin();
   }, []);
@@ -187,6 +190,33 @@ export default function AdminPanel() {
       const data = await res.json();
       setUserDetails(data);
     }
+  }
+
+  async function seedAllContent() {
+    if (!confirm('Import ALL 30 days from HTML files? This will overwrite existing content.')) {
+      return;
+    }
+
+    setSeedingContent(true);
+    try {
+      const res = await fetch('/api/admin/seed-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert(`Successfully imported ${data.results?.seeded?.length || 0} days!`);
+        loadContent(); // Reload the content list
+      } else {
+        alert('Error: ' + (data.error || 'Failed to import'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+    setSeedingContent(false);
   }
 
   async function unlockAllDays(userId) {
@@ -493,12 +523,15 @@ export default function AdminPanel() {
                   <div style={styles.card}>
                     <div style={styles.cardHeader}>
                       <h2 style={styles.cardTitle}>Course Content</h2>
-                      <button
-                        style={styles.btnPrimary}
-                        onClick={() => router.push('/admin/content-editor')}
-                      >
-                        Open Full Editor
-                      </button>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          style={{ ...styles.btnSuccess, opacity: seedingContent ? 0.6 : 1 }}
+                          onClick={seedAllContent}
+                          disabled={seedingContent}
+                        >
+                          {seedingContent ? 'Importing...' : 'Import All 30 Days from HTML'}
+                        </button>
+                      </div>
                     </div>
 
                     <div style={styles.formGroup}>
