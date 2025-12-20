@@ -108,25 +108,54 @@ function extractContentFromHTML(html) {
     }
   }
 
-  // Extract quiz questions
+  // Extract quiz questions using a simpler, more robust approach
   const quizQuestions = [];
-  const questionRegex = /<div class="question-container"[^>]*data-question="(\d+)"[^>]*>([\s\S]*?)<\/div>\s*(?=<div class="question-container"|<\/div>\s*<div class="quiz-navigation")/gi;
 
-  let qMatch;
-  while ((qMatch = questionRegex.exec(html)) !== null) {
-    const questionNum = parseInt(qMatch[1]);
-    const questionHtml = qMatch[2];
+  // Find all question-container divs with data-question attribute
+  const questionStartRegex = /<div\s+class="question-container[^"]*"[^>]*data-question="(\d+)"[^>]*>/gi;
+  let qStartMatch;
+  const questionPositions = [];
+
+  while ((qStartMatch = questionStartRegex.exec(html)) !== null) {
+    questionPositions.push({
+      questionNum: parseInt(qStartMatch[1]),
+      startIdx: qStartMatch.index,
+      tagEndIdx: qStartMatch.index + qStartMatch[0].length
+    });
+  }
+
+  // For each question, extract its content using nested div counting
+  for (const qPos of questionPositions) {
+    let depth = 1;
+    let endIdx = qPos.tagEndIdx;
+
+    while (depth > 0 && endIdx < html.length) {
+      const openTag = html.indexOf('<div', endIdx);
+      const closeTag = html.indexOf('</div>', endIdx);
+
+      if (closeTag === -1) break;
+
+      if (openTag !== -1 && openTag < closeTag) {
+        depth++;
+        endIdx = openTag + 4;
+      } else {
+        depth--;
+        endIdx = closeTag + 6;
+      }
+    }
+
+    const questionHtml = html.substring(qPos.tagEndIdx, endIdx - 6);
 
     // Extract question text
     const qTextMatch = questionHtml.match(/<div class="question-text">([^<]+)<\/div>/i);
     const questionText = qTextMatch ? qTextMatch[1].trim() : '';
 
-    // Extract options
+    // Extract options - find all quiz-option spans
     const options = [];
-    const optionRegex = /<div class="quiz-option"[^>]*data-answer="([^"]+)"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi;
+    const optionRegex = /<div class="quiz-option"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi;
     let optMatch;
     while ((optMatch = optionRegex.exec(questionHtml)) !== null) {
-      options.push(optMatch[2].trim());
+      options.push(optMatch[1].trim());
     }
 
     if (questionText && options.length > 0) {
