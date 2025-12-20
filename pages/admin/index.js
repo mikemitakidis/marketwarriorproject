@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { supabase } from '../../lib/supabase';
+import { getSupabaseClient } from '../../lib/supabase';
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -23,6 +23,11 @@ export default function AdminPanel() {
 
   async function checkAdmin() {
     try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        router.push('/login');
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
