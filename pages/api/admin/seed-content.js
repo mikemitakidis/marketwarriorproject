@@ -17,78 +17,60 @@ function extractContentFromHTML(html) {
   // Extract title from <title> tag
   const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
   let title = titleMatch ? titleMatch[1].replace(/Day \d+:?\s*/i, '').trim() : '';
-
-  // Clean up title
   title = title.replace(/\s*\|\s*Market Warrior.*$/i, '').trim();
 
   // Extract video URL if present (YouTube embed)
   const videoMatch = html.match(/src="(https:\/\/www\.youtube\.com\/embed\/[^"]+)"/i);
   const videoUrl = videoMatch ? videoMatch[1] : null;
 
-  // Extract main lesson content (between sections)
-  // Look for content between video section and quiz/task section
+  // IMPORTANT: Extract the FULL HTML content with all styling classes intact
+  // Look for everything inside <div class="container"> up to the <script> tags
   let lessonContent = '';
 
-  // Find all section divs with lesson content
-  const sectionRegex = /<div class="section"[^>]*>([\s\S]*?)<\/div>\s*(?=<div class="section"|<div class="quiz|<div class="task|<\/div>\s*<script)/gi;
-  let match;
-  const sections = [];
+  // Method 1: Get everything between container and script
+  const containerMatch = html.match(/<div class="container">([\s\S]*?)<script/i);
+  if (containerMatch) {
+    lessonContent = containerMatch[1];
 
-  while ((match = sectionRegex.exec(html)) !== null) {
-    const sectionContent = match[1];
-    // Skip video-only sections and quiz sections
-    if (!sectionContent.includes('video-placeholder') || sectionContent.includes('<h2>')) {
-      // Clean up the section content
-      let cleaned = sectionContent
-        .replace(/<div class="video-placeholder">[\s\S]*?<\/div>/gi, '') // Remove video placeholders
-        .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
-        .trim();
+    // Remove only the day-header (we'll render that separately)
+    lessonContent = lessonContent.replace(/<div class="day-header">[\s\S]*?<\/div>\s*<\/div>/gi, '');
 
-      if (cleaned.length > 100) { // Only add substantial sections
-        sections.push(cleaned);
-      }
-    }
+    // Remove video placeholder (we'll use the actual YouTube embed)
+    lessonContent = lessonContent.replace(/<div class="video-placeholder">[\s\S]*?<\/div>/gi, '');
+
+    // Remove HTML comments
+    lessonContent = lessonContent.replace(/<!--[\s\S]*?-->/g, '');
+
+    // Remove quiz-container section (we'll render quiz separately from database)
+    lessonContent = lessonContent.replace(/<div class="quiz-container">[\s\S]*?<div class="quiz-navigation">[\s\S]*?<\/div>\s*<\/div>/gi, '');
+
+    // Also try alternate quiz removal pattern
+    lessonContent = lessonContent.replace(/<div class="quiz-container"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi, '');
+
+    // Remove empty section wrappers
+    lessonContent = lessonContent.replace(/<div class="section">\s*<\/div>/gi, '');
+
+    // Clean up extra whitespace but preserve structure
+    lessonContent = lessonContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
   }
 
-  lessonContent = sections.join('\n\n');
-
-  // If no sections found, try to get content another way
-  if (!lessonContent) {
-    // Get content between container div and quiz-container
-    const containerMatch = html.match(/<div class="container">([\s\S]*?)<div class="quiz-container"/i);
-    if (containerMatch) {
-      lessonContent = containerMatch[1]
-        .replace(/<div class="day-header">[\s\S]*?<\/div>\s*<\/div>/gi, '')
-        .replace(/<div class="video-placeholder">[\s\S]*?<\/div>/gi, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .trim();
-    }
-  }
-
-  // Extract task prompt
+  // Extract task prompt as HTML (to preserve styling)
   let taskPrompt = '';
-  const taskMatch = html.match(/<div class="task-section"[^>]*>([\s\S]*?)<\/div>\s*(?=<div class="quiz|<div class="section|<\/div>\s*<div class="quiz)/i);
-  if (taskMatch) {
-    // Get the task description
-    const taskContent = taskMatch[1];
-    const missionMatch = taskContent.match(/<h3>Your Mission:?<\/h3>([\s\S]*?)(?=<div|<textarea|$)/i);
+  const taskSectionMatch = html.match(/<div class="task-section"[^>]*>([\s\S]*?)<div class="submission-form"/i);
+  if (taskSectionMatch) {
+    // Get the task description part (mission, etc)
+    const missionMatch = taskSectionMatch[1].match(/<h3>Your Mission:?<\/h3>([\s\S]*?)$/i);
     if (missionMatch) {
-      taskPrompt = missionMatch[1]
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      // Keep as HTML for styling
+      taskPrompt = missionMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     }
   }
 
-  // If no task prompt found, try alternate pattern
+  // Fallback: extract task as text
   if (!taskPrompt) {
-    const altTaskMatch = html.match(/Day \d+ Task[\s\S]*?Your Mission:?([\s\S]*?)(?=<textarea|<div class="quiz|$)/i);
+    const altTaskMatch = html.match(/Your Mission:?([\s\S]*?)(?=<div class="submission|<textarea)/i);
     if (altTaskMatch) {
-      taskPrompt = altTaskMatch[1]
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 500); // Limit length
+      taskPrompt = altTaskMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500);
     }
   }
 
