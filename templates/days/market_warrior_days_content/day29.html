@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 29: SMART Goals Setting & Review | Market Warrior Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .day-header h1 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            height: 100%;
+            width: 96.67%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        
+        .section h3 {
+            color: #334155;
+            margin: 25px 0 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .goal-card {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .smart-template {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px dashed #94a3b8;
+        }
+        
+        .smart-field {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .review-checklist {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .milestone-timeline {
+            position: relative;
+            padding: 20px 0;
+            margin: 30px 0;
+        }
+        
+        .milestone-item {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #10b981;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .quiz-option {
+            background: #f8fafc;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .quiz-option:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border: 2px solid #667eea;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+            border: 2px solid #10b981;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: white;
+            color: #f59e0b;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="day-header">
+            <div class="phase-badge">⭐ PHASE 5: GRADUATION - PENULTIMATE DAY!</div>
+            <div class="day-badge">DAY 29 OF 30</div>
+            <h1>🎯 SMART Goals Setting & 29-Day Review</h1>
+            <p>Create your personalized 90-day trading success plan and celebrate your journey!</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Introduction – Your Trading Future Starts Now</h2>
+            <p>Welcome to <strong>Day 29</strong> - almost there, Market Warrior!</p>
+            <p>Today you'll create your <strong>SMART Trading Goals</strong> and review your incredible 29-day transformation. Tomorrow is graduation, but today we plan your next 90 days of trading success!</p>
+            
+            <div class="highlight-box">
+                <h4>💡 Your Journey So Far</h4>
+                <p><strong>Look how far you've come in 29 days:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>✅ Phase 1: Foundation mastered</li>
+                    <li>✅ Phase 2: Technical analysis conquered</li>
+                    <li>✅ Phase 3: Strategies & psychology understood</li>
+                    <li>✅ Phase 4: Advanced markets decoded</li>
+                    <li>🔥 Phase 5: Ready to graduate!</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>You're now in the top 5% who complete a full trading education!</strong></p>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ Today's Mission</h4>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><strong>Review:</strong> Celebrate your 29-day achievement</li>
+                    <li><strong>Reflect:</strong> Identify your biggest breakthroughs</li>
+                    <li><strong>Plan:</strong> Set SMART goals for next 90 days</li>
+                    <li><strong>Commit:</strong> Create your personal trading contract</li>
+                    <li><strong>Prepare:</strong> Get ready for tomorrow's graduation!</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📹 Video Lesson</h2>
+            <div class="video-placeholder">
+                Video player will load here
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏆 Part 1: Your 29-Day Transformation Review</h2>
+            
+            <h3>Phase-by-Phase Achievement Checklist</h3>
+            
+            <div class="review-checklist">
+                <h4>✅ Phase 1: Foundation (Days 1-7)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>☑️ Understand markets and trading types</li>
+                    <li>☑️ Demo account setup and funded</li>
+                    <li>☑️ Master essential terms and orders</li>
+                    <li>☑️ Know investment vs trading difference</li>
+                    <li>☑️ Understand market indexes</li>
+                    <li>☑️ Risk management basics learned</li>
+                    <li>☑️ Can read charts and candlesticks</li>
+                </ul>
+            </div>
+
+            <div class="review-checklist">
+                <h4>✅ Phase 2: Technical Analysis (Days 8-14)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>☑️ Identify trends and price action</li>
+                    <li>☑️ Spot support and resistance</li>
+                    <li>☑️ Recognize chart patterns</li>
+                    <li>☑️ Use indicators (RSI, MACD, MA)</li>
+                    <li>☑️ Understand market structure</li>
+                    <li>☑️ Position sizing mastered</li>
+                    <li>☑️ Trading plan created</li>
+                </ul>
+            </div>
+
+            <div class="review-checklist">
+                <h4>✅ Phase 3: Strategy & Psychology (Days 15-21)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>☑️ Multiple strategies learned</li>
+                    <li>☑️ Fibonacci tools mastered</li>
+                    <li>☑️ Backtesting completed</li>
+                    <li>☑️ Trading plan refined</li>
+                    <li>☑️ Psychology understood</li>
+                    <li>☑️ Risk management advanced</li>
+                    <li>☑️ Demo trading active</li>
+                </ul>
+            </div>
+
+            <div class="review-checklist">
+                <h4>✅ Phase 4: Advanced Markets (Days 22-28)</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li>☑️ Market volatility tactics</li>
+                    <li>☑️ Hedge funds insights</li>
+                    <li>☑️ Portfolio management</li>
+                    <li>☑️ Performance tracking</li>
+                    <li>☑️ Strategy optimization</li>
+                    <li>☑️ Trade journaling system</li>
+                    <li>☑️ Economic indicators mastery</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>📊 Your Stats</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Days completed: 29/30</li>
+                    <li>Quizzes passed: 29</li>
+                    <li>Tasks submitted: 29</li>
+                    <li>Knowledge gained: PRICELESS</li>
+                    <li>Confidence level: 10X higher!</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Part 2: Understanding SMART Goals</h2>
+            
+            <div class="goal-card">
+                <h4>What Makes Goals SMART?</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>S - Specific:</strong> Clear and well-defined</li>
+                    <li><strong>M - Measurable:</strong> Quantifiable progress</li>
+                    <li><strong>A - Achievable:</strong> Realistic and attainable</li>
+                    <li><strong>R - Relevant:</strong> Aligned with your vision</li>
+                    <li><strong>T - Time-bound:</strong> Clear deadline</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>❌ Bad Goal vs ✅ SMART Goal</h4>
+                
+                <p style="margin-top: 15px;"><strong>❌ Bad:</strong> "I want to be a successful trader"</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Too vague</li>
+                    <li>Not measurable</li>
+                    <li>No timeline</li>
+                </ul>
+                
+                <p style="margin-top: 20px;"><strong>✅ SMART:</strong> "I will achieve 40% win rate with 1:2 risk-reward ratio, making 5% monthly returns on my $1000 demo account by March 31st, 2025"</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Specific metrics</li>
+                    <li>Measurable progress</li>
+                    <li>Realistic targets</li>
+                    <li>Clear deadline</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Part 3: Your 90-Day SMART Goals Template</h2>
+            
+            <div class="smart-template">
+                <h4>🎯 MY 90-DAY TRADING GOALS</h4>
+                
+                <div class="smart-field">
+                    <strong>GOAL 1: PROFITABILITY</strong>
+                    <p>Template: "I will achieve [X]% monthly return with maximum [Y]% drawdown by [date]"</p>
+                    <p style="margin-top: 10px; color: #64748b;">Example: "I will achieve 3-5% monthly return with maximum 10% drawdown by Day 90"</p>
+                </div>
+
+                <div class="smart-field">
+                    <strong>GOAL 2: WIN RATE</strong>
+                    <p>Template: "I will maintain [X]% win rate with [Y:Z] risk-reward ratio by [date]"</p>
+                    <p style="margin-top: 10px; color: #64748b;">Example: "I will maintain 45% win rate with 1:2 risk-reward ratio by Day 90"</p>
+                </div>
+
+                <div class="smart-field">
+                    <strong>GOAL 3: DISCIPLINE</strong>
+                    <p>Template: "I will follow my trading plan [X]% of the time and journal every trade by [date]"</p>
+                    <p style="margin-top: 10px; color: #64748b;">Example: "I will follow my trading plan 95% of the time and journal every trade by Day 90"</p>
+                </div>
+
+                <div class="smart-field">
+                    <strong>GOAL 4: EDUCATION</strong>
+                    <p>Template: "I will complete [X] hours of trading education weekly and master [Y] new strategies by [date]"</p>
+                    <p style="margin-top: 10px; color: #64748b;">Example: "I will complete 5 hours of trading education weekly and master 2 new strategies by Day 90"</p>
+                </div>
+
+                <div class="smart-field">
+                    <strong>GOAL 5: CAPITAL GROWTH</strong>
+                    <p>Template: "I will grow my demo account from $[X] to $[Y] by [date]"</p>
+                    <p style="margin-top: 10px; color: #64748b;">Example: "I will grow my demo account from $10,000 to $11,500 by Day 90"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 Part 4: Your 90-Day Milestone Timeline</h2>
+            
+            <div class="milestone-timeline">
+                <div class="milestone-item">
+                    <h4>📅 Days 1-30: Foundation Phase</h4>
+                    <ul style="padding-left: 20px; margin: 10px 0;">
+                        <li>Continue demo trading daily</li>
+                        <li>Focus on ONE strategy only</li>
+                        <li>Target: Break even or small profit</li>
+                        <li>Journal every single trade</li>
+                        <li>Review Market Warrior materials weekly</li>
+                    </ul>
+                </div>
+
+                <div class="milestone-item">
+                    <h4>📅 Days 31-60: Growth Phase</h4>
+                    <ul style="padding-left: 20px; margin: 10px 0;">
+                        <li>Increase trade frequency (if profitable)</li>
+                        <li>Add second strategy to arsenal</li>
+                        <li>Target: 3-5% monthly return</li>
+                        <li>Start analyzing win/loss patterns</li>
+                        <li>Join trading community for support</li>
+                    </ul>
+                </div>
+
+                <div class="milestone-item">
+                    <h4>📅 Days 61-90: Mastery Phase</h4>
+                    <ul style="padding-left: 20px; margin: 10px 0;">
+                        <li>Optimize best-performing strategy</li>
+                        <li>Consider micro real account ($100-500)</li>
+                        <li>Target: Consistent 5% monthly</li>
+                        <li>Create detailed performance report</li>
+                        <li>Plan next 90-day goals</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Critical Reminders</h4>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>Stay on demo for MINIMUM 6 months</li>
+                    <li>Don't rush to real money</li>
+                    <li>Consistency > Big wins</li>
+                    <li>1% risk per trade maximum</li>
+                    <li>Review goals weekly, adjust monthly</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🤝 Part 5: Your Trading Contract</h2>
+            
+            <div class="goal-card" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                <h4>📜 PERSONAL TRADING CONTRACT</h4>
+                
+                <p style="margin: 20px 0; font-style: italic;">
+                    "I, ________________, commit to my trading education and goals. I understand that success requires patience, discipline, and continuous learning. I will:"
+                </p>
+                
+                <ol style="padding-left: 20px; margin: 20px 0;">
+                    <li>Trade only with money I can afford to lose</li>
+                    <li>Never risk more than 1-2% per trade</li>
+                    <li>Follow my trading plan without exception</li>
+                    <li>Journal every trade immediately</li>
+                    <li>Continue learning and improving daily</li>
+                    <li>Stay on demo until consistently profitable</li>
+                    <li>Treat trading as a business, not gambling</li>
+                    <li>Review and adjust goals monthly</li>
+                    <li>Celebrate small wins, learn from losses</li>
+                    <li>Never give up on my trading dreams!</li>
+                </ol>
+                
+                <p style="margin: 20px 0;">
+                    <strong>Signed:</strong> ________________<br>
+                    <strong>Date:</strong> ________________<br>
+                    <strong>Witness (accountability partner):</strong> ________________
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+        <div class="quiz-container">
+            <h2>📝 Day 29 Quiz - SMART Goals Mastery</h2>
+            
+            <div id="quizQuestions">
+                <div class="question-container active" data-question="1">
+                    <div class="question-text">1. What does the 'M' in SMART goals stand for?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Manageable</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Measurable</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Meaningful</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Motivated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="2">
+                    <div class="question-text">2. What's a realistic monthly return goal for new traders?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>50-100%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>20-30%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>3-5%</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="3">
+                    <div class="question-text">3. How often should you review your trading goals?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Weekly review, monthly adjustment</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Once a year</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Never change them</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Daily changes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="4">
+                    <div class="question-text">4. What increases goal achievement rate to 95%?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>Thinking about goals</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>Writing goals down</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>Regular accountability</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>Keeping goals secret</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container" data-question="5">
+                    <div class="question-text">5. How long minimum should you stay on demo?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-answer="a">
+                            <div class="option-letter">A</div>
+                            <span>1 month</span>
+                        </div>
+                        <div class="quiz-option" data-answer="b">
+                            <div class="option-letter">B</div>
+                            <span>3 months</span>
+                        </div>
+                        <div class="quiz-option" data-answer="c">
+                            <div class="option-letter">C</div>
+                            <span>6 months minimum</span>
+                        </div>
+                        <div class="quiz-option" data-answer="d">
+                            <div class="option-letter">D</div>
+                            <span>No minimum</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-navigation">
+                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
+                <div id="questionInfo">
+                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+                </div>
+                <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+            </div>
+
+            <div id="quizResults" class="quiz-results" style="display: none; text-align: center; margin-top: 30px;">
+                <h3>Quiz Complete!</h3>
+                <div id="scoreDisplay"></div>
+                <div id="passedButtons" style="display: none;">
+                    <p style="color: #059669; font-size: 1.2em; margin: 20px 0;">✅ Excellent! You understand SMART goals!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+                <div id="failedButtons" style="display: none;">
+                    <p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review and try again!</p>
+                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <div class="task-section">
+            <h2>📋 Day 29 Task - Complete Challenge Review & Feedback</h2>
+            <h3>Review your entire 29-day journey and share your valuable feedback!</h3>
+            
+            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                <h4>📝 Task Instructions</h4>
+                <p>Provide a comprehensive review of your Market Warrior Challenge experience. Your honest feedback helps us improve and helps future students! Then set your SMART goals for the next 90/180/360 days.</p>
+            </div>
+
+            <textarea id="taskResponse" style="width: 100%; min-height: 250px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical;" placeholder="MARKET WARRIOR CHALLENGE - COMPLETE REVIEW & FEEDBACK
+
+Date: [Today's Date]
+Start Date: [Tomorrow]
+End Date: [90 days from tomorrow]
+
+═══════════════════════════════════════
+29-DAY REFLECTION
+═══════════════════════════════════════
+
+My Top 3 Achievements:
+1. [What I'm most proud of]
+2. [Biggest breakthrough]
+3. [Key skill developed]
+
+My Biggest Challenge Overcome:
+[What was hardest and how I conquered it]
+
+Most Valuable Lesson:
+[The one thing that changed everything]
+
+My Trading Confidence Level:
+Before Day 1: [1-10]
+After Day 29: [1-10]
+Growth: [X points]
+
+═══════════════════════════════════════
+MY 90-DAY SMART GOALS
+═══════════════════════════════════════
+
+GOAL 1: PROFITABILITY
+Specific: Achieve consistent monthly profits
+Measurable: 3-5% return per month
+Achievable: Yes, with proper risk management
+Relevant: Building toward financial freedom
+Time-bound: By [date 90 days from now]
+
+Monthly Milestones:
+- Month 1: [Target]
+- Month 2: [Target]
+- Month 3: [Target]
+
+GOAL 2: WIN RATE & RISK MANAGEMENT
+Specific: Maintain disciplined trading statistics
+Measurable: 45% win rate with 1:2 risk-reward
+Achievable: Yes, through selective trading
+Relevant: Essential for long-term success
+Time-bound: Consistent by [date]
+
+Weekly Targets:
+- Minimum trades: [X]
+- Maximum trades: [X]
+- Risk per trade: [%]
+
+GOAL 3: STRATEGY MASTERY
+Specific: Master [chosen strategy name]
+Measurable: 100+ trades backtested and forward tested
+Achievable: Yes, with daily practice
+Relevant: Need proven edge in markets
+Time-bound: Proficient by [date]
+
+Practice Schedule:
+- Daily: [Hours dedicated]
+- Weekly: [Backtesting sessions]
+- Monthly: [Strategy review]
+
+GOAL 4: EDUCATION & IMPROVEMENT
+Specific: Continue advanced trading education
+Measurable: 5 hours weekly study + 1 book monthly
+Achievable: Yes, with scheduled time blocks
+Relevant: Markets evolve, must keep learning
+Time-bound: Every week for 90 days
+
+Learning Plan:
+- Week 1-4: [Focus area]
+- Week 5-8: [Focus area]
+- Week 9-12: [Focus area]
+
+GOAL 5: CAPITAL & ACCOUNT GROWTH
+Specific: Grow demo account steadily
+Measurable: From $10,000 to $11,500 (15% total)
+Achievable: Yes, with 5% monthly returns
+Relevant: Proves strategy before real money
+Time-bound: By [date]
+
+Account Milestones:
+- Day 30: $[target]
+- Day 60: $[target]
+- Day 90: $[target]
+
+═══════════════════════════════════════
+ACTION PLAN - NEXT 7 DAYS
+═══════════════════════════════════════
+
+Day 1 (After Graduation):
+- [ ] Set up enhanced journal system
+- [ ] Review all Market Warrior materials
+- [ ] Plan first week's trades
+
+Day 2-3:
+- [ ] Backtest primary strategy (20 trades)
+- [ ] Identify best trading hours
+- [ ] Set up economic calendar alerts
+
+Day 4-5:
+- [ ] Demo trade with new goals
+- [ ] Document every decision
+- [ ] Review and adjust plan
+
+Day 6-7:
+- [ ] First weekly review
+- [ ] Calculate all metrics
+- [ ] Plan week 2 improvements
+
+═══════════════════════════════════════
+ACCOUNTABILITY SYSTEM
+═══════════════════════════════════════
+
+Accountability Partner: [Name]
+Check-in Schedule: [Weekly/Daily]
+Progress Sharing Method: [Email/Call/Meet]
+
+Public Commitment:
+I will share my goals with: [Trading group/Social media/Friends]
+Update frequency: [Weekly progress posts]
+
+Rewards System:
+- Week 1 completed: [Small reward]
+- Month 1 profitable: [Medium reward]
+- 90 days successful: [Big celebration]
+
+═══════════════════════════════════════
+PERSONAL TRADING CONTRACT
+═══════════════════════════════════════
+
+I, [Your Name], having completed the Market Warrior 30-Day Challenge, hereby commit to:
+
+1. ✓ Trade only demo accounts for minimum 6 months
+2. ✓ Never risk more than 1-2% per trade
+3. ✓ Follow my plan with military discipline
+4. ✓ Journal immediately after every trade
+5. ✓ Review performance every Sunday
+6. ✓ Continue education indefinitely
+7. ✓ Treat trading as a serious business
+8. ✓ Be patient with my progress
+9. ✓ Learn from every loss
+10. ✓ Never give up on my dreams
+
+My Trading Mission Statement:
+[Your personal why - what drives you]
+
+My 1-Year Vision:
+[Where you see yourself in 12 months]
+
+My 5-Year Dream:
+[Your ultimate trading lifestyle goal]
+
+Signed: [Your Signature]
+Date: [Today's Date]
+Witness: [Accountability Partner]
+
+═══════════════════════════════════════
+COMMITMENT TO EXCELLENCE
+═══════════════════════════════════════
+
+I understand that:
+- Success takes time and patience
+- Every professional was once a beginner
+- Consistency beats perfection
+- Small gains compound into wealth
+- The Market Warrior principles are my foundation
+
+I promise to:
+- Honor my education investment
+- Apply everything I've learned
+- Help other aspiring traders
+- Stay connected to the Market Warrior community
+- Return for Day 30 graduation tomorrow!
+
+THIS IS MY COMMITMENT TO BECOMING A SUCCESSFUL TRADER!
+
+Market Warrior Graduate (pending)
+www.marketwarrior.club"></textarea>
+            
+            <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()" style="background: #10b981; color: white; padding: 15px 40px; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; display: block; margin: 20px auto;">Submit My 90-Day Goals</button>
+            
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+        </div>
+
+        <div class="section">
+            <h2>📚 Extra Learning Notes</h2>
+            
+            <div class="highlight-box">
+                <h4>🎯 Goal Setting Psychology</h4>
+                <ul style="padding-left: 20px; margin: 15px 0;">
+                    <li><strong>Write goals down:</strong> 42% more likely to achieve</li>
+                    <li><strong>Share with someone:</strong> 65% success rate</li>
+                    <li><strong>Regular accountability:</strong> 95% success rate</li>
+                    <li><strong>Visual reminders:</strong> Post goals where you see daily</li>
+                    <li><strong>Celebrate milestones:</strong> Reward progress, not just results</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 The Power of Review</h4>
+                <p><strong>Weekly Review Questions:</strong></p>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>What went well this week?</li>
+                    <li>What challenges did I face?</li>
+                    <li>Am I on track for my goals?</li>
+                    <li>What needs adjustment?</li>
+                    <li>What will I focus on next week?</li>
+                </ol>
+            </div>
+
+            <div class="success-box">
+                <h4>✅ Your Success Formula</h4>
+                <p style="text-align: center; font-size: 1.2em; margin: 15px 0;">
+                    <strong>Knowledge + Practice + Patience + Discipline = Trading Success</strong>
+                </p>
+                <p>You now have the knowledge. The rest is up to you!</p>
+            </div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; text-align: center;">
+            <h2>🎓 Tomorrow: GRADUATION DAY!</h2>
+            <p style="font-size: 1.2em;"><strong>Day 30: Final Assessment & Market Warrior Certification</strong></p>
+            <p>Complete your final test, receive your certificate, and join the elite Market Warrior alumni!</p>
+        </div>
+
+        <div class="completion-section">
+            <h2>🌟 ONE MORE DAY TO GLORY!</h2>
+            <p>You're 29/30 complete! Tomorrow you become a Market Warrior!</p>
+            <button class="completion-button" onclick="completeDay29()">Complete Day 29 ✓</button>
+            <button class="completion-button" onclick="proceedToDay30()">Prepare for Graduation →</button>
+        </div>
+    </div>
+
+    <script>
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['b', 'c', 'a', 'c', 'c'];
+        let quizCompleted = false;
+        let quizScore = 0;
+        let taskSubmitted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            document.getElementById('totalQuestions').textContent = correctAnswers.length;
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const container = this.closest('.question-container');
+                    container.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    const questionNum = parseInt(container.dataset.question);
+                    userAnswers[questionNum - 1] = this.dataset.answer;
+                    
+                    document.getElementById('nextBtn').disabled = false;
+                });
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < 4) {
+                document.querySelectorAll('.question-container').forEach(q => {
+                    q.classList.remove('active');
+                });
+                currentQuestionIndex++;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                
+                if (currentQuestionIndex === 4) {
+                    document.getElementById('nextBtn').textContent = 'Submit';
+                }
+                
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (!userAnswers[currentQuestionIndex]) {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            } else {
+                submitQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                document.querySelectorAll('.question-container').forEach(q => {
+                    q.classList.remove('active');
+                });
+                currentQuestionIndex--;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+                
+                if (currentQuestionIndex === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+                
+                document.getElementById('nextBtn').textContent = 'Next';
+                document.getElementById('nextBtn').disabled = false;
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === correctAnswers[index]) {
+                    score++;
+                }
+            });
+            
+            quizScore = score;
+            quizCompleted = true;
+            
+            document.getElementById('quizQuestions').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = (score / correctAnswers.length) * 100;
+            const resultHTML = `
+                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    Score: ${score}/${correctAnswers.length} (${percentage}%)
+                </h2>
+                <p>${score >= 3 ? 'Excellent! You understand SMART goals!' : 'Review the material and try again. Need 60% to pass.'}</p>
+            `;
+            document.getElementById('scoreDisplay').innerHTML = resultHTML;
+            
+            if (score >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('failedButtons').style.display = 'none';
+            } else {
+                document.getElementById('passedButtons').style.display = 'none';
+                document.getElementById('failedButtons').style.display = 'block';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizCompleted = false;
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach(q => q.classList.remove('active'));
+            questions[0].classList.add('active');
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            
+            if (taskResponse.length < 800) {
+                showTaskStatus('Please complete your 90-day SMART goals plan (minimum 800 characters).', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Goals submitted! Your 90-day journey begins after graduation tomorrow!', 'success');
+            showTaskSubmitted();
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Goals Submitted ✓';
+            submitBtn.style.backgroundColor = '#059669';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+        }
+
+        function completeDay29() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('⚠️ Please complete the quiz with at least 60% (3/5) before marking Day 29 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('⚠️ Please submit your 90-day goals before completing Day 29.');
+                return;
+            }
+            
+            alert('🎉 INCREDIBLE! Day 29 complete! Your goals are set, your path is clear. See you tomorrow for GRADUATION! 🎓');
+        }
+
+        function proceedToDay30() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('⚠️ Please complete all requirements before preparing for graduation.');
+                return;
+            }
+            
+            alert('🎓 GRADUATION DAY awaits! Day 30 will be your final assessment and certification. Get ready to become a Market Warrior!');
+        }
+
+        // Content protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

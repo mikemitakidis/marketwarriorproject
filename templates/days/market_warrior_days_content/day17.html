@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Day 17: Fibonacci Retracements &amp; Advanced Chart Analysis | Market Warrior</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .phase-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .day-header {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .day-badge {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .day-header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .day-header p {
+            font-size: 1.2em;
+            color: #64748b;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            width: 56.67%;
+        }
+        
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        
+        .section h3 {
+            color: #2563eb;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        .section h4 {
+            color: #3b82f6;
+            margin: 20px 0 12px 0;
+            font-size: 1.2em;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid #10b981;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #10b981;
+        }
+        
+        .info-box {
+            background: #f8fafc;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .fib-level-card {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1em;
+        }
+        
+        .learning-path {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 5px solid #f59e0b;
+        }
+        
+        .learning-path h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .calculator-tool {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 3px solid #3b82f6;
+        }
+        
+        .calculator-tool h4 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .calc-input {
+            margin: 15px 0;
+        }
+        
+        .calc-input label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+        
+        .calc-input input, .calc-input select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .calc-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #f59e0b;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .task-section h2 {
+            color: #92400e;
+        }
+        
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-header h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-progress {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .quiz-progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            display: none;
+        }
+        
+        .question-container.active {
+            display: block;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .question-number {
+            background: #10b981;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 15px 0;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+            transform: translateX(5px);
+        }
+        
+        .quiz-option.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        
+        .option-letter {
+            background: #10b981;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #e5e7eb;
+            color: #64748b;
+        }
+        
+        .quiz-btn:hover:not(:disabled) {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+            color: white;
+        }
+        
+        .quiz-btn.next:hover:not(:disabled) {
+            background: #059669;
+        }
+        
+        .quiz-results {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+            margin: 30px 0;
+        }
+        
+        .sneak-peek {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .completion-section {
+            text-align: center;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .completion-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<div class="day-header">
+<div class="phase-badge">PHASE 3: ADVANCED STRATEGIES</div>
+<div class="day-badge">DAY 17 OF 30</div>
+<h1>Fibonacci Retracements &amp; Advanced Chart Analysis</h1>
+<p>Master the Golden Ratio That Predicts Price Movements</p>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+</div>
+<div class="section">
+<h2>Today's Mission</h2>
+<p>Welcome to Day 17! Today you'll learn one of the most mysterious yet powerful tools in trading: <strong>Fibonacci Retracements</strong>. Based on the golden ratio found throughout nature, Fibonacci levels predict where price will pause or reverse with uncanny accuracy!</p>
+<div class="highlight-box">
+<h4>The Fibonacci Mystery</h4>
+<p>The Fibonacci sequence (0, 1, 1, 2, 3, 5, 8, 13, 21...) appears everywhere: flower petals, spiral galaxies, DNA strands, and... PRICE CHARTS! The ratios derived from this sequence (23.6%, 38.2%, 50%, 61.8%, 78.6%) act as magnetic zones where price often reverses.</p>
+</div>
+<div class="success-box">
+<h4>What You'll Master Today:</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Understanding Fibonacci ratios and why they work</li>
+<li>How to draw Fibonacci retracements correctly</li>
+<li>Trading with Fibonacci + other indicators</li>
+<li>Advanced chart analysis tips from professionals</li>
+<li>Combining Fibonacci with support/resistance &amp; patterns</li>
+</ul>
+</div>
+<div class="learning-path">
+<h4>Your Fibonacci Journey</h4>
+<p><strong>Building Advanced Analysis Skills:</strong></p>
+<ul style="padding-left: 20px; margin: 15px 0;">
+<li><strong>Part 1:</strong> Understanding Fibonacci sequence and ratios</li>
+<li><strong>Part 2:</strong> How to draw Fibonacci retracements</li>
+<li><strong>Part 3:</strong> Trading with Fibonacci levels</li>
+<li><strong>Part 4:</strong> Advanced chart analysis tips</li>
+</ul>
+</div>
+</div>
+<div class="section">
+<h2>Video Lesson</h2>
+<div class="video-placeholder">
+                Video player will load here
+            </div>
+</div>
+<div class="section">
+<h2>Part 1: Understanding Fibonacci</h2>
+<h3>The Fibonacci Sequence</h3>
+<p>The <strong>Fibonacci Sequence</strong> is a series of numbers where each number is the sum of the two preceding ones:</p>
+<div class="info-box">
+<p style="text-align: center; font-size: 1.3em; margin: 20px 0;">
+<strong>0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...</strong>
+</p>
+<p><strong>Pattern:</strong> 0+1=1, 1+1=2, 1+2=3, 2+3=5, 3+5=8, 5+8=13...</p>
+</div>
+<h3>The Golden Ratio &amp; Key Fibonacci Levels</h3>
+<div class="comparison-table">
+<thead>
+<tr>
+<th>Fibonacci Level</th>
+<th>How It's Calculated</th>
+<th>Significance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>23.6%</strong></td>
+<td>Shallow retracement</td>
+<td>Weak support/resistance</td>
+</tr>
+<tr>
+<td><strong>38.2%</strong></td>
+<td>Minor Fibonacci ratio</td>
+<td>Moderate support/resistance</td>
+</tr>
+<tr>
+<td><strong>50%</strong></td>
+<td>Half-way retracement</td>
+<td>Psychological level (not Fib, but used)</td>
+</tr>
+<tr>
+<td><strong>61.8%</strong></td>
+<td>Golden Ratio (most important!)</td>
+<td>Strong support/resistance - highest probability</td>
+</tr>
+<tr>
+<td><strong>78.6%</strong></td>
+<td>Square root of 61.8%</td>
+<td>Deep retracement - last chance level</td>
+</tr>
+</tbody>
+
+<div class="warning-box">
+<h4>The Golden Ratio - 61.8%</h4>
+<p>The <strong>61.8% level</strong> (also called Phi or the Golden Ratio) is THE most important Fibonacci level. When any two consecutive Fibonacci numbers are divided (e.g., 89÷144 = 0.618), you get 61.8%!</p>
+<p style="margin-top: 15px;"><strong>Why it matters:</strong> Price reverses at 61.8% approximately 60-70% of the time! This is your highest probability level.</p>
+</div>
+<div class="example-box">
+<h4>Nature's Fibonacci Examples</h4>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Sunflower seeds spiral in patterns of 55, 89, or 144</li>
+<li>Nautilus shell grows in golden ratio spiral</li>
+<li>Human body proportions follow 1.618 ratio</li>
+<li>Galaxy spirals follow Fibonacci curves</li>
+<li><strong>Markets:</strong> Price retracements follow these same ratios!</li>
+</ul>
+</div>
+</div>
+<div class="section">
+<h2>Part 2: How to Draw Fibonacci Retracements</h2>
+<h3>The 3-Step Process</h3>
+<div class="fib-level-card">
+<h4>Step 1: Identify the Trend</h4>
+<p><strong>Uptrend:</strong> Draw from swing LOW to swing HIGH (bottom to top)</p>
+<p><strong>Downtrend:</strong> Draw from swing HIGH to swing LOW (top to bottom)</p>
+<br/>
+<p><strong>Key Rule:</strong> Always draw in direction of the trend you're analyzing!</p>
+</div>
+<div class="fib-level-card">
+<h4>Step 2: Find Significant Swing Points</h4>
+<p>Don't use random highs/lows. Look for:</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Major swing highs/lows</strong> - obvious turning points</li>
+<li><strong>Multiple timeframe confirmation</strong> - visible on daily AND 4H</li>
+<li><strong>Volume spike</strong> at the swing point</li>
+<li><strong>Clear price action</strong> - not during consolidation</li>
+</ul>
+</div>
+<div class="fib-level-card">
+<h4>Step 3: Draw the Fib Levels</h4>
+<p><strong>For Uptrend (expecting pullback then continuation up):</strong></p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li>Click on swing LOW (starting point)</li>
+<li>Drag to swing HIGH (ending point)</li>
+<li>Tool automatically draws 23.6%, 38.2%, 50%, 61.8%, 78.6% levels</li>
+<li>Wait for price to pull back to one of these levels</li>
+</ol>
+<br/>
+<p><strong>For Downtrend (expecting bounce then continuation down):</strong></p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li>Click on swing HIGH (starting point)</li>
+<li>Drag to swing LOW (ending point)</li>
+<li>Tool draws levels</li>
+<li>Wait for bounce to one of these levels</li>
+</ol>
+</div>
+<div class="example-box">
+<h4>Real Example: Apple Fibonacci Retracement</h4>
+<p><strong>Scenario:</strong> Apple rallies from $140 to $180 (strong uptrend)</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Step 1:</strong> Identify uptrend from $140 low to $180 high</li>
+<li><strong>Step 2:</strong> Draw Fib from $140 (bottom) to $180 (top)</li>
+<li><strong>Step 3:</strong> Fib levels appear:
+                        <ul style="padding-left: 20px; margin: 10px 0;">
+<li>23.6% = $170.56</li>
+<li>38.2% = $164.72</li>
+<li>50.0% = $160.00</li>
+<li>61.8% = $155.28 (Golden Ratio)</li>
+<li>78.6% = $148.56</li>
+</ul>
+</li>
+<li><strong>Result:</strong> Price pulled back and bounced EXACTLY at $155 (61.8%)!</li>
+<li><strong>Trade:</strong> Buy at $155, stop $152, target $180. Gained +16%! 🎯</li>
+</ul>
+</div>
+<div class="calculator-tool">
+<h4>Fibonacci Calculator</h4>
+<p style="text-align: center; margin-bottom: 20px;">Calculate Fibonacci retracement levels for any move!</p>
+<div class="calc-input">
+<label>Trend Direction:</label>
+<select id="trendDirection">
+<option value="up">Uptrend (Low to High)</option>
+<option value="down">Downtrend (High to Low)</option>
+</select>
+</div>
+<div class="calc-input">
+<label>Starting Point Price:</label>
+<input id="startPrice" placeholder="140.00" step="0.01" type="number"/>
+</div>
+<div class="calc-input">
+<label>Ending Point Price:</label>
+<input id="endPrice" placeholder="180.00" step="0.01" type="number"/>
+</div>
+<button class="calc-button" onclick="calculateFib()">Calculate Fibonacci Levels</button>
+<div id="fibResult" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: none;"></div>
+</div>
+</div>
+<div class="section">
+<h2>Part 3: Trading with Fibonacci Levels</h2>
+<h3>The Fibonacci Bounce Strategy</h3>
+<div class="info-box">
+<h4>Strategy Overview:</h4>
+<p>Wait for price to retrace to a Fibonacci level, show signs of reversal, then enter in direction of original trend.</p>
+</div>
+<div class="fib-level-card">
+<h4>Entry Rules (Uptrend Example):</h4>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Wait for retracement</strong> to 38.2%, 50%, or 61.8%</li>
+<li><strong>Look for reversal signal:</strong>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Bullish candlestick pattern (hammer, engulfing)</li>
+<li>RSI oversold + turning up</li>
+<li>MACD bullish divergence</li>
+<li>Volume spike on reversal</li>
+</ul>
+</li>
+<li><strong>Enter when price closes above Fib level</strong></li>
+<li><strong>Stop loss:</strong> Below next Fib level (or 2% below entry)</li>
+<li><strong>Target:</strong> Previous high (where you drew Fib to)</li>
+</ol>
+</div>
+<div class="fib-level-card">
+<h4>Which Fibonacci Level to Trade?</h4>
+<p><strong>Priority Ranking:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>1st Choice: 61.8% (Golden Ratio)</strong> - Highest probability (60-70% win rate)</li>
+<li><strong>2nd Choice: 50%</strong> - Psychological level (50-60% win rate)</li>
+<li><strong>3rd Choice: 38.2%</strong> - Shallow retracement (40-50% win rate)</li>
+<li><strong>Last Resort: 78.6%</strong> - Deep retracement, trend may be reversing</li>
+</ul>
+<br/>
+<p><strong>Pro Tip:</strong> If price breaks below 78.6%, the trend is likely over - don't trade it!</p>
+</div>
+<div class="example-box">
+<h4>Complete Fibonacci Trade Setup</h4>
+<p><strong>Stock:</strong> Microsoft in uptrend</p>
+<p><strong>Initial Move:</strong> $250 to $300 (uptrend)</p>
+<br/>
+<p><strong>Fibonacci Levels:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>23.6% = $288.20</li>
+<li>38.2% = $280.90</li>
+<li>50.0% = $275.00</li>
+<li>61.8% = $269.10 (TARGET)</li>
+</ul>
+<br/>
+<p><strong>Trade Execution:</strong></p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li>Price retraces from $300 down to $269 (61.8% level)</li>
+<li>Forms hammer candle at $269 + RSI 32 (oversold)</li>
+<li><strong>Entry:</strong> $270 (next day open after hammer)</li>
+<li><strong>Stop Loss:</strong> $265 (below 78.6% level)</li>
+<li><strong>Target:</strong> $300 (previous high)</li>
+</ol>
+<br/>
+<p><strong>Result:</strong> Price bounced to $295 in 2 weeks</p>
+<p><strong>Profit:</strong> $270 → $295 = +9.3% gain! Risk/Reward was 1:6 🚀</p>
+</div>
+<div class="warning-box">
+<h4>Common Fibonacci Mistakes</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li><strong>Wrong direction:</strong> Drawing uptrend from high to low (backwards!)</li>
+<li><strong>Random points:</strong> Using minor highs/lows instead of major swings</li>
+<li><strong>No confirmation:</strong> Entering at Fib level without reversal signal</li>
+<li><strong>Trading 23.6%:</strong> Too shallow, weak level, low probability</li>
+<li><strong>Ignoring trend:</strong> Trading against higher timeframe trend</li>
+</ul>
+</div>
+</div>
+<div class="section">
+<h2>Part 4: Advanced Chart Analysis Tips</h2>
+<h3>Combining Fibonacci with Other Tools</h3>
+<div class="fib-level-card">
+<h4>1. Fibonacci + Support/Resistance</h4>
+<p><strong>Power Move:</strong> When Fib level coincides with S/R = SUPER STRONG level!</p>
+<p><strong>Example:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>61.8% Fib = $150</li>
+<li>Historical support also at $150 (tested 3 times before)</li>
+<li>Result: Double support = 80%+ bounce probability!</li>
+</ul>
+</div>
+<div class="fib-level-card">
+<h4>2. Fibonacci + Moving Averages</h4>
+<p><strong>Power Move:</strong> Fib level near major MA = High probability reversal</p>
+<p><strong>Example:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>61.8% Fib = $155</li>
+<li>200 SMA also at $155</li>
+<li>Result: Institutions buy at 200 SMA + Fib = Strong bounce!</li>
+</ul>
+</div>
+<div class="fib-level-card">
+<h4>3. Fibonacci + Chart Patterns</h4>
+<p><strong>Power Move:</strong> Pattern completes at Fib level = Explosive move</p>
+<p><strong>Example:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Bull flag forming during retracement</li>
+<li>Flag low = 61.8% Fib level</li>
+<li>Breakout from flag at Fib = Massive continuation!</li>
+</ul>
+</div>
+<div class="fib-level-card">
+<h4>4. Multi-Timeframe Fibonacci</h4>
+<p><strong>Power Move:</strong> Same Fib level on multiple timeframes = Institutional zone</p>
+<p><strong>Example:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Daily chart: 61.8% Fib = $150</li>
+<li>Weekly chart: Also shows 50% Fib = $150</li>
+<li>Result: $150 is SUPER strong level, institutions watching!</li>
+</ul>
+</div>
+<div class="highlight-box">
+<h4>The Triple Confluence Setup (Professional Level)</h4>
+<p>When 3+ factors align at same price level = HIGHEST PROBABILITY!</p>
+<br/>
+<p><strong>Perfect Setup Example:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>61.8% Fibonacci level = $175</li>
+<li>200 SMA = $175</li>
+<li>Previous resistance turned support = $175</li>
+<li>Round number psychological level = $175</li>
+</ul>
+<p style="margin-top: 15px;"><strong>Result:</strong> $175 becomes MAGNETIC! Price will likely reverse here with 75-85% probability! This is what professionals wait for! 🎯</p>
+</div>
+<div class="success-box">
+<h4>Professional Chart Analysis Checklist</h4>
+<p>Before taking ANY trade, check:</p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li>What's the higher timeframe trend? (Daily if trading 4H, Weekly if trading Daily)</li>
+<li>Where are key Fibonacci levels?</li>
+<li>Where is nearest support/resistance?</li>
+<li>Where are major moving averages (50, 200 SMA)?</li>
+<li>Any chart patterns forming?</li>
+<li>What do indicators say? (RSI, MACD)</li>
+<li>Is volume confirming the move?</li>
+<li>Where do ALL these align? = Your trading zone!</li>
+</ol>
+</div>
+</div>
+
+
+
+
+</div>
+<script>
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['a', 'a', 'a', 'a', 'b'];
+        let quizScore = 0;
+        let quizCompleted = false;
+        let taskSubmitted = false;
+        const totalQuestions = 5;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            updateQuestionDisplay();
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    
+                    questionContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    this.classList.add('selected');
+                    userAnswers[currentQuestionIndex] = this.getAttribute('data-answer');
+                    
+                    document.getElementById('nextBtn').disabled = false;
+                });
+            });
+        }
+
+        function updateQuestionDisplay() {
+            document.querySelectorAll('.question-container').forEach((container, index) => {
+                container.classList.remove('active');
+                if (index === currentQuestionIndex) {
+                    container.classList.add('active');
+                }
+            });
+
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('quizProgress').style.width = progressPercent + '%';
+
+            if (userAnswers[currentQuestionIndex]) {
+                document.getElementById('nextBtn').disabled = false;
+            } else {
+                document.getElementById('nextBtn').disabled = true;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                currentQuestionIndex++;
+                updateQuestionDisplay();
+                document.getElementById('nextBtn').textContent = 'Next';
+            } else {
+                submitQuiz();
+            }
+
+            if (currentQuestionIndex === totalQuestions - 1) {
+                document.getElementById('nextBtn').textContent = 'Submit Quiz';
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                updateQuestionDisplay();
+            }
+        }
+
+        function submitQuiz() {
+            quizScore = 0;
+            for (let i = 0; i < totalQuestions; i++) {
+                if (userAnswers[i] === correctAnswers[i]) {
+                    quizScore++;
+                }
+            }
+
+            const percentage = (quizScore / totalQuestions * 100).toFixed(0);
+            
+            document.getElementById('quizContent').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            let scoreHTML = `
+                <div style="font-size: 3em; font-weight: bold; color: ${quizScore >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                    ${quizScore}/${totalQuestions}
+                </div>
+                <p style="font-size: 1.3em; color: #64748b;">Score: ${percentage}%</p>
+            `;
+            
+            document.getElementById('scoreDisplay').innerHTML = scoreHTML;
+            
+            if (quizScore >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                quizCompleted = true;
+            } else {
+                document.getElementById('failedButtons').style.display = 'block';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizScore = 0;
+            
+            document.getElementById('quizContent').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            updateQuestionDisplay();
+        }
+
+        function calculateFib() {
+            const trend = document.getElementById('trendDirection').value;
+            const startPrice = parseFloat(document.getElementById('startPrice').value);
+            const endPrice = parseFloat(document.getElementById('endPrice').value);
+            
+            if (!startPrice || !endPrice) {
+                alert('Please enter both prices');
+                return;
+            }
+            
+            const range = endPrice - startPrice;
+            
+            const fib236 = endPrice - (range * 0.236);
+            const fib382 = endPrice - (range * 0.382);
+            const fib500 = endPrice - (range * 0.500);
+            const fib618 = endPrice - (range * 0.618);
+            const fib786 = endPrice - (range * 0.786);
+            
+            const resultHTML = `
+                <h4>Fibonacci Retracement Levels:</h4>
+                <p><strong>Trend:</strong> ${trend === 'up' ? 'UPTREND' : 'DOWNTREND'}</p>
+                <p><strong>Start:</strong> $${startPrice.toFixed(2)}</p>
+                <p><strong>End:</strong> $${endPrice.toFixed(2)}</p>
+                <p><strong>Range:</strong> $${Math.abs(range).toFixed(2)}</p>
+                <br>
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <p><strong>23.6%:</strong> $${fib236.toFixed(2)}</p>
+                    <p><strong>38.2%:</strong> $${fib382.toFixed(2)}</p>
+                    <p><strong>50.0%:</strong> $${fib500.toFixed(2)}</p>
+                    <p style="font-size: 1.2em; color: #3b82f6; margin: 10px 0;"><strong>61.8% (Golden Ratio):</strong> $${fib618.toFixed(2)} ⭐</p>
+                    <p><strong>78.6%:</strong> $${fib786.toFixed(2)}</p>
+                </div>
+                <p style="margin-top: 15px; padding: 15px; background: #d1fae5; border-radius: 8px;">
+                    <strong>Key Level:</strong> Watch for price reaction at $${fib618.toFixed(2)} (61.8%) - highest probability reversal!
+                </p>
+            `;
+            
+            const resultDiv = document.getElementById('fibResult');
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value;
+            const fileInput = document.getElementById('taskFile');
+            
+            if (taskResponse.length < 200) {
+                showTaskStatus('Please provide detailed Fibonacci analysis (minimum 200 characters).', 'error');
+                return;
+            }
+            
+            if (!fileInput.files || fileInput.files.length < 3) {
+                showTaskStatus('Please upload at least 3 screenshots showing Fib levels.', 'error');
+                return;
+            }
+            
+            taskSubmitted = true;
+            showTaskStatus('Task submitted successfully! Great Fibonacci work!', 'success');
+            showTaskSubmitted();
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            const statusText = document.getElementById('taskStatusText');
+            
+            statusDiv.style.display = 'block';
+            statusText.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Task Submitted';
+            submitBtn.style.backgroundColor = '#10b981';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+            document.getElementById('taskFile').disabled = true;
+        }
+
+        function completeDay17() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('Please complete the quiz with at least 60% (3/5) before marking Day 17 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('Please submit your Fibonacci analysis before completing Day 17.');
+                return;
+            }
+            
+            alert('Congratulations! Day 17 completed! Day 18 unlocks in 24 hours.');
+        }
+
+        function proceedToDay18() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('Please complete all requirements before proceeding to Day 18.');
+                return;
+            }
+            
+            alert('Day 18: Backtesting Strategies will be available in 24 hours!');
+        }
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+<div class="quiz-container">
+<div class="quiz-header">
+<h2>Day 17 Knowledge Check</h2>
+<p>Test your understanding of Fibonacci retracements</p>
+<div class="quiz-progress">
+<div class="quiz-progress-fill" id="quizProgress"></div>
+</div>
+<p id="questionCounter">Question 1 of 5</p>
+</div>
+<div id="quizContent">
+<div class="question-container active" data-question="1">
+<div class="question-number">1</div>
+<div class="question-text">What is the MOST important Fibonacci level (Golden Ratio)?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>61.8% - highest probability reversal level</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>50% - psychological level</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>23.6% - first retracement</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>100% - starting point</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="2">
+<div class="question-number">2</div>
+<div class="question-text">How do you draw Fibonacci for an UPTREND?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>From swing LOW to swing HIGH (bottom to top)</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>From swing HIGH to swing LOW (top to bottom)</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>From current price to previous price</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>From any point to any point</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="3">
+<div class="question-number">3</div>
+<div class="question-text">What makes a "Triple Confluence" setup so powerful?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>3+ factors align at same price (Fib + S/R + MA) = 75-85% win rate</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>You take 3 trades at the same time</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Three traders agree on the setup</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Trade three different assets</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="4">
+<div class="question-number">4</div>
+<div class="question-text">Price breaks below 78.6% Fibonacci level. What does this mean?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>The trend is likely over - don't trade this retracement</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Best buying opportunity - go all in!</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>It's just a deeper retracement, still bullish</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Double your position size</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="5">
+<div class="question-number">5</div>
+<div class="question-text">Best confirmation signal to enter at a Fib level?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Enter immediately when price touches Fib level</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Wait for reversal candle pattern + volume spike + RSI confirmation</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Use gut feeling</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>No confirmation needed with Fibonacci</span>
+</div>
+</div>
+</div>
+</div>
+<div class="quiz-navigation">
+<button class="quiz-btn" disabled="" id="prevBtn" onclick="previousQuestion()">Previous</button>
+<div id="questionInfo">
+<span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+</div>
+<button class="quiz-btn next" disabled="" id="nextBtn" onclick="nextQuestion()">Next</button>
+</div>
+<div class="quiz-results" id="quizResults" style="display: none;">
+<h3>Quiz Complete!</h3>
+<div id="scoreDisplay"></div>
+<div id="passedButtons" style="display: none;">
+<p style="color: #065f46; font-size: 1.2em; margin: 20px 0;">Excellent! You understand Fibonacci!</p>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+<div id="failedButtons" style="display: none;">
+<p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review Fibonacci concepts and try again!</p>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+</div>
+</div><div class="section task-section">
+<h2>Day 17 Practical Task</h2>
+<p><strong>Mission:</strong> Find and analyze Fibonacci retracements on real charts!</p>
+<div class="info-box">
+<h4>Task Requirements:</h4>
+<ol style="padding-left: 20px; margin-top: 10px;">
+<li><strong>Find 3 trends</strong> on different stocks (1 up, 1 down, 1 either)</li>
+<li><strong>Draw Fibonacci retracements</strong> correctly:
+                        <ul style="margin-top: 10px;">
+<li>Identify major swing high/low</li>
+<li>Draw in correct direction</li>
+<li>Calculate all 5 Fib levels</li>
+</ul>
+</li>
+<li><strong>Find confluence zones:</strong>
+<ul style="margin-top: 10px;">
+<li>Where does Fib level meet S/R?</li>
+<li>Where does Fib level meet MA?</li>
+<li>Any patterns at Fib levels?</li>
+</ul>
+</li>
+<li><strong>Plan a trade</strong> for each setup with entry, stop, target</li>
+<li><strong>Use the Fib calculator</strong> above to verify your levels</li>
+<li><strong>Screenshot charts</strong> showing Fib levels and confluence</li>
+</ol>
+</div>
+<div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+<h4>Task Submission Required</h4>
+<p><strong>Important:</strong> You must submit this task to unlock Day 18!</p>
+<textarea id="taskResponse" placeholder="FIBONACCI ANALYSIS REPORT
+
+Date: [Today's Date]
+
+SETUP 1 - UPTREND:
+Stock: [Name &amp; Ticker]
+Timeframe: [Daily/4H]
+Trend: UPTREND
+
+Swing Points:
+  Low: $[X] (date: [X])
+  High: $[X] (date: [X])
+  Move Size: $[X] ([%])
+
+Fibonacci Levels:
+  23.6% = $[X]
+  38.2% = $[X]
+  50.0% = $[X]
+  61.8% = $[X] (Golden Ratio - PRIMARY TARGET)
+  78.6% = $[X]
+
+Confluence Analysis:
+  ✓/✗ 61.8% aligns with S/R: [Yes/No - explain]
+  ✓/✗ 61.8% aligns with MA: [Yes/No - which MA?]
+  ✓/✗ Pattern at Fib level: [Yes/No - which pattern?]
+  
+Total Confluence: [X/3]
+
+Trade Plan (if 2+ confluence):
+  Entry: $[X] (at which Fib level?)
+  Stop Loss: $[X] (below next Fib level)
+  Target: $[X] (previous high)
+  Risk: $[X] ([%])
+  Reward: $[X] ([%])
+  R:R Ratio: 1:[X]
+
+═══════════════════════════════════════
+
+SETUP 2 - DOWNTREND:
+[Same format]
+
+═══════════════════════════════════════
+
+SETUP 3:
+[Same format]
+
+═══════════════════════════════════════
+
+FIBONACCI CALCULATOR VERIFICATION:
+Setup 1 Calculation:
+  Start: $[X], End: $[X]
+  Calculator 61.8% result: $[X]
+  Matches my drawing: ✓/✗
+
+KEY LESSONS LEARNED:
+1. Which Fib level worked best in your examples?
+2. How does confluence improve probability?
+3. What's the #1 mistake to avoid with Fibonacci?
+4. How will you use Fib in your trading?
+" style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+<div style="margin: 15px 0;">
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - minimum 3: showing Fib levels and confluence)</label>
+<input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
+</div>
+<div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
+<p id="taskStatusText"></p>
+</div>
+<button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 17 Task</button>
+</div>
+</div><div class="sneak-peek">
+<h2>Sneak Peek: Day 18</h2>
+<p>Tomorrow: <strong>Backtesting Strategies &amp; Chart Review</strong></p>
+<p>Learn to test your strategies on historical data!</p>
+</div><div class="completion-section">
+<h2>Day 17 Complete!</h2>
+<p>You now understand the golden ratio that predicts price movements!</p>
+<button class="completion-button" onclick="completeDay17()">Complete Day 17</button>
+<button class="completion-button" onclick="proceedToDay18()" style="background: #3b82f6;">Proceed to Day 18</button>
+</div></div></body>
+</html>

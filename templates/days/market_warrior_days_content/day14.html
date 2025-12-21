@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 14: Simulated Trading Exercise</title>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Day 14: Simulated Trading Exercise | Market Warrior</title>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -468,318 +469,420 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="day-header">
-            <div class="day-badge">DAY 14 OF 30 - PHASE 2 COMPLETE!</div>
-            <h1>📈 Simulated Trading Exercise</h1>
-            <p>Put Everything You've Learned Into Practice!</p>
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>🎯 Today's Mission - PHASE 2 FINALE!</h2>
-            <p>Congratulations on reaching Day 14 - the final day of Phase 2! You've learned:</p>
-            
-            <div class="success-box">
-                <h4>✅ Your Phase 2 Arsenal:</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li><strong>Day 8:</strong> Identifying Trends & Price Action</li>
-                    <li><strong>Day 9:</strong> Support & Resistance Levels</li>
-                    <li><strong>Day 10:</strong> Chart Patterns (Flags, Triangles, Head & Shoulders)</li>
-                    <li><strong>Day 11:</strong> Key Indicators (RSI, MACD, Moving Averages, Economic Cycle)</li>
-                    <li><strong>Day 12:</strong> Fundamental Analysis Basics</li>
-                    <li><strong>Day 13:</strong> Stock Research & Financial Ratios</li>
-                </ul>
-            </div>
-            
-            <p style="margin-top: 20px;">Today, you'll <strong>execute 5 simulated trades</strong> using ALL the skills you've mastered. This is your trading exam - show what you've learned!</p>
-            
-            <div class="highlight-box">
-                <p><strong>Why This Matters:</strong> Practice makes permanent! Before risking real money, you need to prove you can identify setups, plan trades, and execute them correctly. Today's practice builds the muscle memory for profitable trading!</p>
-            </div>
-
-            <div class="warning-box">
-                <h4>⚠️ This Is NOT About Being Right</h4>
-                <p>Professional traders lose 40-60% of their trades! Today's goal is NOT 5 winning trades. Your goal is to follow your process:</p>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>✅ Identify valid setups using multiple confirmations</li>
-                    <li>✅ Plan entry, stop loss, and target BEFORE entering</li>
-                    <li>✅ Manage risk properly (1-2% per trade)</li>
-                    <li>✅ Follow your plan without emotional decisions</li>
-                </ul>
-                <p style="margin-top: 15px;"><strong>Even if all 5 trades lose money, but you followed your process perfectly - that's a WIN!</strong></p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>📹 Video Lesson</h2>
-            <div class="video-placeholder">
+<div class="container">
+<div class="day-header">
+<div class="day-badge">DAY 14 OF 30 - PHASE 2 COMPLETE!</div>
+<h1>📈 Simulated Trading Exercise</h1>
+<p>Put Everything You've Learned Into Practice!</p>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+</div>
+<div class="section">
+<h2>🎯 Today's Mission - PHASE 2 FINALE!</h2>
+<p>Congratulations on reaching Day 14 - the final day of Phase 2! You've learned:</p>
+<div class="success-box">
+<h4>✅ Your Phase 2 Arsenal:</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li><strong>Day 8:</strong> Identifying Trends &amp; Price Action</li>
+<li><strong>Day 9:</strong> Support &amp; Resistance Levels</li>
+<li><strong>Day 10:</strong> Chart Patterns (Flags, Triangles, Head &amp; Shoulders)</li>
+<li><strong>Day 11:</strong> Key Indicators (RSI, MACD, Moving Averages, Economic Cycle)</li>
+<li><strong>Day 12:</strong> Fundamental Analysis Basics</li>
+<li><strong>Day 13:</strong> Stock Research &amp; Financial Ratios</li>
+</ul>
+</div>
+<p style="margin-top: 20px;">Today, you'll <strong>execute 5 simulated trades</strong> using ALL the skills you've mastered. This is your trading exam - show what you've learned!</p>
+<div class="highlight-box">
+<p><strong>Why This Matters:</strong> Practice makes permanent! Before risking real money, you need to prove you can identify setups, plan trades, and execute them correctly. Today's practice builds the muscle memory for profitable trading!</p>
+</div>
+<div class="warning-box">
+<h4>⚠️ This Is NOT About Being Right</h4>
+<p>Professional traders lose 40-60% of their trades! Today's goal is NOT 5 winning trades. Your goal is to follow your process:</p>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>✅ Identify valid setups using multiple confirmations</li>
+<li>✅ Plan entry, stop loss, and target BEFORE entering</li>
+<li>✅ Manage risk properly (1-2% per trade)</li>
+<li>✅ Follow your plan without emotional decisions</li>
+</ul>
+<p style="margin-top: 15px;"><strong>Even if all 5 trades lose money, but you followed your process perfectly - that's a WIN!</strong></p>
+</div>
+</div>
+<div class="section">
+<h2>📹 Video Lesson</h2>
+<div class="video-placeholder">
                 Video player will load here
             </div>
-        </div>
+</div>
+<div class="section">
+<h2>📋 Part 1: Pre-Trade Checklist System</h2>
+<h3>The Professional Trader's Checklist</h3>
+<p>Before entering ANY trade, check ALL boxes below. If even ONE box is unchecked - DON'T TRADE!</p>
+<div class="checklist-item">
+<input id="check1" type="checkbox"/>
+<div>
+<strong>1. Trend Confirmation (Day 8 + 11)</strong>
+<p>Is price above/below key moving averages? What's the trend direction?</p>
+</div>
+</div>
+<div class="checklist-item">
+<input id="check2" type="checkbox"/>
+<div>
+<strong>2. Support/Resistance Level (Day 9)</strong>
+<p>Am I buying at support in uptrend or selling at resistance in downtrend?</p>
+</div>
+</div>
+<div class="checklist-item">
+<input id="check3" type="checkbox"/>
+<div>
+<strong>3. Pattern Recognition (Day 10)</strong>
+<p>Is there a valid chart pattern? (Flag, triangle, H&amp;S, double top/bottom)</p>
+</div>
+</div>
+<div class="checklist-item">
+<input id="check4" type="checkbox"/>
+<div>
+<strong>4. Indicator Confirmation (Day 11)</strong>
+<p>RSI in good zone? MACD showing momentum? Price near key MA?</p>
+</div>
+</div>
+<div class="checklist-item">
+<input id="check5" type="checkbox"/>
+<div>
+<strong>5. Fundamental Check (Day 12-13)</strong>
+<p>For stocks: Is company fundamentally sound? Not overvalued?</p>
+</div>
+</div>
+<div class="checklist-item">
+<input id="check6" type="checkbox"/>
+<div>
+<strong>6. Risk Management Plan (Day 13)</strong>
+<p>Entry, stop loss, target defined? Risk 1-2%? Risk/Reward minimum 1:2?</p>
+</div>
+</div>
+<div class="example-box">
+<h4>💡 Real Example: Complete Trade Setup</h4>
+<p><strong>Stock:</strong> Apple (AAPL)</p>
+<p><strong>Setup Analysis:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>✅ <strong>Trend:</strong> Above 200 SMA ($185) = Uptrend</li>
+<li>✅ <strong>S/R:</strong> Bounced off $190 support 3 times</li>
+<li>✅ <strong>Pattern:</strong> Bull flag forming, flagpole from $175 to $195</li>
+<li>✅ <strong>Indicators:</strong> RSI 45 (room to run), MACD bullish cross, price at 50 SMA</li>
+<li>✅ <strong>Fundamentals:</strong> P/E 28 (reasonable for tech), ROE 25% (strong)</li>
+<li>✅ <strong>Risk Plan:</strong> Entry $192, Stop $188 (-2.1%), Target $200 (+4.2%) = 1:2 R:R</li>
+</ul>
+<p><strong>All 6 boxes checked = HIGH PROBABILITY TRADE! ✅</strong></p>
+</div>
+</div>
+<div class="section">
+<h2>🎮 Part 2: Interactive Trading Simulator</h2>
+<div class="trading-simulator">
+<h3>📊 Virtual Trade Planner</h3>
+<p>Use this to plan each of your 5 trades. Calculate position size and risk/reward!</p>
+<div class="simulator-input">
+<label>Stock/Asset Name:</label>
+<input id="assetName" placeholder="e.g., AAPL, TSLA, EUR/USD" type="text"/>
+</div>
+<div class="simulator-input">
+<label>Account Size:</label>
+<input id="accountSize" placeholder="10000" type="number" value="10000"/>
+</div>
+<div class="simulator-input">
+<label>Risk Per Trade (%):</label>
+<input id="riskPercent" placeholder="1-2" step="0.1" type="number" value="1"/>
+</div>
+<div class="simulator-input">
+<label>Entry Price:</label>
+<input id="entryPrice" placeholder="150.00" step="0.01" type="number"/>
+</div>
+<div class="simulator-input">
+<label>Stop Loss Price:</label>
+<input id="stopLoss" placeholder="148.00" step="0.01" type="number"/>
+</div>
+<div class="simulator-input">
+<label>Target Price:</label>
+<input id="targetPrice" placeholder="154.00" step="0.01" type="number"/>
+</div>
+<div class="simulator-input">
+<label>Trade Direction:</label>
+<select id="tradeDirection">
+<option value="long">Long (Buy)</option>
+<option value="short">Short (Sell)</option>
+</select>
+</div>
+<button class="simulator-btn" onclick="calculateTrade()">Calculate Trade Plan</button>
+<div class="trade-result" id="tradeResult"></div>
+</div>
+</div>
+<div class="section">
+<h2>📚 Part 3: Trade Execution Steps</h2>
+<h3>Step-by-Step Trade Process</h3>
+<div class="trade-card">
+<h4>Step 1: Find Your Setup (15 minutes)</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Open your demo trading platform</li>
+<li>Scan charts looking for patterns from Day 10</li>
+<li>Check if trend, S/R, and indicators align</li>
+<li>Don't force trades - wait for quality setups</li>
+</ul>
+</div>
+<div class="trade-card">
+<h4>Step 2: Complete Pre-Trade Checklist (5 minutes)</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Go through all 6 checklist items above</li>
+<li>Document why each box is checked</li>
+<li>If any box unchecked = find different setup</li>
+</ul>
+</div>
+<div class="trade-card">
+<h4>Step 3: Plan Risk &amp; Position Size (5 minutes)</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Use the calculator above to determine position size</li>
+<li>Verify R:R ratio is minimum 1:2</li>
+<li>Make sure you're risking only 1-2% of account</li>
+</ul>
+</div>
+<div class="trade-card">
+<h4>Step 4: Execute Trade (2 minutes)</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Place entry order on demo platform</li>
+<li>Set stop loss immediately (non-negotiable!)</li>
+<li>Set take profit target</li>
+<li>Screenshot the trade for your records</li>
+</ul>
+</div>
+<div class="trade-card">
+<h4>Step 5: Document Everything (3 minutes)</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li>Screenshot chart with annotations</li>
+<li>Write down your reasoning for the trade</li>
+<li>Note your emotional state (calm, anxious, excited?)</li>
+<li>Set alert to check trade later (don't watch constantly!)</li>
+</ul>
+</div>
+<div class="warning-box">
+<h4>⏰ Total Time Per Trade: 30 Minutes</h4>
+<p>Don't rush! Quality over speed. Professional traders spend hours analyzing before risking money. Today's 5 trades = 2.5 hours of focused practice. This time investment will save you thousands in losses later!</p>
+</div>
+</div>
+<div class="section">
+<h2>🎯 Part 4: What Makes A Good Trade?</h2>
+<div class="info-box">
+<h4>✅ Signs of a HIGH Quality Trade:</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li><strong>4+ Confirmations:</strong> Multiple signals align (trend + pattern + indicator + S/R)</li>
+<li><strong>Clear Entry Trigger:</strong> You know EXACTLY when to enter (breakout, bounce, cross)</li>
+<li><strong>Obvious Stop Loss:</strong> Natural place to exit if wrong (below support, above resistance)</li>
+<li><strong>Good R:R Ratio:</strong> Minimum 1:2, ideally 1:3 or better</li>
+<li><strong>Emotional Clarity:</strong> You feel calm and confident, not desperate or FOMO</li>
+<li><strong>Plan B Ready:</strong> You know what to do if trade goes wrong</li>
+</ul>
+</div>
+<div class="warning-box">
+<h4>❌ Signs of a POOR Quality Trade:</h4>
+<ul style="padding-left: 20px; margin-top: 10px;">
+<li><strong>Few Confirmations:</strong> Only 1-2 signals (trend only, or just a pattern)</li>
+<li><strong>Vague Entry:</strong> "I'll buy somewhere around here" = Recipe for disaster</li>
+<li><strong>No Clear Stop:</strong> "I'll just hold if it drops" = How accounts die</li>
+<li><strong>Bad R:R:</strong> Risk $100 to make $50 = Losing math</li>
+<li><strong>Emotional Trade:</strong> FOMO, revenge trading, or "trying to make back losses"</li>
+<li><strong>No Plan:</strong> Don't know what you'll do if it moves against you</li>
+</ul>
+<p style="margin-top: 15px;"><strong>If you see these signs = DON'T TRADE! Wait for a better setup.</strong></p>
+</div>
+<div class="example-box">
+<h4>💡 Quality vs Quantity</h4>
+<p><strong>Amateur Trader:</strong> Takes 20 trades per day, wins 30%, loses money overall</p>
+<p><strong>Professional Trader:</strong> Takes 2-3 trades per week, wins 60%, makes consistent money</p>
+<br/>
+<p><strong>The Lesson:</strong> You don't get paid for the number of trades. You get paid for taking ONLY the highest quality setups. One perfect trade beats 10 mediocre ones!</p>
+</div>
+</div>
 
-        <div class="section">
-            <h2>📋 Part 1: Pre-Trade Checklist System</h2>
-            
-            <h3>The Professional Trader's Checklist</h3>
-            <p>Before entering ANY trade, check ALL boxes below. If even ONE box is unchecked - DON'T TRADE!</p>
-            
-            <div class="checklist-item">
-                <input type="checkbox" id="check1">
-                <div>
-                    <strong>1. Trend Confirmation (Day 8 + 11)</strong>
-                    <p>Is price above/below key moving averages? What's the trend direction?</p>
-                </div>
-            </div>
 
-            <div class="checklist-item">
-                <input type="checkbox" id="check2">
-                <div>
-                    <strong>2. Support/Resistance Level (Day 9)</strong>
-                    <p>Am I buying at support in uptrend or selling at resistance in downtrend?</p>
-                </div>
-            </div>
 
-            <div class="checklist-item">
-                <input type="checkbox" id="check3">
-                <div>
-                    <strong>3. Pattern Recognition (Day 10)</strong>
-                    <p>Is there a valid chart pattern? (Flag, triangle, H&S, double top/bottom)</p>
-                </div>
-            </div>
 
-            <div class="checklist-item">
-                <input type="checkbox" id="check4">
-                <div>
-                    <strong>4. Indicator Confirmation (Day 11)</strong>
-                    <p>RSI in good zone? MACD showing momentum? Price near key MA?</p>
-                </div>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="check5">
-                <div>
-                    <strong>5. Fundamental Check (Day 12-13)</strong>
-                    <p>For stocks: Is company fundamentally sound? Not overvalued?</p>
-                </div>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="check6">
-                <div>
-                    <strong>6. Risk Management Plan (Day 13)</strong>
-                    <p>Entry, stop loss, target defined? Risk 1-2%? Risk/Reward minimum 1:2?</p>
-                </div>
-            </div>
-
-            <div class="example-box">
-                <h4>💡 Real Example: Complete Trade Setup</h4>
-                <p><strong>Stock:</strong> Apple (AAPL)</p>
-                <p><strong>Setup Analysis:</strong></p>
-                <ul style="padding-left: 20px; margin: 10px 0;">
-                    <li>✅ <strong>Trend:</strong> Above 200 SMA ($185) = Uptrend</li>
-                    <li>✅ <strong>S/R:</strong> Bounced off $190 support 3 times</li>
-                    <li>✅ <strong>Pattern:</strong> Bull flag forming, flagpole from $175 to $195</li>
-                    <li>✅ <strong>Indicators:</strong> RSI 45 (room to run), MACD bullish cross, price at 50 SMA</li>
-                    <li>✅ <strong>Fundamentals:</strong> P/E 28 (reasonable for tech), ROE 25% (strong)</li>
-                    <li>✅ <strong>Risk Plan:</strong> Entry $192, Stop $188 (-2.1%), Target $200 (+4.2%) = 1:2 R:R</li>
-                </ul>
-                <p><strong>All 6 boxes checked = HIGH PROBABILITY TRADE! ✅</strong></p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>🎮 Part 2: Interactive Trading Simulator</h2>
-            
-            <div class="trading-simulator">
-                <h3>📊 Virtual Trade Planner</h3>
-                <p>Use this to plan each of your 5 trades. Calculate position size and risk/reward!</p>
-                
-                <div class="simulator-input">
-                    <label>Stock/Asset Name:</label>
-                    <input type="text" id="assetName" placeholder="e.g., AAPL, TSLA, EUR/USD">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Account Size:</label>
-                    <input type="number" id="accountSize" placeholder="10000" value="10000">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Risk Per Trade (%):</label>
-                    <input type="number" id="riskPercent" placeholder="1-2" value="1" step="0.1">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Entry Price:</label>
-                    <input type="number" id="entryPrice" placeholder="150.00" step="0.01">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Stop Loss Price:</label>
-                    <input type="number" id="stopLoss" placeholder="148.00" step="0.01">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Target Price:</label>
-                    <input type="number" id="targetPrice" placeholder="154.00" step="0.01">
-                </div>
-
-                <div class="simulator-input">
-                    <label>Trade Direction:</label>
-                    <select id="tradeDirection">
-                        <option value="long">Long (Buy)</option>
-                        <option value="short">Short (Sell)</option>
-                    </select>
-                </div>
-
-                <button class="simulator-btn" onclick="calculateTrade()">Calculate Trade Plan</button>
-
-                <div id="tradeResult" class="trade-result"></div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>📚 Part 3: Trade Execution Steps</h2>
-            
-            <h3>Step-by-Step Trade Process</h3>
-            
-            <div class="trade-card">
-                <h4>Step 1: Find Your Setup (15 minutes)</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>Open your demo trading platform</li>
-                    <li>Scan charts looking for patterns from Day 10</li>
-                    <li>Check if trend, S/R, and indicators align</li>
-                    <li>Don't force trades - wait for quality setups</li>
-                </ul>
-            </div>
-
-            <div class="trade-card">
-                <h4>Step 2: Complete Pre-Trade Checklist (5 minutes)</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>Go through all 6 checklist items above</li>
-                    <li>Document why each box is checked</li>
-                    <li>If any box unchecked = find different setup</li>
-                </ul>
-            </div>
-
-            <div class="trade-card">
-                <h4>Step 3: Plan Risk & Position Size (5 minutes)</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>Use the calculator above to determine position size</li>
-                    <li>Verify R:R ratio is minimum 1:2</li>
-                    <li>Make sure you're risking only 1-2% of account</li>
-                </ul>
-            </div>
-
-            <div class="trade-card">
-                <h4>Step 4: Execute Trade (2 minutes)</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>Place entry order on demo platform</li>
-                    <li>Set stop loss immediately (non-negotiable!)</li>
-                    <li>Set take profit target</li>
-                    <li>Screenshot the trade for your records</li>
-                </ul>
-            </div>
-
-            <div class="trade-card">
-                <h4>Step 5: Document Everything (3 minutes)</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li>Screenshot chart with annotations</li>
-                    <li>Write down your reasoning for the trade</li>
-                    <li>Note your emotional state (calm, anxious, excited?)</li>
-                    <li>Set alert to check trade later (don't watch constantly!)</li>
-                </ul>
-            </div>
-
-            <div class="warning-box">
-                <h4>⏰ Total Time Per Trade: 30 Minutes</h4>
-                <p>Don't rush! Quality over speed. Professional traders spend hours analyzing before risking money. Today's 5 trades = 2.5 hours of focused practice. This time investment will save you thousands in losses later!</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>🎯 Part 4: What Makes A Good Trade?</h2>
-            
-            <div class="info-box">
-                <h4>✅ Signs of a HIGH Quality Trade:</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li><strong>4+ Confirmations:</strong> Multiple signals align (trend + pattern + indicator + S/R)</li>
-                    <li><strong>Clear Entry Trigger:</strong> You know EXACTLY when to enter (breakout, bounce, cross)</li>
-                    <li><strong>Obvious Stop Loss:</strong> Natural place to exit if wrong (below support, above resistance)</li>
-                    <li><strong>Good R:R Ratio:</strong> Minimum 1:2, ideally 1:3 or better</li>
-                    <li><strong>Emotional Clarity:</strong> You feel calm and confident, not desperate or FOMO</li>
-                    <li><strong>Plan B Ready:</strong> You know what to do if trade goes wrong</li>
-                </ul>
-            </div>
-
-            <div class="warning-box">
-                <h4>❌ Signs of a POOR Quality Trade:</h4>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li><strong>Few Confirmations:</strong> Only 1-2 signals (trend only, or just a pattern)</li>
-                    <li><strong>Vague Entry:</strong> "I'll buy somewhere around here" = Recipe for disaster</li>
-                    <li><strong>No Clear Stop:</strong> "I'll just hold if it drops" = How accounts die</li>
-                    <li><strong>Bad R:R:</strong> Risk $100 to make $50 = Losing math</li>
-                    <li><strong>Emotional Trade:</strong> FOMO, revenge trading, or "trying to make back losses"</li>
-                    <li><strong>No Plan:</strong> Don't know what you'll do if it moves against you</li>
-                </ul>
-                <p style="margin-top: 15px;"><strong>If you see these signs = DON'T TRADE! Wait for a better setup.</strong></p>
-            </div>
-
-            <div class="example-box">
-                <h4>💡 Quality vs Quantity</h4>
-                <p><strong>Amateur Trader:</strong> Takes 20 trades per day, wins 30%, loses money overall</p>
-                <p><strong>Professional Trader:</strong> Takes 2-3 trades per week, wins 60%, makes consistent money</p>
-                <br>
-                <p><strong>The Lesson:</strong> You don't get paid for the number of trades. You get paid for taking ONLY the highest quality setups. One perfect trade beats 10 mediocre ones!</p>
-            </div>
-        </div>
-
-        <div class="section task-section">
-            <h2>✍️ Day 14 Practical Task - YOUR TRADING EXAM!</h2>
-            <p><strong>Mission:</strong> Execute 5 simulated trades using everything from Phase 2!</p>
-            
-            <div class="info-box">
-                <h4>📝 Task Requirements:</h4>
-                <ol style="padding-left: 20px; margin-top: 10px;">
-                    <li><strong>Execute 5 Trades</strong> on your demo account</li>
-                    <li><strong>For EACH trade, document:</strong>
-                        <ul style="margin-top: 10px;">
-                            <li>Asset name and timeframe</li>
-                            <li>Complete pre-trade checklist (all 6 items)</li>
-                            <li>Entry price, stop loss, target</li>
-                            <li>Position size calculation</li>
-                            <li>Risk/reward ratio</li>
-                            <li>Screenshot of chart with annotations</li>
-                            <li>Screenshot of order execution</li>
-                            <li>Why you took this trade (your reasoning)</li>
-                            <li>Trade outcome (win/loss/pending)</li>
-                            <li>What you learned from this trade</li>
-                        </ul>
-                    </li>
-                    <li><strong>Final Summary:</strong>
-                        <ul style="margin-top: 10px;">
-                            <li>Overall win rate (X out of 5)</li>
-                            <li>Total P&L (profit/loss in dollars or %)</li>
-                            <li>Best trade - why was it good?</li>
-                            <li>Worst trade - what went wrong?</li>
-                            <li>Key lessons learned from this exercise</li>
-                        </ul>
-                    </li>
-                </ol>
-            </div>
-
-            <div class="warning-box">
-                <h4>⚠️ CRITICAL: This Task Determines Your Phase 2 Mastery</h4>
-                <p>This is NOT a regular task. This is your Phase 2 final exam! Take 2-3 hours to do this properly. Your ability to plan and execute trades determines your success in Phase 3!</p>
-            </div>
-
-            <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                <h4>📋 Task Submission Required</h4>
-                <p><strong>⚠️ Important:</strong> You must submit this task to unlock Phase 3!</p>
-                <textarea id="taskResponse" placeholder="SIMULATED TRADING EXERCISE REPORT
+<div class="quiz-container">
+<div class="quiz-header">
+<h2>Day 14 Knowledge Check</h2>
+<p>Test your understanding of complete trade execution</p>
+<div class="quiz-progress">
+<div class="quiz-progress-fill" id="quizProgress"></div>
+</div>
+<p id="questionCounter">Question 1 of 5</p>
+</div>
+<div id="quizContent">
+<div class="question-container active" data-question="1">
+<div class="question-number">1</div>
+<div class="question-text">What is the MINIMUM number of confirmations you should have before taking a trade?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>1 confirmation (just a pattern or indicator)</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>2 confirmations (pattern + indicator)</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>4+ confirmations (trend + S/R + pattern + indicators + fundamentals + risk plan)</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>No confirmations needed, just trade on gut feeling</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="2">
+<div class="question-number">2</div>
+<div class="question-text">You find a trade setup with 3 confirmations. Entry $100, Stop $95, Target $110. Risk/Reward is 1:2. Should you take this trade?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Yes, R:R is 1:2 and you have confirmations</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>No, wait for 4+ confirmations for highest probability</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Yes, but only if FOMO is driving the decision</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Yes, ignore confirmations and just trade</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="3">
+<div class="question-number">3</div>
+<div class="question-text">Which is MORE important: winning percentage or following your process?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Winning percentage - you must win 80%+ to be profitable</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Following your process - even with 40-50% win rate, you profit with good risk management</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Both are equally important</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Neither matters, just make money somehow</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="4">
+<div class="question-number">4</div>
+<div class="question-text">You're on Trade #4 and the first 3 trades lost. What should you do?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Double your position size to make back losses faster (revenge trading)</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Stop trading for today - you're clearly doing something wrong</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Continue with same risk (1-2%), follow your process, review what went wrong later</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Remove stop losses to give trades more room</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="5">
+<div class="question-number">5</div>
+<div class="question-text">What's the PRIMARY goal of today's simulated trading exercise?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Win all 5 trades and make maximum profit</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Prove you can identify high-quality setups and follow a complete trading process</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Take as many trades as possible for practice</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Test different strategies randomly to see what works</span>
+</div>
+</div>
+</div>
+</div>
+<div class="quiz-navigation">
+<button class="quiz-btn" disabled="" id="prevBtn" onclick="previousQuestion()">Previous</button>
+<div id="questionInfo">
+<span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+</div>
+<button class="quiz-btn next" disabled="" id="nextBtn" onclick="nextQuestion()">Next</button>
+</div>
+<div class="quiz-results" id="quizResults" style="display: none;">
+<h3>Quiz Complete!</h3>
+<div id="scoreDisplay"></div>
+<div id="passedButtons" style="display: none;">
+<p style="color: #065f46; font-size: 1.2em; margin: 20px 0;">Great job! You understand the complete trading process!</p>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+<div id="failedButtons" style="display: none;">
+<p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review the trading execution steps and try again!</p>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+</div>
+</div><div class="section task-section">
+<h2>✍️ Day 14 Practical Task - YOUR TRADING EXAM!</h2>
+<p><strong>Mission:</strong> Execute 5 simulated trades using everything from Phase 2!</p>
+<div class="info-box">
+<h4>📝 Task Requirements:</h4>
+<ol style="padding-left: 20px; margin-top: 10px;">
+<li><strong>Execute 5 Trades</strong> on your demo account</li>
+<li><strong>For EACH trade, document:</strong>
+<ul style="margin-top: 10px;">
+<li>Asset name and timeframe</li>
+<li>Complete pre-trade checklist (all 6 items)</li>
+<li>Entry price, stop loss, target</li>
+<li>Position size calculation</li>
+<li>Risk/reward ratio</li>
+<li>Screenshot of chart with annotations</li>
+<li>Screenshot of order execution</li>
+<li>Why you took this trade (your reasoning)</li>
+<li>Trade outcome (win/loss/pending)</li>
+<li>What you learned from this trade</li>
+</ul>
+</li>
+<li><strong>Final Summary:</strong>
+<ul style="margin-top: 10px;">
+<li>Overall win rate (X out of 5)</li>
+<li>Total P&amp;L (profit/loss in dollars or %)</li>
+<li>Best trade - why was it good?</li>
+<li>Worst trade - what went wrong?</li>
+<li>Key lessons learned from this exercise</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="warning-box">
+<h4>⚠️ CRITICAL: This Task Determines Your Phase 2 Mastery</h4>
+<p>This is NOT a regular task. This is your Phase 2 final exam! Take 2-3 hours to do this properly. Your ability to plan and execute trades determines your success in Phase 3!</p>
+</div>
+<div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+<h4>📋 Task Submission Required</h4>
+<p><strong>⚠️ Important:</strong> You must submit this task to unlock Phase 3!</p>
+<textarea id="taskResponse" placeholder="SIMULATED TRADING EXERCISE REPORT
 
 Date: [Today's Date]
 
@@ -791,7 +894,7 @@ Total Trades: 5
 ═══════════════════════════════════════
 
 TRADE 1:
-Asset: [Name & Ticker]
+Asset: [Name &amp; Ticker]
 Timeframe: [5min/15min/1H/Daily]
 Direction: [Long/Short]
 
@@ -815,7 +918,7 @@ Why I Took This Trade:
 
 Trade Outcome:
   Result: [Win/Loss/Break-even/Pending]
-  P&L: $[+/-X] ([%])
+  P&amp;L: $[+/-X] ([%])
   Exit Reason: [Target hit / Stop hit / Manual exit - why?]
 
 What I Learned:
@@ -847,7 +950,7 @@ FINAL SUMMARY:
 
 Performance Metrics:
   Win Rate: [X/5 wins = X%]
-  Total P&L: $[+/-X] ([%] of starting capital)
+  Total P&amp;L: $[+/-X] ([%] of starting capital)
   Average R:R: [1:X]
   Largest Win: $[X]
   Largest Loss: $[X]
@@ -875,189 +978,29 @@ PHASE 2 REFLECTION:
 Looking back at Days 8-14, what's my biggest achievement?
 What trading skill am I most proud of developing?
 What do I still need to improve?
-Am I ready for Phase 3 (Risk Management & Advanced Strategies)?
+Am I ready for Phase 3 (Risk Management &amp; Advanced Strategies)?
 " style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
-                
-                <div style="margin: 15px 0;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Trade Screenshots (Required - minimum 10 images: 5 chart screenshots + 5 order executions)</label>
-                    <input type="file" id="taskFile" accept="image/*" multiple style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;">
-                </div>
-                
-                <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
-                    <p id="taskStatusText"></p>
-                </div>
-                
-                <button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 14 Task - Complete Phase 2!</button>
-            </div>
-        </div>
-
-        <div class="quiz-container">
-            <div class="quiz-header">
-                <h2>Day 14 Knowledge Check</h2>
-                <p>Test your understanding of complete trade execution</p>
-                <div class="quiz-progress">
-                    <div class="quiz-progress-fill" id="quizProgress"></div>
-                </div>
-                <p id="questionCounter">Question 1 of 5</p>
-            </div>
-
-            <div id="quizContent">
-                <div class="question-container active" data-question="1">
-                    <div class="question-number">1</div>
-                    <div class="question-text">What is the MINIMUM number of confirmations you should have before taking a trade?</div>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-answer="a">
-                            <div class="option-letter">A</div>
-                            <span>1 confirmation (just a pattern or indicator)</span>
-                        </div>
-                        <div class="quiz-option" data-answer="b">
-                            <div class="option-letter">B</div>
-                            <span>2 confirmations (pattern + indicator)</span>
-                        </div>
-                        <div class="quiz-option" data-answer="c">
-                            <div class="option-letter">C</div>
-                            <span>4+ confirmations (trend + S/R + pattern + indicators + fundamentals + risk plan)</span>
-                        </div>
-                        <div class="quiz-option" data-answer="d">
-                            <div class="option-letter">D</div>
-                            <span>No confirmations needed, just trade on gut feeling</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="question-container" data-question="2">
-                    <div class="question-number">2</div>
-                    <div class="question-text">You find a trade setup with 3 confirmations. Entry $100, Stop $95, Target $110. Risk/Reward is 1:2. Should you take this trade?</div>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-answer="a">
-                            <div class="option-letter">A</div>
-                            <span>Yes, R:R is 1:2 and you have confirmations</span>
-                        </div>
-                        <div class="quiz-option" data-answer="b">
-                            <div class="option-letter">B</div>
-                            <span>No, wait for 4+ confirmations for highest probability</span>
-                        </div>
-                        <div class="quiz-option" data-answer="c">
-                            <div class="option-letter">C</div>
-                            <span>Yes, but only if FOMO is driving the decision</span>
-                        </div>
-                        <div class="quiz-option" data-answer="d">
-                            <div class="option-letter">D</div>
-                            <span>Yes, ignore confirmations and just trade</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="question-container" data-question="3">
-                    <div class="question-number">3</div>
-                    <div class="question-text">Which is MORE important: winning percentage or following your process?</div>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-answer="a">
-                            <div class="option-letter">A</div>
-                            <span>Winning percentage - you must win 80%+ to be profitable</span>
-                        </div>
-                        <div class="quiz-option" data-answer="b">
-                            <div class="option-letter">B</div>
-                            <span>Following your process - even with 40-50% win rate, you profit with good risk management</span>
-                        </div>
-                        <div class="quiz-option" data-answer="c">
-                            <div class="option-letter">C</div>
-                            <span>Both are equally important</span>
-                        </div>
-                        <div class="quiz-option" data-answer="d">
-                            <div class="option-letter">D</div>
-                            <span>Neither matters, just make money somehow</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="question-container" data-question="4">
-                    <div class="question-number">4</div>
-                    <div class="question-text">You're on Trade #4 and the first 3 trades lost. What should you do?</div>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-answer="a">
-                            <div class="option-letter">A</div>
-                            <span>Double your position size to make back losses faster (revenge trading)</span>
-                        </div>
-                        <div class="quiz-option" data-answer="b">
-                            <div class="option-letter">B</div>
-                            <span>Stop trading for today - you're clearly doing something wrong</span>
-                        </div>
-                        <div class="quiz-option" data-answer="c">
-                            <div class="option-letter">C</div>
-                            <span>Continue with same risk (1-2%), follow your process, review what went wrong later</span>
-                        </div>
-                        <div class="quiz-option" data-answer="d">
-                            <div class="option-letter">D</div>
-                            <span>Remove stop losses to give trades more room</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="question-container" data-question="5">
-                    <div class="question-number">5</div>
-                    <div class="question-text">What's the PRIMARY goal of today's simulated trading exercise?</div>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-answer="a">
-                            <div class="option-letter">A</div>
-                            <span>Win all 5 trades and make maximum profit</span>
-                        </div>
-                        <div class="quiz-option" data-answer="b">
-                            <div class="option-letter">B</div>
-                            <span>Prove you can identify high-quality setups and follow a complete trading process</span>
-                        </div>
-                        <div class="quiz-option" data-answer="c">
-                            <div class="option-letter">C</div>
-                            <span>Take as many trades as possible for practice</span>
-                        </div>
-                        <div class="quiz-option" data-answer="d">
-                            <div class="option-letter">D</div>
-                            <span>Test different strategies randomly to see what works</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="quiz-navigation">
-                <button class="quiz-btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
-                <div id="questionInfo">
-                    <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
-                </div>
-                <button class="quiz-btn next" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
-            </div>
-
-            <div id="quizResults" class="quiz-results" style="display: none;">
-                <h3>Quiz Complete!</h3>
-                <div id="scoreDisplay"></div>
-                
-                <div id="passedButtons" style="display: none;">
-                    <p style="color: #065f46; font-size: 1.2em; margin: 20px 0;">Great job! You understand the complete trading process!</p>
-                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
-                </div>
-                
-                <div id="failedButtons" style="display: none;">
-                    <p style="color: #dc2626; font-size: 1.1em; margin: 20px 0;">You need at least 60% (3/5) to proceed. Review the trading execution steps and try again!</p>
-                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="sneak-peek">
-            <h2>👀 Sneak Peek: Phase 3 - Day 15</h2>
-            <p>Tomorrow: <strong>Risk Management & Position Sizing</strong></p>
-            <p>The #1 skill that separates professionals from amateurs!</p>
-            <p><strong>Phase 3 begins - get ready to level up! 🚀</strong></p>
-        </div>
-
-        <div class="completion-section">
-            <h2>🎉 Day 14 & Phase 2 Complete!</h2>
-            <p>Congratulations! You've mastered technical analysis, patterns, indicators, and fundamentals. Phase 3 starts tomorrow!</p>
-            <button class="completion-button" onclick="completeDay14()">Complete Day 14</button>
-            <button class="completion-button" style="background: #3b82f6;" onclick="proceedToDay15()">Proceed to Phase 3 →</button>
-        </div>
-    </div>
-
-    <script>
+<div style="margin: 15px 0;">
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Trade Screenshots (Required - minimum 10 images: 5 chart screenshots + 5 order executions)</label>
+<input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
+</div>
+<div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
+<p id="taskStatusText"></p>
+</div>
+<button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 14 Task - Complete Phase 2!</button>
+</div>
+</div><div class="sneak-peek">
+<h2>👀 Sneak Peek: Phase 3 - Day 15</h2>
+<p>Tomorrow: <strong>Risk Management &amp; Position Sizing</strong></p>
+<p>The #1 skill that separates professionals from amateurs!</p>
+<p><strong>Phase 3 begins - get ready to level up! 🚀</strong></p>
+</div><div class="completion-section">
+<h2>🎉 Day 14 &amp; Phase 2 Complete!</h2>
+<p>Congratulations! You've mastered technical analysis, patterns, indicators, and fundamentals. Phase 3 starts tomorrow!</p>
+<button class="completion-button" onclick="completeDay14()">Complete Day 14</button>
+<button class="completion-button" onclick="proceedToDay15()" style="background: #3b82f6;">Proceed to Phase 3 →</button>
+</div></div>
+<script>
         let currentQuestionIndex = 0;
         let userAnswers = [];
         let correctAnswers = ['c', 'b', 'b', 'c', 'b'];
