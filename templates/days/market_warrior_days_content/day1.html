@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Day 1: Introduction to Trading and Types of Financial Markets | Market Warrior</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .day-header {
+            background: white;
+            color: #1e293b;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .day-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .day-header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.2em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 6px;
+            width: 3.33%;
+            transition: width 0.8s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section h3 {
+            color: #3b82f6;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .market-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .market-card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #3b82f6;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .market-card:hover {
+            transform: translateY(-5px);
+            background: #f1f5f9;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .market-card h4 {
+            color: #3b82f6;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .market-visual {
+            text-align: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .market-visual h3 {
+            color: #3b82f6;
+            margin-bottom: 20px;
+        }
+        
+        .market-icons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .market-icon {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .market-icon:hover {
+            background: #f1f5f9;
+            transform: scale(1.05);
+            border-color: #3b82f6;
+        }
+        
+        .market-icon span {
+            font-size: 2.5em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .market-icon h5 {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
+        .why-popular {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .why-popular h2 {
+            color: white !important;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .why-popular .market-card {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-left-color: white;
+        }
+        
+        .why-popular .market-card h4 {
+            color: white !important;
+        }
+        
+        .rewards-section {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rewards-section h2 {
+            color: white !important;
+        }
+        
+        .rewards-section .feature-card {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-left-color: white;
+        }
+        
+        .rewards-section .feature-card h4 {
+            color: white !important;
+        }
+        
+        /* QUIZ STYLES */
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-header h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-progress {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .quiz-progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .question-container.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .question-container.answered {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .question-number {
+            background: #10b981;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .quiz-option:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .quiz-option.selected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .quiz-option.correct {
+            border-color: #10b981;
+            background: #dcfce7;
+        }
+        
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+        
+        .option-letter {
+            background: #e5e7eb;
+            color: #374151;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .quiz-option.selected .option-letter {
+            background: #10b981;
+            color: white;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .quiz-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+        }
+        
+        .quiz-btn.next:hover {
+            background: #059669;
+        }
+        
+        .quiz-results {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+            margin: 30px 0;
+        }
+        
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#10b981 0% var(--score), #e5e7eb var(--score) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .score-circle::before {
+            content: '';
+            width: 90px;
+            height: 90px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .score-text {
+            position: relative;
+            z-index: 1;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #065f46;
+        }
+        
+        .performance-message {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 20px 0;
+            color: #065f46;
+        }
+        
+        .quiz-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .summary-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .summary-label {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #f59e0b;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .task-section h2 {
+            color: #92400e;
+        }
+        
+        .quiz-section {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #065f46;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-section h2 {
+            color: #065f46;
+        }
+        
+        .quiz-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .safety-warning {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #dc2626;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        .interactive-element {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px dashed #3b82f6;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .interactive-element h4 {
+            color: #3b82f6;
+            margin-bottom: 15px;
+        }
+        
+        .sneak-peek {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: #3b82f6;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .day-header h1 {
+                font-size: 2.2em;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .market-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .market-icons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<div class="day-header">
+<div class="day-badge">DAY 1 OF 30</div>
+<h1>Introduction to Trading and Types of Financial Markets</h1>
+<p>Welcome to Day 1 of your trading journey! Your first big step into the world of finance.</p>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+</div>
+<div class="section">
+<h2>🎯 Introduction</h2>
+<p>Welcome to <strong>Day 1</strong> of your trading journey!</p>
+<p>Today, we explore the basics of trading and the markets you can trade-in. Think of it as your first big step into the world of finance—discovering how traders earn (and sometimes lose) money by buying and selling various assets.</p>
+<div class="highlight-box">
+<p><strong>Remember:</strong> Trading isn't just about numbers and charts; it's about understanding markets, making good decisions, and managing your emotions.</p>
+</div>
+</div>
+<div class="section">
+<h2>📹 Video Lesson</h2>
+<div class="video-placeholder">
+<p>Video player will load here</p>
+<!-- YouTube embed example: <iframe width="100%" height="100%" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe> -->
+</div>
+</div>
+<div class="section">
+<h2>💡 What Is Trading?</h2>
+<div class="market-comparison">
+<div class="market-card">
+<h4>📈 Definition</h4>
+<p><strong>Trading</strong> means buying or selling financial instruments (like stocks, currencies, and crypto) to make a profit from price changes. If the price increases after you buy, you can sell it higher. If it goes down after you sell short, you can buy it back lower.</p>
+</div>
+<div class="market-card">
+<h4>⏰ Time Horizons</h4>
+<p><strong>Investing</strong> typically spans years/decades, focusing on long-term growth by holding assets.<br/><br/><strong>Trading</strong>, however, can be short-term (minutes, hours, or days) or medium-term (weeks), aiming to profit from shorter-term price fluctuations.</p>
+</div>
+<div class="market-card">
+<h4>🧠 Skills Required</h4>
+<p>Successful trading requires market knowledge, sharp analytical skills, emotional control, and unwavering discipline. It's more than just guessing; it's a learned skill that involves deep understanding of market dynamics and your own behaviour.</p>
+</div>
+</div>
+</div>
+<div class="section">
+<h2>🌍 The Main Markets You Can Trade</h2>
+<div class="market-visual">
+<h3>Navigate the Galaxy of Financial Markets</h3>
+<div class="market-icons">
+<div class="market-icon">
+<span>📈</span>
+<h5>Stocks</h5>
+</div>
+<div class="market-icon">
+<span>💱</span>
+<h5>Forex</h5>
+</div>
+<div class="market-icon">
+<span>₿</span>
+<h5>Crypto</h5>
+</div>
+<div class="market-icon">
+<span>🥇</span>
+<h5>Commodities</h5>
+</div>
+<div class="market-icon">
+<span>📊</span>
+<h5>ETFs</h5>
+</div>
+<div class="market-icon">
+<span>⚡</span>
+<h5>CFDs</h5>
+</div>
+</div>
+</div>
+<!-- Market Comparison Table - Correct Version -->
+<div style="margin: 40px 0;">
+<h3>Market Overview Table</h3>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.1); margin: 20px 0;">
+<thead>
+<tr style="background: linear-gradient(135deg, #1e293b, #475569); color: white;">
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">Market</th>
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">What you get</th>
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">Typical hours</th>
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">Volatility</th>
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">Beginner fit</th>
+<th style="padding: 20px 15px; text-align: left; font-weight: 600;">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px;"><strong>Stocks</strong></td>
+<td style="padding: 18px 15px;">Company ownership</td>
+<td style="padding: 18px 15px;">Exchange hrs</td>
+<td style="padding: 18px 15px;">Medium</td>
+<td style="padding: 18px 15px;">Good</td>
+<td style="padding: 18px 15px;">Dividends possible</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+<td style="padding: 18px 15px;"><strong>Forex</strong></td>
+<td style="padding: 18px 15px;">Currency pairs</td>
+<td style="padding: 18px 15px;">24/5</td>
+<td style="padding: 18px 15px;">Med-High</td>
+<td style="padding: 18px 15px;">With care</td>
+<td style="padding: 18px 15px;">Highly liquid</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px;"><strong>Crypto</strong></td>
+<td style="padding: 18px 15px;">Digital tokens</td>
+<td style="padding: 18px 15px;">24/7</td>
+<td style="padding: 18px 15px;">High</td>
+<td style="padding: 18px 15px;">Start small</td>
+<td style="padding: 18px 15px;">Big swings</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+<td style="padding: 18px 15px;"><strong>Commodities</strong></td>
+<td style="padding: 18px 15px;">Raw materials</td>
+<td style="padding: 18px 15px;">Exchange hrs</td>
+<td style="padding: 18px 15px;">Medium</td>
+<td style="padding: 18px 15px;">Good</td>
+<td style="padding: 18px 15px;">Macro-sensitive</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px;"><strong>ETFs</strong></td>
+<td style="padding: 18px 15px;">Basket exposure</td>
+<td style="padding: 18px 15px;">Exchange hrs</td>
+<td style="padding: 18px 15px;">Low-Med</td>
+<td style="padding: 18px 15px;">Strong</td>
+<td style="padding: 18px 15px;">Easy diversification</td>
+</tr>
+<tr style="background: #f8fafc;">
+<td style="padding: 18px 15px;"><strong>CFDs</strong></td>
+<td style="padding: 18px 15px;">Price exposure only</td>
+<td style="padding: 18px 15px;">Varies</td>
+<td style="padding: 18px 15px;">High</td>
+<td style="padding: 18px 15px;">Not for new</td>
+<td style="padding: 18px 15px;">Leverage risk</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3>📈 3.1 Stocks</h3>
+<p><strong>"Stocks let you own a tiny piece of a company"</strong> is the most fundamental concept of this market. When you buy a company's stock, you become a shareholder. While you won't be calling the shots in the boardroom with a few shares, you do get rights to the company's earnings and assets.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> The stock market is often considered a great starting point for new traders because it's tangible. You can research a company you know and understand, like Apple or Nike, and follow its progress in the news. The market is regulated by bodies like the SEC in the US and the FCA in the UK, which adds a layer of security.</p>
+</div>
+<p><strong>Examples:</strong> Buying one share of <strong>Tesla</strong> means you own a small fraction of the electric car company. If the company performs well, the value of your shares typically increases. If they do poorly, the value can fall.</p>
+<h3>💱 3.2 Forex</h3>
+<p><strong>Forex is the largest market by daily volume (trillions of dollars).</strong> This immense liquidity means you can buy or sell major currency pairs with very little difficulty, and the price is less susceptible to manipulation by a single large trader.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> Forex trading involves buying one currency while simultaneously selling another. Currencies are traded in pairs (e.g., EUR/USD). The value of a currency is constantly changing based on a country's economic stability, interest rates, and political news. For instance, if the US Federal Reserve increases interest rates, the US dollar might strengthen against other currencies, making it more valuable.</p>
+</div>
+<p><strong>Examples:</strong> A trader might buy the Euro against the US Dollar (<strong>EUR/USD</strong>) if they believe the European economy is going to perform better than the US economy, leading to a stronger Euro relative to the Dollar.</p>
+<h3>₿ 3.3 Crypto</h3>
+<p><strong>Crypto is relatively new and can swing wildly in price.</strong> This high volatility is both the main attraction and the biggest risk. Because crypto markets are decentralised, they operate 24/7, which means you can trade at any time.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> Cryptocurrencies are a new asset class based on <strong>blockchain technology</strong>. While Bitcoin and Ethereum are the most well-known, there are thousands of other digital assets. The decentralised nature of crypto means it is not controlled by any central authority, which appeals to many investors seeking freedom from traditional financial systems. However, the lack of traditional regulation in some jurisdictions also means there is less consumer protection compared to regulated markets.</p>
+</div>
+<p><strong>Examples:</strong> The price of <strong>Bitcoin</strong> can move hundreds or even thousands of dollars in a single day, offering opportunities for significant gains or losses. <strong>Ethereum</strong> is another popular cryptocurrency with a wide range of use cases beyond just a store of value.</p>
+<h3>🥇 3.4 Commodities</h3>
+<p><strong>Commodities (think gold rushes and oil booms) have been traded for centuries.</strong> Unlike stocks, commodities are tangible assets that are used in everyday life. Their value is driven by global supply and demand.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> Commodities are essential to the global economy. They can be a good way to diversify a portfolio because their value often moves independently of stocks. They are also often seen as a hedge against inflation. During times of high inflation, the price of assets like gold can increase as investors seek to protect their purchasing power.</p>
+</div>
+<p><strong>Examples:</strong> <strong>Gold</strong> is a popular safe-haven asset, often sought after during economic uncertainty. <strong>Crude Oil</strong> is another major commodity, with its price being highly sensitive to global events and supply changes.</p>
+<div class="interactive-element">
+<h4>🤔 Interactive Element</h4>
+<p>Think about something you use every day, like your phone or your car. What commodities are in it? (e.g., lithium, copper, steel, crude oil). This helps connect real-world products to the commodities market.</p>
+</div>
+<h3>📊 3.5 ETFs</h3>
+<p><strong>ETFs simplify trading in all sectors (like tech or healthcare).</strong> An ETF, or Exchange-Traded Fund, is a basket of different securities that is traded on a stock exchange. This allows you to invest in a broad range of assets in a single trade.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> ETFs are great for beginners because they instantly diversify your portfolio, reducing risk. Instead of choosing a single stock, you can buy an ETF that tracks an entire industry or index. For example, an S&amp;P 500 ETF holds shares in the 500 largest US companies.</p>
+</div>
+<p><strong>Examples:</strong> If you believe the technology sector will grow, you could buy a technology sector ETF, which holds a collection of stocks from companies like Apple, Microsoft, and Google.</p>
+<h3>⚡ 3.6 CFDs</h3>
+<p><strong>CFDs let you bet on price moves (up or down) but come with higher risk.</strong> A CFD, or "Contract for Difference," is a derivative product that allows you to speculate on the price movement of an asset without actually owning it.</p>
+<div class="highlight-box">
+<p><strong>In-depth:</strong> CFDs are leveraged products. This means you only need to put down a small percentage of the total trade value to control a much larger position. While this can amplify profits, it can also amplify losses, which is why they carry a higher risk. They are a popular tool for short-term traders.</p>
+</div>
+<p><strong>Examples:</strong> If you believe the price of a stock will fall, you can open a short CFD position. If the price does fall, you'll profit. If it rises, you'll incur a loss.</p>
+<div class="safety-warning">
+<p><strong>Safety note on CFDs:</strong> Beginners should practice on a demo and avoid using leverage until they are fully trained.</p>
+</div>
+</div>
+<div class="why-popular">
+<div class="why-popular-content">
+<h2 style="color: white; text-align: center; margin-bottom: 30px;">Why These Markets Are Popular</h2>
+<!-- Pros and Cons Table -->
+<div style="overflow-x: auto; margin: 30px 0;">
+<table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
+<thead>
+<tr style="background: #3b82f6; color: white;">
+<th style="padding: 20px 15px; text-align: center; font-weight: 600; width: 20%;">MARKET</th>
+<th style="padding: 20px 15px; text-align: center; font-weight: 600; width: 40%;">PROS</th>
+<th style="padding: 20px 15px; text-align: center; font-weight: 600; width: 40%;">CONS</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">Stocks</td>
+<td style="padding: 18px 15px; color: #1e293b;">Well-regulated / long-term growth potential</td>
+<td style="padding: 18px 15px; color: #1e293b;">Short-term volatility / some shares are expensive in large volumes</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">Forex</td>
+<td style="padding: 18px 15px; color: #1e293b;">24-hour market / highest liquidity</td>
+<td style="padding: 18px 15px; color: #1e293b;">Sensitive to global politics/economics. Requires macro knowledge</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">Crypto</td>
+<td style="padding: 18px 15px; color: #1e293b;">Potential for big profits / decentralised - innovative</td>
+<td style="padding: 18px 15px; color: #1e293b;">Extremely volatile / regulatory uncertainty</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">Commodities</td>
+<td style="padding: 18px 15px; color: #1e293b;">Tangible underlying / inflation hedge</td>
+<td style="padding: 18px 15px; color: #1e293b;">Prices can jump on geopolitical/weather events</td>
+</tr>
+<tr style="border-bottom: 1px solid #e2e8f0;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">ETFs</td>
+<td style="padding: 18px 15px; color: #1e293b;">Diversification / typically lower fees</td>
+<td style="padding: 18px 15px; color: #1e293b;">Gains can be smaller / not entirely risk-free</td>
+</tr>
+<tr style="background: #f8fafc;">
+<td style="padding: 18px 15px; text-align: center; font-weight: bold; color: #1e293b;">CFDs</td>
+<td style="padding: 18px 15px; color: #1e293b;">Leverage / easy shorting</td>
+<td style="padding: 18px 15px; color: #1e293b;">High risk if leverage is misused / not allowed in some regions</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div style="margin: 30px 0; color: white;">
+<ul style="list-style: none; padding: 0;">
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>Stocks:</strong> Offer tangible ownership of companies, often seen as a foundational market for beginners due to their relative simplicity and direct correlation with company performance.
+                        </li>
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>Forex:</strong> Boasts exceptionally high liquidity and 24/5 availability—ideal for those who prefer flexible trading hours and direct exposure to global macroeconomic events.
+                        </li>
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>Cryptocurrencies:</strong> New, fast-moving, and 24/7—attractive for those seeking excitement, higher volatility, and participation in emerging financial technologies.
+                        </li>
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>Commodities:</strong> Tied to real-world supply and demand, offering alternative ways to diversify a portfolio and potentially hedge against inflation.
+                        </li>
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>ETFs:</strong> Provide instant diversification in a single trade, useful for broad market or sector exposure with lower individual stock selection effort.
+                        </li>
+<li style="padding: 10px 0; position: relative; padding-left: 25px;">
+<span style="position: absolute; left: 0; color: white;">•</span>
+<strong>CFDs:</strong> Offer the ability to go long or short on almost any market with leverage, but come with significantly higher inherent risks due to amplified gains and losses.
+                        </li>
+</ul>
+</div>
+</div>
+</div>
+
+
+
+
+
+<div class="quiz-container">
+<div class="quiz-header">
+<h2>Day 1 Knowledge Quiz</h2>
+<p>Test your understanding of trading basics and market types</p>
+<div class="quiz-progress">
+<div class="quiz-progress-fill" id="quizProgress"></div>
+</div>
+<p id="questionCounter">Question 1 of 5</p>
+</div>
+<div id="quizContent">
+<!-- Question 1 -->
+<div class="question-container active" data-question="1">
+<div class="question-number">1</div>
+<div class="question-text">What is the primary difference between trading and investing?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Trading involves higher amounts of money</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Trading focuses on short-term price movements for profit</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Investing is only for professionals</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>There is no difference</span>
+</div>
+</div>
+</div>
+<!-- Question 2 -->
+<div class="question-container" data-question="2" style="display: none;">
+<div class="question-number">2</div>
+<div class="question-text">Which market operates 24/7 without closing?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Stock Market</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Forex Market</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Cryptocurrency Market</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Commodities Market</span>
+</div>
+</div>
+</div>
+<!-- Question 3 -->
+<div class="question-container" data-question="3" style="display: none;">
+<div class="question-number">3</div>
+<div class="question-text">What does ETF stand for?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Electronic Trading Fund</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Exchange-Traded Fund</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>European Trading Foundation</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Equity Transfer Fund</span>
+</div>
+</div>
+</div>
+<!-- Question 4 -->
+<div class="question-container" data-question="4" style="display: none;">
+<div class="question-number">4</div>
+<div class="question-text">Which market is considered the largest by daily trading volume?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Stock Market</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Forex Market</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Cryptocurrency Market</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Commodities Market</span>
+</div>
+</div>
+</div>
+<!-- Question 5 -->
+<div class="question-container" data-question="5" style="display: none;">
+<div class="question-number">5</div>
+<div class="question-text">What is the main risk associated with CFD trading?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Limited trading hours</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>High minimum capital requirements</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Amplified losses due to leverage</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Inability to trade different markets</span>
+</div>
+</div>
+</div>
+</div>
+<div class="quiz-navigation">
+<button class="quiz-btn" disabled="" id="prevBtn" onclick="previousQuestion()">Previous</button>
+<div id="questionInfo">
+<span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+</div>
+<button class="quiz-btn next" disabled="" id="nextBtn" onclick="nextQuestion()">Next</button>
+</div>
+<div class="quiz-results" id="quizResults" style="display: none;">
+<h3>Quiz Complete!</h3>
+<div class="score-circle" style="--score: 80%">
+<div class="score-text" id="scoreText">4/5</div>
+</div>
+<div class="performance-message" id="performanceMessage">Great job! You have a solid understanding of trading basics.</div>
+<div class="quiz-summary">
+<div class="summary-item">
+<div class="summary-number" id="correctAnswers">4</div>
+<div class="summary-label">Correct</div>
+</div>
+<div class="summary-item">
+<div class="summary-number" id="incorrectAnswers">1</div>
+<div class="summary-label">Incorrect</div>
+</div>
+<div class="summary-item">
+<div class="summary-number" id="scorePercentage">80%</div>
+<div class="summary-label">Score</div>
+</div>
+</div>
+<div id="passedButtons" style="display: none;">
+<button class="quiz-btn next" onclick="showQuizReview()">Review Answers</button>
+<button class="quiz-btn" id="continueAfterQuiz" onclick="completeQuiz()">Continue to Task</button>
+</div>
+<div id="failedButtons" style="display: none;">
+<div style="background: #fef2f2; color: #dc2626; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #dc2626;">
+<h4>⚠️ Minimum Score Required</h4>
+<p>You need at least 60% (3/5 correct) to proceed to Day 2. Please review the material and retake the quiz.</p>
+</div>
+<button class="quiz-btn" onclick="showQuizReview()">Review Answers &amp; Learn</button>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+</div>
+<!-- Quiz Review Section -->
+
+</div><div class="quiz-container" id="quizReview" style="display: none;">
+<div class="quiz-header">
+<h2>Quiz Review - Correct Answers</h2>
+<p>Review your answers and learn from any mistakes</p>
+</div>
+<div id="reviewContent">
+<!-- Review content will be populated by JavaScript -->
+</div>
+<div style="text-align: center; margin-top: 30px;">
+<button class="quiz-btn next" onclick="finishReview()">Continue to Task</button>
+</div>
+</div><div class="task-section">
+<h2>📝 Day 1 Task</h2>
+<h3>Your Mission:</h3>
+<ol>
+<li><strong>Choose 1-2 markets</strong> that excite you (e.g. Stocks, Forex, Crypto).</li>
+<li><strong>Write a short paragraph</strong> on why you find them interesting.</li>
+</ol>
+<div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+<h4>📋 Task Submission Required</h4>
+<p><strong>⚠️ Important:</strong> You must submit this task to unlock Day 2. Day 2 will become available 24 hours after you started the challenge.</p>
+<textarea id="taskResponse" placeholder="Write your response here... (minimum 50 words)" style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+<div style="margin: 15px 0;">
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Optional: Upload additional file (image, document, etc.)</label>
+<input id="taskFile" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
+</div>
+<div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
+<p id="taskStatusText"></p>
+</div>
+<button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 1 Task</button>
+</div>
+<div id="dayUnlockInfo" style="background: #e3f2fd; color: #1565c0; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #2196f3;">
+<h4>🕐 Day Unlock Schedule</h4>
+<div id="unlockSchedule">
+<p><strong>Day 1:</strong> Available now</p>
+<p><strong>Day 2:</strong> <span id="day2Unlock">Unlocks 24 hours after challenge start</span></p>
+<p><strong>Day 3:</strong> <span id="day3Unlock">Unlocks 48 hours after challenge start</span></p>
+<p><strong>Day 4:</strong> <span id="day4Unlock">Unlocks 72 hours after challenge start</span></p>
+<p style="font-size: 0.9em; margin-top: 10px;"><em>Each day requires completion of the previous day's task and quiz.</em></p>
+</div>
+</div>
+</div><div class="section">
+<h2>📚 Extra Learning Notes</h2>
+<div class="market-comparison">
+<div class="market-card">
+<h4>🧠 Mindset Over Money</h4>
+<p>Before we discuss complex strategies, remember that trading success often depends on <strong>mindset</strong> and <strong>discipline</strong>.</p>
+</div>
+<div class="market-card">
+<h4>🕐 Market Hours</h4>
+<p>Stocks and commodities mostly trade on specific exchanges (e.g., New York Stock Exchange-NYSE), while <strong>Forex</strong> is global and runs around the clock (Mon-Fri).</p>
+</div>
+<div class="market-card">
+<h4>💰 Starting Small</h4>
+<p>Many newbies worry about not having tons of cash. Remember, you can start with <strong>small</strong> amounts, especially in markets like Forex or Crypto, or use <strong>demo accounts</strong> to practice first.</p>
+</div>
+</div>
+</div><div class="sneak-peek">
+<h2>👀 Sneak Peek: Day 2</h2>
+<p>Tomorrow, we'll talk about <strong>demo accounts</strong> (a zero-risk way to practice) and get you familiar with <strong>trading platforms</strong>. Think of it as a <strong>training ground</strong> before you risk real money.</p>
+<p><strong>Get excited:</strong> By the end of Day 2, you'll have your own <strong>virtual account</strong> and make your <strong>first practice trades</strong>—all with zero risk!</p>
+</div><div class="completion-section">
+<h2>🎉 Day 1 Complete!</h2>
+<p>Congratulations—you've just dipped your toes into the wide ocean of trading and markets. <strong>Keep Day 1's notes</strong> handy, you'll build on them every step of the way.</p>
+<p>Once you're comfortable with these markets, your next big step is to <strong>learn how to navigate a trading platform safely (Day 2)</strong>.</p>
+<button class="completion-button" onclick="completeDay1()">Mark Day 1 as Complete</button>
+<button class="completion-button" onclick="proceedToDay2()" style="background: #3b82f6;">Continue to Day 2</button>
+</div></div>
+<script>
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['b', 'c', 'b', 'b', 'c']; // Correct answers for each question
+        let quizScore = 0;
+        const totalQuestions = 5;
+        let taskSubmitted = false;
+        let quizCompleted = false;
+        let challengeStartTime = null;
+
+        // Quiz questions data for review
+        const quizQuestions = [
+            {
+                question: "What is the primary difference between trading and investing?",
+                options: [
+                    "Trading involves higher amounts of money",
+                    "Trading focuses on short-term price movements for profit",
+                    "Investing is only for professionals", 
+                    "There is no difference"
+                ],
+                explanation: "Trading focuses on short-term price movements to generate profit, while investing typically involves longer-term positions for growth."
+            },
+            {
+                question: "Which market operates 24/7 without closing?",
+                options: [
+                    "Stock Market",
+                    "Forex Market", 
+                    "Cryptocurrency Market",
+                    "Commodities Market"
+                ],
+                explanation: "Cryptocurrency markets operate 24/7 without closing, unlike traditional markets that have specific trading hours."
+            },
+            {
+                question: "What does ETF stand for?",
+                options: [
+                    "Electronic Trading Fund",
+                    "Exchange-Traded Fund",
+                    "European Trading Foundation",
+                    "Equity Transfer Fund"
+                ],
+                explanation: "ETF stands for Exchange-Traded Fund, which is a basket of securities that trades on an exchange like individual stocks."
+            },
+            {
+                question: "Which market is considered the largest by daily trading volume?",
+                options: [
+                    "Stock Market",
+                    "Forex Market",
+                    "Cryptocurrency Market", 
+                    "Commodities Market"
+                ],
+                explanation: "The Forex market is the largest financial market by daily trading volume, with over $6 trillion traded daily."
+            },
+            {
+                question: "What is the main risk associated with CFD trading?",
+                options: [
+                    "Limited trading hours",
+                    "High minimum capital requirements",
+                    "Amplified losses due to leverage",
+                    "Inability to trade different markets"
+                ],
+                explanation: "CFDs use leverage, which amplifies both gains and losses, making them high-risk instruments that can result in losses exceeding your initial investment."
+            }
+        ];
+
+        // Initialize challenge timing
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChallenge();
+            setupQuizOptions();
+            updateQuizProgress();
+            updateUnlockTimes();
+        });
+
+        function initializeChallenge() {
+            // Get challenge start time from localStorage or set it now
+            challengeStartTime = localStorage.getItem('challengeStartTime');
+            if (!challengeStartTime) {
+                challengeStartTime = Date.now();
+                localStorage.setItem('challengeStartTime', challengeStartTime);
+            } else {
+                challengeStartTime = parseInt(challengeStartTime);
+            }
+            
+            // Check if task was already submitted
+            taskSubmitted = localStorage.getItem('day1TaskSubmitted') === 'true';
+            if (taskSubmitted) {
+                showTaskSubmitted();
+            }
+        }
+
+        function updateUnlockTimes() {
+            const startTime = new Date(challengeStartTime);
+            const day2Time = new Date(startTime.getTime() + (24 * 60 * 60 * 1000));
+            const day3Time = new Date(startTime.getTime() + (48 * 60 * 60 * 1000));
+            const day4Time = new Date(startTime.getTime() + (72 * 60 * 60 * 1000));
+
+            document.getElementById('day2Unlock').textContent = `Unlocks: ${day2Time.toLocaleDateString()} at ${day2Time.toLocaleTimeString()}`;
+            document.getElementById('day3Unlock').textContent = `Unlocks: ${day3Time.toLocaleDateString()} at ${day3Time.toLocaleTimeString()}`;
+            document.getElementById('day4Unlock').textContent = `Unlocks: ${day4Time.toLocaleDateString()} at ${day4Time.toLocaleTimeString()}`;
+        }
+
+        // Task submission functionality
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            const taskFile = document.getElementById('taskFile').files[0];
+            
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please write at least 50 words for your response.', 'error');
+                return;
+            }
+
+            // Save task submission
+            localStorage.setItem('day1TaskSubmitted', 'true');
+            localStorage.setItem('day1TaskResponse', taskResponse);
+            if (taskFile) {
+                localStorage.setItem('day1TaskFileName', taskFile.name);
+            }
+
+            taskSubmitted = true;
+            showTaskSubmitted();
+            showTaskStatus('Task submitted successfully! You can now proceed to Day 2 when it unlocks.', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            const statusText = document.getElementById('taskStatusText');
+            
+            statusDiv.style.display = 'block';
+            statusText.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Task Submitted ✓';
+            submitBtn.style.backgroundColor = '#28a745';
+            submitBtn.style.color = 'white';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+            document.getElementById('taskFile').disabled = true;
+        }
+
+        // Disable right-click and copying
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectOption(this);
+                });
+            });
+        }
+
+        function selectOption(selectedOption) {
+            const questionContainer = selectedOption.closest('.question-container');
+            const questionNumber = parseInt(questionContainer.dataset.question) - 1;
+            const allOptions = questionContainer.querySelectorAll('.quiz-option');
+            
+            // Remove selection from all options in this question
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Select the clicked option
+            selectedOption.classList.add('selected');
+            
+            // Store the answer
+            userAnswers[questionNumber] = selectedOption.dataset.answer;
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+            
+            // Mark question as answered
+            questionContainer.classList.add('answered');
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                // Hide current question
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
+                
+                // Show next question
+                currentQuestionIndex++;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                
+                updateQuizProgress();
+                updateNavigationButtons();
+            } else {
+                // Quiz complete
+                finishQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                // Hide current question
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.remove('active');
+                
+                // Show previous question
+                currentQuestionIndex--;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                
+                updateQuizProgress();
+                updateNavigationButtons();
+            }
+        }
+
+        function updateQuizProgress() {
+            const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('quizProgress').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            // Previous button
+            prevBtn.disabled = currentQuestionIndex === 0;
+            
+            // Next button
+            const currentAnswer = userAnswers[currentQuestionIndex];
+            nextBtn.disabled = !currentAnswer;
+            
+            // Update next button text
+            if (currentQuestionIndex === totalQuestions - 1) {
+                nextBtn.textContent = 'Finish Quiz';
+            } else {
+                nextBtn.textContent = 'Next';
+            }
+        }
+
+        function finishQuiz() {
+            // Calculate score
+            quizScore = 0;
+            for (let i = 0; i < totalQuestions; i++) {
+                if (userAnswers[i] === correctAnswers[i]) {
+                    quizScore++;
+                }
+            }
+
+            quizCompleted = true;
+            localStorage.setItem('day1QuizCompleted', 'true');
+            localStorage.setItem('day1QuizScore', quizScore);
+            
+            // Show results
+            showQuizResults();
+        }
+
+        function showQuizResults() {
+            // Hide quiz content
+            document.getElementById('quizContent').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.querySelector('.quiz-progress').style.display = 'none';
+            document.getElementById('questionCounter').style.display = 'none';
+            
+            // Show results
+            const resultsDiv = document.getElementById('quizResults');
+            resultsDiv.style.display = 'block';
+            
+            // Update score display
+            const scorePercentage = Math.round((quizScore / totalQuestions) * 100);
+            document.getElementById('scoreText').textContent = `${quizScore}/${totalQuestions}`;
+            document.getElementById('correctAnswers').textContent = quizScore;
+            document.getElementById('incorrectAnswers').textContent = totalQuestions - quizScore;
+            document.getElementById('scorePercentage').textContent = scorePercentage + '%';
+            
+            // Update score circle
+            const scoreCircle = document.querySelector('.score-circle');
+            scoreCircle.style.setProperty('--score', scorePercentage + '%');
+            
+            // Performance message and buttons based on score
+            let message = '';
+            const passedButtons = document.getElementById('passedButtons');
+            const failedButtons = document.getElementById('failedButtons');
+            
+            if (scorePercentage >= 60) {
+                // Passed - show continue options
+                passedButtons.style.display = 'block';
+                failedButtons.style.display = 'none';
+                
+                if (scorePercentage >= 90) {
+                    message = 'Outstanding! You have an excellent grasp of trading fundamentals.';
+                } else if (scorePercentage >= 80) {
+                    message = 'Great job! You have a solid understanding of trading basics.';
+                } else if (scorePercentage >= 70) {
+                    message = 'Good work! You\'re ready for Day 2.';
+                } else {
+                    message = 'Well done! You\'ve achieved the minimum score to proceed.';
+                }
+            } else {
+                // Failed - show retake options
+                passedButtons.style.display = 'none';
+                failedButtons.style.display = 'block';
+                message = 'Take some time to review the material. Understanding these basics is crucial for your success.';
+            }
+            
+            document.getElementById('performanceMessage').textContent = message;
+        }
+
+        function retakeQuiz() {
+            // Reset quiz state
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizScore = 0;
+            quizCompleted = false;
+            
+            // Hide results and review
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizReview').style.display = 'none';
+            
+            // Show quiz content again
+            document.getElementById('quizContent').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.querySelector('.quiz-progress').style.display = 'block';
+            document.getElementById('questionCounter').style.display = 'block';
+            
+            // Reset all questions
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach((question, index) => {
+                if (index === 0) {
+                    question.style.display = 'block';
+                    question.classList.add('active');
+                } else {
+                    question.style.display = 'none';
+                    question.classList.remove('active');
+                }
+                question.classList.remove('answered');
+                
+                // Clear all selections
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(option => {
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                });
+            });
+            
+            // Reset navigation
+            updateQuizProgress();
+            updateNavigationButtons();
+            
+            // Scroll to quiz
+            document.querySelector('.quiz-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showQuizReview() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizReview').style.display = 'block';
+            
+            // Generate review content
+            let reviewHTML = '';
+            for (let i = 0; i < totalQuestions; i++) {
+                const isCorrect = userAnswers[i] === correctAnswers[i];
+                const userAnswerIndex = ['a', 'b', 'c', 'd'].indexOf(userAnswers[i]);
+                const correctAnswerIndex = ['a', 'b', 'c', 'd'].indexOf(correctAnswers[i]);
+                
+                reviewHTML += `
+                    <div class="question-container" style="border-color: ${isCorrect ? '#10b981' : '#ef4444'};">
+                        <div class="question-number" style="background: ${isCorrect ? '#10b981' : '#ef4444'};">${i + 1}</div>
+                        <div class="question-text">${quizQuestions[i].question}</div>
+                        
+                        <div class="quiz-options">
+                            ${quizQuestions[i].options.map((option, optIndex) => {
+                                let optionClass = '';
+                                if (optIndex === correctAnswerIndex) {
+                                    optionClass = 'correct';
+                                } else if (optIndex === userAnswerIndex && !isCorrect) {
+                                    optionClass = 'incorrect';
+                                }
+                                
+                                return `
+                                    <div class="quiz-option ${optionClass}">
+                                        <div class="option-letter">${['A', 'B', 'C', 'D'][optIndex]}</div>
+                                        <span>${option}</span>
+                                        ${optIndex === correctAnswerIndex ? '<span style="margin-left: auto; color: #10b981; font-weight: bold;">✓ Correct</span>' : ''}
+                                        ${optIndex === userAnswerIndex && !isCorrect ? '<span style="margin-left: auto; color: #ef4444; font-weight: bold;">✗ Your answer</span>' : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #3b82f6;">
+                            <strong>Explanation:</strong> ${quizQuestions[i].explanation}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('reviewContent').innerHTML = reviewHTML;
+        }
+
+        function finishReview() {
+            document.getElementById('quizReview').style.display = 'none';
+            document.querySelector('.task-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function completeQuiz() {
+            alert(`Quiz completed with ${quizScore}/${totalQuestions} correct answers!\n\nYou can now proceed to the Day 1 task.`);
+            // Scroll to task section
+            document.querySelector('.task-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Day completion functions
+        function completeDay1() {
+            if (!quizCompleted) {
+                alert('Please complete the quiz first before finishing Day 1.');
+                return;
+            }
+            
+            if (quizScore < 3) {
+                alert('Please achieve at least 60% on the quiz before completing Day 1.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('Please submit your Day 1 task before completing the day.');
+                return;
+            }
+            
+            alert('🎉 Congratulations! Day 1 completed successfully!\n\nDay 2 will unlock 24 hours after you started the challenge. You\'re making great progress on your Market Warrior journey!');
+        }
+        
+        function proceedToDay2() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('Please complete the quiz (60% minimum) and submit your task before proceeding to Day 2.');
+                return;
+            }
+            
+            const now = Date.now();
+            const day2UnlockTime = challengeStartTime + (24 * 60 * 60 * 1000);
+            
+            if (now < day2UnlockTime) {
+                const remainingTime = day2UnlockTime - now;
+                const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                alert(`Day 2 will unlock in ${hours} hours and ${minutes} minutes.`);
+                return;
+            }
+            
+            alert('🚀 Ready for Day 2!\n\nYou\'ll learn about demo accounts and trading platforms. Get ready to make your first virtual trades!');
+        }
+    </script>
+</body>
+</html>

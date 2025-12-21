@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Day 8: Trend Lines &amp; Chart Patterns | Market Warrior</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .phase-badge {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .day-header {
+            background: white;
+            color: #1e293b;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .day-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .day-header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .day-header p {
+            color: #64748b;
+            font-size: 1.2em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 6px;
+            width: 26.67%;
+            transition: width 0.8s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 25px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section h3 {
+            color: #3b82f6;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        }
+        
+        .trend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .trend-card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #3b82f6;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .trend-card:hover {
+            transform: translateY(-5px);
+            background: #f1f5f9;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .trend-card h4 {
+            color: #3b82f6;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .uptrend-card {
+            border-left-color: #10b981;
+        }
+        
+        .downtrend-card {
+            border-left-color: #ef4444;
+        }
+        
+        .sideways-card {
+            border-left-color: #f59e0b;
+        }
+        
+        .trend-visual {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .pattern-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #10b981;
+        }
+        
+        .pattern-card h4 {
+            color: #065f46;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+        
+        .example-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #dc2626;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        .interactive-tool {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #6366f1;
+        }
+        
+        .interactive-tool h4 {
+            color: #312e81;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        
+        .drawing-canvas {
+            background: white;
+            border: 2px solid #6366f1;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            height: 300px;
+            cursor: crosshair;
+        }
+        
+        .tool-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            background: #6366f1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-btn:hover {
+            background: #4f46e5;
+            transform: translateY(-1px);
+        }
+        
+        .tool-btn.active {
+            background: #10b981;
+        }
+        
+        .comparison-table {
+            overflow-x: auto;
+            margin: 30px 0;
+        }
+        
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table thead {
+            background: linear-gradient(135deg, #1e293b, #475569);
+            color: white;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .comparison-table tbody tr:hover {
+            background: #f1f5f9;
+        }
+        
+        .scenario-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 5px solid #f59e0b;
+        }
+        
+        .scenario-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .task-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #f59e0b;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .task-section h2 {
+            color: #92400e;
+        }
+        
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-header h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-progress {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .quiz-progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .question-container.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .question-number {
+            background: #10b981;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .quiz-option:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .quiz-option.selected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .option-letter {
+            background: #e5e7eb;
+            color: #374151;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .quiz-option.selected .option-letter {
+            background: #10b981;
+            color: white;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .quiz-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .quiz-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quiz-btn.next {
+            background: #10b981;
+        }
+        
+        .quiz-btn.next:hover {
+            background: #059669;
+        }
+        
+        .quiz-results {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+            margin: 30px 0;
+        }
+        
+        .completion-section {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .completion-button {
+            background: #3b82f6;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .completion-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .video-placeholder {
+            background: #111;
+            border-radius: 15px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sneak-peek {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .pattern-identifier {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px dashed #3b82f6;
+        }
+        
+        .pattern-identifier h4 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .pattern-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .pattern-example {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .pattern-example:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+        }
+        
+        .pattern-example h5 {
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .pattern-visual {
+            height: 150px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<div class="day-header">
+<div class="phase-badge">🚀 PHASE 2: TECHNICAL ANALYSIS</div>
+<div class="day-badge">DAY 8 OF 30</div>
+<h1>Trend Lines &amp; Chart Patterns</h1>
+<p>Learn to identify market direction and high-probability pattern setups like a professional</p>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+</div>
+<div class="section">
+<h2>🎯 Introduction - Welcome to Phase 2!</h2>
+<p>Welcome to <strong>Day 8</strong> and the beginning of <strong>Phase 2: Technical Analysis</strong>!</p>
+<p>You've mastered the foundations. Now we dive deeper into reading market structure. Today, you'll learn to <strong>draw trend lines correctly</strong> and <strong>identify powerful chart patterns</strong> that signal high-probability trading opportunities.</p>
+<div class="highlight-box">
+<p><strong>Why This Matters:</strong> Professional traders don't guess market direction—they read it through trend lines and patterns. These tools reveal where price is likely to go next, giving you a massive edge.</p>
+</div>
+<div class="warning-box">
+<h4>⚠️ Critical Principle</h4>
+<p><strong>"The trend is your friend until it ends."</strong> Trading against the trend is like swimming against a riptide—possible, but exhausting and dangerous. Today you'll learn to identify, respect, and profit from trends!</p>
+</div>
+</div>
+<div class="section">
+<h2>📹 Video Lesson</h2>
+<div class="video-placeholder">
+<p>Video player will load here</p>
+</div>
+</div>
+<div class="section">
+<h2>📈 Part 1: Understanding Trend Lines</h2>
+<h3>What is a Trend Line?</h3>
+<p>A <strong>trend line</strong> is a straight line that connects two or more price points and extends into the future. It's one of the most powerful tools in technical analysis because it shows:</p>
+<ul style="margin: 15px 0; padding-left: 20px;">
+<li>Current market direction (up, down, or sideways)</li>
+<li>Support and resistance levels dynamically</li>
+<li>Potential breakout or reversal points</li>
+<li>Entry and exit timing opportunities</li>
+</ul>
+<h3>The Three Types of Trends</h3>
+<div class="trend-grid">
+<div class="trend-card uptrend-card">
+<h4>📈 Uptrend (Bullish)</h4>
+<p><strong>Definition:</strong> Series of higher highs (HH) and higher lows (HL)</p>
+<p style="margin-top: 10px;"><strong>How to draw:</strong> Connect two or more lows, drawing upward</p>
+<p><strong>Meaning:</strong> Buyers are in control, price is climbing</p>
+<p style="margin-top: 10px; color: #10b981;"><strong>Trading strategy:</strong> Buy at trend line support, sell at resistance</p>
+<p><strong>Break signal:</strong> Price closes below trend line = trend may be ending</p>
+</div>
+<div class="trend-card downtrend-card">
+<h4>📉 Downtrend (Bearish)</h4>
+<p><strong>Definition:</strong> Series of lower highs (LH) and lower lows (LL)</p>
+<p style="margin-top: 10px;"><strong>How to draw:</strong> Connect two or more highs, drawing downward</p>
+<p><strong>Meaning:</strong> Sellers are in control, price is falling</p>
+<p style="margin-top: 10px; color: #ef4444;"><strong>Trading strategy:</strong> Sell at trend line resistance, cover at support</p>
+<p><strong>Break signal:</strong> Price closes above trend line = trend may be reversing</p>
+</div>
+<div class="trend-card sideways-card">
+<h4>↔️ Sideways (Range)</h4>
+<p><strong>Definition:</strong> Price moves horizontally between two levels</p>
+<p style="margin-top: 10px;"><strong>How to draw:</strong> Draw horizontal lines at tops and bottoms</p>
+<p><strong>Meaning:</strong> Balance between buyers and sellers, consolidation</p>
+<p style="margin-top: 10px; color: #f59e0b;"><strong>Trading strategy:</strong> Buy at bottom, sell at top (range trading)</p>
+<p><strong>Break signal:</strong> Breakout above/below = new trend beginning</p>
+</div>
+</div>
+<div class="highlight-box">
+<h4>🎓 The Golden Rules of Drawing Trend Lines</h4>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Minimum Two Points:</strong> Need at least 2 touches to draw a valid trend line</li>
+<li><strong>Third Touch Confirms:</strong> When price touches line a 3rd time, trend is STRONG</li>
+<li><strong>More Touches = Stronger:</strong> 4+ touches = very significant level</li>
+<li><strong>Don't Force It:</strong> If line doesn't fit naturally, don't draw it</li>
+<li><strong>Timeframe Matters:</strong> Trend on daily chart more reliable than 5-min chart</li>
+<li><strong>Adjust as Needed:</strong> Redraw trend lines as new data appears</li>
+</ol>
+</div>
+<div class="example-box">
+<h4>💡 Real Example: Tesla Uptrend Analysis</h4>
+<p><strong>Scenario:</strong> Tesla stock from $150 to $220 over 3 months</p>
+<ul style="margin: 15px 0; padding-left: 20px;">
+<li><strong>Point 1:</strong> Low at $150 (Week 1)</li>
+<li><strong>Point 2:</strong> Higher low at $165 (Week 4) → Draw trend line</li>
+<li><strong>Point 3:</strong> Higher low at $180 (Week 8) → Confirms trend!</li>
+<li><strong>Point 4:</strong> Price touches $195 (Week 10) → Very strong trend</li>
+</ul>
+<p><strong>Trading Decision:</strong> Buy when price dips to trend line at $195. Set stop loss at $190 (below trend line). Target $220 (next resistance). <strong>Risk: $5 | Reward: $25 | Ratio: 1:5 ✓</strong></p>
+<p><strong>What happened:</strong> Price respected trend line, rallied to $218, profit secured!</p>
+</div>
+<h3>Support vs Resistance Trend Lines</h3>
+<div class="trend-grid">
+<div class="trend-card">
+<h4>🛡️ Support Trend Line</h4>
+<p><strong>Location:</strong> Below price in uptrend</p>
+<p><strong>Function:</strong> Acts as a floor, buyers step in here</p>
+<p><strong>How to use:</strong> Buy near this line</p>
+<p><strong>Break = Warning:</strong> Uptrend may be over</p>
+</div>
+<div class="trend-card">
+<h4>🚫 Resistance Trend Line</h4>
+<p><strong>Location:</strong> Above price in downtrend</p>
+<p><strong>Function:</strong> Acts as ceiling, sellers step in here</p>
+<p><strong>How to use:</strong> Sell near this line</p>
+<p><strong>Break = Signal:</strong> Downtrend may be ending</p>
+</div>
+</div>
+<div class="scenario-box">
+<h4>📖 Real Trading Scenario: Trend Line Break</h4>
+<p><strong>Setup:</strong> Amazon in downtrend, touching resistance trend line 3 times at $140, $135, $130</p>
+<p><strong>Day 1:</strong> Price approaches trend line resistance at $125</p>
+<p><strong>Day 2:</strong> Price breaks ABOVE trend line, closes at $128 → Downtrend broken!</p>
+<p><strong>Day 3:</strong> Price retests broken trend line (now support) at $126, bounces up</p>
+<p><strong>Action:</strong> Enter long at $127, stop at $122 (below broken line), target $140 (old resistance)</p>
+<p><strong>Result:</strong> Classic trend reversal setup. Stock rallied to $138, 8.6% profit! 🎉</p>
+</div>
+</div>
+<div class="section">
+<h2>🔺 Part 2: Chart Patterns - The Language of Price</h2>
+<h3>Why Patterns Matter</h3>
+<p>Chart patterns are <strong>recurring price formations</strong> that tend to produce predictable outcomes. They work because they reflect human psychology—fear and greed playing out in a visual format.</p>
+<div class="highlight-box">
+<h4>🧠 Pattern Psychology</h4>
+<p>Every pattern tells a story:</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Triangles:</strong> Indecision period before big move</li>
+<li><strong>Flags:</strong> Brief rest before trend continuation</li>
+<li><strong>Head &amp; Shoulders:</strong> Exhaustion signal, trend changing</li>
+<li><strong>Double Tops/Bottoms:</strong> Failed attempts to break level</li>
+</ul>
+</div>
+<h3>Continuation Patterns (Trend Keeps Going)</h3>
+<div class="comparison-table">
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Formation</th>
+<th>Signal</th>
+<th>Trading Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bull Flag 🚩</strong></td>
+<td>Sharp rise + small downward channel</td>
+<td>Uptrend continues</td>
+<td>Buy breakout above flag top. Target = flagpole height</td>
+</tr>
+<tr>
+<td><strong>Bear Flag 🚩</strong></td>
+<td>Sharp drop + small upward channel</td>
+<td>Downtrend continues</td>
+<td>Sell breakdown below flag bottom. Target = flagpole height</td>
+</tr>
+<tr>
+<td><strong>Ascending Triangle ▲</strong></td>
+<td>Flat top resistance + rising support</td>
+<td>Usually breaks up</td>
+<td>Buy breakout above resistance. Target = triangle height</td>
+</tr>
+<tr>
+<td><strong>Descending Triangle ▼</strong></td>
+<td>Flat bottom support + falling resistance</td>
+<td>Usually breaks down</td>
+<td>Sell breakdown below support. Target = triangle height</td>
+</tr>
+<tr>
+<td><strong>Symmetrical Triangle ◆</strong></td>
+<td>Rising support + falling resistance meet</td>
+<td>Breaks either way</td>
+<td>Trade breakout direction. Target = widest part of triangle</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pattern-card">
+<h4>🚩 Bull Flag Pattern Deep Dive</h4>
+<p><strong>Formation Process:</strong></p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Phase 1 - The Pole:</strong> Strong price surge (20-30% in days/weeks)</li>
+<li><strong>Phase 2 - The Flag:</strong> Tight consolidation, small pullback (5-15%)</li>
+<li><strong>Phase 3 - The Breakout:</strong> Price explodes upward, continuing trend</li>
+</ol>
+<p><strong>Why it works:</strong> Strong buyers pause briefly (profit-taking), then resume buying. The flag is their "rest period" before next leg up.</p>
+<br/>
+<p><strong>Trading Rules:</strong></p>
+<ul style="padding-left: 20px;">
+<li>✅ Enter: On break above flag's upper trend line with volume</li>
+<li>✅ Stop Loss: Below flag's lower trend line (5-10%)</li>
+<li>✅ Target: Add pole height to breakout point</li>
+<li>❌ Don't trade if flag lasts &gt;3 weeks (loses validity)</li>
+</ul>
+</div>
+<div class="example-box">
+<h4>💡 Real Flag Pattern Trade: NVIDIA</h4>
+<p><strong>Scenario:</strong> NVIDIA rallies from $400 to $480 in 2 weeks (pole = $80)</p>
+<p><strong>Then:</strong> Forms tight flag, dips to $465 over 5 days</p>
+<p><strong>Setup:</strong> Flag resistance at $475, support at $460</p>
+<p><strong>Entry:</strong> Breakout at $476 with high volume</p>
+<p><strong>Stop Loss:</strong> $458 (below flag)</p>
+<p><strong>Target:</strong> $476 + $80 (pole) = $556</p>
+<p><strong>Result:</strong> Stock reached $545 in 10 days! 14.5% gain. Risk was 3.8%, reward was 14.5% = 1:3.8 ratio ✓</p>
+</div>
+<h3>Reversal Patterns (Trend Changing Direction)</h3>
+<div class="comparison-table">
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Formation</th>
+<th>Signal</th>
+<th>Trading Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Head &amp; Shoulders 👤</strong></td>
+<td>Left shoulder → Higher head → Right shoulder</td>
+<td>Uptrend ending, reversal down</td>
+<td>Sell break below neckline. Target = head to neckline distance</td>
+</tr>
+<tr>
+<td><strong>Inverse H&amp;S 🙃</strong></td>
+<td>Left shoulder → Lower head → Right shoulder</td>
+<td>Downtrend ending, reversal up</td>
+<td>Buy break above neckline. Target = head to neckline distance</td>
+</tr>
+<tr>
+<td><strong>Double Top M</strong></td>
+<td>Two peaks at similar level, failed to break</td>
+<td>Bearish reversal</td>
+<td>Sell break below valley between peaks</td>
+</tr>
+<tr>
+<td><strong>Double Bottom W</strong></td>
+<td>Two troughs at similar level, held support</td>
+<td>Bullish reversal</td>
+<td>Buy break above peak between troughs</td>
+</tr>
+<tr>
+<td><strong>Rising Wedge 📐</strong></td>
+<td>Both lines rising, converging upward</td>
+<td>Bearish reversal (exhaustion)</td>
+<td>Sell breakdown. Target = wedge height</td>
+</tr>
+<tr>
+<td><strong>Falling Wedge 📐</strong></td>
+<td>Both lines falling, converging downward</td>
+<td>Bullish reversal (oversold)</td>
+<td>Buy breakout. Target = wedge height</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pattern-card">
+<h4>👤 Head &amp; Shoulders Pattern Deep Dive</h4>
+<p><strong>Formation Process:</strong></p>
+<ol style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Left Shoulder:</strong> Price rallies, then pulls back</li>
+<li><strong>Head:</strong> Price rallies HIGHER, then pulls back to similar level</li>
+<li><strong>Right Shoulder:</strong> Price rallies but can't reach head height, falls</li>
+<li><strong>Neckline:</strong> Draw line connecting the two valleys</li>
+<li><strong>Confirmation:</strong> Price breaks below neckline = Pattern complete</li>
+</ol>
+<p><strong>Psychology:</strong> Buyers try 3 times to push higher. The head shows maximum buying power. When right shoulder fails to match the head, it signals exhaustion—bears take over.</p>
+<br/>
+<p><strong>Trading Rules:</strong></p>
+<ul style="padding-left: 20px;">
+<li>✅ Enter: Break below neckline with volume</li>
+<li>✅ Stop Loss: Above right shoulder</li>
+<li>✅ Target: Distance from head to neckline, measured down from neckline</li>
+<li>⚠️ Pattern invalid if neckline not broken within 4 weeks</li>
+</ul>
+</div>
+<div class="scenario-box">
+<h4>📖 Real H&amp;S Trade: Apple Stock</h4>
+<p><strong>Formation over 3 months:</strong></p>
+<ul style="margin: 10px 0; padding-left: 20px;">
+<li><strong>Left Shoulder:</strong> Rally to $185, drop to $175</li>
+<li><strong>Head:</strong> Rally to $195 (higher), drop to $175</li>
+<li><strong>Right Shoulder:</strong> Rally to $187 (lower than head), start falling</li>
+<li><strong>Neckline:</strong> At $175 (connected the two valleys)</li>
+</ul>
+<p><strong>Trade Setup:</strong></p>
+<ul style="margin: 10px 0; padding-left: 20px;">
+<li>Entry: Break below neckline at $174</li>
+<li>Stop Loss: $189 (above right shoulder)</li>
+<li>Target: $175 - $20 (head to neckline) = $155</li>
+</ul>
+<p><strong>Outcome:</strong> Stock fell to $158 over 4 weeks. 9.2% profit secured! Classic H&amp;S reversal. 🎯</p>
+</div>
+<div class="warning-box">
+<h4>⚠️ Pattern Trading Mistakes to Avoid</h4>
+<p><strong>1. Trading Before Breakout:</strong> Pattern not confirmed until break happens!</p>
+<p><strong>2. Ignoring Volume:</strong> Breakouts with LOW volume often fail. Need 50%+ above average volume</p>
+<p><strong>3. Wrong Timeframe:</strong> Patterns on 5-min charts less reliable than daily charts</p>
+<p><strong>4. No Stop Loss:</strong> Patterns fail 30-40% of time. ALWAYS use stops</p>
+<p><strong>5. Forcing Patterns:</strong> If pattern isn't clear, it's not there. Don't force it!</p>
+</div>
+</div>
+<div class="section">
+<h2>🛠️ Part 3: Interactive Pattern Practice</h2>
+<div class="pattern-identifier">
+<h4>🎯 Pattern Recognition Exercise</h4>
+<p style="text-align: center; margin-bottom: 20px;">Identify these common chart patterns:</p>
+<div class="pattern-examples">
+<div class="pattern-example">
+<h5>Pattern A</h5>
+<div class="pattern-visual">
+<svg height="120" style="position: absolute;" width="200">
+<!-- Bull Flag -->
+<polyline fill="none" points="20,100 50,40 60,50 70,45 80,50 90,48" stroke="#10b981" stroke-width="2"></polyline>
+<line stroke="#6366f1" stroke-dasharray="3" stroke-width="1.5" x1="60" x2="90" y1="50" y2="45"></line>
+<line stroke="#6366f1" stroke-dasharray="3" stroke-width="1.5" x1="60" x2="90" y1="50" y2="50"></line>
+<polyline fill="none" points="90,48 120,20" stroke="#10b981" stroke-width="2"></polyline>
+</svg>
+</div>
+<select id="patternA" style="width: 100%; padding: 8px; border-radius: 5px;">
+<option value="">Select Pattern...</option>
+<option value="bullflag">Bull Flag</option>
+<option value="triangle">Triangle</option>
+<option value="hs">Head &amp; Shoulders</option>
+<option value="double">Double Top</option>
+</select>
+</div>
+<div class="pattern-example">
+<h5>Pattern B</h5>
+<div class="pattern-visual">
+<svg height="120" style="position: absolute;" width="200">
+<!-- Head & Shoulders -->
+<polyline fill="none" points="20,80 40,50 60,70 80,30 100,70 120,50 140,80" stroke="#ef4444" stroke-width="2"></polyline>
+<line stroke="#6366f1" stroke-dasharray="3" stroke-width="1.5" x1="40" x2="120" y1="70" y2="70"></line>
+</svg>
+</div>
+<select id="patternB" style="width: 100%; padding: 8px; border-radius: 5px;">
+<option value="">Select Pattern...</option>
+<option value="bullflag">Bull Flag</option>
+<option value="triangle">Triangle</option>
+<option value="hs">Head &amp; Shoulders</option>
+<option value="double">Double Top</option>
+</select>
+</div>
+<div class="pattern-example">
+<h5>Pattern C</h5>
+<div class="pattern-visual">
+<svg height="120" style="position: absolute;" width="200">
+<!-- Ascending Triangle -->
+<polyline fill="none" points="20,100 40,80 60,70 80,75 100,70 120,73" stroke="#3b82f6" stroke-width="2"></polyline>
+<line stroke="#ef4444" stroke-dasharray="3" stroke-width="1.5" x1="20" x2="120" y1="70" y2="70"></line>
+<line stroke="#10b981" stroke-dasharray="3" stroke-width="1.5" x1="20" x2="120" y1="100" y2="73"></line>
+</svg>
+</div>
+<select id="patternC" style="width: 100%; padding: 8px; border-radius: 5px;">
+<option value="">Select Pattern...</option>
+<option value="bullflag">Bull Flag</option>
+<option value="triangle">Ascending Triangle</option>
+<option value="hs">Head &amp; Shoulders</option>
+<option value="double">Double Top</option>
+</select>
+</div>
+<div class="pattern-example">
+<h5>Pattern D</h5>
+<div class="pattern-visual">
+<svg height="120" style="position: absolute;" width="200">
+<!-- Double Bottom -->
+<polyline fill="none" points="20,40 40,80 60,45 80,80 100,40" stroke="#10b981" stroke-width="2"></polyline>
+<line stroke="#6366f1" stroke-dasharray="3" stroke-width="1.5" x1="20" x2="100" y1="80" y2="80"></line>
+</svg>
+</div>
+<select id="patternD" style="width: 100%; padding: 8px; border-radius: 5px;">
+<option value="">Select Pattern...</option>
+<option value="bullflag">Bull Flag</option>
+<option value="triangle">Triangle</option>
+<option value="hs">Head &amp; Shoulders</option>
+<option value="doublebottom">Double Bottom</option>
+</select>
+</div>
+</div>
+<button class="tool-btn" onclick="checkPatternAnswers()" style="margin-top: 20px;">Check My Answers</button>
+<div id="patternResults" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: none;">
+<h5 style="color: #1e3a8a; margin-bottom: 10px;">📊 Your Results:</h5>
+<div id="patternScoreDisplay"></div>
+</div>
+</div>
+<div class="interactive-tool">
+<h4>📐 Trend Line Drawing Simulator</h4>
+<p style="text-align: center; margin-bottom: 15px;">Practice identifying trend lines on this simplified chart:</p>
+<div class="tool-buttons">
+<button class="tool-btn" id="uptrendBtn" onclick="showTrend('up')">Show Uptrend</button>
+<button class="tool-btn" id="downtrendBtn" onclick="showTrend('down')">Show Downtrend</button>
+<button class="tool-btn" id="sidewaysBtn" onclick="showTrend('sideways')">Show Sideways</button>
+<button class="tool-btn" onclick="clearTrend()">Clear</button>
+</div>
+<div class="drawing-canvas" id="trendCanvas">
+<canvas height="300" id="chartCanvas" width="800"></canvas>
+</div>
+<div id="trendAnalysis" style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; display: none;">
+<h5 style="color: #312e81; margin-bottom: 10px;">📈 Trend Analysis:</h5>
+<div id="trendContent"></div>
+</div>
+</div>
+</div>
+<div class="section">
+<h2>📚 Part 4: Advanced Pattern Concepts</h2>
+<h3>Multiple Timeframe Pattern Analysis</h3>
+<div class="highlight-box">
+<h4>🎯 The Professional's Approach</h4>
+<p>Never trade a pattern on just one timeframe. Use this 3-step process:</p>
+<ol style="padding-left: 20px; margin: 15px 0;">
+<li><strong>Higher Timeframe (Daily/Weekly):</strong> Identify overall trend direction</li>
+<li><strong>Medium Timeframe (4H/1H):</strong> Find pattern forming in trend direction</li>
+<li><strong>Lower Timeframe (15min/5min):</strong> Time exact entry on breakout</li>
+</ol>
+<p><strong>Example:</strong> Daily chart shows uptrend → 4H chart shows bull flag forming → 15min chart shows flag breakout = HIGH probability setup!</p>
+</div>
+<h3>Volume Confirmation</h3>
+<div class="trend-grid">
+<div class="trend-card">
+<h4>✅ Valid Breakout</h4>
+<p><strong>Volume:</strong> 50-100%+ above average</p>
+<p><strong>Price Action:</strong> Strong, decisive move</p>
+<p><strong>Probability:</strong> 70-80% success rate</p>
+<p><strong>Action:</strong> Enter with confidence</p>
+</div>
+<div class="trend-card">
+<h4>⚠️ Weak Breakout</h4>
+<p><strong>Volume:</strong> Below or near average</p>
+<p><strong>Price Action:</strong> Slow, indecisive</p>
+<p><strong>Probability:</strong> 40-50% success (coin flip)</p>
+<p><strong>Action:</strong> Wait for retest or skip</p>
+</div>
+<div class="trend-card">
+<h4>❌ False Breakout</h4>
+<p><strong>Volume:</strong> Very low volume</p>
+<p><strong>Price Action:</strong> Breaks then quickly reverses</p>
+<p><strong>Probability:</strong> 20-30% success</p>
+<p><strong>Action:</strong> Exit immediately or don't enter</p>
+</div>
+</div>
+<div class="example-box">
+<h4>💡 Volume Analysis Example</h4>
+<p><strong>Stock:</strong> Microsoft forming ascending triangle</p>
+<p><strong>Average Daily Volume:</strong> 20 million shares</p>
+<p><strong>Breakout Day Volume:</strong> 42 million shares (110% above average) ✓</p>
+<p><strong>Analysis:</strong> This is a HIGH conviction breakout. Institutions are participating.</p>
+<p><strong>Trade:</strong> Enter long with larger position size. This breakout has strong follow-through probability.</p>
+</div>
+<h3>Pattern Target Calculation</h3>
+<div class="highlight-box">
+<h4>🎯 How to Calculate Profit Targets</h4>
+<p>Each pattern has a mathematical target based on its structure:</p>
+<br/>
+<p><strong>Flags &amp; Triangles:</strong></p>
+<p>Target = Pattern Height + Breakout Point</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Measure from bottom to top of pattern</li>
+<li>Add that distance to the breakout level</li>
+<li>Example: Triangle $100-$120 = $20 height. Break at $120 → Target $140</li>
+</ul>
+<br/>
+<p><strong>Head &amp; Shoulders:</strong></p>
+<p>Target = (Head Peak - Neckline) measured from neckline break</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Head at $200, neckline at $180 = $20 distance</li>
+<li>Break below $180 → Target $160 ($180 - $20)</li>
+</ul>
+<br/>
+<p><strong>Double Tops/Bottoms:</strong></p>
+<p>Target = Distance between peaks/troughs to middle valley/peak</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>Double top at $150, valley at $140 = $10 distance</li>
+<li>Break below $140 → Target $130 ($140 - $10)</li>
+</ul>
+</div>
+<div class="scenario-box">
+<h4>📖 Complete Pattern Trade Plan: Triangle Breakout</h4>
+<p><strong>Stock:</strong> Google forming symmetrical triangle over 6 weeks</p>
+<p><strong>Triangle Range:</strong> $2,800 (bottom) to $2,900 (top) = $100 height</p>
+<p><strong>Breakout Level:</strong> $2,900 (upper line)</p>
+<br/>
+<p><strong>Trade Plan:</strong></p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>Entry:</strong> $2,902 (on breakout with volume)</li>
+<li><strong>Stop Loss:</strong> $2,850 (middle of triangle, -1.8%)</li>
+<li><strong>Target 1:</strong> $3,000 (pattern target, +3.4%)</li>
+<li><strong>Target 2:</strong> $3,050 (if momentum strong, +5.1%)</li>
+</ul>
+<br/>
+<p><strong>Risk/Reward:</strong> Risk $52, Reward $98-148 = 1:1.9 to 1:2.8 ✓</p>
+<p><strong>Position Size:</strong> With $10,000 account, risk 1% ($100). Can buy 1.9 shares ($100 ÷ $52 risk per share)</p>
+<p><strong>Outcome:</strong> Stock hit $3,020 in 8 days. Took 80% profit at $3,000, let 20% run. Total gain: $186 on $5,500 position = 3.4% 🎯</p>
+</div>
+</div>
+
+
+
+
+
+<div class="quiz-container">
+<div class="quiz-header">
+<h2>Day 8 Knowledge Quiz</h2>
+<p>Test your understanding of trend lines and chart patterns</p>
+<div class="quiz-progress">
+<div class="quiz-progress-fill" id="quizProgress"></div>
+</div>
+<p id="questionCounter">Question 1 of 5</p>
+</div>
+<div id="quizContent">
+<div class="question-container active" data-question="1">
+<div class="question-number">1</div>
+<div class="question-text">What defines a valid uptrend?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Series of higher highs and higher lows</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Series of lower highs and lower lows</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Price moving sideways</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Random price movements</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="2" style="display: none;">
+<div class="question-number">2</div>
+<div class="question-text">A bull flag pattern indicates what?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Trend reversal to the downside</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Trend continuation to the upside</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Market will move sideways</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>No predictable movement</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="3" style="display: none;">
+<div class="question-number">3</div>
+<div class="question-text">How many points minimum do you need to draw a valid trend line?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>1 point</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>2 points</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>3 points</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>4 points</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="4" style="display: none;">
+<div class="question-number">4</div>
+<div class="question-text">What does a Head &amp; Shoulders pattern signal?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Bullish continuation</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>Bearish reversal (uptrend ending)</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Strong uptrend beginning</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>Sideways movement</span>
+</div>
+</div>
+</div>
+<div class="question-container" data-question="5" style="display: none;">
+<div class="question-number">5</div>
+<div class="question-text">What is the most important confirmation for a valid pattern breakout?</div>
+<div class="quiz-options">
+<div class="quiz-option" data-answer="a">
+<div class="option-letter">A</div>
+<span>Price color (green or red)</span>
+</div>
+<div class="quiz-option" data-answer="b">
+<div class="option-letter">B</div>
+<span>High volume (50%+ above average)</span>
+</div>
+<div class="quiz-option" data-answer="c">
+<div class="option-letter">C</div>
+<span>Time of day</span>
+</div>
+<div class="quiz-option" data-answer="d">
+<div class="option-letter">D</div>
+<span>The broker you use</span>
+</div>
+</div>
+</div>
+</div>
+<div class="quiz-navigation">
+<button class="quiz-btn" disabled="" id="prevBtn" onclick="previousQuestion()">Previous</button>
+<div id="questionInfo">
+<span id="currentQuestion">1</span> of <span id="totalQuestions">5</span>
+</div>
+<button class="quiz-btn next" disabled="" id="nextBtn" onclick="nextQuestion()">Next</button>
+</div>
+<div class="quiz-results" id="quizResults" style="display: none;">
+<h3>Quiz Complete!</h3>
+<div class="score-circle" style="--score: 80%">
+<div class="score-text" id="scoreText">4/5</div>
+</div>
+<div class="performance-message" id="performanceMessage">Great job!</div>
+<div id="passedButtons" style="display: none;">
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+<button class="quiz-btn" onclick="proceedToTask()">Continue to Task</button>
+</div>
+<div id="failedButtons" style="display: none;">
+<div style="background: #fef2f2; color: #dc2626; padding: 20px; border-radius: 10px; margin: 20px 0;">
+<p>You need at least 60% (3/5 correct) to proceed. Please review and try again.</p>
+</div>
+<button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+</div>
+</div>
+</div><div class="task-section">
+<h2>📋 Day 8 Task</h2>
+<h3>Your Mission: Identify Trends &amp; Patterns</h3>
+<ol style="padding-left: 20px; margin: 20px 0;">
+<li style="margin: 15px 0;"><strong>Open your demo account and find:</strong>
+<ul style="margin: 10px 0; padding-left: 20px;">
+<li>One stock in a clear UPTREND (draw the trend line)</li>
+<li>One stock in a clear DOWNTREND (draw the trend line)</li>
+<li>One stock forming a PATTERN (flag, triangle, H&amp;S, or double top/bottom)</li>
+</ul>
+</li>
+<li style="margin: 15px 0;"><strong>For each find:</strong>
+<ul style="margin: 10px 0; padding-left: 20px;">
+<li>Screenshot the chart with your trend lines/pattern marked</li>
+<li>Calculate the target using pattern mathematics</li>
+<li>Plan your entry, stop loss, and target</li>
+</ul>
+</li>
+<li style="margin: 15px 0;"><strong>Complete the interactive exercises above:</strong>
+<ul style="margin: 10px 0; padding-left: 20px;">
+<li>Pattern Recognition Game (must get 3/4 correct)</li>
+<li>Practice with Trend Line Simulator</li>
+</ul>
+</li>
+<li style="margin: 15px 0;"><strong>Document using the template below</strong></li>
+</ol>
+<div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+<h4>📋 Task Submission Required</h4>
+<p><strong>⚠️ Important:</strong> You must submit this task to unlock Day 9!</p>
+<textarea id="taskResponse" placeholder="TREND &amp; PATTERN ANALYSIS REPORT
+
+Date: [Today's Date]
+
+UPTREND ANALYSIS:
+Stock: [Name &amp; Ticker]
+Timeframe: [Daily/4H/1H]
+Trend Line Points: [Price levels where line touches]
+Number of Touches: [2/3/4+]
+Current Price: $[X]
+Trend Line Level: $[X]
+Strength: [Weak/Moderate/Strong]
+
+Trading Plan:
+Entry: $[X] (near trend line)
+Stop Loss: $[X] (below trend line)
+Target: $[X]
+Risk/Reward: [X:X]
+
+DOWNTREND ANALYSIS:
+Stock: [Name &amp; Ticker]
+Timeframe: 
+Trend Line Points: 
+Number of Touches: 
+Current Price: 
+Trend Line Level: 
+Strength: 
+
+Trading Plan:
+Entry: 
+Stop Loss: 
+Target: 
+Risk/Reward: 
+
+PATTERN ANALYSIS:
+Stock: [Name &amp; Ticker]
+Pattern Type: [Flag/Triangle/H&amp;S/Double Top-Bottom/Wedge]
+Timeframe: 
+Pattern Height/Width: $[X]
+Key Levels: 
+  Resistance: $[X]
+  Support: $[X]
+
+Trading Plan:
+Entry: $[X] (on breakout)
+Stop Loss: $[X] (inside pattern)
+Target: $[X] (calculated target)
+Risk/Reward: [X:X]
+Why this pattern will likely work: [Your analysis]
+
+PATTERN RECOGNITION GAME:
+Score: [X/4]
+
+KEY LEARNING TODAY:
+Most important concept learned:
+Which pattern will you focus on first?
+What will you practice more?
+" style="width: 100%; height: 350px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+<div style="margin: 15px 0;">
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - at least 3)</label>
+<input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
+</div>
+<div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
+<p id="taskStatusText"></p>
+</div>
+<button class="completion-button" id="submitTaskBtn" onclick="submitTask()" style="background: #ffc107; color: #000;">Submit Day 8 Task</button>
+</div>
+</div><div class="section">
+<h2>🎓 Extra Learning Notes</h2>
+<div class="trend-grid">
+<div class="trend-card">
+<h4>📖 The 80% Rule</h4>
+<p>When price approaches a major trend line:</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>80% of the time it will bounce (respect the line)</li>
+<li>20% of the time it will break through</li>
+</ul>
+<p><strong>Strategy:</strong> Trade the bounce until it breaks, then trade the new trend!</p>
+</div>
+<div class="trend-card">
+<h4>⏰ Pattern Timing</h4>
+<p>Best time for pattern breakouts:</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li><strong>9:30-10:30 AM:</strong> High volume, strong moves</li>
+<li><strong>3:00-4:00 PM:</strong> Day traders covering, big moves</li>
+<li><strong>Avoid 12-2 PM:</strong> Lunch lull, low volume</li>
+</ul>
+</div>
+<div class="trend-card">
+<h4>🎯 Pattern Reliability Ranking</h4>
+<p><strong>Most Reliable (70-80%):</strong></p>
+<ul style="padding-left: 20px; margin: 5px 0;">
+<li>Bull/Bear Flags (in strong trends)</li>
+<li>Ascending/Descending Triangles</li>
+</ul>
+<p><strong>Moderately Reliable (60-70%):</strong></p>
+<ul style="padding-left: 20px; margin: 5px 0;">
+<li>Head &amp; Shoulders</li>
+<li>Double Tops/Bottoms</li>
+</ul>
+<p><strong>Less Reliable (50-60%):</strong></p>
+<ul style="padding-left: 20px;">
+<li>Symmetrical Triangles</li>
+<li>Rising/Falling Wedges</li>
+</ul>
+</div>
+<div class="trend-card">
+<h4>💡 Fake Breakout Detection</h4>
+<p>Spot false breakouts before they trap you:</p>
+<ul style="padding-left: 20px; margin: 10px 0;">
+<li>❌ Very low volume on break</li>
+<li>❌ Break happens on gap (not gradual)</li>
+<li>❌ Immediate reversal (within 1-2 candles)</li>
+<li>❌ Break at end of day (closing hour)</li>
+</ul>
+<p><strong>Protection:</strong> Wait for candle close before entering!</p>
+</div>
+</div>
+</div><div class="sneak-peek">
+<h2>👀 Sneak Peek: Day 9</h2>
+<p>Tomorrow we continue Phase 2 with <strong>Moving Averages &amp; Support/Resistance</strong>! You'll learn how to use moving averages to identify trends, find perfect entry points, and combine them with support/resistance for high-probability trades.</p>
+<p><strong>Get ready to add powerful indicators to your trading arsenal!</strong> 📊</p>
+</div><div class="completion-section">
+<h2>🎉 Day 8 Complete - Phase 2 Begins!</h2>
+<p>Excellent work! You can now identify trends and patterns like a professional. These are the building blocks of technical analysis. Keep practicing pattern recognition—it's a skill that improves with time!</p>
+<button class="completion-button" onclick="completeDay8()">Mark Day 8 as Complete</button>
+<button class="completion-button" onclick="proceedToDay9()" style="background: #3b82f6;">Continue to Day 9</button>
+</div></div>
+<script>
+        // Pattern Recognition Game
+        function checkPatternAnswers() {
+            const answers = {
+                patternA: 'bullflag',
+                patternB: 'hs',
+                patternC: 'triangle',
+                patternD: 'doublebottom'
+            };
+            
+            let score = 0;
+            let results = '';
+            
+            for (let pattern in answers) {
+                const userAnswer = document.getElementById(pattern).value;
+                const correctAnswer = answers[pattern];
+                
+                if (userAnswer === correctAnswer) {
+                    score++;
+                    results += `<p style="color: #10b981;">✓ ${pattern.toUpperCase()}: Correct!</p>`;
+                } else {
+                    results += `<p style="color: #ef4444;">✗ ${pattern.toUpperCase()}: Incorrect. Answer: ${correctAnswer}</p>`;
+                }
+            }
+            
+            const percentage = (score / 4 * 100).toFixed(0);
+            const message = score >= 3 ? '🎉 Excellent pattern recognition!' : score >= 2 ? '👍 Good effort! Study the patterns more.' : '📚 Keep learning! Review the patterns.';
+            
+            document.getElementById('patternScoreDisplay').innerHTML = `
+                <p style="font-size: 1.3em; color: #6366f1; margin-bottom: 15px;">Score: ${score}/4 (${percentage}%)</p>
+                <p style="margin-bottom: 15px; font-weight: 600;">${message}</p>
+                ${results}
+            `;
+            
+            document.getElementById('patternResults').style.display = 'block';
+        }
+
+        // Trend Line Simulator
+        let currentTrend = null;
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+
+        function showTrend(type) {
+            if (!ctx) return;
+            
+            currentTrend = type;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background grid
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            if (type === 'up') {
+                // Draw uptrend
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(50, 250);
+                ctx.lineTo(150, 200);
+                ctx.lineTo(250, 180);
+                ctx.lineTo(350, 120);
+                ctx.lineTo(450, 100);
+                ctx.lineTo(550, 80);
+                ctx.lineTo(650, 40);
+                ctx.stroke();
+                
+                // Draw trend line
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(50, 250);
+                ctx.lineTo(650, 80);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                showAnalysis('Uptrend', 'Series of higher highs and higher lows. Trend line connects the lows. Buy near trend line, sell at resistance.');
+                
+            } else if (type === 'down') {
+                // Draw downtrend
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(50, 50);
+                ctx.lineTo(150, 80);
+                ctx.lineTo(250, 120);
+                ctx.lineTo(350, 140);
+                ctx.lineTo(450, 180);
+                ctx.lineTo(550, 220);
+                ctx.lineTo(650, 250);
+                ctx.stroke();
+                
+                // Draw trend line
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(50, 50);
+                ctx.lineTo(650, 220);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                showAnalysis('Downtrend', 'Series of lower highs and lower lows. Trend line connects the highs. Sell near trend line, cover at support.');
+                
+            } else if (type === 'sideways') {
+                // Draw sideways
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(50, 120);
+                ctx.lineTo(150, 180);
+                ctx.lineTo(250, 130);
+                ctx.lineTo(350, 170);
+                ctx.lineTo(450, 140);
+                ctx.lineTo(550, 180);
+                ctx.lineTo(650, 130);
+                ctx.stroke();
+                
+                // Draw range lines
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(50, 120);
+                ctx.lineTo(650, 120);
+                ctx.moveTo(50, 180);
+                ctx.lineTo(650, 180);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                showAnalysis('Sideways/Range', 'Price moves between support and resistance. Buy at support, sell at resistance. Breakout signals new trend.');
+            }
+        }
+
+        function showAnalysis(trendType, description) {
+            document.getElementById('trendContent').innerHTML = `
+                <p><strong>Trend Type:</strong> <span style="color: #6366f1; font-size: 1.1em;">${trendType}</span></p>
+                <p style="margin-top: 10px;"><strong>Analysis:</strong> ${description}</p>
+                <p style="margin-top: 15px; padding: 10px; background: #f0fdf4; border-radius: 5px; color: #065f46;">
+                    <strong>Pro Tip:</strong> The trend line in blue shows the key level to watch. Price respecting this line = trend continues. Price breaking through = trend may be ending!
+                </p>
+            `;
+            document.getElementById('trendAnalysis').style.display = 'block';
+        }
+
+        function clearTrend() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('trendAnalysis').style.display = 'none';
+            currentTrend = null;
+        }
+
+        // Quiz functionality
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswers = ['a', 'b', 'b', 'b', 'b'];
+        let quizScore = 0;
+        const totalQuestions = 5;
+        let taskSubmitted = false;
+        let quizCompleted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupQuizOptions();
+            updateQuizProgress();
+            checkPreviousProgress();
+        });
+
+        function checkPreviousProgress() {
+            taskSubmitted = localStorage.getItem('day8TaskSubmitted') === 'true';
+            if (taskSubmitted) {
+                showTaskSubmitted();
+            }
+            
+            quizCompleted = localStorage.getItem('day8QuizCompleted') === 'true';
+            if (quizCompleted) {
+                quizScore = parseInt(localStorage.getItem('day8QuizScore') || '0');
+            }
+        }
+
+        function setupQuizOptions() {
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectOption(this);
+                });
+            });
+        }
+
+        function selectOption(selectedOption) {
+            const questionContainer = selectedOption.closest('.question-container');
+            const questionNumber = parseInt(questionContainer.dataset.question) - 1;
+            const allOptions = questionContainer.querySelectorAll('.quiz-option');
+            
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+            selectedOption.classList.add('selected');
+            
+            userAnswers[questionNumber] = selectedOption.dataset.answer;
+            document.getElementById('nextBtn').disabled = false;
+            questionContainer.classList.add('answered');
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
+                currentQuestionIndex++;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
+                
+                updateQuizProgress();
+                updateNavigationButtons();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
+                currentQuestionIndex--;
+                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
+                
+                updateQuizProgress();
+                updateNavigationButtons();
+            }
+        }
+
+        function updateQuizProgress() {
+            const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('quizProgress').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+        }
+
+        function updateNavigationButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            const currentAnswer = userAnswers[currentQuestionIndex];
+            document.getElementById('nextBtn').disabled = !currentAnswer;
+            
+            if (currentQuestionIndex === totalQuestions - 1) {
+                document.getElementById('nextBtn').textContent = 'Finish Quiz';
+            } else {
+                document.getElementById('nextBtn').textContent = 'Next';
+            }
+        }
+
+        function finishQuiz() {
+            quizScore = 0;
+            for (let i = 0; i < totalQuestions; i++) {
+                if (userAnswers[i] === correctAnswers[i]) {
+                    quizScore++;
+                }
+            }
+
+            quizCompleted = true;
+            localStorage.setItem('day8QuizCompleted', 'true');
+            localStorage.setItem('day8QuizScore', quizScore);
+            
+            showQuizResults();
+        }
+
+        function showQuizResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const scorePercentage = Math.round((quizScore / totalQuestions) * 100);
+            document.getElementById('scoreText').textContent = `${quizScore}/${totalQuestions}`;
+            
+            const scoreCircle = document.querySelector('.score-circle');
+            scoreCircle.style.setProperty('--score', scorePercentage + '%');
+            
+            if (scorePercentage >= 60) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('failedButtons').style.display = 'none';
+                document.getElementById('performanceMessage').textContent = 
+                    scorePercentage >= 80 ? 'Excellent! You understand trends and patterns!' : 
+                    'Good job! You grasp the essentials.';
+            } else {
+                document.getElementById('passedButtons').style.display = 'none';
+                document.getElementById('failedButtons').style.display = 'block';
+                document.getElementById('performanceMessage').textContent = 'Review the material and try again.';
+            }
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizScore = 0;
+            
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizContent').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach((question, index) => {
+                if (index === 0) {
+                    question.style.display = 'block';
+                    question.classList.add('active');
+                } else {
+                    question.style.display = 'none';
+                    question.classList.remove('active');
+                }
+                question.classList.remove('answered');
+                
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(option => option.classList.remove('selected'));
+            });
+            
+            updateQuizProgress();
+            updateNavigationButtons();
+        }
+
+        function proceedToTask() {
+            document.querySelector('.task-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse').value.trim();
+            const taskFile = document.getElementById('taskFile').files;
+            
+            if (!taskResponse) {
+                showTaskStatus('Please complete your trend and pattern analysis.', 'error');
+                return;
+            }
+
+            if (taskFile.length < 3) {
+                showTaskStatus('Please upload at least 3 screenshots (uptrend, downtrend, pattern).', 'error');
+                return;
+            }
+
+            localStorage.setItem('day8TaskSubmitted', 'true');
+            localStorage.setItem('day8TaskResponse', taskResponse);
+
+            taskSubmitted = true;
+            showTaskSubmitted();
+            showTaskStatus('🎉 Day 8 Task submitted! Day 9 will unlock in 24 hours.', 'success');
+        }
+
+        function showTaskStatus(message, type) {
+            const statusDiv = document.getElementById('taskStatus');
+            const statusText = document.getElementById('taskStatusText');
+            
+            statusDiv.style.display = 'block';
+            statusText.textContent = message;
+            
+            if (type === 'success') {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.style.borderLeft = '5px solid #28a745';
+            } else {
+                statusDiv.style.backgroundColor = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.style.borderLeft = '5px solid #dc3545';
+            }
+        }
+
+        function showTaskSubmitted() {
+            const submitBtn = document.getElementById('submitTaskBtn');
+            submitBtn.textContent = 'Task Submitted ✓';
+            submitBtn.style.backgroundColor = '#28a745';
+            submitBtn.style.color = 'white';
+            submitBtn.disabled = true;
+            
+            document.getElementById('taskResponse').disabled = true;
+            document.getElementById('taskFile').disabled = true;
+        }
+
+        function completeDay8() {
+            if (!quizCompleted || quizScore < 3) {
+                alert('Please complete the quiz with at least 60% before marking Day 8 complete.');
+                return;
+            }
+            
+            if (!taskSubmitted) {
+                alert('Please submit your task before completing Day 8.');
+                return;
+            }
+            
+            alert('🎉 Day 8 completed! Day 9 will unlock in 24 hours.');
+        }
+
+        function proceedToDay9() {
+            if (!quizCompleted || quizScore < 3 || !taskSubmitted) {
+                alert('Please complete all requirements before proceeding to Day 9.');
+                return;
+            }
+            
+            alert('Day 9 will be available tomorrow. Keep mastering technical analysis!');
+        }
+
+        // Disable right-click and copy
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
