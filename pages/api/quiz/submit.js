@@ -92,13 +92,16 @@ export default async function handler(req, res) {
       }
     }
 
-    // Update challenge_progress if passed
+    // Update challenge_progress if passed (use upsert in case row doesn't exist)
     if (passed) {
       await supabase
         .from('challenge_progress')
-        .update({ quiz_passed: true })
-        .eq('user_id', userId)
-        .eq('day', day);
+        .upsert({
+          user_id: userId,
+          day: day,
+          quiz_passed: true,
+          unlocked: true,
+        }, { onConflict: 'user_id,day' });
     }
 
     return res.status(200).json({ score, total, passed });

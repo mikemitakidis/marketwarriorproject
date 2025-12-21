@@ -63,17 +63,18 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Could not save task' });
     }
 
-    // Mark current day as completed
+    // Mark current day as completed (use upsert in case row doesn't exist)
     const now = new Date().toISOString();
     await supabase
       .from('challenge_progress')
-      .update({
+      .upsert({
+        user_id: userId,
+        day: day,
         completed: true,
         completed_at: now,
         task_submitted: true,
-      })
-      .eq('user_id', userId)
-      .eq('day', day);
+        unlocked: true,
+      }, { onConflict: 'user_id,day' });
 
     // Unlock the next day (if exists in course_content)
     const nextDay = Number(day) + 1;
