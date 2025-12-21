@@ -117,12 +117,32 @@ function extractContentFromHTML(html) {
   // Extract quiz questions - only from HTML body, not JavaScript
   const quizQuestions = [];
 
-  // Get only the HTML portion before <script> tags to avoid matching JS template literals
-  const scriptIdx = html.indexOf('<script');
-  const htmlBody = scriptIdx > 0 ? html.substring(0, scriptIdx) : html;
+  // Get the HTML portion - find the script that contains quiz logic (correctAnswers)
+  // Some files have decorative scripts (confetti, animations) before the main quiz content
+  let htmlBody = html;
+  const scriptMatches = [...html.matchAll(/<script[^>]*>/gi)];
+  if (scriptMatches.length > 0) {
+    // Find which script contains correctAnswers (quiz logic)
+    let quizScriptPos = -1;
+    for (const match of scriptMatches) {
+      const scriptStart = match.index;
+      const scriptContent = html.substring(scriptStart, scriptStart + 5000);
+      if (scriptContent.includes('correctAnswers')) {
+        quizScriptPos = scriptStart;
+        break;
+      }
+    }
+    // If found, use everything before that script as htmlBody
+    if (quizScriptPos > 0) {
+      htmlBody = html.substring(0, quizScriptPos);
+    } else {
+      // Fallback: use everything before the last script
+      const lastScript = scriptMatches[scriptMatches.length - 1];
+      htmlBody = html.substring(0, lastScript.index);
+    }
+  }
 
-  // Find all question-container divs with data-question attribute (only in HTML body)
-  // Made more flexible to handle different attribute orders and spacing
+  // ========== FORMAT 1: Standard format (question-container with quiz-option spans) ==========
   const questionStartRegex = /<div[^>]*class="question-container[^"]*"[^>]*data-question="(\d+)"[^>]*>/gi;
   let qStartMatch;
   const questionPositions = [];
@@ -157,16 +177,46 @@ function extractContentFromHTML(html) {
 
     const questionHtml = htmlBody.substring(qPos.tagEndIdx, endIdx - 6);
 
-    // Extract question text
-    const qTextMatch = questionHtml.match(/<div class="question-text">([^<]+)<\/div>/i);
-    const questionText = qTextMatch ? qTextMatch[1].trim() : '';
+    // Extract question text (may span multiple lines, with or without question-text class)
+    let qTextMatch = questionHtml.match(/<div class="question-text"[^>]*>([\s\S]*?)<\/div>/i);
+    // Fallback: question text in div with just style (Day 24 format)
+    if (!qTextMatch) {
+      qTextMatch = questionHtml.match(/<div[^>]*style="[^"]*font-size[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    }
+    let questionText = qTextMatch ? qTextMatch[1].trim() : '';
+    // Remove HTML tags like <strong>
+    questionText = questionText.replace(/<[^>]+>/g, '');
+    // Remove numbered prefix like "1. " at the start
+    questionText = questionText.replace(/^\d+\.\s*/, '').trim();
 
-    // Extract options - find all quiz-option spans
+    // Extract options - try multiple formats
     const options = [];
-    const optionRegex = /<div class="quiz-option"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi;
+
+    // Format 1a: quiz-option with span (Days 1-26, 28-29)
+    const optionWithSpanRegex = /<div class="quiz-option"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi;
     let optMatch;
-    while ((optMatch = optionRegex.exec(questionHtml)) !== null) {
+    while ((optMatch = optionWithSpanRegex.exec(questionHtml)) !== null) {
       options.push(optMatch[1].trim());
+    }
+
+    // Format 1b: quiz-option with plain text like "A) Option text" (Day 30)
+    if (options.length === 0) {
+      const optionPlainRegex = /<div class="quiz-option"[^>]*>([A-D]\)?\s*[^<]+)<\/div>/gi;
+      while ((optMatch = optionPlainRegex.exec(questionHtml)) !== null) {
+        // Remove the "A) " prefix
+        let optText = optMatch[1].trim();
+        optText = optText.replace(/^[A-D]\)\s*/, '');
+        options.push(optText);
+      }
+    }
+
+    // Format 1c: quiz-option with span.option-letter for letter, then text (Day 24)
+    // e.g., <div class="quiz-option"><span class="option-letter">A)</span> Option text</div>
+    if (options.length === 0) {
+      const optionLetterSpanRegex = /<div class="quiz-option"[^>]*>\s*<span[^>]*class="option-letter"[^>]*>[^<]*<\/span>\s*([^<]+)/gi;
+      while ((optMatch = optionLetterSpanRegex.exec(questionHtml)) !== null) {
+        options.push(optMatch[1].trim());
+      }
     }
 
     if (questionText && options.length > 0) {
@@ -177,37 +227,91 @@ function extractContentFromHTML(html) {
     }
   }
 
-  // Extract correct answers from JavaScript
-  const answersMatch = html.match(/correctAnswers\s*[:=]\s*\[([^\]]+)\]/i);
-  let correctAnswers = [];
-  if (answersMatch) {
-    correctAnswers = answersMatch[1]
-      .split(',')
-      .map(a => {
-        const letter = a.trim().replace(/['"]/g, '').toLowerCase();
-        return 'abcd'.indexOf(letter);
-      })
-      .filter(i => i >= 0);
-  }
+  // ========== FORMAT 2: Day 27 format (quiz-section with onclick handlers) ==========
+  if (quizQuestions.length === 0) {
+    // Look for quiz-section format
+    const quizSectionMatch = htmlBody.match(/<div class="quiz-section">([\s\S]*?)(?:<div class="task-section|<div class="completion-section|$)/i);
+    if (quizSectionMatch) {
+      const quizSectionHtml = quizSectionMatch[1];
 
-  // Also check for object-style answers (Day 30 format)
-  if (correctAnswers.length === 0) {
-    const objAnswersMatch = html.match(/correctAnswers\s*[:=]\s*\{([^}]+)\}/i);
-    if (objAnswersMatch) {
-      const answerPairs = objAnswersMatch[1].match(/\d+:\s*['"]([a-d])['"]/gi);
-      if (answerPairs) {
-        correctAnswers = answerPairs.map(pair => {
-          const letter = pair.match(/['"]([a-d])['"]/i)?.[1]?.toLowerCase();
-          return letter ? 'abcd'.indexOf(letter) : -1;
-        }).filter(i => i >= 0);
+      // Find all questions with h4 tags
+      const questionRegex = /<div class="question">\s*<h4>(\d+)\.\s*([^<]+)<\/h4>\s*<div class="options">([\s\S]*?)<\/div>\s*<\/div>/gi;
+      let qMatch;
+
+      while ((qMatch = questionRegex.exec(quizSectionHtml)) !== null) {
+        const questionText = qMatch[2].trim();
+        const optionsHtml = qMatch[3];
+
+        // Extract options with their onclick handlers to determine correct answer
+        const options = [];
+        let correctIdx = 0;
+
+        const optRegex = /<div class="option"[^>]*onclick="selectAnswer\(this,\s*'q\d+',\s*(true|false)\)"[^>]*>([^<]+)<\/div>/gi;
+        let oMatch;
+        let optIdx = 0;
+
+        while ((oMatch = optRegex.exec(optionsHtml)) !== null) {
+          const isCorrect = oMatch[1].toLowerCase() === 'true';
+          let optText = oMatch[2].trim();
+          // Remove "A) " prefix
+          optText = optText.replace(/^[A-D]\)\s*/, '');
+          options.push(optText);
+
+          if (isCorrect) {
+            correctIdx = optIdx;
+          }
+          optIdx++;
+        }
+
+        if (questionText && options.length > 0) {
+          quizQuestions.push({
+            question: questionText,
+            options: options,
+            correctOption: correctIdx,
+          });
+        }
       }
     }
   }
 
-  // Assign correct answers to questions
-  quizQuestions.forEach((q, idx) => {
-    q.correctOption = correctAnswers[idx] !== undefined ? correctAnswers[idx] : 0;
-  });
+  // Extract correct answers from JavaScript (for formats that store answers separately)
+  let correctAnswers = [];
+
+  // Check if questions already have correctOption set (Format 2)
+  const needsAnswers = quizQuestions.length > 0 && quizQuestions[0].correctOption === undefined;
+
+  if (needsAnswers) {
+    // Array format: correctAnswers = ['b', 'c', 'b']
+    const answersMatch = html.match(/correctAnswers\s*[:=]\s*\[([^\]]+)\]/i);
+    if (answersMatch) {
+      correctAnswers = answersMatch[1]
+        .split(',')
+        .map(a => {
+          const letter = a.trim().replace(/['"]/g, '').toLowerCase();
+          return 'abcd'.indexOf(letter);
+        })
+        .filter(i => i >= 0);
+    }
+
+    // Object format: correctAnswers = {1: 'b', 2: 'c'}
+    if (correctAnswers.length === 0) {
+      const objAnswersMatch = html.match(/correctAnswers\s*[:=]\s*\{([^}]+)\}/i);
+      if (objAnswersMatch) {
+        const answerPairs = objAnswersMatch[1].match(/\d+:\s*['"]([a-d])['"]/gi);
+        if (answerPairs) {
+          correctAnswers = answerPairs.map(pair => {
+            const letter = pair.match(/['"]([a-d])['"]/i)?.[1]?.toLowerCase();
+            return letter ? 'abcd'.indexOf(letter) : -1;
+          }).filter(i => i >= 0);
+        }
+      }
+    }
+
+    // Assign correct answers to questions
+    quizQuestions.forEach((q, idx) => {
+      q.correctOption = correctAnswers[idx] !== undefined ? correctAnswers[idx] : 0;
+    });
+  }
 
   return {
     title,
