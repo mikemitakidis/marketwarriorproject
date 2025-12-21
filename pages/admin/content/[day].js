@@ -476,7 +476,7 @@ export default function ContentEditor() {
             )}
 
             {showPreview && (
-              <div className="preview-container" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div className="preview-container mw-lesson" dangerouslySetInnerHTML={{ __html: htmlContent }} />
             )}
           </div>
 

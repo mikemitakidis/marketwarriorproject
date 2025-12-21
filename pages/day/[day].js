@@ -601,7 +601,7 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, quiz
             <div className="section">
               <h2>📖 Lesson Content</h2>
               <div
-                className="lesson-content"
+                className="lesson-content mw-lesson"
                 dangerouslySetInnerHTML={{ __html: content.html_content || '<p>No lesson content available.</p>' }}
               />
             </div>

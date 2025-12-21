@@ -1,10 +1,10 @@
-.container {
+.mw-lesson .container {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
 
-.day-header {
+.mw-lesson .day-header {
             background: white;
             color: #1e293b;
             padding: 40px;
@@ -16,7 +16,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
 
-.day-badge {
+.mw-lesson .day-badge {
             background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: white;
             padding: 10px 20px;
@@ -27,7 +27,7 @@
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
 
-.day-header h1 {
+.mw-lesson .day-header h1 {
             font-size: 2.8em;
             margin-bottom: 10px;
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
@@ -36,12 +36,12 @@
             background-clip: text;
         }
 
-.day-header p {
+.mw-lesson .day-header p {
             color: #64748b;
             font-size: 1.2em;
         }
 
-.progress-bar {
+.mw-lesson .progress-bar {
             width: 100%;
             height: 12px;
             background: rgba(59, 130, 246, 0.2);
@@ -50,7 +50,7 @@
             overflow: hidden;
         }
 
-.progress-fill {
+.mw-lesson .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #3b82f6, #1d4ed8);
             border-radius: 6px;
@@ -59,7 +59,7 @@
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
 
-.section {
+.mw-lesson .section {
             background: white;
             padding: 40px;
             border-radius: 20px;
@@ -69,7 +69,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.section h2 {
+.mw-lesson .section h2 {
             color: #1e293b;
             margin-bottom: 25px;
             font-size: 2em;
@@ -78,13 +78,13 @@
             gap: 15px;
         }
 
-.section h3 {
+.mw-lesson .section h3 {
             color: #3b82f6;
             font-size: 1.5em;
             margin: 25px 0 15px 0;
         }
 
-.highlight-box {
+.mw-lesson .highlight-box {
             background: #f8fafc;
             color: #1e293b;
             border: 2px solid #3b82f6;
@@ -94,7 +94,7 @@
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
         }
 
-.video-placeholder {
+.mw-lesson .video-placeholder {
             background: #111;
             border-radius: 15px;
             aspect-ratio: 16/9;
@@ -107,14 +107,14 @@
             overflow: hidden;
         }
 
-.market-comparison {
+.mw-lesson .market-comparison {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.market-card {
+.mw-lesson .market-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -124,19 +124,19 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.market-card:hover {
+.mw-lesson .market-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.market-card h4 {
+.mw-lesson .market-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.market-visual {
+.mw-lesson .market-visual {
             text-align: center;
             margin: 40px 0;
             padding: 30px;
@@ -146,19 +146,19 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.market-visual h3 {
+.mw-lesson .market-visual h3 {
             color: #3b82f6;
             margin-bottom: 20px;
         }
 
-.market-icons {
+.mw-lesson .market-icons {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
 
-.market-icon {
+.mw-lesson .market-icon {
             text-align: center;
             padding: 20px;
             background: #f8fafc;
@@ -167,24 +167,24 @@
             border: 2px solid transparent;
         }
 
-.market-icon:hover {
+.mw-lesson .market-icon:hover {
             background: #f1f5f9;
             transform: scale(1.05);
             border-color: #3b82f6;
         }
 
-.market-icon span {
+.mw-lesson .market-icon span {
             font-size: 2.5em;
             display: block;
             margin-bottom: 10px;
         }
 
-.market-icon h5 {
+.mw-lesson .market-icon h5 {
             color: #1e293b;
             font-weight: 600;
         }
 
-.why-popular {
+.mw-lesson .why-popular {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             padding: 40px;
@@ -194,23 +194,23 @@
             overflow: hidden;
         }
 
-.why-popular h2 {
+.mw-lesson .why-popular h2 {
             color: white !important;
             text-align: center;
             margin-bottom: 30px;
         }
 
-.why-popular .market-card {
+.mw-lesson .why-popular .market-card {
             background: rgba(255,255,255,0.15);
             color: white;
             border-left-color: white;
         }
 
-.why-popular .market-card h4 {
+.mw-lesson .why-popular .market-card h4 {
             color: white !important;
         }
 
-.rewards-section {
+.mw-lesson .rewards-section {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             padding: 40px;
@@ -220,21 +220,21 @@
             overflow: hidden;
         }
 
-.rewards-section h2 {
+.mw-lesson .rewards-section h2 {
             color: white !important;
         }
 
-.rewards-section .feature-card {
+.mw-lesson .rewards-section .feature-card {
             background: rgba(255,255,255,0.15);
             color: white;
             border-left-color: white;
         }
 
-.rewards-section .feature-card h4 {
+.mw-lesson .rewards-section .feature-card h4 {
             color: white !important;
         }
 
-.quiz-container {
+.mw-lesson .quiz-container {
             background: white;
             padding: 30px;
             border-radius: 15px;
@@ -243,17 +243,17 @@
             margin: 30px 0;
         }
 
-.quiz-header {
+.mw-lesson .quiz-header {
             text-align: center;
             margin-bottom: 30px;
         }
 
-.quiz-header h2 {
+.mw-lesson .quiz-header h2 {
             color: #065f46;
             margin-bottom: 10px;
         }
 
-.quiz-progress {
+.mw-lesson .quiz-progress {
             background: #e5e7eb;
             height: 8px;
             border-radius: 4px;
@@ -261,7 +261,7 @@
             overflow: hidden;
         }
 
-.quiz-progress-fill {
+.mw-lesson .quiz-progress-fill {
             background: #10b981;
             height: 100%;
             width: 0%;
@@ -269,7 +269,7 @@
             transition: width 0.3s ease;
         }
 
-.question-container {
+.mw-lesson .question-container {
             margin: 30px 0;
             padding: 25px;
             background: #f8fafc;
@@ -277,17 +277,17 @@
             border: 2px solid #e5e7eb;
         }
 
-.question-container.active {
+.mw-lesson .question-container.active {
             border-color: #10b981;
             background: #f0fdf4;
         }
 
-.question-container.answered {
+.mw-lesson .question-container.answered {
             border-color: #3b82f6;
             background: #eff6ff;
         }
 
-.question-number {
+.mw-lesson .question-number {
             background: #10b981;
             color: white;
             width: 30px;
@@ -300,7 +300,7 @@
             margin-bottom: 15px;
         }
 
-.question-text {
+.mw-lesson .question-text {
             font-size: 1.1em;
             font-weight: 600;
             color: #1e293b;
@@ -308,12 +308,12 @@
             line-height: 1.5;
         }
 
-.quiz-options {
+.mw-lesson .quiz-options {
             display: grid;
             gap: 12px;
         }
 
-.quiz-option {
+.mw-lesson .quiz-option {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
@@ -325,27 +325,27 @@
             gap: 12px;
         }
 
-.quiz-option:hover {
+.mw-lesson .quiz-option:hover {
             border-color: #3b82f6;
             background: #f8fafc;
         }
 
-.quiz-option.selected {
+.mw-lesson .quiz-option.selected {
             border-color: #10b981;
             background: #f0fdf4;
         }
 
-.quiz-option.correct {
+.mw-lesson .quiz-option.correct {
             border-color: #10b981;
             background: #dcfce7;
         }
 
-.quiz-option.incorrect {
+.mw-lesson .quiz-option.incorrect {
             border-color: #ef4444;
             background: #fee2e2;
         }
 
-.option-letter {
+.mw-lesson .option-letter {
             background: #e5e7eb;
             color: #374151;
             width: 24px;
@@ -359,12 +359,12 @@
             flex-shrink: 0;
         }
 
-.quiz-option.selected .option-letter {
+.mw-lesson .quiz-option.selected .option-letter {
             background: #10b981;
             color: white;
         }
 
-.quiz-navigation {
+.mw-lesson .quiz-navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -373,7 +373,7 @@
             border-top: 1px solid #e5e7eb;
         }
 
-.quiz-btn {
+.mw-lesson .quiz-btn {
             background: #3b82f6;
             color: white;
             border: none;
@@ -384,26 +384,26 @@
             transition: all 0.3s ease;
         }
 
-.quiz-btn:hover {
+.mw-lesson .quiz-btn:hover {
             background: #2563eb;
             transform: translateY(-1px);
         }
 
-.quiz-btn:disabled {
+.mw-lesson .quiz-btn:disabled {
             background: #9ca3af;
             cursor: not-allowed;
             transform: none;
         }
 
-.quiz-btn.next {
+.mw-lesson .quiz-btn.next {
             background: #10b981;
         }
 
-.quiz-btn.next:hover {
+.mw-lesson .quiz-btn.next:hover {
             background: #059669;
         }
 
-.quiz-results {
+.mw-lesson .quiz-results {
             text-align: center;
             padding: 40px;
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
@@ -412,7 +412,7 @@
             margin: 30px 0;
         }
 
-.score-circle {
+.mw-lesson .score-circle {
             width: 120px;
             height: 120px;
             border-radius: 50%;
@@ -424,7 +424,7 @@
             position: relative;
         }
 
-.score-circle::before {
+.mw-lesson .score-circle::before {
             content: '';
             width: 90px;
             height: 90px;
@@ -433,7 +433,7 @@
             position: absolute;
         }
 
-.score-text {
+.mw-lesson .score-text {
             position: relative;
             z-index: 1;
             font-size: 1.5em;
@@ -441,21 +441,21 @@
             color: #065f46;
         }
 
-.performance-message {
+.mw-lesson .performance-message {
             font-size: 1.2em;
             font-weight: 600;
             margin: 20px 0;
             color: #065f46;
         }
 
-.quiz-summary {
+.mw-lesson .quiz-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin: 30px 0;
         }
 
-.summary-item {
+.mw-lesson .summary-item {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -463,18 +463,18 @@
             border: 2px solid #e5e7eb;
         }
 
-.summary-number {
+.mw-lesson .summary-number {
             font-size: 2em;
             font-weight: bold;
             color: #10b981;
         }
 
-.summary-label {
+.mw-lesson .summary-label {
             color: #6b7280;
             font-size: 0.9em;
         }
 
-.task-section {
+.mw-lesson .task-section {
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
             color: #92400e;
             padding: 30px;
@@ -483,11 +483,11 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.task-section h2 {
+.mw-lesson .task-section h2 {
             color: #92400e;
         }
 
-.quiz-section {
+.mw-lesson .quiz-section {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
             color: #065f46;
             padding: 30px;
@@ -496,11 +496,11 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.quiz-section h2 {
+.mw-lesson .quiz-section h2 {
             color: #065f46;
         }
 
-.quiz-button {
+.mw-lesson .quiz-button {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             padding: 15px 30px;
@@ -515,12 +515,12 @@
             transition: all 0.3s ease;
         }
 
-.quiz-button:hover {
+.mw-lesson .quiz-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
-.safety-warning {
+.mw-lesson .safety-warning {
             background: #fef2f2;
             color: #dc2626;
             padding: 20px;
@@ -530,7 +530,7 @@
             font-weight: 600;
         }
 
-.interactive-element {
+.mw-lesson .interactive-element {
             background: rgba(59, 130, 246, 0.1);
             border: 2px dashed #3b82f6;
             border-radius: 15px;
@@ -539,12 +539,12 @@
             text-align: center;
         }
 
-.interactive-element h4 {
+.mw-lesson .interactive-element h4 {
             color: #3b82f6;
             margin-bottom: 15px;
         }
 
-.sneak-peek {
+.mw-lesson .sneak-peek {
             background: linear-gradient(135deg, #7c3aed, #5b21b6);
             color: white;
             padding: 30px;
@@ -553,7 +553,7 @@
             text-align: center;
         }
 
-.completion-section {
+.mw-lesson .completion-section {
             background: linear-gradient(135deg, #059669, #047857);
             color: white;
             padding: 30px;
@@ -562,7 +562,7 @@
             margin: 40px 0;
         }
 
-.completion-button {
+.mw-lesson .completion-button {
             background: #3b82f6;
             color: white;
             padding: 15px 30px;
@@ -575,12 +575,12 @@
             transition: all 0.3s ease;
         }
 
-.completion-button:hover {
+.mw-lesson .completion-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
         }
 
-.phase-badge {
+.mw-lesson .phase-badge {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             color: white;
             padding: 8px 20px;
@@ -591,7 +591,7 @@
             font-size: 0.9em;
         }
 
-.learning-path {
+.mw-lesson .learning-path {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
             padding: 25px;
             border-radius: 15px;
@@ -599,19 +599,19 @@
             border-left: 5px solid #f59e0b;
         }
 
-.learning-path h4 {
+.mw-lesson .learning-path h4 {
             color: #92400e;
             margin-bottom: 15px;
         }
 
-.pattern-grid {
+.mw-lesson .pattern-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.pattern-card {
+.mw-lesson .pattern-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -620,34 +620,34 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.pattern-card:hover {
+.mw-lesson .pattern-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.pattern-card h4 {
+.mw-lesson .pattern-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.bullish-pattern {
+.mw-lesson .bullish-pattern {
             border-left-color: #10b981;
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         }
 
-.bearish-pattern {
+.mw-lesson .bearish-pattern {
             border-left-color: #ef4444;
             background: linear-gradient(135deg, #fef2f2, #fee2e2);
         }
 
-.neutral-pattern {
+.mw-lesson .neutral-pattern {
             border-left-color: #f59e0b;
             background: linear-gradient(135deg, #fffbeb, #fef3c7);
         }
 
-.example-box {
+.mw-lesson .example-box {
             background: linear-gradient(135deg, #fff7ed, #ffedd5);
             padding: 25px;
             border-radius: 15px;
@@ -655,12 +655,12 @@
             border: 2px solid #f59e0b;
         }
 
-.example-box h4 {
+.mw-lesson .example-box h4 {
             color: #92400e;
             margin-bottom: 15px;
         }
 
-.warning-box {
+.mw-lesson .warning-box {
             background: #fef2f2;
             color: #dc2626;
             padding: 20px;
@@ -670,12 +670,12 @@
             font-weight: 600;
         }
 
-.comparison-table {
+.mw-lesson .comparison-table {
             overflow-x: auto;
             margin: 30px 0;
         }
 
-.comparison-table table {
+.mw-lesson .comparison-table table {
             width: 100%;
             border-collapse: collapse;
             background: white;
@@ -684,27 +684,27 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.comparison-table thead {
+.mw-lesson .comparison-table thead {
             background: linear-gradient(135deg, #1e293b, #475569);
             color: white;
         }
 
-.comparison-table th,
+.mw-lesson .comparison-table th,
         .comparison-table td {
             padding: 18px 15px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
-.comparison-table tbody tr:nth-child(even) {
+.mw-lesson .comparison-table tbody tr:nth-child(even) {
             background: #f8fafc;
         }
 
-.comparison-table tbody tr:hover {
+.mw-lesson .comparison-table tbody tr:hover {
             background: #f1f5f9;
         }
 
-.scenario-box {
+.mw-lesson .scenario-box {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
             padding: 25px;
             border-radius: 15px;
@@ -712,12 +712,12 @@
             border-left: 5px solid #f59e0b;
         }
 
-.scenario-box h4 {
+.mw-lesson .scenario-box h4 {
             color: #92400e;
             margin-bottom: 15px;
         }
 
-.interactive-quiz {
+.mw-lesson .interactive-quiz {
             background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             padding: 30px;
             border-radius: 15px;
@@ -725,20 +725,20 @@
             border: 2px dashed #3b82f6;
         }
 
-.interactive-quiz h4 {
+.mw-lesson .interactive-quiz h4 {
             color: #1e3a8a;
             margin-bottom: 20px;
             text-align: center;
         }
 
-.pattern-images {
+.mw-lesson .pattern-images {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
 
-.pattern-img-card {
+.mw-lesson .pattern-img-card {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -747,17 +747,17 @@
             transition: all 0.3s ease;
         }
 
-.pattern-img-card:hover {
+.mw-lesson .pattern-img-card:hover {
             border-color: #3b82f6;
             transform: translateY(-3px);
         }
 
-.pattern-img-card h5 {
+.mw-lesson .pattern-img-card h5 {
             color: #1e293b;
             margin-bottom: 15px;
         }
 
-.pattern-visual {
+.mw-lesson .pattern-visual {
             height: 120px;
             background: #f8fafc;
             border-radius: 8px;
@@ -768,14 +768,14 @@
             position: relative;
         }
 
-.indicator-grid {
+.mw-lesson .indicator-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.indicator-card {
+.mw-lesson .indicator-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -784,34 +784,34 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.indicator-card:hover {
+.mw-lesson .indicator-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.indicator-card h4 {
+.mw-lesson .indicator-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.rsi-card {
+.mw-lesson .rsi-card {
             border-left-color: #8b5cf6;
             background: linear-gradient(135deg, #f5f3ff, #ede9fe);
         }
 
-.macd-card {
+.mw-lesson .macd-card {
             border-left-color: #f59e0b;
             background: linear-gradient(135deg, #fffbeb, #fef3c7);
         }
 
-.ma-card {
+.mw-lesson .ma-card {
             border-left-color: #10b981;
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         }
 
-.calculator-tool {
+.mw-lesson .calculator-tool {
             background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
             padding: 30px;
             border-radius: 15px;
@@ -819,32 +819,32 @@
             border: 2px solid #6366f1;
         }
 
-.calculator-tool h4 {
+.mw-lesson .calculator-tool h4 {
             color: #312e81;
             margin-bottom: 20px;
             font-size: 1.3em;
             text-align: center;
         }
 
-.calc-input-group {
+.mw-lesson .calc-input-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
 
-.calc-input {
+.mw-lesson .calc-input {
             display: flex;
             flex-direction: column;
         }
 
-.calc-input label {
+.mw-lesson .calc-input label {
             color: #312e81;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
-.calc-input input {
+.mw-lesson .calc-input input {
             padding: 12px;
             border: 2px solid #6366f1;
             border-radius: 8px;
@@ -852,7 +852,7 @@
             background: white;
         }
 
-.calc-button {
+.mw-lesson .calc-button {
             background: #6366f1;
             color: white;
             padding: 15px 30px;
@@ -866,12 +866,12 @@
             display: block;
         }
 
-.calc-button:hover {
+.mw-lesson .calc-button:hover {
             background: #4f46e5;
             transform: translateY(-2px);
         }
 
-.cycle-chart {
+.mw-lesson .cycle-chart {
             background: #1e293b;
             padding: 30px;
             border-radius: 15px;
@@ -879,43 +879,43 @@
             color: white;
         }
 
-.cycle-phases {
+.mw-lesson .cycle-phases {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
 
-.cycle-phase {
+.mw-lesson .cycle-phase {
             background: rgba(255,255,255,0.1);
             padding: 15px;
             border-radius: 10px;
             border-left: 4px solid;
         }
 
-.phase-expansion {
+.mw-lesson .phase-expansion {
             border-left-color: #10b981;
         }
 
-.phase-peak {
+.mw-lesson .phase-peak {
             border-left-color: #f59e0b;
         }
 
-.phase-contraction {
+.mw-lesson .phase-contraction {
             border-left-color: #ef4444;
         }
 
-.phase-trough {
+.mw-lesson .phase-trough {
             border-left-color: #3b82f6;
         }
 
-.section h4 {
+.mw-lesson .section h4 {
             color: #3b82f6;
             margin: 20px 0 12px 0;
             font-size: 1.2em;
         }
 
-.success-box {
+.mw-lesson .success-box {
             background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             border: 2px solid #10b981;
             padding: 25px;
@@ -923,7 +923,7 @@
             border-radius: 12px;
         }
 
-.info-box {
+.mw-lesson .info-box {
             background: #f8fafc;
             border: 2px solid #3b82f6;
             border-radius: 12px;
@@ -931,7 +931,7 @@
             margin: 25px 0;
         }
 
-.approach-card {
+.mw-lesson .approach-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -939,7 +939,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.comparison-table th {
+.mw-lesson .comparison-table th {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             padding: 15px;
@@ -947,16 +947,16 @@
             font-weight: 600;
         }
 
-.comparison-table td {
+.mw-lesson .comparison-table td {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
         }
 
-.comparison-table tr:hover {
+.mw-lesson .comparison-table tr:hover {
             background: #f8fafc;
         }
 
-.ratio-card {
+.mw-lesson .ratio-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -964,7 +964,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.formula-box {
+.mw-lesson .formula-box {
             background: #1e293b;
             color: #f1f5f9;
             padding: 20px;
@@ -975,7 +975,7 @@
             text-align: center;
         }
 
-.calculator-section {
+.mw-lesson .calculator-section {
             background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
             padding: 25px;
             border-radius: 15px;
@@ -983,7 +983,7 @@
             border: 2px solid #0ea5e9;
         }
 
-.calculator-input {
+.mw-lesson .calculator-input {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -992,7 +992,7 @@
             font-size: 1em;
         }
 
-.calculate-btn {
+.mw-lesson .calculate-btn {
             background: #3b82f6;
             color: white;
             padding: 12px 30px;
@@ -1005,12 +1005,12 @@
             transition: all 0.3s;
         }
 
-.calculate-btn:hover {
+.mw-lesson .calculate-btn:hover {
             background: #2563eb;
             transform: translateY(-2px);
         }
 
-.result-display {
+.mw-lesson .result-display {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -1019,7 +1019,7 @@
             display: none;
         }
 
-.trade-card {
+.mw-lesson .trade-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -1027,16 +1027,16 @@
             border: 2px solid #cbd5e1;
         }
 
-.quiz-btn:hover:not(:disabled) {
+.mw-lesson .quiz-btn:hover:not(:disabled) {
             background: #cbd5e1;
             transform: translateY(-2px);
         }
 
-.quiz-btn.next:hover:not(:disabled) {
+.mw-lesson .quiz-btn.next:hover:not(:disabled) {
             background: #059669;
         }
 
-.trading-simulator {
+.mw-lesson .trading-simulator {
             background: white;
             padding: 30px;
             border-radius: 15px;
@@ -1044,18 +1044,18 @@
             border: 3px solid #3b82f6;
         }
 
-.simulator-input {
+.mw-lesson .simulator-input {
             margin: 15px 0;
         }
 
-.simulator-input label {
+.mw-lesson .simulator-input label {
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
             color: #1e293b;
         }
 
-.simulator-input input,
+.mw-lesson .simulator-input input,
         .simulator-input select {
             width: 100%;
             padding: 12px;
@@ -1064,7 +1064,7 @@
             font-size: 1em;
         }
 
-.simulator-btn {
+.mw-lesson .simulator-btn {
             background: #3b82f6;
             color: white;
             border: none;
@@ -1077,29 +1077,29 @@
             transition: all 0.3s ease;
         }
 
-.simulator-btn:hover {
+.mw-lesson .simulator-btn:hover {
             background: #2563eb;
             transform: translateY(-2px);
         }
 
-.trade-result {
+.mw-lesson .trade-result {
             margin-top: 25px;
             padding: 25px;
             border-radius: 12px;
             display: none;
         }
 
-.trade-result.profit {
+.mw-lesson .trade-result.profit {
             background: #d1fae5;
             border: 2px solid #10b981;
         }
 
-.trade-result.loss {
+.mw-lesson .trade-result.loss {
             background: #fee2e2;
             border: 2px solid #ef4444;
         }
 
-.checklist-item {
+.mw-lesson .checklist-item {
             background: white;
             padding: 20px;
             margin: 15px 0;
@@ -1109,14 +1109,14 @@
             align-items: start;
         }
 
-.checklist-item input[type="checkbox"] {
+.mw-lesson .checklist-item input[type="checkbox"] {
             width: 24px;
             height: 24px;
             margin-right: 15px;
             cursor: pointer;
         }
 
-.danger-box {
+.mw-lesson .danger-box {
             background: linear-gradient(135deg, #fee2e2, #fecaca);
             border: 2px solid #ef4444;
             padding: 25px;
@@ -1124,7 +1124,7 @@
             border-radius: 12px;
         }
 
-.rule-card {
+.mw-lesson .rule-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -1132,7 +1132,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.strategy-card {
+.mw-lesson .strategy-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -1140,7 +1140,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.fib-level-card {
+.mw-lesson .fib-level-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -1148,7 +1148,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.calc-input input, .calc-input select {
+.mw-lesson .calc-input input, .calc-input select {
             width: 100%;
             padding: 12px;
             border: 2px solid #3b82f6;
@@ -1156,7 +1156,7 @@
             font-size: 1em;
         }
 
-.step-card {
+.mw-lesson .step-card {
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             padding: 25px;
             border-radius: 12px;
@@ -1164,14 +1164,14 @@
             border: 2px solid #cbd5e1;
         }
 
-.notes-grid {
+.mw-lesson .notes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.note-card {
+.mw-lesson .note-card {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             padding: 20px;
             border-radius: 12px;
@@ -1179,23 +1179,23 @@
             transition: all 0.3s ease;
         }
 
-.note-card:hover {
+.mw-lesson .note-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
-.note-card h4 {
+.mw-lesson .note-card h4 {
             color: #1e3a8a;
             margin-bottom: 12px;
         }
 
-.section p {
+.mw-lesson .section p {
             margin: 15px 0;
             font-size: 1.05em;
             line-height: 1.8;
         }
 
-.calculator {
+.mw-lesson .calculator {
             background: #f8fafc;
             padding: 25px;
             border-radius: 12px;
@@ -1203,7 +1203,7 @@
             border: 2px solid #3b82f6;
         }
 
-.calculator input, .calculator select {
+.mw-lesson .calculator input, .calculator select {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -1212,7 +1212,7 @@
             font-size: 1em;
         }
 
-.calculator button {
+.mw-lesson .calculator button {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             border: none;
@@ -1226,12 +1226,12 @@
             transition: all 0.3s ease;
         }
 
-.calculator button:hover {
+.mw-lesson .calculator button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
         }
 
-.result-box {
+.mw-lesson .result-box {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -1239,7 +1239,7 @@
             border: 2px solid #10b981;
         }
 
-.plan-template {
+.mw-lesson .plan-template {
             background: #1e293b;
             color: #e2e8f0;
             padding: 25px;
@@ -1250,19 +1250,19 @@
             overflow-x: auto;
         }
 
-.quiz-results h3 {
+.mw-lesson .quiz-results h3 {
             color: #166534;
             margin-bottom: 15px;
         }
 
-.checklist {
+.mw-lesson .checklist {
             background: white;
             padding: 20px;
             border-radius: 10px;
             margin: 15px 0;
         }
 
-.platform-box {
+.mw-lesson .platform-box {
             background: linear-gradient(135deg, #f0fdf4, #d1fae5);
             padding: 20px;
             border-radius: 10px;
@@ -1270,14 +1270,14 @@
             border: 2px solid #10b981;
         }
 
-.myth-reality-grid {
+.mw-lesson .myth-reality-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.myth-card {
+.mw-lesson .myth-card {
             background: #fef2f2;
             padding: 25px;
             border-radius: 15px;
@@ -1285,7 +1285,7 @@
             position: relative;
         }
 
-.reality-card {
+.mw-lesson .reality-card {
             background: #f0fdf4;
             padding: 25px;
             border-radius: 15px;
@@ -1293,7 +1293,7 @@
             position: relative;
         }
 
-.myth-card::before {
+.mw-lesson .myth-card::before {
             content: "❌ MYTH";
             position: absolute;
             top: -10px;
@@ -1306,7 +1306,7 @@
             font-weight: bold;
         }
 
-.reality-card::before {
+.mw-lesson .reality-card::before {
             content: "✅ REALITY";
             position: absolute;
             top: -10px;
@@ -1319,25 +1319,25 @@
             font-weight: bold;
         }
 
-.myth-card h4 {
+.mw-lesson .myth-card h4 {
             color: #dc2626;
             margin: 15px 0 10px 0;
             font-style: italic;
         }
 
-.reality-card h4 {
+.mw-lesson .reality-card h4 {
             color: #065f46;
             margin: 15px 0 10px 0;
         }
 
-.platform-grid {
+.mw-lesson .platform-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.platform-card {
+.mw-lesson .platform-card {
             background: #f8fafc;
             padding: 30px;
             border-radius: 15px;
@@ -1347,19 +1347,19 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.platform-card:hover {
+.mw-lesson .platform-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             border-color: #3b82f6;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.platform-card.featured {
+.mw-lesson .platform-card.featured {
             border-color: #10b981;
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         }
 
-.platform-card.featured::after {
+.mw-lesson .platform-card.featured::after {
             content: "⭐ RECOMMENDED";
             position: absolute;
             top: -10px;
@@ -1372,7 +1372,7 @@
             font-weight: bold;
         }
 
-.platform-card h4 {
+.mw-lesson .platform-card h4 {
             color: #3b82f6;
             font-size: 1.4em;
             margin-bottom: 15px;
@@ -1381,7 +1381,7 @@
             gap: 10px;
         }
 
-.platform-logo {
+.mw-lesson .platform-logo {
             width: 40px;
             height: 40px;
             background: #3b82f6;
@@ -1394,7 +1394,7 @@
             font-size: 1.2em;
         }
 
-.best-for {
+.mw-lesson .best-for {
             background: rgba(59, 130, 246, 0.1);
             color: #1d4ed8;
             padding: 8px 15px;
@@ -1405,7 +1405,7 @@
             display: inline-block;
         }
 
-.affiliate-link {
+.mw-lesson .affiliate-link {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             padding: 12px 20px;
@@ -1417,25 +1417,25 @@
             transition: all 0.3s ease;
         }
 
-.affiliate-link:hover {
+.mw-lesson .affiliate-link:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
         }
 
-.affiliate-link.us-link {
+.mw-lesson .affiliate-link.us-link {
             background: linear-gradient(135deg, #10b981, #059669);
         }
 
-.affiliate-link.us-link:hover {
+.mw-lesson .affiliate-link.us-link:hover {
             box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
-.demo-vs-live-table {
+.mw-lesson .demo-vs-live-table {
             overflow-x: auto;
             margin: 30px 0;
         }
 
-.demo-vs-live-table table {
+.mw-lesson .demo-vs-live-table table {
             width: 100%;
             border-collapse: collapse;
             background: white;
@@ -1444,41 +1444,41 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.demo-vs-live-table thead {
+.mw-lesson .demo-vs-live-table thead {
             background: linear-gradient(135deg, #1e293b, #475569);
             color: white;
         }
 
-.demo-vs-live-table th,
+.mw-lesson .demo-vs-live-table th,
         .demo-vs-live-table td {
             padding: 18px 15px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
-.demo-vs-live-table th {
+.mw-lesson .demo-vs-live-table th {
             font-weight: 600;
         }
 
-.demo-vs-live-table tbody tr:nth-child(even) {
+.mw-lesson .demo-vs-live-table tbody tr:nth-child(even) {
             background: #f8fafc;
         }
 
-.demo-vs-live-table tbody tr:hover {
+.mw-lesson .demo-vs-live-table tbody tr:hover {
             background: #f1f5f9;
         }
 
-.demo-column {
+.mw-lesson .demo-column {
             background: #dcfce7 !important;
             font-weight: 600;
         }
 
-.live-column {
+.mw-lesson .live-column {
             background: #fef3c7 !important;
             font-weight: 600;
         }
 
-.task-step {
+.mw-lesson .task-step {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -1486,12 +1486,12 @@
             border-left: 4px solid #f59e0b;
         }
 
-.task-step h4 {
+.mw-lesson .task-step h4 {
             color: #92400e;
             margin-bottom: 10px;
         }
 
-.task-example {
+.mw-lesson .task-example {
             background: rgba(245, 158, 11, 0.1);
             padding: 20px;
             border-radius: 10px;
@@ -1499,7 +1499,7 @@
             border: 2px dashed #f59e0b;
         }
 
-.task-example h4 {
+.mw-lesson .task-example h4 {
             color: #92400e;
             margin-bottom: 15px;
             display: flex;
@@ -1507,7 +1507,7 @@
             gap: 10px;
         }
 
-.day-header::before {
+.mw-lesson .day-header::before {
             content: '';
             position: absolute;
             top: 0;
@@ -1517,7 +1517,7 @@
             background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
         }
 
-.emotion-card {
+.mw-lesson .emotion-card {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1526,20 +1526,20 @@
             transition: all 0.3s ease;
         }
 
-.emotion-card:hover {
+.mw-lesson .emotion-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-color: #667eea;
         }
 
-.psychology-grid {
+.mw-lesson .psychology-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.psychology-item {
+.mw-lesson .psychology-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1548,13 +1548,13 @@
             transition: all 0.3s ease;
         }
 
-.psychology-item:hover {
+.mw-lesson .psychology-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.emotional-meter {
+.mw-lesson .emotional-meter {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1562,7 +1562,7 @@
             margin: 25px 0;
         }
 
-.meter-scale {
+.mw-lesson .meter-scale {
             display: flex;
             justify-content: space-between;
             margin: 20px 0;
@@ -1573,14 +1573,14 @@
             font-weight: 600;
         }
 
-.quiz-option.selected .option-letter,
+.mw-lesson .quiz-option.selected .option-letter,
         .quiz-option.correct .option-letter,
         .quiz-option.incorrect .option-letter {
             background: white;
             color: inherit;
         }
 
-.submit-btn {
+.mw-lesson .submit-btn {
             background: #10b981;
             color: white;
             padding: 15px 40px;
@@ -1594,13 +1594,13 @@
             margin: 20px auto;
         }
 
-.submit-btn:hover {
+.mw-lesson .submit-btn:hover {
             background: #059669;
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(16,185,129,0.3);
         }
 
-.mindset-exercise {
+.mw-lesson .mindset-exercise {
             background: #f0f9ff;
             border: 2px solid #0ea5e9;
             border-radius: 15px;
@@ -1608,7 +1608,7 @@
             margin: 25px 0;
         }
 
-.scenario-card {
+.mw-lesson .scenario-card {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1618,7 +1618,7 @@
             overflow: hidden;
         }
 
-.scenario-card::before {
+.mw-lesson .scenario-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -1628,7 +1628,7 @@
             background: #667eea;
         }
 
-.dividend-card {
+.mw-lesson .dividend-card {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1637,20 +1637,20 @@
             transition: all 0.3s ease;
         }
 
-.dividend-card:hover {
+.mw-lesson .dividend-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-color: #667eea;
         }
 
-.bond-grid {
+.mw-lesson .bond-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.bond-item {
+.mw-lesson .bond-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1659,17 +1659,17 @@
             transition: all 0.3s ease;
         }
 
-.bond-item:hover {
+.mw-lesson .bond-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.calc-input input::placeholder {
+.mw-lesson .calc-input input::placeholder {
             color: rgba(255,255,255,0.5);
         }
 
-.crypto-card {
+.mw-lesson .crypto-card {
             background: linear-gradient(135deg, #f59e0b10, #ec481510);
             border: 2px solid #f59e0b;
             border-radius: 15px;
@@ -1677,7 +1677,7 @@
             margin: 20px 0;
         }
 
-.ipo-timeline {
+.mw-lesson .ipo-timeline {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1688,14 +1688,14 @@
             flex-wrap: wrap;
         }
 
-.timeline-item {
+.mw-lesson .timeline-item {
             flex: 1;
             text-align: center;
             padding: 15px;
             position: relative;
         }
 
-.timeline-item::after {
+.mw-lesson .timeline-item::after {
             content: '→';
             position: absolute;
             right: -15px;
@@ -1705,11 +1705,11 @@
             color: #667eea;
         }
 
-.timeline-item:last-child::after {
+.mw-lesson .timeline-item:last-child::after {
             display: none;
         }
 
-.volatility-meter {
+.mw-lesson .volatility-meter {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1717,7 +1717,7 @@
             margin: 25px 0;
         }
 
-.risk-scale {
+.mw-lesson .risk-scale {
             display: flex;
             justify-content: space-between;
             margin: 20px 0;
@@ -1728,7 +1728,7 @@
             font-weight: 600;
         }
 
-.scalping-box {
+.mw-lesson .scalping-box {
             background: #fef3c7;
             border: 2px solid #f59e0b;
             border-radius: 15px;
@@ -1736,7 +1736,7 @@
             margin: 25px 0;
         }
 
-.copy-trader-card {
+.mw-lesson .copy-trader-card {
             background: linear-gradient(135deg, #10b98110, #05966910);
             border: 2px solid #10b981;
             border-radius: 15px;
@@ -1745,19 +1745,19 @@
             transition: all 0.3s ease;
         }
 
-.copy-trader-card:hover {
+.mw-lesson .copy-trader-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(16,185,129,0.2);
         }
 
-.hedge-fund-grid {
+.mw-lesson .hedge-fund-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.fund-item {
+.mw-lesson .fund-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1766,13 +1766,13 @@
             transition: all 0.3s ease;
         }
 
-.fund-item:hover {
+.mw-lesson .fund-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.trader-evaluation {
+.mw-lesson .trader-evaluation {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1780,7 +1780,7 @@
             margin: 25px 0;
         }
 
-.etoro-feature {
+.mw-lesson .etoro-feature {
             background: linear-gradient(135deg, #8cc63f10, #00965010);
             border: 2px solid #8cc63f;
             border-radius: 15px;
@@ -1788,7 +1788,7 @@
             margin: 25px 0;
         }
 
-.portfolio-card {
+.mw-lesson .portfolio-card {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1797,20 +1797,20 @@
             transition: all 0.3s ease;
         }
 
-.portfolio-card:hover {
+.mw-lesson .portfolio-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-color: #667eea;
         }
 
-.rebalance-grid {
+.mw-lesson .rebalance-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.rebalance-item {
+.mw-lesson .rebalance-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1819,13 +1819,13 @@
             transition: all 0.3s ease;
         }
 
-.rebalance-item:hover {
+.mw-lesson .rebalance-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.pie-chart {
+.mw-lesson .pie-chart {
             width: 300px;
             height: 300px;
             margin: 20px auto;
@@ -1840,7 +1840,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-.chart-legend {
+.mw-lesson .chart-legend {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
@@ -1848,19 +1848,19 @@
             margin-top: 20px;
         }
 
-.legend-item {
+.mw-lesson .legend-item {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-.legend-color {
+.mw-lesson .legend-color {
             width: 20px;
             height: 20px;
             border-radius: 3px;
         }
 
-.metric-card {
+.mw-lesson .metric-card {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1869,20 +1869,20 @@
             transition: all 0.3s ease;
         }
 
-.metric-card:hover {
+.mw-lesson .metric-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-color: #667eea;
         }
 
-.metrics-grid {
+.mw-lesson .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.metric-item {
+.mw-lesson .metric-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1891,27 +1891,27 @@
             transition: all 0.3s ease;
         }
 
-.metric-item:hover {
+.mw-lesson .metric-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.metric-value {
+.mw-lesson .metric-value {
             font-size: 2em;
             font-weight: 700;
             color: #667eea;
             margin: 10px 0;
         }
 
-.metric-label {
+.mw-lesson .metric-label {
             color: #64748b;
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-.performance-table {
+.mw-lesson .performance-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
@@ -1921,7 +1921,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-.performance-table th {
+.mw-lesson .performance-table th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 15px;
@@ -1929,16 +1929,16 @@
             font-weight: 600;
         }
 
-.performance-table td {
+.mw-lesson .performance-table td {
             padding: 15px;
             border-bottom: 1px solid #e5e7eb;
         }
 
-.performance-table tr:hover {
+.mw-lesson .performance-table tr:hover {
             background: #f8fafc;
         }
 
-.dashboard-preview {
+.mw-lesson .dashboard-preview {
             background: linear-gradient(135deg, #1e293b, #334155);
             border-radius: 15px;
             padding: 30px;
@@ -1946,7 +1946,7 @@
             color: white;
         }
 
-.chart-placeholder {
+.mw-lesson .chart-placeholder {
             background: rgba(255,255,255,0.1);
             border-radius: 10px;
             height: 200px;
@@ -1957,7 +1957,7 @@
             border: 2px dashed rgba(255,255,255,0.3);
         }
 
-.tracking-tool {
+.mw-lesson .tracking-tool {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
             border-radius: 15px;
@@ -1965,20 +1965,20 @@
             margin: 25px 0;
         }
 
-.strategy-card:hover {
+.mw-lesson .strategy-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-color: #667eea;
         }
 
-.adjustment-grid {
+.mw-lesson .adjustment-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.adjustment-item {
+.mw-lesson .adjustment-item {
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -1987,13 +1987,13 @@
             transition: all 0.3s ease;
         }
 
-.adjustment-item:hover {
+.mw-lesson .adjustment-item:hover {
             transform: scale(1.05);
             border-color: #667eea;
             box-shadow: 0 5px 20px rgba(102,126,234,0.2);
         }
 
-.optimization-table {
+.mw-lesson .optimization-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
@@ -2003,7 +2003,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-.optimization-table th {
+.mw-lesson .optimization-table th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 15px;
@@ -2011,23 +2011,23 @@
             font-weight: 600;
         }
 
-.optimization-table td {
+.mw-lesson .optimization-table td {
             padding: 15px;
             border-bottom: 1px solid #e5e7eb;
         }
 
-.optimization-table tr:hover {
+.mw-lesson .optimization-table tr:hover {
             background: #f8fafc;
         }
 
-.decision-tree {
+.mw-lesson .decision-tree {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border-radius: 15px;
             padding: 30px;
             margin: 25px 0;
         }
 
-.tree-node {
+.mw-lesson .tree-node {
             background: white;
             border: 2px solid #667eea;
             border-radius: 10px;
@@ -2037,7 +2037,7 @@
             padding-left: 40px;
         }
 
-.tree-node::before {
+.mw-lesson .tree-node::before {
             content: '→';
             position: absolute;
             left: 15px;
@@ -2048,13 +2048,13 @@
             font-weight: bold;
         }
 
-.day-title {
+.mw-lesson .day-title {
             font-size: 32px;
             margin-bottom: 15px;
             color: #1a1a1a;
         }
 
-.content-box {
+.mw-lesson .content-box {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
             padding: 25px;
             border-radius: 10px;
@@ -2062,7 +2062,7 @@
             border-left: 4px solid #667eea;
         }
 
-.highlight {
+.mw-lesson .highlight {
             background: #fef3c7;
             padding: 20px;
             border-radius: 10px;
@@ -2070,7 +2070,7 @@
             border-left: 4px solid #fbbf24;
         }
 
-.journal-cta {
+.mw-lesson .journal-cta {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 40px;
@@ -2080,19 +2080,19 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
-.journal-cta h3 {
+.mw-lesson .journal-cta h3 {
             color: white;
             font-size: 28px;
             margin-bottom: 15px;
         }
 
-.journal-cta p {
+.mw-lesson .journal-cta p {
             font-size: 18px;
             margin-bottom: 25px;
             opacity: 0.9;
         }
 
-.journal-btn {
+.mw-lesson .journal-btn {
             display: inline-block;
             background: white;
             color: #667eea;
@@ -2105,19 +2105,19 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
 
-.journal-btn:hover {
+.mw-lesson .journal-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
 
-.features-grid {
+.mw-lesson .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 25px 0;
         }
 
-.feature-card {
+.mw-lesson .feature-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
@@ -2125,24 +2125,24 @@
             transition: all 0.3s;
         }
 
-.feature-card:hover {
+.mw-lesson .feature-card:hover {
             border-color: #667eea;
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
         }
 
-.feature-icon {
+.mw-lesson .feature-icon {
             font-size: 36px;
             margin-bottom: 15px;
         }
 
-.feature-card h4 {
+.mw-lesson .feature-card h4 {
             color: #667eea;
             margin-bottom: 10px;
             font-size: 18px;
         }
 
-.question {
+.mw-lesson .question {
             background: white;
             padding: 25px;
             border-radius: 12px;
@@ -2150,19 +2150,19 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-.question h4 {
+.mw-lesson .question h4 {
             margin-bottom: 15px;
             color: #1f2937;
             font-size: 16px;
         }
 
-.options {
+.mw-lesson .options {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
-.option {
+.mw-lesson .option {
             padding: 12px 20px;
             background: #f9fafb;
             border: 2px solid #e5e7eb;
@@ -2171,32 +2171,32 @@
             transition: all 0.3s;
         }
 
-.option:hover {
+.mw-lesson .option:hover {
             background: #ede9fe;
             border-color: #667eea;
         }
 
-.option.selected {
+.mw-lesson .option.selected {
             background: #ddd6fe;
             border-color: #667eea;
         }
 
-.option.correct {
+.mw-lesson .option.correct {
             background: #d1fae5;
             border-color: #10b981;
         }
 
-.option.wrong {
+.mw-lesson .option.wrong {
             background: #fee2e2;
             border-color: #ef4444;
         }
 
-.completion-section h2 {
+.mw-lesson .completion-section h2 {
             color: #065f46;
             margin-bottom: 20px;
         }
 
-.watermark {
+.mw-lesson .watermark {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -2210,49 +2210,49 @@
             z-index: 1000;
         }
 
-.day-header, .section {
+.mw-lesson .day-header, .section {
                 padding: 20px;
             }
 
-.calendar-table {
+.mw-lesson .calendar-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
 
-.calendar-table th,
+.mw-lesson .calendar-table th,
         .calendar-table td {
             padding: 12px;
             text-align: left;
             border: 1px solid #e5e7eb;
         }
 
-.calendar-table th {
+.mw-lesson .calendar-table th {
             background: #f1f5f9;
             font-weight: 600;
             color: #334155;
         }
 
-.calendar-table tr:hover {
+.mw-lesson .calendar-table tr:hover {
             background: #f8fafc;
         }
 
-.impact-high {
+.mw-lesson .impact-high {
             color: #dc2626;
             font-weight: 600;
         }
 
-.impact-medium {
+.mw-lesson .impact-medium {
             color: #f59e0b;
             font-weight: 600;
         }
 
-.impact-low {
+.mw-lesson .impact-low {
             color: #10b981;
             font-weight: 600;
         }
 
-.calc-input input,
+.mw-lesson .calc-input input,
         .calc-input select {
             width: 100%;
             padding: 12px;
@@ -2261,7 +2261,7 @@
             font-size: 1em;
         }
 
-.calc-result {
+.mw-lesson .calc-result {
             margin-top: 20px;
             padding: 20px;
             background: white;
@@ -2269,7 +2269,7 @@
             display: none;
         }
 
-.goal-card {
+.mw-lesson .goal-card {
             background: linear-gradient(135deg, #f8fafc, #e2e8f0);
             padding: 25px;
             border-radius: 15px;
@@ -2277,7 +2277,7 @@
             border: 2px solid #cbd5e1;
         }
 
-.smart-template {
+.mw-lesson .smart-template {
             background: #f1f5f9;
             padding: 25px;
             border-radius: 15px;
@@ -2285,7 +2285,7 @@
             border: 2px dashed #94a3b8;
         }
 
-.smart-field {
+.mw-lesson .smart-field {
             margin: 20px 0;
             padding: 15px;
             background: white;
@@ -2293,20 +2293,20 @@
             border-left: 3px solid #f59e0b;
         }
 
-.review-checklist {
+.mw-lesson .review-checklist {
             background: #fef3c7;
             padding: 20px;
             border-radius: 12px;
             margin: 20px 0;
         }
 
-.milestone-timeline {
+.mw-lesson .milestone-timeline {
             position: relative;
             padding: 20px 0;
             margin: 30px 0;
         }
 
-.milestone-item {
+.mw-lesson .milestone-item {
             background: white;
             padding: 20px;
             margin: 20px 0;
@@ -2315,14 +2315,14 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-.terms-grid {
+.mw-lesson .terms-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.term-card {
+.mw-lesson .term-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2331,30 +2331,30 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.term-card:hover {
+.mw-lesson .term-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.term-card h4 {
+.mw-lesson .term-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.term-card .term {
+.mw-lesson .term-card .term {
             color: #10b981;
             font-weight: bold;
             font-size: 1.1em;
         }
 
-.order-type-table {
+.mw-lesson .order-type-table {
             overflow-x: auto;
             margin: 30px 0;
         }
 
-.order-type-table table {
+.mw-lesson .order-type-table table {
             width: 100%;
             border-collapse: collapse;
             background: white;
@@ -2363,27 +2363,27 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-.order-type-table thead {
+.mw-lesson .order-type-table thead {
             background: linear-gradient(135deg, #1e293b, #475569);
             color: white;
         }
 
-.order-type-table th,
+.mw-lesson .order-type-table th,
         .order-type-table td {
             padding: 18px 15px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
-.order-type-table tbody tr:nth-child(even) {
+.mw-lesson .order-type-table tbody tr:nth-child(even) {
             background: #f8fafc;
         }
 
-.order-type-table tbody tr:hover {
+.mw-lesson .order-type-table tbody tr:hover {
             background: #f1f5f9;
         }
 
-.confetti {
+.mw-lesson .confetti {
             position: absolute;
             width: 10px;
             height: 10px;
@@ -2391,7 +2391,7 @@
             animation: confetti-fall 3s linear infinite;
         }
 
-.graduation-badge {
+.mw-lesson .graduation-badge {
             display: inline-block;
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white;
@@ -2405,20 +2405,20 @@
             animation: pulse 2s infinite;
         }
 
-.trophy-icon {
+.mw-lesson .trophy-icon {
             font-size: 80px;
             margin: 20px 0;
             animation: bounce 1s infinite;
         }
 
-.achievement-grid {
+.mw-lesson .achievement-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 30px 0;
         }
 
-.achievement-card {
+.mw-lesson .achievement-card {
             background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
             padding: 25px;
             border-radius: 15px;
@@ -2427,36 +2427,36 @@
             transition: all 0.3s ease;
         }
 
-.achievement-card:hover {
+.mw-lesson .achievement-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-.achievement-icon {
+.mw-lesson .achievement-icon {
             font-size: 50px;
             margin-bottom: 15px;
         }
 
-.achievement-title {
+.mw-lesson .achievement-title {
             font-weight: 700;
             color: #667eea;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
 
-.achievement-desc {
+.mw-lesson .achievement-desc {
             color: #6b7280;
             font-size: 0.95em;
         }
 
-.stats-grid {
+.mw-lesson .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin: 30px 0;
         }
 
-.stat-box {
+.mw-lesson .stat-box {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 25px;
@@ -2464,20 +2464,20 @@
             text-align: center;
         }
 
-.stat-number {
+.mw-lesson .stat-number {
             font-size: 3em;
             font-weight: 700;
             margin-bottom: 10px;
         }
 
-.stat-label {
+.mw-lesson .stat-label {
             font-size: 0.9em;
             opacity: 0.95;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-.score-display {
+.mw-lesson .score-display {
             font-size: 4em;
             font-weight: 700;
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -2487,7 +2487,7 @@
             margin: 30px 0;
         }
 
-.certificate-preview {
+.mw-lesson .certificate-preview {
             background: white;
             padding: 50px;
             border-radius: 20px;
@@ -2497,20 +2497,20 @@
             text-align: center;
         }
 
-.certificate-header {
+.mw-lesson .certificate-header {
             border-bottom: 3px solid #667eea;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
 
-.certificate-title {
+.mw-lesson .certificate-title {
             font-size: 2.5em;
             color: #667eea;
             font-weight: 700;
             margin: 20px 0;
         }
 
-.certificate-recipient {
+.mw-lesson .certificate-recipient {
             font-size: 2em;
             color: #1e293b;
             font-weight: 700;
@@ -2519,25 +2519,25 @@
             text-decoration-color: #fbbf24;
         }
 
-.certificate-text {
+.mw-lesson .certificate-text {
             font-size: 1.1em;
             color: #6b7280;
             line-height: 1.8;
             margin: 20px 0;
         }
 
-.certificate-footer {
+.mw-lesson .certificate-footer {
             margin-top: 50px;
             display: flex;
             justify-content: space-around;
             align-items: flex-end;
         }
 
-.signature-line {
+.mw-lesson .signature-line {
             text-align: center;
         }
 
-.signature {
+.mw-lesson .signature {
             border-top: 2px solid #1e293b;
             padding-top: 10px;
             margin-top: 40px;
@@ -2545,7 +2545,7 @@
             color: #1e293b;
         }
 
-.download-certificate-btn {
+.mw-lesson .download-certificate-btn {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white;
             padding: 20px 50px;
@@ -2560,22 +2560,22 @@
             box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
         }
 
-.download-certificate-btn:hover {
+.mw-lesson .download-certificate-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(251, 191, 36, 0.5);
         }
 
-.final-message {
+.mw-lesson .final-message {
             font-size: 1.3em;
             margin: 30px 0;
             line-height: 1.8;
         }
 
-.social-share {
+.mw-lesson .social-share {
             margin: 40px 0;
         }
 
-.share-btn {
+.mw-lesson .share-btn {
             display: inline-block;
             padding: 12px 25px;
             margin: 10px;
@@ -2586,30 +2586,30 @@
             transition: all 0.3s ease;
         }
 
-.share-btn:hover {
+.mw-lesson .share-btn:hover {
             transform: translateY(-3px);
         }
 
-.share-linkedin {
+.mw-lesson .share-linkedin {
             background: #0077b5;
         }
 
-.share-twitter {
+.mw-lesson .share-twitter {
             background: #1da1f2;
         }
 
-.share-facebook {
+.mw-lesson .share-facebook {
             background: #1877f2;
         }
 
-.comparison-grid {
+.mw-lesson .comparison-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.comparison-card {
+.mw-lesson .comparison-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2618,29 +2618,29 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.comparison-card:hover {
+.mw-lesson .comparison-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.comparison-card h4 {
+.mw-lesson .comparison-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.investment-col {
+.mw-lesson .investment-col {
             background: #f0f9ff !important;
             font-weight: 600;
         }
 
-.trading-col {
+.mw-lesson .trading-col {
             background: #fef3c7 !important;
             font-weight: 600;
         }
 
-.template-box {
+.mw-lesson .template-box {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
             padding: 25px;
             border-radius: 15px;
@@ -2648,12 +2648,12 @@
             border: 2px solid #f59e0b;
         }
 
-.template-box h4 {
+.mw-lesson .template-box h4 {
             color: #92400e;
             margin-bottom: 15px;
         }
 
-.template-content {
+.mw-lesson .template-content {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -2661,14 +2661,14 @@
             font-family: 'Courier New', monospace;
         }
 
-.index-grid {
+.mw-lesson .index-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.index-card {
+.mw-lesson .index-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2677,26 +2677,26 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.index-card:hover {
+.mw-lesson .index-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.index-card h4 {
+.mw-lesson .index-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.card-grid {
+.mw-lesson .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.info-card {
+.mw-lesson .info-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2705,19 +2705,19 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.info-card:hover {
+.mw-lesson .info-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.info-card h4 {
+.mw-lesson .info-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.calculator-box {
+.mw-lesson .calculator-box {
             background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
             padding: 30px;
             border-radius: 15px;
@@ -2725,25 +2725,25 @@
             border: 2px solid #6366f1;
         }
 
-.calculator-box h4 {
+.mw-lesson .calculator-box h4 {
             color: #312e81;
             margin-bottom: 20px;
             font-size: 1.3em;
         }
 
-.calc-result h5 {
+.mw-lesson .calc-result h5 {
             color: #065f46;
             margin-bottom: 10px;
         }
 
-.chart-grid {
+.mw-lesson .chart-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.chart-card {
+.mw-lesson .chart-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2752,19 +2752,19 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.chart-card:hover {
+.mw-lesson .chart-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.chart-card h4 {
+.mw-lesson .chart-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.candlestick-visual {
+.mw-lesson .candlestick-visual {
             background: #1e293b;
             padding: 30px;
             border-radius: 15px;
@@ -2775,44 +2775,44 @@
             min-height: 250px;
         }
 
-.candle {
+.mw-lesson .candle {
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
         }
 
-.candle-wick {
+.mw-lesson .candle-wick {
             width: 2px;
             background: #64748b;
             position: absolute;
         }
 
-.candle-body {
+.mw-lesson .candle-body {
             width: 40px;
             border-radius: 4px;
             position: relative;
             z-index: 1;
         }
 
-.bullish {
+.mw-lesson .bullish {
             background: #10b981;
             border: 2px solid #059669;
         }
 
-.bearish {
+.mw-lesson .bearish {
             background: #ef4444;
             border: 2px solid #dc2626;
         }
 
-.candle-label {
+.mw-lesson .candle-label {
             color: white;
             font-size: 0.9em;
             margin-top: 10px;
             text-align: center;
         }
 
-.candle-display {
+.mw-lesson .candle-display {
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -2823,7 +2823,7 @@
             margin-top: 20px;
         }
 
-.interactive-exercise {
+.mw-lesson .interactive-exercise {
             background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             padding: 30px;
             border-radius: 15px;
@@ -2831,20 +2831,20 @@
             border: 2px dashed #3b82f6;
         }
 
-.interactive-exercise h4 {
+.mw-lesson .interactive-exercise h4 {
             color: #1e3a8a;
             margin-bottom: 20px;
             text-align: center;
         }
 
-.trend-grid {
+.mw-lesson .trend-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.trend-card {
+.mw-lesson .trend-card {
             background: #f8fafc;
             padding: 25px;
             border-radius: 15px;
@@ -2853,31 +2853,31 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-.trend-card:hover {
+.mw-lesson .trend-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.trend-card h4 {
+.mw-lesson .trend-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.uptrend-card {
+.mw-lesson .uptrend-card {
             border-left-color: #10b981;
         }
 
-.downtrend-card {
+.mw-lesson .downtrend-card {
             border-left-color: #ef4444;
         }
 
-.sideways-card {
+.mw-lesson .sideways-card {
             border-left-color: #f59e0b;
         }
 
-.trend-visual {
+.mw-lesson .trend-visual {
             background: #1e293b;
             padding: 30px;
             border-radius: 15px;
@@ -2889,7 +2889,7 @@
             position: relative;
         }
 
-.interactive-tool {
+.mw-lesson .interactive-tool {
             background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
             padding: 30px;
             border-radius: 15px;
@@ -2897,14 +2897,14 @@
             border: 2px solid #6366f1;
         }
 
-.interactive-tool h4 {
+.mw-lesson .interactive-tool h4 {
             color: #312e81;
             margin-bottom: 20px;
             font-size: 1.3em;
             text-align: center;
         }
 
-.drawing-canvas {
+.mw-lesson .drawing-canvas {
             background: white;
             border: 2px solid #6366f1;
             border-radius: 10px;
@@ -2914,7 +2914,7 @@
             cursor: crosshair;
         }
 
-.tool-buttons {
+.mw-lesson .tool-buttons {
             display: flex;
             gap: 10px;
             justify-content: center;
@@ -2922,7 +2922,7 @@
             flex-wrap: wrap;
         }
 
-.tool-btn {
+.mw-lesson .tool-btn {
             background: #6366f1;
             color: white;
             padding: 10px 20px;
@@ -2933,16 +2933,16 @@
             transition: all 0.3s ease;
         }
 
-.tool-btn:hover {
+.mw-lesson .tool-btn:hover {
             background: #4f46e5;
             transform: translateY(-1px);
         }
 
-.tool-btn.active {
+.mw-lesson .tool-btn.active {
             background: #10b981;
         }
 
-.pattern-identifier {
+.mw-lesson .pattern-identifier {
             background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             padding: 30px;
             border-radius: 15px;
@@ -2950,20 +2950,20 @@
             border: 2px dashed #3b82f6;
         }
 
-.pattern-identifier h4 {
+.mw-lesson .pattern-identifier h4 {
             color: #1e3a8a;
             margin-bottom: 20px;
             text-align: center;
         }
 
-.pattern-examples {
+.mw-lesson .pattern-examples {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
 
-.pattern-example {
+.mw-lesson .pattern-example {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -2972,44 +2972,44 @@
             transition: all 0.3s ease;
         }
 
-.pattern-example:hover {
+.mw-lesson .pattern-example:hover {
             border-color: #3b82f6;
             transform: translateY(-3px);
         }
 
-.pattern-example h5 {
+.mw-lesson .pattern-example h5 {
             color: #1e293b;
             margin-bottom: 15px;
         }
 
-.ma-grid {
+.mw-lesson .ma-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
 
-.ma-card:hover {
+.mw-lesson .ma-card:hover {
             transform: translateY(-5px);
             background: #f1f5f9;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-.ma-card h4 {
+.mw-lesson .ma-card h4 {
             color: #3b82f6;
             margin-bottom: 15px;
             font-size: 1.4em;
         }
 
-.sma-card {
+.mw-lesson .sma-card {
             border-left-color: #10b981;
         }
 
-.ema-card {
+.mw-lesson .ema-card {
             border-left-color: #f59e0b;
         }
 
-.sr-levels {
+.mw-lesson .sr-levels {
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             padding: 25px;
             border-radius: 15px;
@@ -3017,12 +3017,12 @@
             border: 2px solid #10b981;
         }
 
-.sr-levels h4 {
+.mw-lesson .sr-levels h4 {
             color: #065f46;
             margin-bottom: 15px;
         }
 
-.interactive-chart {
+.mw-lesson .interactive-chart {
             background: #1e293b;
             padding: 30px;
             border-radius: 15px;
@@ -3031,7 +3031,7 @@
             position: relative;
         }
 
-.chart-canvas {
+.mw-lesson .chart-canvas {
             width: 100%;
             height: 250px;
             background: white;
