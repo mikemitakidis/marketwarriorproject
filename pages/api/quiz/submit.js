@@ -3,9 +3,11 @@ import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth'
 /**
  * API route: /api/quiz/submit
  *
- * Accepts POST with `{ day: number, answers: { [questionId]: selectedOption } }`.
- * Computes the score and stores the result in `quiz_attempts`.
- * Returns score to the client.
+ * Accepts POST with:
+ *   - { day: number, answers: { [questionId]: selectedOption } } - standard mode
+ *   - { day: number, answers: [...], score: N, total: N, passed: bool } - iframe template mode
+ *
+ * Stores the result in `quiz_attempts` and returns score to the client.
  */
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,9 +15,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { day, answers } = req.body;
-    if (!day || !answers) {
-      return res.status(400).json({ error: 'Missing day or answers' });
+    const { day, answers, score: providedScore, total: providedTotal, passed: providedPassed } = req.body;
+    if (!day) {
+      return res.status(400).json({ error: 'Missing day' });
     }
 
     const user = await getUserFromRequest(req);
@@ -26,38 +28,53 @@ export default async function handler(req, res) {
     const userId = user.id;
     const supabase = getServiceSupabase();
 
-    // Fetch quiz questions with correct answers for the day
-    // Schema: quiz_questions has correct_option, question_text, options (jsonb)
-    const { data: questions, error: qErr } = await supabase
-      .from('quiz_questions')
-      .select('id, correct_option')
-      .eq('day', day);
+    let score, total, passed;
 
-    if (qErr) {
-      console.error('Error fetching questions:', qErr);
-      return res.status(500).json({ error: 'Could not load quiz questions' });
-    }
-
-    if (!questions || questions.length === 0) {
-      return res.status(404).json({ error: 'No quiz questions found for this day' });
-    }
-
-    // Calculate score - compare answer letters
-    // userAnswer is an index (0, 1, 2, 3), correct_option is a letter ('A', 'B', 'C', 'D')
-    const letters = ['A', 'B', 'C', 'D'];
-    let score = 0;
-    questions.forEach((q) => {
-      const userAnswer = answers[q.id];
-      if (userAnswer !== undefined && userAnswer !== null) {
-        const userLetter = letters[parseInt(userAnswer)];
-        if (userLetter === q.correct_option) {
-          score += 1;
-        }
+    // Check if this is from iframe template mode (score/total/passed already provided)
+    if (providedScore !== undefined && providedTotal !== undefined && providedPassed !== undefined) {
+      // Trust the values from the template's JS calculation
+      score = parseInt(providedScore);
+      total = parseInt(providedTotal);
+      passed = Boolean(providedPassed);
+    } else {
+      // Standard mode: calculate score from answers
+      if (!answers) {
+        return res.status(400).json({ error: 'Missing answers' });
       }
-    });
 
-    const total = questions.length;
-    const passed = total > 0 && (score / total) >= 0.6;
+      // Fetch quiz questions with correct answers for the day
+      // Schema: quiz_questions has correct_option, question_text, options (jsonb)
+      const { data: questions, error: qErr } = await supabase
+        .from('quiz_questions')
+        .select('id, correct_option')
+        .eq('day', day);
+
+      if (qErr) {
+        console.error('Error fetching questions:', qErr);
+        return res.status(500).json({ error: 'Could not load quiz questions' });
+      }
+
+      if (!questions || questions.length === 0) {
+        return res.status(404).json({ error: 'No quiz questions found for this day' });
+      }
+
+      // Calculate score - compare answer letters
+      // userAnswer is an index (0, 1, 2, 3), correct_option is a letter ('A', 'B', 'C', 'D')
+      const letters = ['A', 'B', 'C', 'D'];
+      score = 0;
+      questions.forEach((q) => {
+        const userAnswer = answers[q.id];
+        if (userAnswer !== undefined && userAnswer !== null) {
+          const userLetter = letters[parseInt(userAnswer)];
+          if (userLetter === q.correct_option) {
+            score += 1;
+          }
+        }
+      });
+
+      total = questions.length;
+      passed = total > 0 && (score / total) >= 0.6;
+    }
 
     // Save result to quiz_attempts (correct table name from schema!)
     const { error: insertErr } = await supabase
@@ -65,7 +82,7 @@ export default async function handler(req, res) {
       .upsert({
         user_id: userId,
         day: day,
-        answers: answers,
+        answers: answers || null,
         score: score,
         max_score: total,
         passed: passed,
@@ -80,7 +97,7 @@ export default async function handler(req, res) {
         .insert({
           user_id: userId,
           day: day,
-          answers: answers,
+          answers: answers || null,
           score: score,
           max_score: total,
           passed: passed,

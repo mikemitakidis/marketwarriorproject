@@ -270,7 +270,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
         </div>
 
         <div className="actions-grid">
-          <a href={`/day/${stats.currentDay}`} className="action-card primary">
+          <a href={`/day-template/${stats.currentDay}`} className="action-card primary">
             <div className="action-icon">▶️</div>
             <div className="action-title">Continue Learning</div>
             <div className="action-desc">Day {stats.currentDay}</div>
@@ -323,7 +323,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
                     <button
                       key={day}
                       className={className}
-                      onClick={() => isUnlocked && router.push(`/day/${day}`)}
+                      onClick={() => isUnlocked && router.push(`/day-template/${day}`)}
                     >
                       {isCompleted ? '✓' : day}
                     </button>

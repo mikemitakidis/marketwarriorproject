@@ -1,0 +1,210 @@
+import fs from 'fs';
+import path from 'path';
+import { getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
+
+/**
+ * API route: /api/template/[day]
+ *
+ * Serves the raw HTML template for a day, with a postMessage bridge injected
+ * so the template can communicate quiz/task completion to the parent app.
+ */
+export default async function handler(req, res) {
+  const { day } = req.query;
+  const dayNum = parseInt(day, 10);
+
+  if (isNaN(dayNum) || dayNum < 1 || dayNum > 30) {
+    return res.status(400).json({ error: 'Invalid day number' });
+  }
+
+  // Verify user has access
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).send('<h1>Please log in to view this content</h1>');
+  }
+
+  const gate = await getGateStatus(user.id);
+  if (!gate.hasPaid) {
+    return res.status(403).send('<h1>Payment required</h1>');
+  }
+
+  const challengeStatus = await getUserChallengeStatus(user.id);
+  if (!challengeStatus.unlockedDays.includes(dayNum)) {
+    return res.status(403).send('<h1>This day is not unlocked yet</h1>');
+  }
+
+  // Find the template file - check both new and old directories
+  const newTemplateDir = path.join(process.cwd(), 'templates/days/market_warrior_days_content');
+  const oldTemplateDir = path.join(process.cwd(), 'templates/days');
+
+  let templatePath = null;
+  let html = null;
+
+  // Check new directory first (simple day1.html format)
+  const newExactPath = path.join(newTemplateDir, `day${dayNum}.html`);
+  if (fs.existsSync(newExactPath)) {
+    templatePath = newExactPath;
+  }
+
+  // Check old directory patterns if not found
+  if (!templatePath) {
+    const oldExactPath = path.join(oldTemplateDir, `day${dayNum}.html`);
+    if (fs.existsSync(oldExactPath)) {
+      templatePath = oldExactPath;
+    } else {
+      // Try to find file with suffix (day15_risk_management.html format)
+      try {
+        const files = fs.readdirSync(oldTemplateDir);
+        const matchingFile = files.find(f => f.startsWith(`day${dayNum}_`) && f.endsWith('.html'));
+        if (matchingFile) {
+          templatePath = path.join(oldTemplateDir, matchingFile);
+        }
+      } catch (e) {
+        // Directory might not exist
+      }
+    }
+  }
+
+  if (!templatePath || !fs.existsSync(templatePath)) {
+    return res.status(404).send(`<h1>Template for Day ${dayNum} not found</h1>`);
+  }
+
+  html = fs.readFileSync(templatePath, 'utf-8');
+
+  // Inject the postMessage bridge script before </body>
+  const bridgeScript = `
+<script>
+(function() {
+  // PostMessage bridge to communicate with parent app
+  const DAY = ${dayNum};
+
+  // Helper to send messages to parent
+  function sendToParent(type, data) {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type, day: DAY, ...data }, '*');
+    }
+  }
+
+  // Track if we've already sent completion messages
+  let quizReported = false;
+  let taskReported = false;
+
+  // Listen for messages from parent (e.g., init with existing progress)
+  window.addEventListener('message', function(event) {
+    if (event.origin !== window.location.origin) return;
+    if (event.data.type === 'INIT') {
+      console.log('[MWBridge] Initialized with:', event.data);
+      // If already completed, update local state
+      if (event.data.quizPassed) {
+        quizReported = true;
+        if (typeof quizCompleted !== 'undefined') quizCompleted = true;
+      }
+      if (event.data.taskSubmitted) {
+        taskReported = true;
+        if (typeof taskSubmitted !== 'undefined') taskSubmitted = true;
+      }
+    }
+  });
+
+  // Notify parent that template is loaded
+  window.addEventListener('load', function() {
+    sendToParent('TEMPLATE_LOADED', {});
+  });
+
+  // Hook into template functions after DOM is ready
+  function hookFunctions() {
+    // Hook finishQuiz - this is called when user completes the quiz
+    if (typeof window.finishQuiz === 'function' && !window.finishQuiz._hooked) {
+      const originalFinishQuiz = window.finishQuiz;
+      window.finishQuiz = function() {
+        originalFinishQuiz.apply(this, arguments);
+        // After original runs, send results to parent
+        if (!quizReported && typeof quizScore !== 'undefined' && typeof totalQuestions !== 'undefined') {
+          const passed = (quizScore / totalQuestions) >= 0.6;
+          sendToParent('QUIZ_COMPLETE', {
+            score: quizScore,
+            total: totalQuestions,
+            passed: passed,
+            answers: typeof userAnswers !== 'undefined' ? userAnswers : {}
+          });
+          quizReported = true;
+        }
+      };
+      window.finishQuiz._hooked = true;
+    }
+
+    // Hook submitTask - this is called when user submits their task
+    if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
+      const originalSubmitTask = window.submitTask;
+      window.submitTask = function() {
+        // Get task response before original function might clear it
+        const taskResponseEl = document.getElementById('taskResponse');
+        const taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
+
+        // Check minimum length before proceeding
+        if (taskText.length < 50) {
+          // Let original function show error
+          originalSubmitTask.apply(this, arguments);
+          return;
+        }
+
+        originalSubmitTask.apply(this, arguments);
+
+        // After original runs, send to parent
+        if (!taskReported && taskText.length >= 50) {
+          sendToParent('TASK_COMPLETE', {
+            response: taskText
+          });
+          taskReported = true;
+        }
+      };
+      window.submitTask._hooked = true;
+    }
+
+    // Hook proceedToDay function (varies by day number)
+    const proceedFn = window['proceedToDay' + (DAY + 1)] || window['proceedToDay2'] || window['proceedToNextDay'];
+    if (proceedFn && !proceedFn._hooked) {
+      const fnName = window['proceedToDay' + (DAY + 1)] ? 'proceedToDay' + (DAY + 1) :
+                     window['proceedToDay2'] ? 'proceedToDay2' : 'proceedToNextDay';
+      window[fnName] = function() {
+        // Navigate via parent instead of in iframe
+        sendToParent('NAVIGATE', { to: '/day-template/' + (DAY + 1) });
+      };
+      window[fnName]._hooked = true;
+    }
+
+    // Also hook any "Go to Dashboard" buttons
+    document.querySelectorAll('button, a').forEach(function(el) {
+      if (el.textContent.toLowerCase().includes('dashboard')) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          sendToParent('NAVIGATE', { to: '/dashboard' });
+        });
+      }
+    });
+  }
+
+  // Run hooks after short delay to ensure template JS has run
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(hookFunctions, 100);
+    });
+  } else {
+    setTimeout(hookFunctions, 100);
+  }
+})();
+</script>
+`;
+
+  // Inject bridge script before </body>
+  if (html.includes('</body>')) {
+    html = html.replace('</body>', bridgeScript + '</body>');
+  } else {
+    html += bridgeScript;
+  }
+
+  // Set headers for HTML response
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+
+  return res.status(200).send(html);
+}
