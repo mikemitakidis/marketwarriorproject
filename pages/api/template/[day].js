@@ -120,21 +120,45 @@ export default async function handler(req, res) {
         localStorage.removeItem('day' + DAY + 'TaskSubmitted');
         localStorage.removeItem('day' + DAY + 'TaskResponse');
         localStorage.removeItem('day' + DAY + 'TaskFileName');
-        if (typeof window.taskSubmitted !== 'undefined') window.taskSubmitted = false;
-        // Reset task UI to show as NOT submitted
-        setTimeout(function() {
+        window.taskSubmitted = false;
+
+        // Function to reset task UI
+        function resetTaskUI() {
           var submitBtn = document.getElementById('submitTaskBtn');
-          if (submitBtn && submitBtn.disabled) {
+          if (submitBtn) {
             submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
             submitBtn.style.backgroundColor = '';
-            submitBtn.style.color = '';
+            submitBtn.style.background = '#f59e0b';
+            submitBtn.style.color = '#000';
             submitBtn.disabled = false;
           }
           var taskResponse = document.getElementById('taskResponse');
           if (taskResponse) taskResponse.disabled = false;
           var taskFile = document.getElementById('taskFile');
           if (taskFile) taskFile.disabled = false;
-        }, 200);
+          var taskStatus = document.querySelector('.task-status, .submission-status');
+          if (taskStatus && taskStatus.textContent.includes('Submitted')) {
+            taskStatus.style.display = 'none';
+          }
+        }
+
+        // Run reset multiple times to catch late template initialization
+        setTimeout(resetTaskUI, 100);
+        setTimeout(resetTaskUI, 300);
+        setTimeout(resetTaskUI, 600);
+
+        // Also watch for button changes and revert them
+        setTimeout(function() {
+          var btn = document.getElementById('submitTaskBtn');
+          if (btn) {
+            var observer = new MutationObserver(function(mutations) {
+              if (!window.taskSubmitted && btn.textContent.includes('Submitted')) {
+                resetTaskUI();
+              }
+            });
+            observer.observe(btn, { attributes: true, childList: true, characterData: true });
+          }
+        }, 150);
       }
 
       // If quiz already passed, update state AND UI
@@ -291,6 +315,10 @@ export default async function handler(req, res) {
   // Set headers for HTML response
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  // Prevent caching to ensure fresh state for each user
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   return res.status(200).send(html);
 }

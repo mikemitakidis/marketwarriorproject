@@ -226,10 +226,10 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
           </div>
         )}
 
-        {/* Iframe for template */}
+        {/* Iframe for template - add timestamp to prevent caching */}
         <iframe
           ref={iframeRef}
-          src={`/api/template/${day}`}
+          src={`/api/template/${day}?_t=${Date.now()}`}
           className={`template-iframe ${templateLoaded ? 'loaded' : ''}`}
           title={`Day ${day} Content`}
           sandbox="allow-scripts allow-same-origin allow-forms"
