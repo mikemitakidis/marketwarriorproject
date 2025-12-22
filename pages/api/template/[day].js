@@ -86,11 +86,20 @@ export default async function handler(req, res) {
 #dayUnlockInfo {
   display: none !important;
 }
+/* ENSURE affiliate links are visible */
+.affiliate-link {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 </style>
 <script>
 (function() {
   // PostMessage bridge to communicate with parent app
   const DAY = ${dayNum};
+
+  // NOTE: localStorage is already cleared by early script in <head>
+  // This ensures template's DOMContentLoaded reads empty localStorage
 
   // Helper to send messages to parent
   function sendToParent(type, data) {
@@ -191,17 +200,39 @@ export default async function handler(req, res) {
       // If task already submitted, update state AND UI
       if (event.data.taskSubmitted) {
         taskReported = true;
-        if (typeof window.taskSubmitted !== 'undefined') window.taskSubmitted = true;
-        // Update task UI to show as submitted
+        window.taskSubmitted = true; // Always set global
+
+        // Function to show task as submitted
+        function showTaskAsSubmitted() {
+          var submitBtn = document.getElementById('submitTaskBtn');
+          if (submitBtn) {
+            submitBtn.textContent = 'Task Submitted ✓';
+            submitBtn.style.background = '#10b981';
+            submitBtn.style.backgroundColor = '#10b981';
+            submitBtn.style.color = 'white';
+            submitBtn.disabled = true;
+          }
+          var taskResponse = document.getElementById('taskResponse');
+          if (taskResponse) taskResponse.disabled = true;
+          var taskFile = document.getElementById('taskFile');
+          if (taskFile) taskFile.disabled = true;
+        }
+
+        // Run multiple times to catch late initialization
+        setTimeout(showTaskAsSubmitted, 100);
+        setTimeout(showTaskAsSubmitted, 300);
+        setTimeout(showTaskAsSubmitted, 600);
+
+        // Also call template's function if available
         setTimeout(function() {
           if (typeof window.showTaskSubmitted === 'function') {
             window.showTaskSubmitted();
           } else {
-            // Fallback: manually update task button
+            // Fallback already handled above
             var submitBtn = document.getElementById('submitTaskBtn');
             if (submitBtn) {
               submitBtn.textContent = 'Task Submitted ✓';
-              submitBtn.style.backgroundColor = '#28a745';
+              submitBtn.style.background = '#10b981';
               submitBtn.style.color = 'white';
               submitBtn.disabled = true;
             }
@@ -305,7 +336,27 @@ export default async function handler(req, res) {
 </script>
 `;
 
-  // Inject bridge script before </body>
+  // Inject early localStorage clear script in <head> - runs BEFORE template scripts
+  const earlyScript = `
+<script>
+(function() {
+  // Clear localStorage immediately to prevent pollution from other user accounts
+  var DAY = ${dayNum};
+  localStorage.removeItem('day' + DAY + 'TaskSubmitted');
+  localStorage.removeItem('day' + DAY + 'TaskResponse');
+  localStorage.removeItem('day' + DAY + 'TaskFileName');
+  localStorage.removeItem('day' + DAY + 'QuizCompleted');
+  localStorage.removeItem('day' + DAY + 'QuizScore');
+})();
+</script>
+`;
+
+  // Inject early script in <head> to clear localStorage before template scripts run
+  if (html.includes('</head>')) {
+    html = html.replace('</head>', earlyScript + '</head>');
+  }
+
+  // Inject main bridge script before </body>
   if (html.includes('</body>')) {
     html = html.replace('</body>', bridgeScript + '</body>');
   } else {
