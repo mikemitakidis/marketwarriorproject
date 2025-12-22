@@ -93,14 +93,57 @@ export default async function handler(req, res) {
     if (event.origin !== window.location.origin) return;
     if (event.data.type === 'INIT') {
       console.log('[MWBridge] Initialized with:', event.data);
-      // If already completed, update local state
+
+      // If quiz already passed, update state AND UI
       if (event.data.quizPassed) {
         quizReported = true;
-        if (typeof quizCompleted !== 'undefined') quizCompleted = true;
+        if (typeof window.quizCompleted !== 'undefined') window.quizCompleted = true;
+        if (typeof window.quizScore !== 'undefined' && typeof window.totalQuestions !== 'undefined') {
+          window.quizScore = Math.ceil(window.totalQuestions * 0.6); // Assume passing score
+        }
+        // Update quiz UI to show as completed
+        setTimeout(function() {
+          var quizContent = document.getElementById('quizContent');
+          var quizResults = document.getElementById('quizResults');
+          var quizNav = document.querySelector('.quiz-navigation');
+          var quizProgress = document.querySelector('.quiz-progress');
+          var questionCounter = document.getElementById('questionCounter');
+
+          if (quizContent) quizContent.style.display = 'none';
+          if (quizNav) quizNav.style.display = 'none';
+          if (quizProgress) quizProgress.style.display = 'none';
+          if (questionCounter) questionCounter.style.display = 'none';
+
+          if (quizResults) {
+            quizResults.style.display = 'block';
+            quizResults.innerHTML = '<div style="text-align:center; padding: 40px;"><div style="font-size: 60px; color: #10b981;">✓</div><h3 style="color: #10b981; margin: 20px 0;">Quiz Already Completed!</h3><p style="color: #6b7280;">You passed this quiz. Scroll down to the task section.</p></div>';
+          }
+        }, 200);
       }
+
+      // If task already submitted, update state AND UI
       if (event.data.taskSubmitted) {
         taskReported = true;
-        if (typeof taskSubmitted !== 'undefined') taskSubmitted = true;
+        if (typeof window.taskSubmitted !== 'undefined') window.taskSubmitted = true;
+        // Update task UI to show as submitted
+        setTimeout(function() {
+          if (typeof window.showTaskSubmitted === 'function') {
+            window.showTaskSubmitted();
+          } else {
+            // Fallback: manually update task button
+            var submitBtn = document.getElementById('submitTaskBtn');
+            if (submitBtn) {
+              submitBtn.textContent = 'Task Submitted ✓';
+              submitBtn.style.backgroundColor = '#28a745';
+              submitBtn.style.color = 'white';
+              submitBtn.disabled = true;
+            }
+            var taskResponse = document.getElementById('taskResponse');
+            if (taskResponse) taskResponse.disabled = true;
+            var taskFile = document.getElementById('taskFile');
+            if (taskFile) taskFile.disabled = true;
+          }
+        }, 200);
       }
     }
   });
