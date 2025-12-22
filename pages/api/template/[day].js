@@ -130,44 +130,47 @@ export default async function handler(req, res) {
         localStorage.removeItem('day' + DAY + 'TaskResponse');
         localStorage.removeItem('day' + DAY + 'TaskFileName');
         window.taskSubmitted = false;
+        window._serverSaysTaskNotSubmitted = true; // Flag to track server state
 
-        // Function to reset task UI
+        // Function to reset task UI - force button back to unsubmitted state
         function resetTaskUI() {
           var submitBtn = document.getElementById('submitTaskBtn');
           if (submitBtn) {
             submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
-            submitBtn.style.backgroundColor = '';
-            submitBtn.style.background = '#f59e0b';
-            submitBtn.style.color = '#000';
+            submitBtn.style.cssText = 'background: #f59e0b !important; color: #000 !important;';
             submitBtn.disabled = false;
           }
           var taskResponse = document.getElementById('taskResponse');
           if (taskResponse) taskResponse.disabled = false;
           var taskFile = document.getElementById('taskFile');
           if (taskFile) taskFile.disabled = false;
-          var taskStatus = document.querySelector('.task-status, .submission-status');
-          if (taskStatus && taskStatus.textContent.includes('Submitted')) {
-            taskStatus.style.display = 'none';
-          }
         }
 
-        // Run reset multiple times to catch late template initialization
-        setTimeout(resetTaskUI, 100);
+        // Run reset multiple times to catch ALL template initialization
+        setTimeout(resetTaskUI, 50);
+        setTimeout(resetTaskUI, 150);
         setTimeout(resetTaskUI, 300);
-        setTimeout(resetTaskUI, 600);
+        setTimeout(resetTaskUI, 500);
+        setTimeout(resetTaskUI, 1000);
+        setTimeout(resetTaskUI, 2000);
 
-        // Also watch for button changes and revert them
+        // Watch for button changes and immediately revert them
         setTimeout(function() {
           var btn = document.getElementById('submitTaskBtn');
           if (btn) {
-            var observer = new MutationObserver(function(mutations) {
-              if (!window.taskSubmitted && btn.textContent.includes('Submitted')) {
-                resetTaskUI();
+            var observer = new MutationObserver(function() {
+              if (window._serverSaysTaskNotSubmitted && !window.taskSubmitted) {
+                if (btn.textContent.includes('Submitted') || btn.disabled) {
+                  console.log('[MWBridge] Reverting unauthorized task button change');
+                  resetTaskUI();
+                }
               }
             });
-            observer.observe(btn, { attributes: true, childList: true, characterData: true });
+            observer.observe(btn, { attributes: true, childList: true, characterData: true, subtree: true });
           }
-        }, 150);
+        }, 100);
+      } else {
+        window._serverSaysTaskNotSubmitted = false;
       }
 
       // If quiz already passed, update state AND UI

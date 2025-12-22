@@ -80,15 +80,16 @@ export async function getServerSideProps({ req }) {
 export default function AdminPage({ html, users }) {
   const [priceId, setPriceId] = useState('');
   const [priceMessage, setPriceMessage] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
+  const [loadingAction, setLoadingAction] = useState(null);
+
   async function updatePrice() {
     if (!priceId.startsWith('price_')) {
       setPriceMessage('Price ID must start with price_');
       return;
     }
-    // prompt for admin password; do not store it in state
     const adminPassword = window.prompt('Enter admin password to update price');
     if (!adminPassword) return;
-    // Obtain current session to get JWT
     const { data: { session } } = await supabaseClient.auth.getSession();
     const token = session?.access_token;
     const res = await fetch('/api/admin/settings/stripe-price', {
@@ -107,17 +108,80 @@ export default function AdminPage({ html, users }) {
       setPriceMessage(data.error || 'Failed to update price');
     }
   }
+
+  async function handleUserAction(userId, action, userEmail) {
+    const actionLabels = {
+      'unlock_all': 'unlock all 30 days for',
+      'reset_user': 'reset all progress for'
+    };
+    if (!confirm(`Are you sure you want to ${actionLabels[action]} ${userEmail}?`)) {
+      return;
+    }
+    setLoadingAction(`${action}-${userId}`);
+    setActionMessage('');
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action, userId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(`✓ ${data.message}`);
+      } else {
+        setActionMessage(`✗ Error: ${data.error}`);
+      }
+    } catch (err) {
+      setActionMessage(`✗ Error: ${err.message}`);
+    }
+    setLoadingAction(null);
+  }
+
   return (
     <div>
       {/* Render the static admin template */}
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <div style={{ padding: '20px', background: '#f9fafb' }}>
-        <h2>Users</h2>
-        <ul>
-          {users && users.map((u) => (
-            <li key={u.id}>{u.email} {u.is_admin ? '(admin)' : ''}</li>
-          ))}
-        </ul>
+        <h2>User Management</h2>
+        {actionMessage && (
+          <div style={{ padding: '10px', marginBottom: '15px', background: actionMessage.startsWith('✓') ? '#d1fae5' : '#fee2e2', borderRadius: '5px' }}>
+            {actionMessage}
+          </div>
+        )}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+          <thead>
+            <tr style={{ background: '#e5e7eb' }}>
+              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #d1d5db' }}>Email</th>
+              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #d1d5db' }}>Admin</th>
+              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #d1d5db' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users && users.map((u) => (
+              <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <td style={{ padding: '10px' }}>{u.email}</td>
+                <td style={{ padding: '10px' }}>{u.is_admin ? '✓' : ''}</td>
+                <td style={{ padding: '10px' }}>
+                  <button
+                    onClick={() => handleUserAction(u.id, 'unlock_all', u.email)}
+                    disabled={loadingAction === `unlock_all-${u.id}`}
+                    style={{ padding: '5px 10px', marginRight: '5px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    {loadingAction === `unlock_all-${u.id}` ? '...' : '🔓 Unlock All Days'}
+                  </button>
+                  <button
+                    onClick={() => handleUserAction(u.id, 'reset_user', u.email)}
+                    disabled={loadingAction === `reset_user-${u.id}`}
+                    style={{ padding: '5px 10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    {loadingAction === `reset_user-${u.id}` ? '...' : '🔄 Reset Progress'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <hr />
         <h2>Billing Settings</h2>
         <p>Update the active Stripe Price ID used for checkout.</p>
