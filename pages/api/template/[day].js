@@ -82,6 +82,10 @@ export default async function handler(req, res) {
 .completion-section {
   padding-bottom: 30px !important;
 }
+/* Hide the Day Unlock Schedule box - it shows incorrect info */
+#dayUnlockInfo {
+  display: none !important;
+}
 </style>
 <script>
 (function() {

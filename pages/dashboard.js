@@ -91,6 +91,21 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
     { name: 'Final Challenge', days: [29, 30], icon: '🏆' },
   ];
 
+  // Calculate time until next day unlocks (based on 24h cycle from registration)
+  const getNextUnlockTime = (currentUnlockedCount) => {
+    if (currentUnlockedCount >= 30) return 'All days unlocked!';
+    // This is a simple countdown - in reality, we'd need the actual registration time
+    // For now, show a generic message
+    const now = new Date();
+    const nextUnlock = new Date(now);
+    nextUnlock.setHours(24, 0, 0, 0); // Approximate - next midnight
+    const diff = nextUnlock - now;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <>
       <Head>
@@ -228,6 +243,33 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
         .day-btn.unlocked { border-color: #667eea; color: #667eea; cursor: pointer; }
         .day-btn.completed { background: #22c55e; border-color: #22c55e; color: white; }
         .day-btn.current { background: #667eea; border-color: #667eea; color: white; cursor: pointer; }
+        .day-btn.locked { border-color: #334155; color: #475569; cursor: not-allowed; font-size: 12px; }
+        .day-btn.locked:hover { background: transparent; }
+        .unlock-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: #1e293b;
+          border: 1px solid #334155;
+          border-radius: 12px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+        }
+        .unlock-info-icon { font-size: 24px; }
+        .unlock-info-text { display: flex; flex-direction: column; gap: 4px; }
+        .unlock-info-text strong { color: #e2e8f0; font-size: 14px; }
+        .unlock-timer {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #334155;
+          color: #94a3b8;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-family: monospace;
+          margin-top: 4px;
+        }
         @media (max-width: 768px) {
           .stats-grid, .actions-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -301,6 +343,15 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
             <div className="progress-fill" style={{ width: `${stats.overallProgress}%` }}></div>
           </div>
 
+          {/* Info about unlock schedule */}
+          <div className="unlock-info">
+            <div className="unlock-info-icon">ℹ️</div>
+            <div className="unlock-info-text">
+              <strong>Daily unlocks: 24h cycle from sign-up.</strong>
+              <span className="unlock-timer">Next unlock: {getNextUnlockTime(unlockedDays.length)}</span>
+            </div>
+          </div>
+
           {phases.map((phase, idx) => (
             <div className="phase" key={idx}>
               <div className="phase-header">
@@ -313,19 +364,23 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
                   const isCompleted = completedDays.includes(day);
                   const isUnlocked = unlockedDays.includes(day);
                   const isCurrent = day === stats.currentDay;
+                  const isLocked = !isUnlocked;
 
                   let className = 'day-btn';
                   if (isCompleted) className += ' completed';
                   else if (isCurrent) className += ' current';
                   else if (isUnlocked) className += ' unlocked';
+                  else className += ' locked';
 
                   return (
                     <button
                       key={day}
                       className={className}
                       onClick={() => isUnlocked && router.push(`/day-template/${day}`)}
+                      disabled={isLocked}
+                      title={isLocked ? 'Locked - unlocks based on your sign-up date' : ''}
                     >
-                      {isCompleted ? '✓' : day}
+                      {isCompleted ? '✓' : isLocked ? '🔒' : day}
                     </button>
                   );
                 })}
