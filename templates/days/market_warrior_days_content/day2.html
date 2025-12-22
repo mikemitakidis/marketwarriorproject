@@ -1170,155 +1170,16 @@
         // Quiz functionality
         let currentQuestionIndex = 0;
         let userAnswers = [];
-        let correctAnswers = ['b', 'c', 'b', 'c', 'c']; // Correct answers for each question
+        let correctAnswers = ['b', 'c', 'b', 'c', 'c'];
         let quizScore = 0;
         const totalQuestions = 5;
         let taskSubmitted = false;
         let quizCompleted = false;
-        let challengeStartTime = null;
 
-        // Quiz questions data for review
-        const quizQuestions = [
-            {
-                question: "What is the main purpose of a demo trading account?",
-                options: [
-                    "To make real profits without risk",
-                    "To practice trading with virtual money and learn platform mechanics",
-                    "To compete with other traders",
-                    "To access premium market data"
-                ],
-                explanation: "A demo account allows you to practice trading with virtual money, learning the platform mechanics and building skills without risking real capital."
-            },
-            {
-                question: "Which statement about demo trading is most accurate?",
-                options: [
-                    "Demo success guarantees live trading success",
-                    "Demo trading is completely useless for learning",
-                    "Demo trading builds mechanics and process skills that transfer to live trading",
-                    "Demo accounts always show delayed prices"
-                ],
-                explanation: "While demo trading can't replicate the emotions of real trading, the mechanics, processes, and skills you develop transfer directly to live trading."
-            },
-            {
-                question: "What is eToro's standout feature mentioned in the lesson?",
-                options: [
-                    "Lowest fees in the market",
-                    "CopyTrading - automatically replicate successful investors' trades",
-                    "Advanced charting tools",
-                    "Cryptocurrency mining features"
-                ],
-                explanation: "eToro's standout feature is CopyTrading, which allows you to automatically replicate the trades of successful investors on the platform."
-            },
-            {
-                question: "Which platform is described as best for serious traders and professionals?",
-                options: [
-                    "eToro",
-                    "Robinhood",
-                    "Interactive Brokers",
-                    "Trading 212"
-                ],
-                explanation: "Interactive Brokers is described as the industry powerhouse for serious traders and professionals, offering access to global markets and professional-grade tools."
-            },
-            {
-                question: "What should you do in a demo account that you wouldn't do with real money?",
-                options: [
-                    "Only make safe, conservative trades",
-                    "Avoid learning new features",
-                    "Try risky moves and experiment to understand consequences",
-                    "Focus only on making profits"
-                ],
-                explanation: "Demo accounts are the perfect place to try risky moves and experiment since mistakes don't cost real money - this helps you understand consequences and learn faster."
-            }
-        ];
-
-        // Initialize challenge timing
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChallenge();
             setupQuizOptions();
             updateQuizProgress();
-        });
-
-        function initializeChallenge() {
-            // Get challenge start time from localStorage or set it now
-            challengeStartTime = localStorage.getItem('challengeStartTime');
-            if (!challengeStartTime) {
-                challengeStartTime = Date.now();
-                localStorage.setItem('challengeStartTime', challengeStartTime);
-            } else {
-                challengeStartTime = parseInt(challengeStartTime);
-            }
-
-            // Check if task was already submitted
-            taskSubmitted = localStorage.getItem('day2TaskSubmitted') === 'true';
-            if (taskSubmitted) {
-                showTaskSubmitted();
-            }
-        }
-
-        // Task submission functionality
-        function submitTask() {
-            const taskResponse = document.getElementById('taskResponse').value.trim();
-            const taskFile = document.getElementById('taskFile').files[0];
-
-            if (taskResponse.length < 50) {
-                showTaskStatus('Please write at least 50 words for your response.', 'error');
-                return;
-            }
-
-            // Save task submission
-            localStorage.setItem('day2TaskSubmitted', 'true');
-            localStorage.setItem('day2TaskResponse', taskResponse);
-            if (taskFile) {
-                localStorage.setItem('day2TaskFileName', taskFile.name);
-            }
-
-            taskSubmitted = true;
-            showTaskSubmitted();
-            showTaskStatus('Task submitted successfully! You can now proceed to Day 3 when it unlocks.', 'success');
-        }
-
-        function showTaskStatus(message, type) {
-            const statusDiv = document.getElementById('taskStatus');
-            const statusText = document.getElementById('taskStatusText');
-
-            statusDiv.style.display = 'block';
-            statusText.textContent = message;
-
-            if (type === 'success') {
-                statusDiv.style.backgroundColor = '#d4edda';
-                statusDiv.style.color = '#155724';
-                statusDiv.style.borderLeft = '5px solid #28a745';
-            } else {
-                statusDiv.style.backgroundColor = '#f8d7da';
-                statusDiv.style.color = '#721c24';
-                statusDiv.style.borderLeft = '5px solid #dc3545';
-            }
-        }
-
-        function showTaskSubmitted() {
-            const submitBtn = document.getElementById('submitTaskBtn');
-            submitBtn.textContent = 'Task Submitted ✓';
-            submitBtn.style.backgroundColor = '#28a745';
-            submitBtn.style.color = 'white';
-            submitBtn.disabled = true;
-
-            document.getElementById('taskResponse').disabled = true;
-            document.getElementById('taskFile').disabled = true;
-        }
-
-        // Disable right-click and copying
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('selectstart', function(e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 83 || e.keyCode === 85)) {
-                e.preventDefault();
-            }
         });
 
         function setupQuizOptions() {
@@ -1334,52 +1195,35 @@
             const questionContainer = selectedOption.closest('.question-container');
             const questionNumber = parseInt(questionContainer.dataset.question) - 1;
             const allOptions = questionContainer.querySelectorAll('.quiz-option');
-
-            // Remove selection from all options in this question
+            
             allOptions.forEach(opt => opt.classList.remove('selected'));
-
-            // Select the clicked option
             selectedOption.classList.add('selected');
-
-            // Store the answer
+            
             userAnswers[questionNumber] = selectedOption.dataset.answer;
-
-            // Enable next button
             document.getElementById('nextBtn').disabled = false;
-
-            // Mark question as answered
             questionContainer.classList.add('answered');
         }
 
         function nextQuestion() {
             if (currentQuestionIndex < totalQuestions - 1) {
-                // Hide current question
                 document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
-
-                // Show next question
                 currentQuestionIndex++;
                 document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
                 document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
-
+                
                 updateQuizProgress();
                 updateNavigationButtons();
             } else {
-                // Quiz complete
                 finishQuiz();
             }
         }
 
         function previousQuestion() {
             if (currentQuestionIndex > 0) {
-                // Hide current question
                 document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'none';
-                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.remove('active');
-
-                // Show previous question
                 currentQuestionIndex--;
                 document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).style.display = 'block';
-                document.querySelector(`[data-question="${currentQuestionIndex + 1}"]`).classList.add('active');
-
+                
                 updateQuizProgress();
                 updateNavigationButtons();
             }
@@ -1389,184 +1233,145 @@
             const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
             document.getElementById('quizProgress').style.width = progress + '%';
             document.getElementById('questionCounter').textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
-            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            if (document.getElementById('currentQuestion')) {
+                document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            }
         }
 
         function updateNavigationButtons() {
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-
-            // Previous button
-            prevBtn.disabled = currentQuestionIndex === 0;
-
-            // Next button
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
             const currentAnswer = userAnswers[currentQuestionIndex];
-            nextBtn.disabled = !currentAnswer;
-
-            // Update next button text
+            document.getElementById('nextBtn').disabled = !currentAnswer;
+            
             if (currentQuestionIndex === totalQuestions - 1) {
-                nextBtn.textContent = 'Finish Quiz';
+                document.getElementById('nextBtn').textContent = 'Finish Quiz';
             } else {
-                nextBtn.textContent = 'Next';
+                document.getElementById('nextBtn').textContent = 'Next';
             }
         }
 
         function finishQuiz() {
-            // Calculate score
             quizScore = 0;
             for (let i = 0; i < totalQuestions; i++) {
                 if (userAnswers[i] === correctAnswers[i]) {
                     quizScore++;
                 }
             }
-
-            quizCompleted = true;
-            localStorage.setItem('day2QuizCompleted', 'true');
-            localStorage.setItem('day2QuizScore', quizScore);
-
-            // Show results
+            
+            quizCompleted = quizScore >= 3;
             showQuizResults();
         }
 
         function showQuizResults() {
-            // Hide quiz content
-            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizQuestions').style.display = 'none';
             document.querySelector('.quiz-navigation').style.display = 'none';
-            document.querySelector('.quiz-progress').style.display = 'none';
-            document.getElementById('questionCounter').style.display = 'none';
-
-            // Show results
-            const resultsDiv = document.getElementById('quizResults');
-            resultsDiv.style.display = 'block';
-
-            // Update score display
+            document.getElementById('quizResults').style.display = 'block';
+            
             const scorePercentage = Math.round((quizScore / totalQuestions) * 100);
             document.getElementById('scoreText').textContent = `${quizScore}/${totalQuestions}`;
             document.getElementById('correctAnswers').textContent = quizScore;
             document.getElementById('incorrectAnswers').textContent = totalQuestions - quizScore;
             document.getElementById('scorePercentage').textContent = scorePercentage + '%';
-
-            // Update score circle
-            const scoreCircle = document.querySelector('.score-circle');
-            scoreCircle.style.setProperty('--score', scorePercentage + '%');
-
-            // Performance message and buttons based on score
+            
+            // Performance message
             let message = '';
-            const passedButtons = document.getElementById('passedButtons');
-            const failedButtons = document.getElementById('failedButtons');
-
-            if (scorePercentage >= 60) {
-                // Passed - show continue options
-                passedButtons.style.display = 'block';
-                failedButtons.style.display = 'none';
-
-                if (scorePercentage >= 90) {
-                    message = 'Outstanding! You have an excellent grasp of demo trading concepts.';
-                } else if (scorePercentage >= 80) {
-                    message = 'Great job! You understand demo accounts and platforms well.';
-                } else if (scorePercentage >= 70) {
-                    message = 'Good work! You\'re ready for Day 3.';
-                } else {
-                    message = 'Well done! You\'ve achieved the minimum score to proceed.';
-                }
+            if (scorePercentage >= 90) {
+                message = 'Outstanding! You have an excellent understanding of demo trading!';
+            } else if (scorePercentage >= 80) {
+                message = 'Great job! You understand the fundamentals well.';
+            } else if (scorePercentage >= 70) {
+                message = 'Good work! Review the material and you\'ll be ready for Day 3.';
+            } else if (scorePercentage >= 60) {
+                message = 'Not bad! Consider reviewing today\'s content before moving forward.';
             } else {
-                // Failed - show retake options
-                passedButtons.style.display = 'none';
-                failedButtons.style.display = 'block';
-                message = 'Take some time to review the material. Understanding demo accounts is crucial for your practice.';
+                message = 'Take some time to review the material. Understanding demo trading is crucial for your success.';
             }
-
+            
             document.getElementById('performanceMessage').textContent = message;
         }
 
         function retakeQuiz() {
-            // Reset quiz state
             currentQuestionIndex = 0;
             userAnswers = [];
             quizScore = 0;
             quizCompleted = false;
-
-            // Hide results and review
+            
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizReview').style.display = 'none';
-
-            // Show quiz content again
-            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('quizQuestions').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';
-            document.querySelector('.quiz-progress').style.display = 'block';
-            document.getElementById('questionCounter').style.display = 'block';
-
+            
             // Reset all questions
-            const questions = document.querySelectorAll('.question-container');
-            questions.forEach((question, index) => {
+            document.querySelectorAll('.question-container').forEach((q, index) => {
                 if (index === 0) {
-                    question.style.display = 'block';
-                    question.classList.add('active');
+                    q.style.display = 'block';
+                    q.classList.add('active');
                 } else {
-                    question.style.display = 'none';
-                    question.classList.remove('active');
+                    q.style.display = 'none';
+                    q.classList.remove('active');
                 }
-                question.classList.remove('answered');
-
-                // Clear all selections
-                const options = question.querySelectorAll('.quiz-option');
-                options.forEach(option => {
-                    option.classList.remove('selected', 'correct', 'incorrect');
+                q.classList.remove('answered');
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect');
                 });
             });
-
-            // Reset navigation
+            
+            document.getElementById('nextBtn').textContent = 'Next';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('prevBtn').disabled = true;
             updateQuizProgress();
-            updateNavigationButtons();
-
-            // Scroll to quiz
-            document.querySelector('.quiz-container').scrollIntoView({ behavior: 'smooth' });
         }
 
         function showQuizReview() {
             document.getElementById('quizResults').style.display = 'none';
             document.getElementById('quizReview').style.display = 'block';
-
-            // Generate review content
+            
+            // Show all questions with correct/incorrect highlighting
+            const reviewContent = document.getElementById('reviewContent');
             let reviewHTML = '';
-            for (let i = 0; i < totalQuestions; i++) {
-                const isCorrect = userAnswers[i] === correctAnswers[i];
-                const userAnswerIndex = ['a', 'b', 'c', 'd'].indexOf(userAnswers[i]);
-                const correctAnswerIndex = ['a', 'b', 'c', 'd'].indexOf(correctAnswers[i]);
-
+            
+            document.querySelectorAll('.question-container').forEach((container, index) => {
+                const isCorrect = userAnswers[index] === correctAnswers[index];
+                const questionText = container.querySelector('.question-text').textContent;
+                
                 reviewHTML += `
-                    <div class="question-container" style="border-color: ${isCorrect ? '#10b981' : '#ef4444'};">
-                        <div class="question-number" style="background: ${isCorrect ? '#10b981' : '#ef4444'};">${i + 1}</div>
-                        <div class="question-text">${quizQuestions[i].question}</div>
-
+                    <div class="question-container" style="border-color: ${isCorrect ? '#10b981' : '#ef4444'}; display: block;">
+                        <div class="question-number" style="background: ${isCorrect ? '#10b981' : '#ef4444'};">${index + 1}</div>
+                        <div class="question-text">${questionText}</div>
                         <div class="quiz-options">
-                            ${quizQuestions[i].options.map((option, optIndex) => {
-                                let optionClass = '';
-                                if (optIndex === correctAnswerIndex) {
-                                    optionClass = 'correct';
-                                } else if (optIndex === userAnswerIndex && !isCorrect) {
-                                    optionClass = 'incorrect';
-                                }
-
-                                return `
-                                    <div class="quiz-option ${optionClass}">
-                                        <div class="option-letter">${['A', 'B', 'C', 'D'][optIndex]}</div>
-                                        <span>${option}</span>
-                                        ${optIndex === correctAnswerIndex ? '<span style="margin-left: auto; color: #10b981; font-weight: bold;">✓ Correct</span>' : ''}
-                                        ${optIndex === userAnswerIndex && !isCorrect ? '<span style="margin-left: auto; color: #ef4444; font-weight: bold;">✗ Your answer</span>' : ''}
-                                    </div>
-                                `;
-                            }).join('')}
+                `;
+                
+                container.querySelectorAll('.quiz-option').forEach(option => {
+                    const answer = option.dataset.answer;
+                    const optionText = option.querySelector('span').textContent;
+                    const letter = option.querySelector('.option-letter').textContent;
+                    
+                    let optionClass = '';
+                    let marker = '';
+                    
+                    if (answer === correctAnswers[index]) {
+                        optionClass = 'correct';
+                        marker = '<span style="margin-left: auto; color: #10b981; font-weight: bold;">✓ Correct</span>';
+                    } else if (answer === userAnswers[index]) {
+                        optionClass = 'incorrect';
+                        marker = '<span style="margin-left: auto; color: #ef4444; font-weight: bold;">✗ Your answer</span>';
+                    }
+                    
+                    reviewHTML += `
+                        <div class="quiz-option ${optionClass}">
+                            <div class="option-letter">${letter}</div>
+                            <span>${optionText}</span>
+                            ${marker}
                         </div>
-
-                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #3b82f6;">
-                            <strong>Explanation:</strong> ${quizQuestions[i].explanation}
+                    `;
+                });
+                
+                reviewHTML += `
                         </div>
                     </div>
                 `;
-            }
-
-            document.getElementById('reviewContent').innerHTML = reviewHTML;
+            });
+            
+            reviewContent.innerHTML = reviewHTML;
         }
 
         function finishReview() {
@@ -1576,28 +1381,42 @@
 
         function completeQuiz() {
             alert(`Quiz completed with ${quizScore}/${totalQuestions} correct answers!\n\nYou can now proceed to the Day 2 task.`);
-            // Scroll to task section
             document.querySelector('.task-section').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Day completion functions
+        function submitTask() {
+            const taskResponse = document.getElementById('taskResponse');
+            if (!taskResponse || taskResponse.value.trim().length < 50) {
+                alert('Please write at least 50 characters for your task response.');
+                return;
+            }
+            
+            taskSubmitted = true;
+            const btn = document.getElementById('submitTaskBtn');
+            btn.disabled = true;
+            btn.textContent = 'Task Submitted ✓';
+            btn.style.background = '#10b981';
+            
+            alert('Task submitted successfully! You can now complete Day 2.');
+        }
+
         function completeDay2() {
             if (!quizCompleted) {
                 alert('Please complete the quiz first before finishing Day 2.');
                 return;
             }
-
+            
             if (quizScore < 3) {
                 alert('Please achieve at least 60% on the quiz before completing Day 2.');
                 return;
             }
-
+            
             if (!taskSubmitted) {
                 alert('Please submit your Day 2 task before completing the day.');
                 return;
             }
-
-            alert('🎉 Congratulations! Day 2 completed successfully!\n\nDay 3 will unlock 24 hours after you started the challenge. You\'re making great progress on your Market Warrior journey!');
+            
+            alert('🎉 Congratulations! Day 2 completed successfully!\n\nDay 3 will unlock soon. You\'re making great progress on your Market Warrior journey!');
         }
 
         function proceedToDay3() {
@@ -1605,19 +1424,8 @@
                 alert('Please complete the quiz (60% minimum) and submit your task before proceeding to Day 3.');
                 return;
             }
-
-            const now = Date.now();
-            const day3UnlockTime = challengeStartTime + (48 * 60 * 60 * 1000); // 48 hours for Day 3
-
-            if (now < day3UnlockTime) {
-                const remainingTime = day3UnlockTime - now;
-                const hours = Math.floor(remainingTime / (1000 * 60 * 60));
-                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-                alert(`Day 3 will unlock in ${hours} hours and ${minutes} minutes.`);
-                return;
-            }
-
-            alert('🚀 Ready for Day 3!\n\nYou\'ll learn about key trading terms like Bid, Ask, Spread, and Short Selling. Get ready to speak like a pro trader!');
+            
+            alert('🚀 Ready for Day 3!\n\nYou\'ll learn about market types and trading styles. Get ready to discover your trading personality!');
         }
     </script>
 </body>
