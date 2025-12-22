@@ -105,6 +105,34 @@ export default async function handler(req, res) {
     if (event.data.type === 'INIT') {
       console.log('[MWBridge] Initialized with:', event.data);
 
+      // IMPORTANT: Clear localStorage entries that don't match server state
+      // This prevents cross-account pollution when using same browser
+      if (!event.data.quizPassed) {
+        localStorage.removeItem('day' + DAY + 'QuizCompleted');
+        localStorage.removeItem('day' + DAY + 'QuizScore');
+        if (typeof window.quizCompleted !== 'undefined') window.quizCompleted = false;
+      }
+      if (!event.data.taskSubmitted) {
+        localStorage.removeItem('day' + DAY + 'TaskSubmitted');
+        localStorage.removeItem('day' + DAY + 'TaskResponse');
+        localStorage.removeItem('day' + DAY + 'TaskFileName');
+        if (typeof window.taskSubmitted !== 'undefined') window.taskSubmitted = false;
+        // Reset task UI to show as NOT submitted
+        setTimeout(function() {
+          var submitBtn = document.getElementById('submitTaskBtn');
+          if (submitBtn && submitBtn.disabled) {
+            submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
+            submitBtn.style.backgroundColor = '';
+            submitBtn.style.color = '';
+            submitBtn.disabled = false;
+          }
+          var taskResponse = document.getElementById('taskResponse');
+          if (taskResponse) taskResponse.disabled = false;
+          var taskFile = document.getElementById('taskFile');
+          if (taskFile) taskFile.disabled = false;
+        }, 200);
+      }
+
       // If quiz already passed, update state AND UI
       if (event.data.quizPassed) {
         quizReported = true;
