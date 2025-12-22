@@ -1263,7 +1263,7 @@
         }
 
         function showQuizResults() {
-            document.getElementById('quizQuestions').style.display = 'none';
+            document.getElementById('quizContent').style.display = 'none';
             document.querySelector('.quiz-navigation').style.display = 'none';
             document.getElementById('quizResults').style.display = 'block';
             
@@ -1288,6 +1288,15 @@
             }
             
             document.getElementById('performanceMessage').textContent = message;
+
+            // Show appropriate buttons based on pass/fail
+            if (quizScore >= 3) {
+                document.getElementById('passedButtons').style.display = 'block';
+                document.getElementById('failedButtons').style.display = 'none';
+            } else {
+                document.getElementById('passedButtons').style.display = 'none';
+                document.getElementById('failedButtons').style.display = 'block';
+            }
         }
 
         function retakeQuiz() {
@@ -1297,7 +1306,7 @@
             quizCompleted = false;
             
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizQuestions').style.display = 'block';
+            document.getElementById('quizContent').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';
             
             // Reset all questions

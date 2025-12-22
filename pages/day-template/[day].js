@@ -93,6 +93,8 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
   const [taskSubmitted, setTaskSubmitted] = useState(initialTaskSubmitted);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  // Use ref for timestamp to prevent iframe reload on re-render
+  const cacheBuster = useRef(Date.now());
 
   // Handle postMessage from iframe
   useEffect(() => {
@@ -226,10 +228,10 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
           </div>
         )}
 
-        {/* Iframe for template - add timestamp to prevent caching */}
+        {/* Iframe for template - use ref timestamp to prevent reload on re-render */}
         <iframe
           ref={iframeRef}
-          src={`/api/template/${day}?_t=${Date.now()}`}
+          src={`/api/template/${day}?_t=${cacheBuster.current}`}
           className={`template-iframe ${templateLoaded ? 'loaded' : ''}`}
           title={`Day ${day} Content`}
           sandbox="allow-scripts allow-same-origin allow-forms"
