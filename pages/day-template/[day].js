@@ -37,30 +37,33 @@ export async function getServerSideProps({ req, params }) {
 
     // Get progress status from challenge_progress
     const supabase = getServiceSupabase();
-    const { data: progress } = await supabase
+    const { data: progress, error: progressError } = await supabase
       .from('challenge_progress')
       .select('completed, quiz_passed, task_submitted')
       .eq('user_id', user.id)
       .eq('day', dayNum)
       .single();
 
+    console.log(`[Day ${dayNum}] User: ${user.id}, Progress:`, progress, 'Error:', progressError);
+
     // Also check task_submissions as fallback (in case challenge_progress wasn't updated)
     let taskSubmitted = progress?.task_submitted || false;
     if (!taskSubmitted) {
-      const { data: taskSub } = await supabase
+      const { data: taskSub, error: taskError } = await supabase
         .from('task_submissions')
         .select('id')
         .eq('user_id', user.id)
         .eq('day', dayNum)
         .limit(1)
         .maybeSingle();
+      console.log(`[Day ${dayNum}] TaskSub check:`, taskSub, 'Error:', taskError);
       taskSubmitted = !!taskSub;
     }
 
     // Also check quiz_attempts as fallback for quiz_passed
     let quizPassed = progress?.quiz_passed || false;
     if (!quizPassed) {
-      const { data: quizAttempt } = await supabase
+      const { data: quizAttempt, error: quizError } = await supabase
         .from('quiz_attempts')
         .select('passed')
         .eq('user_id', user.id)
@@ -68,8 +71,11 @@ export async function getServerSideProps({ req, params }) {
         .eq('passed', true)
         .limit(1)
         .maybeSingle();
+      console.log(`[Day ${dayNum}] QuizAttempt check:`, quizAttempt, 'Error:', quizError);
       quizPassed = !!quizAttempt;
     }
+
+    console.log(`[Day ${dayNum}] Final values - taskSubmitted: ${taskSubmitted}, quizPassed: ${quizPassed}`);
 
     return {
       props: {
