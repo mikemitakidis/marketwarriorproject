@@ -35,7 +35,7 @@ export async function getServerSideProps({ req, params }) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
-    // Get progress status
+    // Get progress status from challenge_progress
     const supabase = getServiceSupabase();
     const { data: progress } = await supabase
       .from('challenge_progress')
@@ -44,12 +44,39 @@ export async function getServerSideProps({ req, params }) {
       .eq('day', dayNum)
       .single();
 
+    // Also check task_submissions as fallback (in case challenge_progress wasn't updated)
+    let taskSubmitted = progress?.task_submitted || false;
+    if (!taskSubmitted) {
+      const { data: taskSub } = await supabase
+        .from('task_submissions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('day', dayNum)
+        .limit(1)
+        .maybeSingle();
+      taskSubmitted = !!taskSub;
+    }
+
+    // Also check quiz_attempts as fallback for quiz_passed
+    let quizPassed = progress?.quiz_passed || false;
+    if (!quizPassed) {
+      const { data: quizAttempt } = await supabase
+        .from('quiz_attempts')
+        .select('passed')
+        .eq('user_id', user.id)
+        .eq('day', dayNum)
+        .eq('passed', true)
+        .limit(1)
+        .maybeSingle();
+      quizPassed = !!quizAttempt;
+    }
+
     return {
       props: {
         day: dayNum,
         isCompleted: progress?.completed || false,
-        quizPassed: progress?.quiz_passed || false,
-        taskSubmitted: progress?.task_submitted || false,
+        quizPassed,
+        taskSubmitted,
       },
     };
   } catch (err) {
@@ -78,7 +105,7 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
       switch (type) {
         case 'TEMPLATE_LOADED':
           setTemplateLoaded(true);
-          setStatusMessage('Template loaded');
+          // Don't show "Template loaded" message - just send init data
           // Send init data to template
           if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
