@@ -72,6 +72,17 @@ export default async function handler(req, res) {
 
   // Inject the postMessage bridge script before </body>
   const bridgeScript = `
+<style>
+/* Hide the completion buttons at the bottom - navigation is in the top bar */
+.completion-section .completion-button,
+.completion-section button {
+  display: none !important;
+}
+/* Keep the green completion box text visible */
+.completion-section {
+  padding-bottom: 30px !important;
+}
+</style>
 <script>
 (function() {
   // PostMessage bridge to communicate with parent app
