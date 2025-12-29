@@ -140,10 +140,17 @@ export default function AdminPage({ html, users }) {
 
   return (
     <div>
-      {/* Render the static admin template */}
+      {/* Render the static admin template - hide its user management section */}
+      <style>{`
+        /* Hide the static HTML user management section since we have dynamic React version */
+        #users.content-section { display: none !important; }
+      `}</style>
       <div dangerouslySetInnerHTML={{ __html: html }} />
-      <div style={{ padding: '20px', background: '#f9fafb' }}>
-        <h2>User Management</h2>
+      <div style={{ padding: '30px', background: '#f9fafb', marginTop: '0' }}>
+        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', padding: '20px', borderRadius: '15px', marginBottom: '25px' }}>
+          <h2 style={{ margin: 0 }}>👥 User Management (Live Data)</h2>
+          <p style={{ margin: '10px 0 0', opacity: 0.9 }}>Manage user access and progress below</p>
+        </div>
         {actionMessage && (
           <div style={{ padding: '10px', marginBottom: '15px', background: actionMessage.startsWith('✓') ? '#d1fae5' : '#fee2e2', borderRadius: '5px' }}>
             {actionMessage}
