@@ -131,18 +131,17 @@ async function handlePost(req, res, supabase) {
 
   if (action === 'unlock_all') {
     // Unlock all 30 days for the user
-    // First, update user_onboarding to mark challenge as started with an old date
+    // Set welcome_completed_at to 30 days ago so all days are unlocked
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const { error: onboardingError } = await supabase
       .from('user_onboarding')
-      .upsert({
-        user_id: userId,
-        challenge_started: true,
-        challenge_start_time: thirtyDaysAgo.toISOString(),
+      .update({
         welcome_completed: true,
-      }, { onConflict: 'user_id' });
+        welcome_completed_at: thirtyDaysAgo.toISOString(),
+      })
+      .eq('user_id', userId);
 
     if (onboardingError) {
       console.error('Unlock all - onboarding error:', onboardingError);
@@ -177,12 +176,12 @@ async function handlePost(req, res, supabase) {
       .eq('user_id', userId);
     if (taskError) errors.push('task_submissions: ' + taskError.message);
 
-    // Reset user_onboarding (keep welcome_completed but reset challenge)
+    // Reset welcome_completed_at to restart the challenge timer
+    // This determines when Day 1 unlocked and subsequent days unlock
     const { error: onboardingError } = await supabase
       .from('user_onboarding')
       .update({
-        challenge_started: true,
-        challenge_start_time: new Date().toISOString(),
+        welcome_completed_at: new Date().toISOString(),
       })
       .eq('user_id', userId);
     if (onboardingError) errors.push('user_onboarding: ' + onboardingError.message);

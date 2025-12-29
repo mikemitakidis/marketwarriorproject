@@ -54,6 +54,19 @@ export default async function handler(req, res) {
     }
 
     // Unlock all 30 days for the user
+    // 1. Set welcome_completed_at to 30 days ago so time-based unlock shows all days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    await supabase
+      .from('user_onboarding')
+      .update({
+        welcome_completed: true,
+        welcome_completed_at: thirtyDaysAgo.toISOString(),
+      })
+      .eq('user_id', targetUserId);
+
+    // 2. Also create unlock records in challenge_progress for each day
     const unlockPromises = [];
     for (let day = 1; day <= 30; day++) {
       unlockPromises.push(
