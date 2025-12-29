@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../../lib/serverAuth';
 
@@ -89,6 +89,11 @@ export async function getServerSideProps({ req, params }) {
 
 export default function DayPage({ day, content, quizQuestions, isCompleted, quizPassed, taskSubmitted: initialTaskSubmitted, userName, welcomeCompletedAt }) {
   const router = useRouter();
+
+  // Track the current day to detect navigation
+  const prevDayRef = useRef(day);
+
+  // Local state for form inputs and UI
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [taskResponse, setTaskResponse] = useState('');
@@ -97,24 +102,35 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, quiz
   const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
-  const [taskSubmitted, setTaskSubmitted] = useState(initialTaskSubmitted);
   const [error, setError] = useState('');
   const [showQuizResults, setShowQuizResults] = useState(false);
 
-  // Reset state when day changes (for client-side navigation)
+  // Track if user just submitted task in THIS session (separate from server state)
+  const [justSubmittedTask, setJustSubmittedTask] = useState(false);
+
+  // The actual displayed state: server truth OR just submitted this session
+  const taskSubmitted = initialTaskSubmitted || justSubmittedTask;
+
+  // Reset ALL local state when day changes (for client-side navigation)
   useEffect(() => {
-    setCurrentQuestion(0);
-    setQuizAnswers({});
-    setTaskResponse('');
-    setTaskFile(null);
-    setUploadingFile(false);
-    setUploadedFileUrl(null);
-    setSubmitting(false);
-    setQuizResult(null);
-    setTaskSubmitted(initialTaskSubmitted);
-    setError('');
-    setShowQuizResults(false);
-  }, [day, initialTaskSubmitted]);
+    // Only reset if day actually changed (not on initial mount)
+    if (prevDayRef.current !== day) {
+      console.log(`Day changed from ${prevDayRef.current} to ${day}, resetting state`);
+      setCurrentQuestion(0);
+      setQuizAnswers({});
+      setTaskResponse('');
+      setTaskFile(null);
+      setUploadingFile(false);
+      setUploadedFileUrl(null);
+      setSubmitting(false);
+      setQuizResult(null);
+      setError('');
+      setShowQuizResults(false);
+      // IMPORTANT: Reset the "just submitted" flag - the server prop will now determine the state
+      setJustSubmittedTask(false);
+      prevDayRef.current = day;
+    }
+  }, [day]);
 
   const totalQuestions = quizQuestions.length;
   const progressPercent = ((day) / 30) * 100;
@@ -216,7 +232,8 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, quiz
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit task');
-      setTaskSubmitted(true);
+      // Mark as submitted in local state - this will combine with server prop
+      setJustSubmittedTask(true);
     } catch (err) {
       setError(err.message);
     } finally {
