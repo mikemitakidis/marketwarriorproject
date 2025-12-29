@@ -233,6 +233,26 @@ export default function AdminPanel() {
     }
   }
 
+  async function resetUserProgress(userId) {
+    if (!confirm('Reset all progress for this user? This will delete all quiz attempts, task submissions, and progress data. This action cannot be undone!')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'reset_user', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('User progress reset successfully!');
+      loadUsers();
+      if (selectedUser === userId) {
+        loadUserDetails(userId);
+      }
+    } else {
+      alert('Error: ' + (data.error || 'Failed to reset user'));
+    }
+  }
+
   async function grantAccess(email) {
     const res = await fetch('/api/admin/grant-access', {
       method: 'POST',
@@ -671,6 +691,12 @@ export default function AdminPanel() {
                                     onClick={() => unlockAllDays(user.id)}
                                   >
                                     Unlock
+                                  </button>
+                                  <button
+                                    style={{ ...styles.btnSmDanger, marginLeft: '5px' }}
+                                    onClick={() => resetUserProgress(user.id)}
+                                  >
+                                    Reset
                                   </button>
                                 </td>
                               </tr>
