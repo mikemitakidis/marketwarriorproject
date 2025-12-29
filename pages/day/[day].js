@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../../lib/serverAuth';
 
@@ -100,6 +100,21 @@ export default function DayPage({ day, content, quizQuestions, isCompleted, quiz
   const [taskSubmitted, setTaskSubmitted] = useState(initialTaskSubmitted);
   const [error, setError] = useState('');
   const [showQuizResults, setShowQuizResults] = useState(false);
+
+  // Reset state when day changes (for client-side navigation)
+  useEffect(() => {
+    setCurrentQuestion(0);
+    setQuizAnswers({});
+    setTaskResponse('');
+    setTaskFile(null);
+    setUploadingFile(false);
+    setUploadedFileUrl(null);
+    setSubmitting(false);
+    setQuizResult(null);
+    setTaskSubmitted(initialTaskSubmitted);
+    setError('');
+    setShowQuizResults(false);
+  }, [day, initialTaskSubmitted]);
 
   const totalQuestions = quizQuestions.length;
   const progressPercent = ((day) / 30) * 100;
