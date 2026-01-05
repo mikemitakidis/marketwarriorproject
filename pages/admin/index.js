@@ -229,6 +229,8 @@ export default function AdminPanel() {
     });
     if (res.ok) {
       alert('All days unlocked!');
+      // Reload both user list and details to update UI immediately
+      loadUsers();
       loadUserDetails(userId);
     }
   }
@@ -649,6 +651,7 @@ export default function AdminPanel() {
                               <th>Name</th>
                               <th>Email</th>
                               <th>Status</th>
+                              <th>Days Unlocked</th>
                               <th>Progress</th>
                               <th>Actions</th>
                             </tr>
@@ -667,6 +670,14 @@ export default function AdminPanel() {
                                     ...(user.has_paid ? styles.badgeSuccess : styles.badgeWarning)
                                   }}>
                                     {user.has_paid ? 'Paid' : 'Free'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span style={{
+                                    ...styles.badge,
+                                    ...(user.all_days_unlocked ? styles.badgeSuccess : styles.badgeInfo)
+                                  }}>
+                                    {user.all_days_unlocked ? '🔓 All 30' : `🔒 ${user.days_unlocked || 0}/30`}
                                   </span>
                                 </td>
                                 <td>
@@ -1456,6 +1467,10 @@ const styles = {
   badgeDanger: {
     background: '#fee2e2',
     color: '#991b1b',
+  },
+  badgeInfo: {
+    background: '#e0e7ff',
+    color: '#3730a3',
   },
   splitView: {
     display: 'grid',

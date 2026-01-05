@@ -91,16 +91,42 @@ export async function getServerSideProps({ req, params }) {
   }
 }
 
-export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubmitted: initialTaskSubmitted }) {
+export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQuizPassed, taskSubmitted: initialTaskSubmitted }) {
   const router = useRouter();
   const iframeRef = useRef(null);
+
+  // Track previous day to detect navigation
+  const prevDayRef = useRef(day);
+
   const [templateLoaded, setTemplateLoaded] = useState(false);
-  const [quizResult, setQuizResult] = useState(null);
-  const [taskSubmitted, setTaskSubmitted] = useState(initialTaskSubmitted);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+
+  // Session-only state (resets on navigation, combines with server props)
+  const [justPassedQuiz, setJustPassedQuiz] = useState(false);
+  const [justSubmittedTask, setJustSubmittedTask] = useState(false);
+
+  // Computed state: server truth OR just completed this session
+  const quizPassed = initialQuizPassed || justPassedQuiz;
+  const taskSubmitted = initialTaskSubmitted || justSubmittedTask;
+
   // Use ref for timestamp to prevent iframe reload on re-render
   const cacheBuster = useRef(Date.now());
+
+  // Reset ALL local state when day changes (client-side navigation)
+  useEffect(() => {
+    if (prevDayRef.current !== day) {
+      console.log(`[DayTemplate] Day changed: ${prevDayRef.current} → ${day}, resetting state`);
+      setTemplateLoaded(false);
+      setError('');
+      setStatusMessage('');
+      setJustPassedQuiz(false);
+      setJustSubmittedTask(false);
+      // Generate new cache buster to reload iframe with new day
+      cacheBuster.current = Date.now();
+      prevDayRef.current = day;
+    }
+  }, [day]);
 
   // Handle postMessage from iframe
   useEffect(() => {
@@ -143,7 +169,9 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
             });
             const result = await res.json();
             if (res.ok) {
-              setQuizResult({ score: data.score, total: data.total, passed: data.passed });
+              if (data.passed) {
+                setJustPassedQuiz(true);
+              }
               setStatusMessage(data.passed ? '✓ Quiz passed!' : 'Quiz not passed - try again');
             } else {
               setError(result.error || 'Failed to save quiz');
@@ -168,7 +196,7 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
             });
             const result = await res.json();
             if (res.ok) {
-              setTaskSubmitted(true);
+              setJustSubmittedTask(true);
               setStatusMessage('✓ Task submitted! Day completed.');
             } else {
               setError(result.error || 'Failed to save task');
@@ -208,8 +236,8 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed, taskSubm
             {statusMessage && !error && <span className="status">{statusMessage}</span>}
           </div>
           <div className="status-right">
-            <span className={`badge ${quizPassed || quizResult?.passed ? 'passed' : ''}`}>
-              Quiz: {quizPassed || quizResult?.passed ? '✓' : '○'}
+            <span className={`badge ${quizPassed ? 'passed' : ''}`}>
+              Quiz: {quizPassed ? '✓' : '○'}
             </span>
             <span className={`badge ${taskSubmitted ? 'passed' : ''}`}>
               Task: {taskSubmitted ? '✓' : '○'}

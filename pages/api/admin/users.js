@@ -94,6 +94,27 @@ async function handleGet(req, res, supabase) {
     .select('user_id, passed')
     .in('user_id', userIds);
 
+  // Get onboarding data to check unlock status
+  const { data: onboardingData } = await supabase
+    .from('user_onboarding')
+    .select('user_id, welcome_completed_at')
+    .in('user_id', userIds);
+
+  // Build onboarding map - check if all days unlocked (welcome_completed_at > 29 days ago)
+  const onboardingMap = {};
+  const now = new Date();
+  (onboardingData || []).forEach(o => {
+    if (o.welcome_completed_at) {
+      const startDate = new Date(o.welcome_completed_at);
+      const daysSinceStart = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+      onboardingMap[o.user_id] = {
+        welcome_completed_at: o.welcome_completed_at,
+        all_days_unlocked: daysSinceStart >= 29,
+        days_unlocked: Math.min(daysSinceStart + 1, 30),
+      };
+    }
+  });
+
   // Build stats map
   const progressMap = {};
   (progressData || []).forEach(p => {
@@ -117,6 +138,8 @@ async function handleGet(req, res, supabase) {
     days_completed: progressMap[u.id]?.completed || 0,
     quizzes_passed: quizMap[u.id]?.passed || 0,
     quizzes_taken: quizMap[u.id]?.total || 0,
+    all_days_unlocked: onboardingMap[u.id]?.all_days_unlocked || false,
+    days_unlocked: onboardingMap[u.id]?.days_unlocked || 0,
   }));
 
   return res.status(200).json({ users: usersWithStats });
