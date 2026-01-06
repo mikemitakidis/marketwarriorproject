@@ -951,7 +951,7 @@ KEY LESSONS FROM DAY 22:
 1. [Most important thing about IPOs]
 2. [Most important thing about penny stocks]
 3. [Most important thing about crypto]
-4. [What volatility trading taught me]"></textarea>
+4. [What volatility trading taught me] (minimum 50 characters)"></textarea>
             
             <button class="completion-button" onclick="submitTask()">Submit Volatility Analysis</button>
             
@@ -1127,8 +1127,8 @@ KEY LESSONS FROM DAY 22:
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 500) {
-                showTaskStatus('Please complete all sections of your analysis (minimum 500 characters).', 'error');
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please complete all sections of your analysis (minimum 50 characters).', 'error');
                 return;
             }
             

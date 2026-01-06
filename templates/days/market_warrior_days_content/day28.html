@@ -1374,8 +1374,8 @@ My News Trading Rule:
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 600) {
-                showTaskStatus('Please complete your economic calendar analysis (minimum 600 characters).', 'error');
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please complete your economic calendar analysis (minimum 50 characters).', 'error');
                 return;
             }
             

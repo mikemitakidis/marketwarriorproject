@@ -850,7 +850,7 @@
 <label style="display: block; margin: 25px 0 10px 0; font-weight: 600;">Your Company Research (Required):</label>
 <textarea id="taskResponse" placeholder="Paste your company research here following the template above..." style="width: 100%; height: 350px; padding: 15px; border: 2px solid #3b82f6; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
 <div style="margin: 20px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - Yahoo Finance page showing financial statements)</label>
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshot (Optional)</label>
 <input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #3b82f6; border-radius: 5px; width: 100%;" type="file"/>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
@@ -994,15 +994,12 @@
             const response = document.getElementById('taskResponse').value.trim();
             const fileInput = document.getElementById('taskFile');
             
-            if (!response || response.length < 200) {
-                showTaskStatus('Please provide complete company research (minimum 200 characters).', 'error');
+            if (!response || response.length < 50) {
+                showTaskStatus('Please provide complete company research (minimum 50 characters).', 'error');
                 return;
             }
             
-            if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload at least 1 screenshot showing financial statements.', 'error');
-                return;
-            }
+            // File upload is optional
             
             taskSubmitted = true;
             showTaskStatus('✅ Task submitted successfully! Great research work!', 'success');

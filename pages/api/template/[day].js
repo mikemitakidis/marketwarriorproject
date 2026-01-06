@@ -279,30 +279,86 @@ export default async function handler(req, res) {
     // Hook submitTask - this is called when user submits their task
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;
-      window.submitTask = function() {
+      window.submitTask = async function() {
         // Get task response before original function might clear it
         const taskResponseEl = document.getElementById('taskResponse');
         const taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
+        const taskFileEl = document.getElementById('taskFile');
+        const files = taskFileEl ? taskFileEl.files : [];
 
-        console.log('[MWBridge] submitTask called, text length:', taskText.length);
+        console.log('[MWBridge] submitTask called, text length:', taskText.length, 'files:', files.length);
 
-        // Check minimum length before proceeding
+        // Check minimum length (50 chars)
         if (taskText.length < 50) {
           console.log('[MWBridge] Text too short (' + taskText.length + ' chars), need at least 50');
-          // Let original function show error
-          originalSubmitTask.apply(this, arguments);
+          alert('Please write at least 50 characters. Currently: ' + taskText.length + ' characters.');
           return;
         }
 
-        originalSubmitTask.apply(this, arguments);
+        // If already reported, don't re-submit
+        if (taskReported) {
+          console.log('[MWBridge] Task already submitted');
+          return;
+        }
 
-        // After original runs, send to parent
-        if (!taskReported && taskText.length >= 50) {
+        // Show uploading status
+        var submitBtn = document.getElementById('submitTaskBtn');
+        if (submitBtn) {
+          submitBtn.textContent = 'Uploading...';
+          submitBtn.disabled = true;
+        }
+
+        try {
+          // Upload files if any (optional)
+          var attachmentUrls = [];
+          if (files.length > 0) {
+            console.log('[MWBridge] Uploading ' + files.length + ' file(s)...');
+            for (var i = 0; i < files.length; i++) {
+              var file = files[i];
+              var formData = new FormData();
+              formData.append('file', file);
+              formData.append('day', DAY);
+
+              var uploadRes = await fetch('/api/upload/task-file', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+              });
+
+              if (uploadRes.ok) {
+                var uploadResult = await uploadRes.json();
+                attachmentUrls.push(uploadResult.url);
+                console.log('[MWBridge] Uploaded file:', uploadResult.url);
+              } else {
+                console.error('[MWBridge] File upload failed');
+              }
+            }
+          }
+
+          // Send to parent with text and attachment URLs
           console.log('[MWBridge] Sending TASK_COMPLETE to parent');
           sendToParent('TASK_COMPLETE', {
-            response: taskText
+            response: taskText,
+            attachmentUrls: attachmentUrls
           });
           taskReported = true;
+
+          // Update UI to show success
+          if (submitBtn) {
+            submitBtn.textContent = 'Task Submitted ✓';
+            submitBtn.style.background = '#10b981';
+            submitBtn.style.color = 'white';
+          }
+          if (taskResponseEl) taskResponseEl.disabled = true;
+          if (taskFileEl) taskFileEl.disabled = true;
+
+        } catch (err) {
+          console.error('[MWBridge] Task submission error:', err);
+          alert('Error submitting task: ' + err.message);
+          if (submitBtn) {
+            submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
+            submitBtn.disabled = false;
+          }
         }
       };
       window.submitTask._hooked = true;

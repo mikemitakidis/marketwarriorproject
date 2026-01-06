@@ -980,7 +980,7 @@ How I'll manage them:
 KEY LESSONS FROM DAY 21:
 1. [Most important thing learned about dividends]
 2. [Most important thing learned about bonds]
-3. [How passive income fits my overall strategy]"></textarea>
+3. [How passive income fits my overall strategy] (minimum 50 characters)"></textarea>
 <button class="completion-button" onclick="submitTask()">Submit Portfolio Plan</button>
 <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
 </div><div class="section">
@@ -1181,8 +1181,8 @@ KEY LESSONS FROM DAY 21:
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 500) {
-                showTaskStatus('Please complete all sections of your portfolio plan (minimum 500 characters).', 'error');
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please complete all sections of your portfolio plan (minimum 50 characters).', 'error');
                 return;
             }
             
