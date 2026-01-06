@@ -1173,9 +1173,21 @@ Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months bef
 </div>
 </div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
-            
-            <button class="submit-btn" onclick="submitTask()">Submit Optimized System</button>
-            
+
+<div class="file-upload-container">
+<div class="file-upload-header">
+<label>Upload Screenshots (Required)</label>
+<button type="button" class="add-file-btn" onclick="triggerFileSelect()">+ Add File</button>
+</div>
+<input accept="image/*,.pdf,.doc,.docx" id="taskFile" multiple="" style="display:none;" type="file"/>
+<div class="uploaded-files-list" id="uploadedFilesList">
+<div class="file-upload-empty">No files uploaded yet. Click "Add File" to upload.</div>
+</div>
+<div class="file-upload-note">Supported: Images, PDF, Word documents. Max 50MB per file.</div>
+</div>
+
+            <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()">Submit Optimized System</button>
+
             <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
         </div>
 
