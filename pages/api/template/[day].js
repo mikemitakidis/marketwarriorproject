@@ -320,10 +320,14 @@ export default async function handler(req, res) {
         // Get task response and files
         const taskResponseEl = document.getElementById('taskResponse');
         const taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
-        const taskFileEl = document.getElementById('taskFile');
-        const files = taskFileEl ? taskFileEl.files : [];
 
-        console.log('[MWBridge] submitTask called, text length:', taskText.length, 'files:', files.length);
+        // Check for pre-uploaded files (new UI) or file input (fallback)
+        var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+        const taskFileEl = document.getElementById('taskFile');
+        const pendingFiles = taskFileEl ? taskFileEl.files : [];
+        const totalFiles = preUploadedUrls.length + pendingFiles.length;
+
+        console.log('[MWBridge] submitTask called, text length:', taskText.length, 'pre-uploaded:', preUploadedUrls.length, 'pending:', pendingFiles.length);
         console.log('[MWBridge] Day ' + DAY + ' requires: ' + dayReqs.minChars + ' chars, ' + dayReqs.minFiles + ' files');
 
         // Check minimum character length
@@ -333,7 +337,7 @@ export default async function handler(req, res) {
         }
 
         // Check if file upload is required
-        if (dayReqs.minFiles > 0 && files.length === 0) {
+        if (dayReqs.minFiles > 0 && totalFiles === 0) {
           alert('Please upload your screenshot(s) for this task.');
           return;
         }
@@ -344,22 +348,24 @@ export default async function handler(req, res) {
           return;
         }
 
-        // Show uploading status
+        // Show submitting status
         var submitBtn = document.getElementById('submitTaskBtn');
         if (submitBtn) {
-          submitBtn.textContent = files.length > 0 ? 'Uploading files...' : 'Submitting...';
+          submitBtn.textContent = 'Submitting...';
           submitBtn.disabled = true;
         }
 
         try {
-          // Upload files if any
-          var attachmentUrls = [];
-          if (files.length > 0) {
-            console.log('[MWBridge] Uploading ' + files.length + ' file(s)...');
-            for (var i = 0; i < files.length; i++) {
-              var file = files[i];
+          // Use pre-uploaded URLs (files already uploaded via new UI)
+          var attachmentUrls = preUploadedUrls.slice();
+
+          // Upload any pending files from old-style input (fallback)
+          if (pendingFiles.length > 0) {
+            console.log('[MWBridge] Uploading ' + pendingFiles.length + ' pending file(s)...');
+            for (var i = 0; i < pendingFiles.length; i++) {
+              var file = pendingFiles[i];
               if (submitBtn) {
-                submitBtn.textContent = 'Uploading file ' + (i + 1) + '/' + files.length + '...';
+                submitBtn.textContent = 'Uploading file ' + (i + 1) + '/' + pendingFiles.length + '...';
               }
               var formData = new FormData();
               formData.append('file', file);
