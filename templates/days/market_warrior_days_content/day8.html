@@ -595,7 +595,183 @@
             justify-content: center;
             position: relative;
         }
-    </style>
+    
+        .template-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+
+        .template-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .template-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Review Answers Styling */
+        .review-mode .question-container {
+            display: block !important;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        .review-mode .quiz-option {
+            pointer-events: none;
+        }
+        .review-mode .quiz-option.user-correct {
+            background: #dcfce7 !important;
+            border-color: #22c55e !important;
+        }
+        .review-mode .quiz-option.user-correct::after {
+            content: " ✓ Your Answer";
+            color: #16a34a;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .review-mode .quiz-option.user-wrong {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+        }
+        .review-mode .quiz-option.user-wrong::after {
+            content: " ✗ Your Answer";
+            color: #dc2626;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .review-mode .quiz-option.correct-answer {
+            background: #dcfce7 !important;
+            border-color: #22c55e !important;
+        }
+        .review-mode .quiz-option.correct-answer::after {
+            content: " ← Correct Answer";
+            color: #16a34a;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .review-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* File Upload UI Styling */
+        .file-upload-container {
+            border: 2px dashed #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #fffbeb;
+        }
+        .file-upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .file-upload-header label {
+            font-weight: 600;
+            color: #92400e;
+        }
+        .add-file-btn {
+            background: #ffc107;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .add-file-btn:hover {
+            background: #f59e0b;
+        }
+        .uploaded-files-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .uploaded-file-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            gap: 10px;
+            max-width: 250px;
+        }
+        .uploaded-file-item.uploading {
+            opacity: 0.7;
+            background: #f3f4f6;
+        }
+        .uploaded-file-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+        .uploaded-file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .uploaded-file-name {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .uploaded-file-size {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .uploaded-file-status {
+            font-size: 11px;
+            color: #f59e0b;
+        }
+        .delete-file-btn {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .delete-file-btn:hover {
+            background: #fecaca;
+        }
+        .file-upload-empty {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .file-upload-note {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+</style>
 </head>
 <body>
 <div class="container">
@@ -622,8 +798,11 @@
 </div>
 <div class="section">
 <h2>📹 Video Lesson</h2>
-<div class="video-placeholder">
-<p>Video player will load here</p>
+<div class="video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 15px; background: #000;">
+<video id="lessonVideo" controls style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+<source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
 </div>
 </div>
 <div class="section">
@@ -1230,6 +1409,7 @@
 </div>
 <div class="performance-message" id="performanceMessage">Great job!</div>
 <div id="passedButtons" style="display: none;">
+<button class="quiz-btn" onclick="reviewAnswers()" style="background: #3b82f6; margin-right: 10px;">Review Answers</button>
 <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
 <button class="quiz-btn" onclick="proceedToTask()">Continue to Task</button>
 </div>
@@ -1237,6 +1417,7 @@
 <div style="background: #fef2f2; color: #dc2626; padding: 20px; border-radius: 10px; margin: 20px 0;">
 <p>You need at least 60% (3/5 correct) to proceed. Please review and try again.</p>
 </div>
+<button class="quiz-btn" onclick="reviewAnswers()" style="background: #3b82f6; margin-right: 10px;">Review Answers</button>
 <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
 </div>
 </div>
@@ -1269,12 +1450,15 @@
 <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
 <h4>📋 Task Submission Required</h4>
 <p><strong>⚠️ Important:</strong> You must submit this task to unlock Day 9!</p>
-<textarea id="taskResponse" placeholder="TREND &amp; PATTERN ANALYSIS REPORT
+<div class="template-box">
+<h4>📝 Response Template</h4>
+<div class="template-content">
+<pre>TREND & PATTERN ANALYSIS REPORT
 
 Date: [Today's Date]
 
 UPTREND ANALYSIS:
-Stock: [Name &amp; Ticker]
+Stock: [Name & Ticker]
 Timeframe: [Daily/4H/1H]
 Trend Line Points: [Price levels where line touches]
 Number of Touches: [2/3/4+]
@@ -1289,7 +1473,7 @@ Target: $[X]
 Risk/Reward: [X:X]
 
 DOWNTREND ANALYSIS:
-Stock: [Name &amp; Ticker]
+Stock: [Name & Ticker]
 Timeframe: 
 Trend Line Points: 
 Number of Touches: 
@@ -1304,8 +1488,8 @@ Target:
 Risk/Reward: 
 
 PATTERN ANALYSIS:
-Stock: [Name &amp; Ticker]
-Pattern Type: [Flag/Triangle/H&amp;S/Double Top-Bottom/Wedge]
+Stock: [Name & Ticker]
+Pattern Type: [Flag/Triangle/H&S/Double Top-Bottom/Wedge]
 Timeframe: 
 Pattern Height/Width: $[X]
 Key Levels: 
@@ -1325,11 +1509,20 @@ Score: [X/4]
 KEY LEARNING TODAY:
 Most important concept learned:
 Which pattern will you focus on first?
-What will you practice more?
-" style="width: 100%; height: 350px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
-<div style="margin: 15px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - at least 3)</label>
-<input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
+What will you practice more?</pre>
+</div>
+</div>
+<textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." style="width: 100%; height: 350px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+<div class="file-upload-container">
+<div class="file-upload-header">
+<label>Upload Screenshots (Required)</label>
+<button type="button" class="add-file-btn" onclick="triggerFileSelect()">+ Add File</button>
+</div>
+<input accept="image/*,.pdf,.doc,.docx" id="taskFile" multiple="" style="display:none;" type="file"/>
+<div class="uploaded-files-list" id="uploadedFilesList">
+<div class="file-upload-empty">No files uploaded yet. Click "Add File" to upload.</div>
+</div>
+<div class="file-upload-note">Supported: Images, PDF, Word documents. Max 50MB per file.</div>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
 <p id="taskStatusText"></p>
@@ -1705,6 +1898,79 @@ What will you practice more?
                     question.style.display = 'none';
                     question.classList.remove('active');
                 }
+
+        function reviewAnswers() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('quizContent').classList.add('review-mode');
+            document.querySelector('.quiz-navigation').style.display = 'none';
+
+            // Show all questions
+            document.querySelectorAll('.question-container').forEach((q, idx) => {
+                q.style.display = 'block';
+
+                // Clear previous styling
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('user-correct', 'user-wrong', 'correct-answer', 'selected');
+                });
+
+                // Mark user's answer
+                const userAnswer = userAnswers[idx];
+                const correctAnswer = correctAnswers[idx];
+
+                if (userAnswer) {
+                    const userOption = q.querySelector('.quiz-option[data-answer="' + userAnswer + '"]');
+                    if (userOption) {
+                        if (userAnswer === correctAnswer) {
+                            userOption.classList.add('user-correct');
+                        } else {
+                            userOption.classList.add('user-wrong');
+                            // Show correct answer
+                            const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
+                            if (correctOption) {
+                                correctOption.classList.add('correct-answer');
+                            }
+                        }
+                    }
+                } else {
+                    // User didn't answer - show correct
+                    const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
+                    if (correctOption) {
+                        correctOption.classList.add('correct-answer');
+                    }
+                }
+            });
+
+            // Add back button if not already there
+            if (!document.getElementById('backToResultsBtn')) {
+                const backBtn = document.createElement('button');
+                backBtn.id = 'backToResultsBtn';
+                backBtn.className = 'quiz-btn';
+                backBtn.textContent = '← Back to Results';
+                backBtn.onclick = backToResults;
+                backBtn.style.cssText = 'margin: 20px auto; display: block;';
+                document.getElementById('quizContent').appendChild(backBtn);
+            }
+        }
+
+        function backToResults() {
+            document.getElementById('quizContent').classList.remove('review-mode');
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+
+            // Remove back button
+            const backBtn = document.getElementById('backToResultsBtn');
+            if (backBtn) backBtn.remove();
+
+            // Reset question display
+            document.querySelectorAll('.question-container').forEach((q, idx) => {
+                q.style.display = idx === 0 ? 'block' : 'none';
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
+                });
+            });
+        }
+
                 question.classList.remove('answered');
                 
                 const options = question.querySelectorAll('.quiz-option');
@@ -1728,8 +1994,8 @@ What will you practice more?
                 return;
             }
 
-            if (taskFile.length < 3) {
-                showTaskStatus('Please upload at least 3 screenshots (uptrend, downtrend, pattern).', 'error');
+            if (taskFile.length < 1) {
+                showTaskStatus('Please upload your screenshot(s).', 'error');
                 return;
             }
 
@@ -1801,6 +2067,169 @@ What will you practice more?
                 e.preventDefault();
             }
         });
+    
+        // File Upload Management
+        var uploadedFiles = [];
+        // Get day number from page badge for file upload
+        var DAY = parseInt((document.querySelector('.day-badge').textContent.match(/DAY (\d+)/) || [null, '0'])[1]);
+        var uploadedUrls = [];
+
+        function initFileUpload() {
+            var container = document.querySelector('.file-upload-container');
+            if (!container) return;
+
+            var fileInput = document.getElementById('taskFile');
+            if (fileInput) {
+                fileInput.style.display = 'none';
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+        }
+
+        function triggerFileSelect() {
+            var fileInput = document.getElementById('taskFile');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        function handleFileSelect(e) {
+            var files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            for (var i = 0; i < files.length; i++) {
+                uploadSingleFile(files[i]);
+            }
+
+            // Clear input so same file can be re-selected
+            e.target.value = '';
+        }
+
+        function uploadSingleFile(file) {
+            var fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+            // Add to list with uploading status
+            uploadedFiles.push({
+                id: fileId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                status: 'uploading',
+                url: null,
+                file: file
+            });
+
+            renderFileList();
+
+            // Upload file
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('day', DAY);
+
+            fetch('/api/upload/task-file', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Upload failed');
+                return res.json();
+            })
+            .then(function(data) {
+                // Update file status
+                var fileObj = uploadedFiles.find(function(f) { return f.id === fileId; });
+                if (fileObj) {
+                    fileObj.status = 'uploaded';
+                    fileObj.url = data.url;
+                    uploadedUrls.push(data.url);
+                }
+                renderFileList();
+            })
+            .catch(function(err) {
+                console.error('Upload error:', err);
+                // Remove failed file
+                uploadedFiles = uploadedFiles.filter(function(f) { return f.id !== fileId; });
+                renderFileList();
+                alert('Failed to upload: ' + file.name);
+            });
+        }
+
+        function deleteFile(fileId) {
+            var fileObj = uploadedFiles.find(function(f) { return f.id === fileId; });
+            if (fileObj && fileObj.url) {
+                uploadedUrls = uploadedUrls.filter(function(u) { return u !== fileObj.url; });
+            }
+            uploadedFiles = uploadedFiles.filter(function(f) { return f.id !== fileId; });
+            renderFileList();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function renderFileList() {
+            var listContainer = document.getElementById('uploadedFilesList');
+            if (!listContainer) return;
+
+            if (uploadedFiles.length === 0) {
+                listContainer.innerHTML = '<div class="file-upload-empty">No files uploaded yet. Click "Add File" to upload.</div>';
+                return;
+            }
+
+            var html = '';
+            uploadedFiles.forEach(function(file) {
+                var isImage = file.type && file.type.startsWith('image/');
+                var thumbHtml = isImage && file.file
+                    ? '<img class="uploaded-file-thumb" id="thumb_' + file.id + '" alt="Preview">'
+                    : '<div class="uploaded-file-thumb" style="display:flex;align-items:center;justify-content:center;font-size:18px;">📄</div>';
+
+                var statusHtml = file.status === 'uploading'
+                    ? '<div class="uploaded-file-status">Uploading...</div>'
+                    : '<div class="uploaded-file-size">' + formatFileSize(file.size) + '</div>';
+
+                var deleteBtn = file.status === 'uploaded'
+                    ? '<button type="button" class="delete-file-btn" onclick="deleteFile(\'' + file.id + '\')" title="Remove file">×</button>'
+                    : '<span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">⏳</span>';
+
+                html += '<div class="uploaded-file-item' + (file.status === 'uploading' ? ' uploading' : '') + '">' +
+                    thumbHtml +
+                    '<div class="uploaded-file-info">' +
+                    '<div class="uploaded-file-name" title="' + file.name + '">' + file.name + '</div>' +
+                    statusHtml +
+                    '</div>' +
+                    deleteBtn +
+                    '</div>';
+            });
+
+            listContainer.innerHTML = html;
+
+            // Generate thumbnails for images
+            uploadedFiles.forEach(function(file) {
+                if (file.type && file.type.startsWith('image/') && file.file) {
+                    var thumb = document.getElementById('thumb_' + file.id);
+                    if (thumb && !thumb.src) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            thumb.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file.file);
+                    }
+                }
+            });
+        }
+
+        function getUploadedUrls() {
+            return uploadedUrls;
+        }
+
+        // Initialize on load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFileUpload);
+        } else {
+            setTimeout(initFileUpload, 100);
+        }
+
     </script>
 </body>
 </html>
