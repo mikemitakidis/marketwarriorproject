@@ -283,11 +283,11 @@ export default async function handler(req, res) {
         // Requirements per day
         // minFiles: 1 = file required (user can upload multiple), 0 = optional
         const requirements = {
-          1: { minChars: 50, minFiles: 0 },
-          2: { minChars: 50, minFiles: 0 },
-          3: { minChars: 50, minFiles: 0 },
-          4: { minChars: 50, minFiles: 0 },
-          5: { minChars: 50, minFiles: 0 },
+          1: { minChars: 50, minFiles: 0 },    // Optional file
+          2: { minChars: 50, minFiles: 1 },    // File required
+          3: { minChars: 50, minFiles: 1 },    // File required
+          4: { minChars: 50, minFiles: 1 },    // File required
+          5: { minChars: 50, minFiles: 1 },    // File required
           6: { minChars: 100, minFiles: 1 },   // File required
           7: { minChars: 100, minFiles: 1 },   // File required
           8: { minChars: 100, minFiles: 1 },   // File required
@@ -301,9 +301,9 @@ export default async function handler(req, res) {
           16: { minChars: 150, minFiles: 1 },  // File required
           17: { minChars: 150, minFiles: 1 },  // File required
           18: { minChars: 200, minFiles: 1 },  // File required
-          19: { minChars: 100, minFiles: 0 },
+          19: { minChars: 100, minFiles: 1 },  // File required
           20: { minChars: 200, minFiles: 1 },  // File required
-          21: { minChars: 200, minFiles: 0 },  // NO file required
+          21: { minChars: 200, minFiles: 1 },  // File required
           22: { minChars: 200, minFiles: 1 },  // File required
           23: { minChars: 200, minFiles: 1 },  // File required
           24: { minChars: 200, minFiles: 1 },  // File required
@@ -312,7 +312,7 @@ export default async function handler(req, res) {
           27: { minChars: 50, minFiles: 1 },   // File required
           28: { minChars: 200, minFiles: 1 },  // File required
           29: { minChars: 200, minFiles: 1 },  // File required
-          30: { minChars: 0, minFiles: 0 }
+          30: { minChars: 0, minFiles: 0 }     // Quiz only - no task
         };
 
         const dayReqs = requirements[DAY] || { minChars: 50, minFiles: 0 };
