@@ -979,15 +979,12 @@
             const taskResponse = document.getElementById('taskResponse').value;
             const fileInput = document.getElementById('taskFile');
             
-            if (taskResponse.length < 200) {
-                showTaskStatus('Please provide detailed Fibonacci analysis (minimum 200 characters).', 'error');
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please provide detailed Fibonacci analysis (minimum 50 characters).', 'error');
                 return;
             }
             
-            if (!fileInput.files || fileInput.files.length < 3) {
-                showTaskStatus('Please upload at least 3 screenshots showing Fib levels.', 'error');
-                return;
-            }
+            // File upload is optional
             
             taskSubmitted = true;
             showTaskStatus('Task submitted successfully! Great Fibonacci work!', 'success');
@@ -1283,7 +1280,7 @@ KEY LESSONS LEARNED:
 4. How will you use Fib in your trading?
 " style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
 <div style="margin: 15px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - minimum 3: showing Fib levels and confluence)</label>
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshot (Optional)</label>
 <input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">

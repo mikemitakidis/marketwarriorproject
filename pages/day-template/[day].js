@@ -182,8 +182,8 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
           break;
 
         case 'TASK_COMPLETE':
-          setStatusMessage('Task submitted');
-          // Call task submit API
+          setStatusMessage('Saving task...');
+          // Call task submit API with attachment URLs
           try {
             const res = await fetch('/api/task/submit', {
               method: 'POST',
@@ -192,6 +192,9 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
               body: JSON.stringify({
                 day: data.day,
                 response: data.response || 'Completed via template',
+                attachmentUrl: data.attachmentUrls && data.attachmentUrls.length > 0
+                  ? data.attachmentUrls.join(',')
+                  : null,
               }),
             });
             const result = await res.json();

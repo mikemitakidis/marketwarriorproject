@@ -1262,8 +1262,8 @@ KEY LESSONS FROM DAY 24:
 function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 500) {
-                showTaskStatus('Please complete all sections (minimum 500 characters).', 'error');
+            if (taskResponse.length < 50) {
+                showTaskStatus('Please complete all sections (minimum 50 characters).', 'error');
                 return;
             }
             

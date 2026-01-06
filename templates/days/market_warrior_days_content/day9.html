@@ -1199,9 +1199,9 @@ KEY LEARNING TODAY:
 What was your biggest 'aha' moment?
 How will you use MAs in your trading?
 What support/resistance level was most obvious?
-" style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+ (minimum 50 characters)" style="width: 100%; height: 400px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
 <div style="margin: 15px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - at least 3 charts with MAs + S/R marked)</label>
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshot (Optional)</label>
 <input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
@@ -1510,10 +1510,7 @@ What support/resistance level was most obvious?
                 return;
             }
 
-            if (taskFile.length < 3) {
-                showTaskStatus('Please upload at least 3 screenshots with MAs and S/R marked.', 'error');
-                return;
-            }
+            // File upload is optional
 
             localStorage.setItem('day9TaskSubmitted', 'true');
             localStorage.setItem('day9TaskResponse', taskResponse);
