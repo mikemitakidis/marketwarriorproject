@@ -423,7 +423,7 @@ export default async function handler(req, res) {
                      window['proceedToDay2'] ? 'proceedToDay2' : 'proceedToNextDay';
       window[fnName] = function() {
         // Navigate via parent instead of in iframe
-        sendToParent('NAVIGATE', { to: '/day-template/' + (DAY + 1) });
+        sendToParent('NAVIGATE', { to: '/day/' + (DAY + 1) });
       };
       window[fnName]._hooked = true;
     }
