@@ -280,39 +280,39 @@ export default async function handler(req, res) {
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;
       window.submitTask = async function() {
-        // Requirements per day - EXACT from original templates
-        // Character limits capped at reasonable values, file requirements preserved
+        // Requirements per day
+        // minFiles: 1 = file required (user can upload multiple), 0 = optional
         const requirements = {
-          1: { minChars: 50, minFiles: 0 },    // Original: 50
-          2: { minChars: 50, minFiles: 0 },    // Original: 50 (has optional file)
-          3: { minChars: 50, minFiles: 0 },    // Has optional screenshots
-          4: { minChars: 50, minFiles: 0 },    // Optional file
-          5: { minChars: 50, minFiles: 0 },    // Optional file
-          6: { minChars: 50, minFiles: 3 },    // Required 3 trade screenshots
-          7: { minChars: 50, minFiles: 5 },    // Required 5 chart screenshots
-          8: { minChars: 50, minFiles: 3 },    // Required 3 pattern screenshots
-          9: { minChars: 50, minFiles: 3 },    // Required 3 charts with MAs
-          10: { minChars: 50, minFiles: 3 },   // Required 3 patterns marked
-          11: { minChars: 50, minFiles: 3 },   // Required 3 charts RSI/MACD/MAs
-          12: { minChars: 200, minFiles: 1 },  // Original: 200, 1 Yahoo Finance screenshot
-          13: { minChars: 200, minFiles: 3 },  // Original: 300→200, 3 stock screenshots
-          14: { minChars: 100, minFiles: 10 }, // Original: 100, 10 trade screenshots
-          15: { minChars: 200, minFiles: 3 },  // Original: 200, 3 calculator screenshots
-          16: { minChars: 200, minFiles: 3 },  // Original: 200, 3 crossover screenshots
-          17: { minChars: 200, minFiles: 3 },  // Original: 200, 3 Fib levels screenshots
-          18: { minChars: 200, minFiles: 1 },  // Original: 300→200, 1 backtest result
-          19: { minChars: 50, minFiles: 0 },   // Trading plan (has optional PDF)
-          20: { minChars: 200, minFiles: 0 },  // Original: 500→200, optional file
-          21: { minChars: 200, minFiles: 0 },  // Original: 500→200
-          22: { minChars: 200, minFiles: 0 },  // Original: 500→200
-          23: { minChars: 200, minFiles: 0 },  // Original: 800→200
-          24: { minChars: 200, minFiles: 0 },  // Original: 500→200
-          25: { minChars: 200, minFiles: 0 },  // Original: 800→200
-          26: { minChars: 200, minFiles: 0 },  // Original: 600→200
-          27: { minChars: 50, minFiles: 0 },   // Original: 50
-          28: { minChars: 200, minFiles: 0 },  // Original: 600→200
-          29: { minChars: 200, minFiles: 0 },  // Original: 800→200
-          30: { minChars: 0, minFiles: 0 }     // Quiz only
+          1: { minChars: 50, minFiles: 0 },    // Optional file
+          2: { minChars: 50, minFiles: 1 },    // File required
+          3: { minChars: 50, minFiles: 1 },    // File required
+          4: { minChars: 50, minFiles: 1 },    // File required
+          5: { minChars: 50, minFiles: 1 },    // File required
+          6: { minChars: 100, minFiles: 1 },   // File required
+          7: { minChars: 100, minFiles: 1 },   // File required
+          8: { minChars: 100, minFiles: 1 },   // File required
+          9: { minChars: 100, minFiles: 1 },   // File required
+          10: { minChars: 100, minFiles: 1 },  // File required
+          11: { minChars: 100, minFiles: 1 },  // File required
+          12: { minChars: 150, minFiles: 1 },  // File required
+          13: { minChars: 200, minFiles: 1 },  // File required
+          14: { minChars: 100, minFiles: 1 },  // File required
+          15: { minChars: 150, minFiles: 1 },  // File required
+          16: { minChars: 150, minFiles: 1 },  // File required
+          17: { minChars: 150, minFiles: 1 },  // File required
+          18: { minChars: 200, minFiles: 1 },  // File required
+          19: { minChars: 100, minFiles: 1 },  // File required
+          20: { minChars: 200, minFiles: 1 },  // File required
+          21: { minChars: 200, minFiles: 1 },  // File required
+          22: { minChars: 200, minFiles: 1 },  // File required
+          23: { minChars: 200, minFiles: 1 },  // File required
+          24: { minChars: 200, minFiles: 1 },  // File required
+          25: { minChars: 200, minFiles: 1 },  // File required
+          26: { minChars: 200, minFiles: 1 },  // File required
+          27: { minChars: 50, minFiles: 1 },   // File required
+          28: { minChars: 200, minFiles: 1 },  // File required
+          29: { minChars: 200, minFiles: 1 },  // File required
+          30: { minChars: 0, minFiles: 0 }     // Quiz only - no task
         };
 
         const dayReqs = requirements[DAY] || { minChars: 50, minFiles: 0 };
@@ -332,9 +332,9 @@ export default async function handler(req, res) {
           return;
         }
 
-        // Check minimum file count
-        if (dayReqs.minFiles > 0 && files.length < dayReqs.minFiles) {
-          alert('Please upload at least ' + dayReqs.minFiles + ' file(s). Currently: ' + files.length + ' file(s).');
+        // Check if file upload is required
+        if (dayReqs.minFiles > 0 && files.length === 0) {
+          alert('Please upload your screenshot(s) for this task.');
           return;
         }
 
