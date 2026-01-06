@@ -1082,7 +1082,7 @@ Ready for Real Trading?
 [Honest assessment - minimum 6 months demo recommended]
 
 COMMITMENT:
-I will continue tracking every trade, reviewing weekly, and improving based on data. Performance tracking is now part of my permanent trading process. (minimum 50 characters)"></textarea>
+I will continue tracking every trade, reviewing weekly, and improving based on data. Performance tracking is now part of my permanent trading process."></textarea>
             
             <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()">Submit Performance Report</button>
             
@@ -1238,8 +1238,8 @@ I will continue tracking every trade, reviewing weekly, and improving based on d
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 50) {
-                showTaskStatus('Please complete your comprehensive performance report (minimum 50 characters).', 'error');
+            if (taskResponse.length < 800) {
+                showTaskStatus('Please complete your comprehensive performance report (minimum 800 characters).', 'error');
                 return;
             }
             

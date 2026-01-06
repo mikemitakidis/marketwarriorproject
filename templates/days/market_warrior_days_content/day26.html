@@ -1138,8 +1138,8 @@ Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months bef
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 50) {
-                showTaskStatus('Please complete your optimized trading system (minimum 50 characters).', 'error');
+            if (taskResponse.length < 600) {
+                showTaskStatus('Please complete your optimized trading system (minimum 600 characters).', 'error');
                 return;
             }
             

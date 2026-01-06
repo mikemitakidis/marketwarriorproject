@@ -1123,8 +1123,8 @@ www.marketwarrior.club"></textarea>
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (taskResponse.length < 50) {
-                showTaskStatus('Please complete your 90-day SMART goals plan (minimum 50 characters).', 'error');
+            if (taskResponse.length < 800) {
+                showTaskStatus('Please complete your 90-day SMART goals plan (minimum 800 characters).', 'error');
                 return;
             }
             
