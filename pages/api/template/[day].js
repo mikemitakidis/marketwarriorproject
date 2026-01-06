@@ -284,8 +284,11 @@ export default async function handler(req, res) {
         const taskResponseEl = document.getElementById('taskResponse');
         const taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
 
+        console.log('[MWBridge] submitTask called, text length:', taskText.length);
+
         // Check minimum length before proceeding
         if (taskText.length < 50) {
+          console.log('[MWBridge] Text too short (' + taskText.length + ' chars), need at least 50');
           // Let original function show error
           originalSubmitTask.apply(this, arguments);
           return;
@@ -295,6 +298,7 @@ export default async function handler(req, res) {
 
         // After original runs, send to parent
         if (!taskReported && taskText.length >= 50) {
+          console.log('[MWBridge] Sending TASK_COMPLETE to parent');
           sendToParent('TASK_COMPLETE', {
             response: taskText
           });
@@ -302,6 +306,7 @@ export default async function handler(req, res) {
         }
       };
       window.submitTask._hooked = true;
+      console.log('[MWBridge] submitTask hooked successfully');
     }
 
     // Hook proceedToDay function (varies by day number)
