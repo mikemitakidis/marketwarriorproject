@@ -497,7 +497,28 @@
             background: #059669;
         }
 
-    </style>
+    
+        .template-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+
+        .template-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .template-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+</style>
 </head>
 <body>
     <div class="container">
@@ -881,7 +902,10 @@ Your browser does not support the video tag.
                 </ol>
             </div>
             
-            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 13px; white-space: pre-wrap;">My Trading Journal Commitment:
+            <div class="template-box">
+<h4>📝 Response Template</h4>
+<div class="template-content">
+<pre>My Trading Journal Commitment:
 
 I commit to recording every trade I make, including:
 - Entry and exit details
@@ -889,8 +913,10 @@ I commit to recording every trade I make, including:
 - My emotional state
 - Lessons learned
 
-I understand that this journal is my path to becoming a better trader...</div>
-            <textarea id="taskResponse" style="width: 100%; min-height: 250px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical;" placeholder="Copy the template above and fill in your commitment..."></textarea>
+I understand that this journal is my path to becoming a better trader...</pre>
+</div>
+</div>
+<textarea id="taskResponse" style="width: 100%; min-height: 250px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical;" placeholder="Copy the template above and fill in your commitment..."></textarea>
             
             <button onclick="submitTask()">Submit Task</button>
         </div>

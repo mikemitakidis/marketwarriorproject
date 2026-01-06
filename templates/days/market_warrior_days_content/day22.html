@@ -292,7 +292,28 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
-    </style>
+    
+        .template-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+
+        .template-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .template-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+</style>
 </head>
 <body>
     <div class="container">
@@ -834,7 +855,10 @@ Your browser does not support the video tag.
                 <p>Research one opportunity in each category (IPO, Penny Stock, Crypto) and create a detailed trading plan with risk management. Practice on your demo account!</p>
             </div>
 
-            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 13px; white-space: pre-wrap;">VOLATILE MARKETS TRADING PLAN
+            <div class="template-box">
+<h4>📝 Response Template</h4>
+<div class="template-content">
+<pre>VOLATILE MARKETS TRADING PLAN
 
 Date: [Today's Date]
 
@@ -954,7 +978,9 @@ KEY LESSONS FROM DAY 22:
 1. [Most important thing about IPOs]
 2. [Most important thing about penny stocks]
 3. [Most important thing about crypto]
-4. [What volatility trading taught me]</div>
+4. [What volatility trading taught me]</pre>
+</div>
+</div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
             
             <button class="completion-button" onclick="submitTask()">Submit Volatility Analysis</button>

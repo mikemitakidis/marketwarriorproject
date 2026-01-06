@@ -438,7 +438,28 @@
             padding: 25px;
             margin: 25px 0;
         }
-    </style>
+    
+        .template-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+
+        .template-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .template-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+</style>
 </head>
 <body>
 <div class="container">
@@ -889,7 +910,10 @@ Your browser does not support the video tag.
 </ol>
 <p style="margin-top: 20px;"><strong>Remember:</strong> This is practice research using DEMO accounts only!</p>
 </div>
-<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 13px; white-space: pre-wrap;">COPY TRADING RESEARCH REPORT
+<div class="template-box">
+<h4>📝 Response Template</h4>
+<div class="template-content">
+<pre>COPY TRADING RESEARCH REPORT
 
 Date: [Today's Date]
 Platform: eToro Demo Account
@@ -1051,7 +1075,9 @@ Next Steps:
 4. Practice for 6+ months before considering real funds
 
 IMPORTANT NOTE:
-This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at least 6 months on demo before considering real money, as even successful traders can have losing periods.</div>
+This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at least 6 months on demo before considering real money, as even successful traders can have losing periods.</pre>
+</div>
+</div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
 <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()">Submit Copy Trading Research</button>
 <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>

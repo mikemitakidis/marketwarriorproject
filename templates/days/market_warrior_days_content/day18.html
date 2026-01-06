@@ -456,7 +456,28 @@
         .comparison-table tr:hover {
             background: #f8fafc;
         }
-    </style>
+    
+        .template-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #f59e0b;
+        }
+
+        .template-box h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .template-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+</style>
 </head>
 <body>
 <div class="container">
@@ -1193,7 +1214,10 @@ Your browser does not support the video tag.
 <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
 <h4>📋 Task Submission Required</h4>
 <p><strong>⚠️ Important:</strong> You must submit this task to unlock Day 19!</p>
-<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 13px; white-space: pre-wrap;">BACKTESTING REPORT
+<div class="template-box">
+<h4>📝 Response Template</h4>
+<div class="template-content">
+<pre>BACKTESTING REPORT
 
 Date: [Today's Date]
 
@@ -1299,6 +1323,8 @@ KEY LESSONS LEARNED:
 1. [Most important insight from backtest]
 2. [Second lesson]
 3. [Will you trade this strategy live? Why/why not?]
+</pre>
+</div>
 </div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." style="width: 100%; height: 500px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
 <div style="margin: 15px 0;">
