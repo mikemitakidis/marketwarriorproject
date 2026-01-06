@@ -280,39 +280,39 @@ export default async function handler(req, res) {
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;
       window.submitTask = async function() {
-        // Requirements per day - file counts and character minimums
-        // Based on actual template tasks and education content
+        // Requirements per day - EXACT from original templates
+        // Character limits capped at reasonable values, file requirements preserved
         const requirements = {
-          1: { minChars: 100, minFiles: 0 },   // Intro - optional file
-          2: { minChars: 150, minFiles: 1 },   // Broker setup - screenshot required
-          3: { minChars: 50, minFiles: 0 },    // Order types - optional screenshots
-          4: { minChars: 50, minFiles: 0 },    // Research - optional
-          5: { minChars: 50, minFiles: 0 },    // Indices - optional
-          6: { minChars: 100, minFiles: 3 },   // Paper trading - 3 trade screenshots
-          7: { minChars: 100, minFiles: 5 },   // Price action - 5 chart screenshots
-          8: { minChars: 100, minFiles: 3 },   // Candlesticks - 3 pattern screenshots
-          9: { minChars: 100, minFiles: 3 },   // Support/Resistance - 3 charts
-          10: { minChars: 100, minFiles: 3 },  // Chart patterns - 3 patterns marked
-          11: { minChars: 100, minFiles: 3 },  // Indicators - 3 charts with RSI/MACD/MAs
-          12: { minChars: 150, minFiles: 1 },  // Fundamentals - Yahoo Finance screenshot
-          13: { minChars: 200, minFiles: 3 },  // Stock analysis - 3 stock screenshots
-          14: { minChars: 100, minFiles: 5 },  // Paper trading week - 5 trade screenshots
-          15: { minChars: 150, minFiles: 3 },  // Risk management - calculator screenshots
-          16: { minChars: 150, minFiles: 3 },  // Moving averages - crossover screenshots
-          17: { minChars: 150, minFiles: 3 },  // Fibonacci - levels screenshots
-          18: { minChars: 200, minFiles: 1 },  // Backtesting - spreadsheet/results
-          19: { minChars: 100, minFiles: 1 },  // Trading plan - PDF upload
-          20: { minChars: 200, minFiles: 0 },  // Psychology - emotional audit
-          21: { minChars: 200, minFiles: 0 },  // Portfolio planning
-          22: { minChars: 200, minFiles: 0 },  // Market analysis
-          23: { minChars: 250, minFiles: 0 },  // Trader evaluation - 3 traders
-          24: { minChars: 200, minFiles: 0 },  // Advanced strategies
-          25: { minChars: 250, minFiles: 0 },  // Performance review
-          26: { minChars: 200, minFiles: 0 },  // System optimization
-          27: { minChars: 50, minFiles: 0 },   // Commitment
-          28: { minChars: 200, minFiles: 0 },  // Economic calendar
-          29: { minChars: 250, minFiles: 0 },  // 90-day SMART goals
-          30: { minChars: 0, minFiles: 0 }     // Final quiz only
+          1: { minChars: 50, minFiles: 0 },    // Original: 50
+          2: { minChars: 50, minFiles: 0 },    // Original: 50 (has optional file)
+          3: { minChars: 50, minFiles: 0 },    // Has optional screenshots
+          4: { minChars: 50, minFiles: 0 },    // Optional file
+          5: { minChars: 50, minFiles: 0 },    // Optional file
+          6: { minChars: 50, minFiles: 3 },    // Required 3 trade screenshots
+          7: { minChars: 50, minFiles: 5 },    // Required 5 chart screenshots
+          8: { minChars: 50, minFiles: 3 },    // Required 3 pattern screenshots
+          9: { minChars: 50, minFiles: 3 },    // Required 3 charts with MAs
+          10: { minChars: 50, minFiles: 3 },   // Required 3 patterns marked
+          11: { minChars: 50, minFiles: 3 },   // Required 3 charts RSI/MACD/MAs
+          12: { minChars: 200, minFiles: 1 },  // Original: 200, 1 Yahoo Finance screenshot
+          13: { minChars: 200, minFiles: 3 },  // Original: 300→200, 3 stock screenshots
+          14: { minChars: 100, minFiles: 10 }, // Original: 100, 10 trade screenshots
+          15: { minChars: 200, minFiles: 3 },  // Original: 200, 3 calculator screenshots
+          16: { minChars: 200, minFiles: 3 },  // Original: 200, 3 crossover screenshots
+          17: { minChars: 200, minFiles: 3 },  // Original: 200, 3 Fib levels screenshots
+          18: { minChars: 200, minFiles: 1 },  // Original: 300→200, 1 backtest result
+          19: { minChars: 50, minFiles: 0 },   // Trading plan (has optional PDF)
+          20: { minChars: 200, minFiles: 0 },  // Original: 500→200, optional file
+          21: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          22: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          23: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          24: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          25: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          26: { minChars: 200, minFiles: 0 },  // Original: 600→200
+          27: { minChars: 50, minFiles: 0 },   // Original: 50
+          28: { minChars: 200, minFiles: 0 },  // Original: 600→200
+          29: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          30: { minChars: 0, minFiles: 0 }     // Quiz only
         };
 
         const dayReqs = requirements[DAY] || { minChars: 50, minFiles: 0 };
