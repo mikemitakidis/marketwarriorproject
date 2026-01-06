@@ -1439,6 +1439,8 @@ How will I use indexes in my trading/investing:</pre>
     
         // File Upload Management
         var uploadedFiles = [];
+        // Get day number from page badge for file upload
+        var DAY = parseInt((document.querySelector('.day-badge').textContent.match(/DAY (\d+)/) || [null, '0'])[1]);
         var uploadedUrls = [];
 
         function initFileUpload() {

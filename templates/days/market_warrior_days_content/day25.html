@@ -1566,6 +1566,8 @@ I will continue tracking every trade, reviewing weekly, and improving based on d
     
         // File Upload Management
         var uploadedFiles = [];
+        // Get day number from page badge for file upload
+        var DAY = parseInt((document.querySelector('.day-badge').textContent.match(/DAY (\d+)/) || [null, '0'])[1]);
         var uploadedUrls = [];
 
         function initFileUpload() {
