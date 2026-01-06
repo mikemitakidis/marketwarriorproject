@@ -302,16 +302,16 @@ export default async function handler(req, res) {
           17: { minChars: 150, minFiles: 1 },  // File required
           18: { minChars: 200, minFiles: 1 },  // File required
           19: { minChars: 100, minFiles: 0 },
-          20: { minChars: 200, minFiles: 0 },
-          21: { minChars: 200, minFiles: 0 },
-          22: { minChars: 200, minFiles: 0 },
-          23: { minChars: 200, minFiles: 0 },
-          24: { minChars: 200, minFiles: 0 },
-          25: { minChars: 200, minFiles: 0 },
-          26: { minChars: 200, minFiles: 0 },
-          27: { minChars: 50, minFiles: 0 },
-          28: { minChars: 200, minFiles: 0 },
-          29: { minChars: 200, minFiles: 0 },
+          20: { minChars: 200, minFiles: 1 },  // File required
+          21: { minChars: 200, minFiles: 0 },  // NO file required
+          22: { minChars: 200, minFiles: 1 },  // File required
+          23: { minChars: 200, minFiles: 1 },  // File required
+          24: { minChars: 200, minFiles: 1 },  // File required
+          25: { minChars: 200, minFiles: 1 },  // File required
+          26: { minChars: 200, minFiles: 1 },  // File required
+          27: { minChars: 50, minFiles: 1 },   // File required
+          28: { minChars: 200, minFiles: 1 },  // File required
+          29: { minChars: 200, minFiles: 1 },  // File required
           30: { minChars: 0, minFiles: 0 }
         };
 
