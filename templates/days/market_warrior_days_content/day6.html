@@ -1118,7 +1118,7 @@ Tested 5:1 leverage - comfortable with risk
 Tested 10:1 leverage - too risky, would wipe account easily
 Will use max 5:1 in real trading" style="width: 100%; height: 200px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
 <div style="margin: 15px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshot (Optional)</label>
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required - 3 trades)</label>
 <input accept="image/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
@@ -1417,7 +1417,10 @@ Will use max 5:1 in real trading" style="width: 100%; height: 200px; padding: 15
                 return;
             }
 
-            // File upload is optional
+            if (taskFile.length < 3) {
+                showTaskStatus('Please upload at least 3 screenshots (one for each trade).', 'error');
+                return;
+            }
 
             localStorage.setItem('day6TaskSubmitted', 'true');
             localStorage.setItem('day6TaskResponse', taskResponse);

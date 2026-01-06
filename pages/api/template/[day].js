@@ -280,18 +280,61 @@ export default async function handler(req, res) {
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;
       window.submitTask = async function() {
-        // Get task response before original function might clear it
+        // Requirements per day - EXACT from original templates
+        // Character limits capped at reasonable values, file requirements preserved
+        const requirements = {
+          1: { minChars: 50, minFiles: 0 },    // Original: 50
+          2: { minChars: 50, minFiles: 0 },    // Original: 50 (has optional file)
+          3: { minChars: 50, minFiles: 0 },    // Has optional screenshots
+          4: { minChars: 50, minFiles: 0 },    // Optional file
+          5: { minChars: 50, minFiles: 0 },    // Optional file
+          6: { minChars: 50, minFiles: 3 },    // Required 3 trade screenshots
+          7: { minChars: 50, minFiles: 5 },    // Required 5 chart screenshots
+          8: { minChars: 50, minFiles: 3 },    // Required 3 pattern screenshots
+          9: { minChars: 50, minFiles: 3 },    // Required 3 charts with MAs
+          10: { minChars: 50, minFiles: 3 },   // Required 3 patterns marked
+          11: { minChars: 50, minFiles: 3 },   // Required 3 charts RSI/MACD/MAs
+          12: { minChars: 200, minFiles: 1 },  // Original: 200, 1 Yahoo Finance screenshot
+          13: { minChars: 200, minFiles: 3 },  // Original: 300→200, 3 stock screenshots
+          14: { minChars: 100, minFiles: 10 }, // Original: 100, 10 trade screenshots
+          15: { minChars: 200, minFiles: 3 },  // Original: 200, 3 calculator screenshots
+          16: { minChars: 200, minFiles: 3 },  // Original: 200, 3 crossover screenshots
+          17: { minChars: 200, minFiles: 3 },  // Original: 200, 3 Fib levels screenshots
+          18: { minChars: 200, minFiles: 1 },  // Original: 300→200, 1 backtest result
+          19: { minChars: 50, minFiles: 0 },   // Trading plan (has optional PDF)
+          20: { minChars: 200, minFiles: 0 },  // Original: 500→200, optional file
+          21: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          22: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          23: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          24: { minChars: 200, minFiles: 0 },  // Original: 500→200
+          25: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          26: { minChars: 200, minFiles: 0 },  // Original: 600→200
+          27: { minChars: 50, minFiles: 0 },   // Original: 50
+          28: { minChars: 200, minFiles: 0 },  // Original: 600→200
+          29: { minChars: 200, minFiles: 0 },  // Original: 800→200
+          30: { minChars: 0, minFiles: 0 }     // Quiz only
+        };
+
+        const dayReqs = requirements[DAY] || { minChars: 50, minFiles: 0 };
+
+        // Get task response and files
         const taskResponseEl = document.getElementById('taskResponse');
         const taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
         const taskFileEl = document.getElementById('taskFile');
         const files = taskFileEl ? taskFileEl.files : [];
 
         console.log('[MWBridge] submitTask called, text length:', taskText.length, 'files:', files.length);
+        console.log('[MWBridge] Day ' + DAY + ' requires: ' + dayReqs.minChars + ' chars, ' + dayReqs.minFiles + ' files');
 
-        // Check minimum length (50 chars)
-        if (taskText.length < 50) {
-          console.log('[MWBridge] Text too short (' + taskText.length + ' chars), need at least 50');
-          alert('Please write at least 50 characters. Currently: ' + taskText.length + ' characters.');
+        // Check minimum character length
+        if (taskText.length < dayReqs.minChars) {
+          alert('Please write at least ' + dayReqs.minChars + ' characters. Currently: ' + taskText.length + ' characters.');
+          return;
+        }
+
+        // Check minimum file count
+        if (dayReqs.minFiles > 0 && files.length < dayReqs.minFiles) {
+          alert('Please upload at least ' + dayReqs.minFiles + ' file(s). Currently: ' + files.length + ' file(s).');
           return;
         }
 
@@ -304,17 +347,20 @@ export default async function handler(req, res) {
         // Show uploading status
         var submitBtn = document.getElementById('submitTaskBtn');
         if (submitBtn) {
-          submitBtn.textContent = 'Uploading...';
+          submitBtn.textContent = files.length > 0 ? 'Uploading files...' : 'Submitting...';
           submitBtn.disabled = true;
         }
 
         try {
-          // Upload files if any (optional)
+          // Upload files if any
           var attachmentUrls = [];
           if (files.length > 0) {
             console.log('[MWBridge] Uploading ' + files.length + ' file(s)...');
             for (var i = 0; i < files.length; i++) {
               var file = files[i];
+              if (submitBtn) {
+                submitBtn.textContent = 'Uploading file ' + (i + 1) + '/' + files.length + '...';
+              }
               var formData = new FormData();
               formData.append('file', file);
               formData.append('day', DAY);
@@ -330,7 +376,12 @@ export default async function handler(req, res) {
                 attachmentUrls.push(uploadResult.url);
                 console.log('[MWBridge] Uploaded file:', uploadResult.url);
               } else {
-                console.error('[MWBridge] File upload failed');
+                var errorMsg = 'File upload failed';
+                try {
+                  var errData = await uploadRes.json();
+                  errorMsg = errData.error || errorMsg;
+                } catch(e) {}
+                throw new Error(errorMsg);
               }
             }
           }
@@ -354,7 +405,7 @@ export default async function handler(req, res) {
 
         } catch (err) {
           console.error('[MWBridge] Task submission error:', err);
-          alert('Error submitting task: ' + err.message);
+          alert('Error: ' + err.message);
           if (submitBtn) {
             submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
             submitBtn.disabled = false;
@@ -372,7 +423,7 @@ export default async function handler(req, res) {
                      window['proceedToDay2'] ? 'proceedToDay2' : 'proceedToNextDay';
       window[fnName] = function() {
         // Navigate via parent instead of in iframe
-        sendToParent('NAVIGATE', { to: '/day-template/' + (DAY + 1) });
+        sendToParent('NAVIGATE', { to: '/day/' + (DAY + 1) });
       };
       window[fnName]._hooked = true;
     }

@@ -979,9 +979,9 @@
 <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
 <h4>📋 Task Submission Required</h4>
 <p><strong>⚠️ Important:</strong> You must submit this task to unlock Day 4.</p>
-<textarea id="taskResponse" placeholder="Write your answers and observations here... (minimum 50 characters required)" style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
+<textarea id="taskResponse" placeholder="Write your answers and observations here..." style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ffc107; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin: 15px 0;"></textarea>
 <div style="margin: 15px 0;">
-<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Optional)</label>
+<label style="display: block; margin-bottom: 10px; font-weight: 600;">Upload Screenshots (Required)</label>
 <input accept="image/*,video/*" id="taskFile" multiple="" style="margin: 10px 0; padding: 10px; background: white; border: 2px solid #ffc107; border-radius: 5px; width: 100%;" type="file"/>
 </div>
 <div id="taskStatus" style="margin: 15px 0; padding: 15px; border-radius: 8px; display: none;">
@@ -1202,15 +1202,14 @@
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             const taskFile = document.getElementById('taskFile').files[0];
-
+            
             if (!taskResponse) {
                 showTaskStatus('Please write your observations.', 'error');
                 return;
             }
 
-            // minimum 50 characters required for task response
-            if (taskResponse.length < 50) {
-                showTaskStatus('Please write at least 50 characters in your response. Currently: ' + taskResponse.length + ' characters.', 'error');
+            if (!taskFile) {
+                showTaskStatus('Please upload your order screenshots.', 'error');
                 return;
             }
 
