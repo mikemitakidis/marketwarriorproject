@@ -1575,13 +1575,26 @@ Signature: _________________ Date: _______
         }
 
         function submitTask() {
-            const fileInput = document.getElementById('taskFile');
-            
-            if (!fileInput.files.length) {
+            const response = document.getElementById('taskResponse').value.trim();
+            const minChars = 100;
+
+            if (response.length < minChars) {
+                var needed = minChars - response.length;
+                showTaskStatus('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')', 'error');
+                return;
+            }
+
+            // Check for file upload
+            var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+            var taskFileEl = document.getElementById('taskFile');
+            var pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+            var totalFiles = preUploadedUrls.length + pendingFiles;
+
+            if (totalFiles === 0) {
                 showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
-            
+
             taskSubmitted = true;
             showTaskStatus('✅ Trading plan submitted successfully! Review it weekly and update monthly.', 'success');
             showTaskSubmitted();
