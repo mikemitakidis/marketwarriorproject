@@ -1402,12 +1402,12 @@ KEY LESSONS LEARNED:
             
             if (taskResponse.length < 200) {
                 var needed = 200 - taskResponse.length;
-                showTaskStatus('Minimum 200 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 200 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
-            
+
             if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
             

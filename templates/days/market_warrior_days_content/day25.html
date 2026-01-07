@@ -1439,7 +1439,7 @@ Performance tracking is now part of my permanent trading process.</pre>
 
             if (taskResponse.length < 800) {
                 var needed = 800 - taskResponse.length;
-                showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
 

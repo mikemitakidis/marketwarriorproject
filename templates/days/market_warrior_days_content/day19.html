@@ -1580,7 +1580,7 @@ Signature: _________________ Date: _______
 
             if (response.length < minChars) {
                 var needed = minChars - response.length;
-                showTaskStatus('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')', 'error');
+                alert('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')');
                 return;
             }
 
@@ -1591,7 +1591,7 @@ Signature: _________________ Date: _______
             var totalFiles = preUploadedUrls.length + pendingFiles;
 
             if (totalFiles === 0) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
 
