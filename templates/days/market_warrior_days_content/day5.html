@@ -1365,8 +1365,9 @@ How will I use indexes in my trading/investing:</pre>
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (!taskResponse) {
-                showTaskStatus('Please complete your index analysis.', 'error');
+            if (taskResponse.length < 50) {
+                var needed = 50 - taskResponse.length;
+                showTaskStatus('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 

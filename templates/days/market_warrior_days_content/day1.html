@@ -1401,7 +1401,8 @@ Your browser does not support the video tag.
             const taskFile = document.getElementById('taskFile').files[0];
             
             if (taskResponse.length < 50) {
-                showTaskStatus('Please write at least 50 words for your response.', 'error');
+                var needed = 50 - taskResponse.length;
+                showTaskStatus('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 

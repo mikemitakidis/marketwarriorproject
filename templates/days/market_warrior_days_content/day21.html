@@ -1456,7 +1456,8 @@ KEY LESSONS FROM DAY 21:
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
             if (taskResponse.length < 500) {
-                showTaskStatus('Please complete all sections of your portfolio plan (minimum 500 characters).', 'error');
+                var needed = 500 - taskResponse.length;
+                showTaskStatus('Minimum 500 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
             

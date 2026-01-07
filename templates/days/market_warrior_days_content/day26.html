@@ -1337,7 +1337,8 @@ Will test for minimum 3-6 months before considering real money.</pre>
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
             if (taskResponse.length < 600) {
-                showTaskStatus('Please complete your optimized trading system (minimum 600 characters).', 'error');
+                var needed = 600 - taskResponse.length;
+                showTaskStatus('Minimum 600 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 

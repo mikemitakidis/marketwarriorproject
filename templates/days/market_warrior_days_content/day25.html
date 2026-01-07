@@ -1438,7 +1438,8 @@ Performance tracking is now part of my permanent trading process.</pre>
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
             if (taskResponse.length < 800) {
-                showTaskStatus('Please complete your comprehensive performance report (minimum 800 characters).', 'error');
+                var needed = 800 - taskResponse.length;
+                showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 
