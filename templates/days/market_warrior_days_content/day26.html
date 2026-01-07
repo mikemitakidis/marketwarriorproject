@@ -1326,7 +1326,11 @@ Will test for minimum 3-6 months before considering real money.</pre>
             document.getElementById('quizQuestions').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';
             document.getElementById('quizResults').style.display = 'none';
-            
+
+            // Reset button visibility for next quiz attempt
+            document.getElementById('passedButtons').style.display = 'none';
+            document.getElementById('failedButtons').style.display = 'none';
+
             document.getElementById('currentQuestion').textContent = '1';
             document.getElementById('prevBtn').disabled = true;
             document.getElementById('nextBtn').disabled = true;

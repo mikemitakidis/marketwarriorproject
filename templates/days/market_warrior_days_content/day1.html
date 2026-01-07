@@ -1630,7 +1630,11 @@ Your browser does not support the video tag.
             // Hide results and review
             document.getElementById('quizResults').style.display = 'none';
             document.getElementById('quizReview').style.display = 'none';
-            
+
+            // Hide both button containers
+            document.getElementById('passedButtons').style.display = 'none';
+            document.getElementById('failedButtons').style.display = 'none';
+
             // Show quiz content again
             document.getElementById('quizContent').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';

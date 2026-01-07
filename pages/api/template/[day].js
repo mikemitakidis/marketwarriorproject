@@ -276,6 +276,27 @@ export default async function handler(req, res) {
       window.finishQuiz._hooked = true;
     }
 
+    // Hook submitQuiz - this is used by days 20-30 instead of finishQuiz
+    if (typeof window.submitQuiz === 'function' && !window.submitQuiz._hooked) {
+      const originalSubmitQuiz = window.submitQuiz;
+      window.submitQuiz = function() {
+        originalSubmitQuiz.apply(this, arguments);
+        // After original runs, send results to parent
+        if (!quizReported && typeof quizScore !== 'undefined' && typeof correctAnswers !== 'undefined') {
+          const total = correctAnswers.length;
+          const passed = (quizScore / total) >= 0.6;
+          sendToParent('QUIZ_COMPLETE', {
+            score: quizScore,
+            total: total,
+            passed: passed,
+            answers: typeof userAnswers !== 'undefined' ? userAnswers : {}
+          });
+          quizReported = true;
+        }
+      };
+      window.submitQuiz._hooked = true;
+    }
+
     // Hook submitTask - this is called when user submits their task
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;

@@ -1578,7 +1578,11 @@ Will use max 5:1 in real trading</pre>
             document.getElementById('quizResults').style.display = 'none';
             document.getElementById('quizContent').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';
-            
+
+            // Hide both button containers
+            document.getElementById('passedButtons').style.display = 'none';
+            document.getElementById('failedButtons').style.display = 'none';
+
             const questions = document.querySelectorAll('.question-container');
             questions.forEach((question, index) => {
                 if (index === 0) {

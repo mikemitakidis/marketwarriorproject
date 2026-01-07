@@ -1389,7 +1389,11 @@ From now on, I commit to:
             `;
             
             document.getElementById('scoreDisplay').innerHTML = scoreHTML;
-            
+
+            // Hide both button containers first
+            document.getElementById('passedButtons').style.display = 'none';
+            document.getElementById('failedButtons').style.display = 'none';
+
             if (quizScore >= 3) {
                 document.getElementById('passedButtons').style.display = 'block';
                 quizCompleted = true;
@@ -1402,15 +1406,19 @@ From now on, I commit to:
             currentQuestionIndex = 0;
             userAnswers = [];
             quizScore = 0;
-            
+
             document.getElementById('quizContent').style.display = 'block';
             document.querySelector('.quiz-navigation').style.display = 'flex';
             document.getElementById('quizResults').style.display = 'none';
-            
+
+            // Hide both button containers
+            document.getElementById('passedButtons').style.display = 'none';
+            document.getElementById('failedButtons').style.display = 'none';
+
             document.querySelectorAll('.quiz-option').forEach(opt => {
                 opt.classList.remove('selected');
             });
-            
+
             updateQuestionDisplay();
         }
 
