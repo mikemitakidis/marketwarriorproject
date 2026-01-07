@@ -1319,6 +1319,15 @@ KEY LESSONS FROM DAY 24:
                     q.classList.remove('active');
                 }
 
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect');
+                });
+            });
+
+            document.getElementById('nextBtn').textContent = 'Next';
+            updateNavigation();
+        }
+
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
             document.getElementById('quizQuestions').style.display = 'block';
@@ -1390,15 +1399,6 @@ KEY LESSONS FROM DAY 24:
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-                q.querySelectorAll('.quiz-option').forEach(opt => {
-                    opt.classList.remove('selected', 'correct', 'incorrect');
-                });
-            });
-            
-            document.getElementById('nextBtn').textContent = 'Next';
-            updateNavigation();
         }
 
         function reviewQuiz() {

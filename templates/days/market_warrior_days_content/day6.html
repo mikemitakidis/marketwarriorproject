@@ -1588,6 +1588,22 @@ Will use max 5:1 in real trading</pre>
                     question.style.display = 'none';
                     question.classList.remove('active');
                 }
+                question.classList.remove('answered');
+
+                // Clear all selections
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(option => {
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                });
+            });
+
+            // Reset navigation
+            updateQuizProgress();
+            updateNavigationButtons();
+
+            // Scroll to quiz
+            document.querySelector('.quiz-container').scrollIntoView({ behavior: 'smooth' });
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1660,16 +1676,6 @@ Will use max 5:1 in real trading</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-                question.classList.remove('answered');
-                
-                const options = question.querySelectorAll('.quiz-option');
-                options.forEach(option => option.classList.remove('selected'));
-            });
-            
-            updateQuizProgress();
-            updateNavigationButtons();
         }
 
         function proceedToTask() {

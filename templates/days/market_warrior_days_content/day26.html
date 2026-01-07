@@ -1335,12 +1335,16 @@ Will test for minimum 3-6 months before considering real money.</pre>
 
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
-            
+
             if (taskResponse.length < 600) {
                 var needed = 600 - taskResponse.length;
                 showTaskStatus('Minimum 600 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
+
+            taskSubmitted = true;
+            showTaskStatus('Optimized system submitted! Test this for 30 days on your demo account!', 'success');
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1413,11 +1417,6 @@ Will test for minimum 3-6 months before considering real money.</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            taskSubmitted = true;
-            showTaskStatus('Optimized system submitted! Test this for 30 days on your demo account!', 'success');
         }
 
         function showTaskStatus(message, type) {

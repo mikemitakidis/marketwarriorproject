@@ -1483,6 +1483,22 @@ Your browser does not support the video tag.
                     q.style.display = 'none';
                     q.classList.remove('active');
                 }
+                q.classList.remove('answered');
+
+                // Clear all selections
+                const options = q.querySelectorAll('.quiz-option');
+                options.forEach(option => {
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                });
+            });
+
+            // Reset navigation
+            updateQuizProgress();
+            updateNavigationButtons();
+
+            // Scroll to quiz
+            document.querySelector('.quiz-container').scrollIntoView({ behavior: 'smooth' });
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1555,18 +1571,6 @@ Your browser does not support the video tag.
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-                q.classList.remove('answered');
-                q.querySelectorAll('.quiz-option').forEach(opt => {
-                    opt.classList.remove('selected', 'correct', 'incorrect');
-                });
-            });
-            
-            document.getElementById('nextBtn').textContent = 'Next';
-            document.getElementById('nextBtn').disabled = true;
-            document.getElementById('prevBtn').disabled = true;
-            updateQuizProgress();
         }
 
         function showQuizReview() {

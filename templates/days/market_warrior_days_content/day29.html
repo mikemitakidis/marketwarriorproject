@@ -1320,12 +1320,17 @@ www.marketwarrior.club</pre>
 
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
-            
+
             if (taskResponse.length < 800) {
                 var needed = 800 - taskResponse.length;
                 showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
+
+            taskSubmitted = true;
+            showTaskStatus('Goals submitted! Your 90-day journey begins after graduation tomorrow!', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1398,12 +1403,6 @@ www.marketwarrior.club</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            taskSubmitted = true;
-            showTaskStatus('Goals submitted! Your 90-day journey begins after graduation tomorrow!', 'success');
-            showTaskSubmitted();
         }
 
         function showTaskStatus(message, type) {

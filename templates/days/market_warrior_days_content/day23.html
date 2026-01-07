@@ -1395,12 +1395,17 @@ at least 6 months on demo before considering real money.</pre>
 
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
-            
+
             if (taskResponse.length < 800) {
                 var needed = 800 - taskResponse.length;
                 showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
+
+            taskSubmitted = true;
+            showTaskStatus('Copy trading research submitted successfully! Remember to practice on demo for 6+ months!', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1473,12 +1478,6 @@ at least 6 months on demo before considering real money.</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            taskSubmitted = true;
-            showTaskStatus('Copy trading research submitted successfully! Remember to practice on demo for 6+ months!', 'success');
-            showTaskSubmitted();
         }
 
         function showTaskStatus(message, type) {

@@ -1451,12 +1451,17 @@ KEY INSIGHTS FROM DAY 20:
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             const fileInput = document.getElementById('taskFile');
-            
+
             if (taskResponse.length < 500) {
                 var needed = 500 - taskResponse.length;
                 showTaskStatus('Minimum 500 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
+
+            taskSubmitted = true;
+            showTaskStatus('Emotional audit submitted successfully! You\'ve taken the first step to mastering your trading psychology.', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1529,12 +1534,6 @@ KEY INSIGHTS FROM DAY 20:
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            taskSubmitted = true;
-            showTaskStatus('Emotional audit submitted successfully! You\'ve taken the first step to mastering your trading psychology.', 'success');
-            showTaskSubmitted();
         }
 
         function showTaskStatus(message, type) {

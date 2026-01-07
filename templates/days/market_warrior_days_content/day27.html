@@ -1285,6 +1285,20 @@ I understand that this journal is my path to becoming a better trader...</pre>
                     q.classList.remove('active');
                 }
 
+                var opts = q.querySelectorAll('.quiz-option');
+                opts.forEach(function(opt) {
+                    opt.classList.remove('selected');
+                    opt.style.background = '';
+                    opt.style.borderColor = '';
+                });
+            });
+
+            document.getElementById('nextBtn').textContent = 'Next';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('questionCounter').textContent = '1 of 5';
+        }
+
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
             document.getElementById('quizQuestions').style.display = 'block';
@@ -1356,20 +1370,6 @@ I understand that this journal is my path to becoming a better trader...</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-                var opts = q.querySelectorAll('.quiz-option');
-                opts.forEach(function(opt) {
-                    opt.classList.remove('selected');
-                    opt.style.background = '';
-                    opt.style.borderColor = '';
-                });
-            });
-            
-            document.getElementById('nextBtn').textContent = 'Next';
-            document.getElementById('nextBtn').disabled = true;
-            document.getElementById('prevBtn').disabled = true;
-            document.getElementById('questionCounter').textContent = '1 of 5';
         }
 
         function reviewQuiz() {
