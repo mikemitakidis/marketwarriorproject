@@ -1358,7 +1358,7 @@ Will test for minimum 3-6 months before considering real money.</pre>
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 

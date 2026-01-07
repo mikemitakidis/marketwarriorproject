@@ -1301,7 +1301,7 @@ I understand that this journal is my path to becoming a better trader...</pre>
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 

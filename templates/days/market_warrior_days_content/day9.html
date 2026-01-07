@@ -1697,7 +1697,7 @@ What support/resistance level was most obvious?</pre>
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
