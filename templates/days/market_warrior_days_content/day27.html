@@ -1073,8 +1073,22 @@ I understand that this journal is my path to becoming a better trader...</pre>
 </div>
 </div>
 <textarea id="taskResponse" style="width: 100%; min-height: 250px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical;" placeholder="Copy the template above and fill in your commitment..."></textarea>
-            
-            <button onclick="submitTask()">Submit Task</button>
+
+<div class="file-upload-container">
+<div class="file-upload-header">
+<label>Upload Screenshots (Required)</label>
+<button type="button" class="add-file-btn" onclick="triggerFileSelect()">+ Add File</button>
+</div>
+<input accept="image/*,.pdf,.doc,.docx" id="taskFile" multiple="" style="display:none;" type="file"/>
+<div class="uploaded-files-list" id="uploadedFilesList">
+<div class="file-upload-empty">No files uploaded yet. Click "Add File" to upload.</div>
+</div>
+<div class="file-upload-note">Supported: Images, PDF, Word documents. Max 50MB per file.</div>
+</div>
+
+            <button class="submit-btn" id="submitTaskBtn" onclick="submitTask()">Submit Task</button>
+
+            <div id="taskStatus" style="display: none; margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
         </div>
 
         <!-- Extra Learning Notes -->
