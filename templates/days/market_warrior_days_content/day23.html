@@ -1231,7 +1231,8 @@ Next Steps:
 4. Practice for 6+ months before considering real funds
 
 IMPORTANT NOTE:
-This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at least 6 months on demo before considering real money, as even successful traders can have losing periods.</pre>
+This is DEMO PRACTICE ONLY. I understand I should practice copy trading for
+at least 6 months on demo before considering real money.</pre>
 </div>
 </div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
@@ -1402,8 +1403,8 @@ This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at l
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizContent').style.display = 'block';
-            document.getElementById('quizContent').classList.add('review-mode');
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.getElementById('quizQuestions').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
             // Show all questions
@@ -1416,7 +1417,8 @@ This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at l
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {
@@ -1450,13 +1452,13 @@ This is DEMO PRACTICE ONLY. I understand I should practice copy trading for at l
                 backBtn.textContent = '← Back to Results';
                 backBtn.onclick = backToResults;
                 backBtn.style.cssText = 'margin: 20px auto; display: block;';
-                document.getElementById('quizContent').appendChild(backBtn);
+                document.getElementById('quizQuestions').appendChild(backBtn);
             }
         }
 
         function backToResults() {
-            document.getElementById('quizContent').classList.remove('review-mode');
-            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizQuestions').classList.remove('review-mode');
+            document.getElementById('quizQuestions').style.display = 'none';
             document.getElementById('quizResults').style.display = 'block';
 
             // Remove back button

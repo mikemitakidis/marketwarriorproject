@@ -1328,8 +1328,8 @@ www.marketwarrior.club</pre>
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizContent').style.display = 'block';
-            document.getElementById('quizContent').classList.add('review-mode');
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.getElementById('quizQuestions').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
             // Show all questions
@@ -1342,7 +1342,8 @@ www.marketwarrior.club</pre>
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {
@@ -1376,13 +1377,13 @@ www.marketwarrior.club</pre>
                 backBtn.textContent = '← Back to Results';
                 backBtn.onclick = backToResults;
                 backBtn.style.cssText = 'margin: 20px auto; display: block;';
-                document.getElementById('quizContent').appendChild(backBtn);
+                document.getElementById('quizQuestions').appendChild(backBtn);
             }
         }
 
         function backToResults() {
-            document.getElementById('quizContent').classList.remove('review-mode');
-            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizQuestions').classList.remove('review-mode');
+            document.getElementById('quizQuestions').style.display = 'none';
             document.getElementById('quizResults').style.display = 'block';
 
             // Remove back button

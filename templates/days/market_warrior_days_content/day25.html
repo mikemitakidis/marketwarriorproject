@@ -1265,7 +1265,8 @@ Ready for Real Trading?
 [Honest assessment - minimum 6 months demo recommended]
 
 COMMITMENT:
-I will continue tracking every trade, reviewing weekly, and improving based on data. Performance tracking is now part of my permanent trading process.</pre>
+I will continue tracking every trade, reviewing weekly, and improving based on data.
+Performance tracking is now part of my permanent trading process.</pre>
 </div>
 </div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
@@ -1443,8 +1444,8 @@ I will continue tracking every trade, reviewing weekly, and improving based on d
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizContent').style.display = 'block';
-            document.getElementById('quizContent').classList.add('review-mode');
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.getElementById('quizQuestions').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
             // Show all questions
@@ -1457,7 +1458,8 @@ I will continue tracking every trade, reviewing weekly, and improving based on d
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {
@@ -1491,13 +1493,13 @@ I will continue tracking every trade, reviewing weekly, and improving based on d
                 backBtn.textContent = '← Back to Results';
                 backBtn.onclick = backToResults;
                 backBtn.style.cssText = 'margin: 20px auto; display: block;';
-                document.getElementById('quizContent').appendChild(backBtn);
+                document.getElementById('quizQuestions').appendChild(backBtn);
             }
         }
 
         function backToResults() {
-            document.getElementById('quizContent').classList.remove('review-mode');
-            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizQuestions').classList.remove('review-mode');
+            document.getElementById('quizQuestions').style.display = 'none';
             document.getElementById('quizResults').style.display = 'block';
 
             // Remove back button
