@@ -1868,7 +1868,8 @@ What was your biggest 'aha' moment about economic cycles?
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {

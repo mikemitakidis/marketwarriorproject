@@ -1605,7 +1605,8 @@ Will use max 5:1 in real trading</pre>
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {

@@ -332,13 +332,14 @@ export default async function handler(req, res) {
 
         // Check minimum character length
         if (taskText.length < dayReqs.minChars) {
-          alert('Please write at least ' + dayReqs.minChars + ' characters. Currently: ' + taskText.length + ' characters.');
+          var needed = dayReqs.minChars - taskText.length;
+          alert('Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')');
           return;
         }
 
         // Check if file upload is required
         if (dayReqs.minFiles > 0 && totalFiles === 0) {
-          alert('Please upload your screenshot(s) for this task.');
+          alert('Please upload at least 1 screenshot for this task. File upload is required.');
           return;
         }
 

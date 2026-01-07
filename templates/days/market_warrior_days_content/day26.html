@@ -1169,7 +1169,8 @@ Full Evaluation Date: [Date + 1 month]
 Key Lesson from Day 26:
 [Most important realization about optimization]
 
-Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months before considering real money.</pre>
+Note: This system is for DEMO TRADING ONLY.
+Will test for minimum 3-6 months before considering real money.</pre>
 </div>
 </div>
 <textarea id="taskResponse" placeholder="Copy the template above and fill in your responses..." ></textarea>
@@ -1342,8 +1343,8 @@ Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months bef
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
-            document.getElementById('quizContent').style.display = 'block';
-            document.getElementById('quizContent').classList.add('review-mode');
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.getElementById('quizQuestions').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
             // Show all questions
@@ -1356,7 +1357,8 @@ Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months bef
                 });
 
                 // Mark user's answer
-                const userAnswer = userAnswers[idx];
+                const questionNum = parseInt(q.dataset.question);
+                const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
                 if (userAnswer) {
@@ -1390,13 +1392,13 @@ Note: This system is for DEMO TRADING ONLY. Will test for minimum 3-6 months bef
                 backBtn.textContent = '← Back to Results';
                 backBtn.onclick = backToResults;
                 backBtn.style.cssText = 'margin: 20px auto; display: block;';
-                document.getElementById('quizContent').appendChild(backBtn);
+                document.getElementById('quizQuestions').appendChild(backBtn);
             }
         }
 
         function backToResults() {
-            document.getElementById('quizContent').classList.remove('review-mode');
-            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizQuestions').classList.remove('review-mode');
+            document.getElementById('quizQuestions').style.display = 'none';
             document.getElementById('quizResults').style.display = 'block';
 
             // Remove back button
