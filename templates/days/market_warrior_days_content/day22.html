@@ -1308,7 +1308,17 @@ KEY LESSONS FROM DAY 22:
                 const letter = opt.querySelector('.option-letter');
                 letter.style.background = '#667eea';
                 letter.style.color = 'white';
-            }
+            });
+
+            document.getElementById('quizQuestions').style.display = 'block';
+            document.querySelector('.quiz-navigation').style.display = 'flex';
+            document.getElementById('quizResults').style.display = 'none';
+
+            document.getElementById('currentQuestion').textContent = '1';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('nextBtn').textContent = 'Next';
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1326,7 +1336,7 @@ KEY LESSONS FROM DAY 22:
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
@@ -1381,17 +1391,6 @@ KEY LESSONS FROM DAY 22:
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-);
-            
-            document.getElementById('quizQuestions').style.display = 'block';
-            document.querySelector('.quiz-navigation').style.display = 'flex';
-            document.getElementById('quizResults').style.display = 'none';
-            
-            document.getElementById('currentQuestion').textContent = '1';
-            document.getElementById('prevBtn').disabled = true;
-            document.getElementById('nextBtn').disabled = true;
-            document.getElementById('nextBtn').textContent = 'Next';
         }
 
         function submitTask() {

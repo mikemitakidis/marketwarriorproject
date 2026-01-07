@@ -1513,11 +1513,61 @@ My News Trading Rule:
             const consensus = parseFloat(document.getElementById('consensus').value);
             const actual = parseFloat(document.getElementById('actual').value);
             const asset = document.getElementById('asset').value;
-            
+
             if (!consensus || !actual) {
                 alert('Please enter both consensus and actual values');
                 return;
             }
+
+            const surprise = ((actual - consensus) / consensus * 100).toFixed(2);
+            const beat = actual > consensus;
+
+            let impact = '';
+            let direction = '';
+            let magnitude = '';
+
+            if (Math.abs(surprise) > 20) {
+                magnitude = 'MAJOR';
+            } else if (Math.abs(surprise) > 10) {
+                magnitude = 'Significant';
+            } else if (Math.abs(surprise) > 5) {
+                magnitude = 'Moderate';
+            } else {
+                magnitude = 'Minor';
+            }
+
+            // Determine market impact based on indicator and asset
+            if (indicator === 'nfp') {
+                if (beat) {
+                    if (asset === 'spy') direction = '↑ Bullish (strong economy)';
+                    if (asset === 'usd') direction = '↑ Dollar strengthens';
+                    if (asset === 'gold') direction = '↓ Gold weakens';
+                    if (asset === 'bonds') direction = '↓ Bonds fall (yields up)';
+                } else {
+                    if (asset === 'spy') direction = '↓ Bearish (weak economy)';
+                    if (asset === 'usd') direction = '↓ Dollar weakens';
+                    if (asset === 'gold') direction = '↑ Gold rallies (safe haven)';
+                    if (asset === 'bonds') direction = '↑ Bonds rally (yields down)';
+                }
+            }
+
+            const resultHTML = `
+                <h4>${magnitude} Market Impact Expected!</h4>
+                <p><strong>Surprise:</strong> ${beat ? '+' : ''}${surprise}% ${beat ? 'beat' : 'miss'}</p>
+                <p><strong>Expected:</strong> ${consensus}</p>
+                <p><strong>Actual:</strong> ${actual}</p>
+                <p style="margin-top: 15px; font-size: 1.2em; font-weight: bold; color: ${beat ? '#10b981' : '#ef4444'};">
+                    Market Direction: ${direction}
+                </p>
+                <p style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 8px;">
+                    <strong>Trading Tip:</strong> ${magnitude === 'MAJOR' ? 'Expect high volatility! Consider staying flat or using tight stops.' : 'Normal volatility expected. Trade your plan with proper risk management.'}
+                </p>
+            `;
+
+            const resultDiv = document.getElementById('impactResult');
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1535,7 +1585,7 @@ My News Trading Rule:
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
@@ -1590,57 +1640,6 @@ My News Trading Rule:
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            const surprise = ((actual - consensus) / consensus * 100).toFixed(2);
-            const beat = actual > consensus;
-            
-            let impact = '';
-            let direction = '';
-            let magnitude = '';
-            
-            if (Math.abs(surprise) > 20) {
-                magnitude = 'MAJOR';
-            } else if (Math.abs(surprise) > 10) {
-                magnitude = 'Significant';
-            } else if (Math.abs(surprise) > 5) {
-                magnitude = 'Moderate';
-            } else {
-                magnitude = 'Minor';
-            }
-            
-            // Determine market impact based on indicator and asset
-            if (indicator === 'nfp') {
-                if (beat) {
-                    if (asset === 'spy') direction = '↑ Bullish (strong economy)';
-                    if (asset === 'usd') direction = '↑ Dollar strengthens';
-                    if (asset === 'gold') direction = '↓ Gold weakens';
-                    if (asset === 'bonds') direction = '↓ Bonds fall (yields up)';
-                } else {
-                    if (asset === 'spy') direction = '↓ Bearish (weak economy)';
-                    if (asset === 'usd') direction = '↓ Dollar weakens';
-                    if (asset === 'gold') direction = '↑ Gold rallies (safe haven)';
-                    if (asset === 'bonds') direction = '↑ Bonds rally (yields down)';
-                }
-            }
-            
-            const resultHTML = `
-                <h4>${magnitude} Market Impact Expected!</h4>
-                <p><strong>Surprise:</strong> ${beat ? '+' : ''}${surprise}% ${beat ? 'beat' : 'miss'}</p>
-                <p><strong>Expected:</strong> ${consensus}</p>
-                <p><strong>Actual:</strong> ${actual}</p>
-                <p style="margin-top: 15px; font-size: 1.2em; font-weight: bold; color: ${beat ? '#10b981' : '#ef4444'};">
-                    Market Direction: ${direction}
-                </p>
-                <p style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 8px;">
-                    <strong>Trading Tip:</strong> ${magnitude === 'MAJOR' ? 'Expect high volatility! Consider staying flat or using tight stops.' : 'Normal volatility expected. Trade your plan with proper risk management.'}
-                </p>
-            `;
-            
-            const resultDiv = document.getElementById('impactResult');
-            resultDiv.innerHTML = resultHTML;
-            resultDiv.style.display = 'block';
         }
 
         function submitTask() {

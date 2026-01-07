@@ -1284,7 +1284,18 @@ Your browser does not support the video tag.
             questions.forEach((question, index) => {
                 if (index === 0) {
                     question.classList.add('active');
+                } else {
+                    question.classList.remove('active');
                 }
+
+                question.querySelectorAll('.quiz-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+            });
+
+            updateQuizProgress();
+            updateNavigationButtons();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1302,7 +1313,7 @@ Your browser does not support the video tag.
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
@@ -1357,18 +1368,6 @@ Your browser does not support the video tag.
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
- else {
-                    question.classList.remove('active');
-                }
-                
-                question.querySelectorAll('.quiz-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-            });
-            
-            updateQuizProgress();
-            updateNavigationButtons();
         }
 
         function proceedToCertificate() {

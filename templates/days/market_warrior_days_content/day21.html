@@ -1341,14 +1341,41 @@ KEY LESSONS FROM DAY 21:
 
         function calculateDividends() {
             const investment = parseFloat(document.getElementById('divInvestment').value);
-            const yield = parseFloat(document.getElementById('divYield').value);
+            const divYield = parseFloat(document.getElementById('divYield').value);
             const years = parseFloat(document.getElementById('divYears').value);
             const growth = parseFloat(document.getElementById('divGrowth').value);
-            
-            if (!investment || !yield || !years) {
+
+            if (!investment || !divYield || !years) {
                 alert('Please fill all fields');
                 return;
             }
+
+            let totalDividends = 0;
+            let currentYield = divYield;
+            let yearlyBreakdown = '';
+
+            for (let i = 1; i <= years; i++) {
+                const yearlyIncome = (investment * currentYield) / 100;
+                totalDividends += yearlyIncome;
+                yearlyBreakdown += '<p>Year ' + i + ': $' + yearlyIncome.toFixed(2) + ' (' + currentYield.toFixed(2) + '% yield)</p>';
+                currentYield *= (1 + growth / 100);
+            }
+
+            const avgMonthly = totalDividends / (years * 12);
+
+            const resultHTML =
+                '<p><strong>Initial Investment:</strong> $' + investment.toLocaleString() + '</p>' +
+                '<p><strong>Total Dividends (' + years + ' years):</strong> $' + totalDividends.toFixed(2) + '</p>' +
+                '<p><strong>Average Monthly Income:</strong> $' + avgMonthly.toFixed(2) + '</p>' +
+                '<p><strong>Final Yield:</strong> ' + currentYield.toFixed(2) + '%</p>' +
+                '<details style="margin-top: 15px;">' +
+                '<summary style="cursor: pointer; font-weight: 600;">Year-by-Year Breakdown</summary>' +
+                yearlyBreakdown +
+                '</details>';
+
+            document.getElementById('divContent').innerHTML = resultHTML;
+            document.getElementById('divResult').style.display = 'block';
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1366,7 +1393,7 @@ KEY LESSONS FROM DAY 21:
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
@@ -1421,35 +1448,6 @@ KEY LESSONS FROM DAY 21:
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            let totalDividends = 0;
-            let currentYield = yield;
-            let yearlyBreakdown = '';
-            
-            for (let i = 1; i <= years; i++) {
-                const yearlyIncome = (investment * currentYield) / 100;
-                totalDividends += yearlyIncome;
-                yearlyBreakdown += `<p>Year ${i}: $${yearlyIncome.toFixed(2)} (${currentYield.toFixed(2)}% yield)</p>`;
-                currentYield *= (1 + growth / 100);
-            }
-            
-            const avgMonthly = totalDividends / (years * 12);
-            
-            const resultHTML = `
-                <p><strong>Initial Investment:</strong> $${investment.toLocaleString()}</p>
-                <p><strong>Total Dividends (${years} years):</strong> $${totalDividends.toFixed(2)}</p>
-                <p><strong>Average Monthly Income:</strong> $${avgMonthly.toFixed(2)}</p>
-                <p><strong>Final Yield:</strong> ${currentYield.toFixed(2)}%</p>
-                <details style="margin-top: 15px;">
-                    <summary style="cursor: pointer; font-weight: 600;">Year-by-Year Breakdown</summary>
-                    ${yearlyBreakdown}
-                </details>
-            `;
-            
-            document.getElementById('divContent').innerHTML = resultHTML;
-            document.getElementById('divResult').style.display = 'block';
         }
 
         function submitTask() {

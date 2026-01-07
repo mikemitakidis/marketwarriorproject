@@ -1330,7 +1330,7 @@ Am I ready for Phase 3 (Risk Management & Advanced Strategies)?</pre>
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 

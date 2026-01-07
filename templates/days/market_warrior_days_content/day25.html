@@ -1436,12 +1436,17 @@ Performance tracking is now part of my permanent trading process.</pre>
 
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
-            
+
             if (taskResponse.length < 800) {
                 var needed = 800 - taskResponse.length;
                 showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
+
+            taskSubmitted = true;
+            showTaskStatus('Performance report submitted successfully! You now have data to guide your trading decisions!', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1459,7 +1464,7 @@ Performance tracking is now part of my permanent trading process.</pre>
                 });
 
                 // Mark user's answer
-                const questionNum = parseInt(q.dataset.question);
+                const questionNum = parseInt(q.dataset.question) - 1;
                 const userAnswer = userAnswers[questionNum];
                 const correctAnswer = correctAnswers[idx];
 
@@ -1514,12 +1519,6 @@ Performance tracking is now part of my permanent trading process.</pre>
                     opt.classList.remove('user-correct', 'user-wrong', 'correct-answer');
                 });
             });
-        }
-
-            
-            taskSubmitted = true;
-            showTaskStatus('Performance report submitted successfully! You now have data to guide your trading decisions!', 'success');
-            showTaskSubmitted();
         }
 
         function showTaskStatus(message, type) {
