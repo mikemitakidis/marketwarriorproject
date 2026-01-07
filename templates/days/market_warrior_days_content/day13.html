@@ -1243,12 +1243,29 @@ Your browser does not support the video tag.
 
         function submitTask() {
             const response = document.getElementById('taskResponse').value.trim();
-            const fileInput = document.getElementById('taskFile');
-            
-            if (!response || response.length < 300) {
-                showTaskStatus('Please provide detailed stock analysis for all 3 stocks (minimum 300 characters).', 'error');
+            const minChars = 200;
+
+            if (response.length < minChars) {
+                var needed = minChars - response.length;
+                showTaskStatus('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')', 'error');
                 return;
             }
+
+            // Check for file upload
+            var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+            var taskFileEl = document.getElementById('taskFile');
+            var pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+            var totalFiles = preUploadedUrls.length + pendingFiles;
+
+            if (totalFiles === 0) {
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                return;
+            }
+
+            taskSubmitted = true;
+            showTaskStatus('✅ Stock analysis submitted successfully!', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1325,7 +1342,7 @@ Your browser does not support the video tag.
 
             
             if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload your screenshot(s).', 'error');
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
             

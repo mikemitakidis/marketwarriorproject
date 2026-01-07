@@ -1397,7 +1397,8 @@ at least 6 months on demo before considering real money.</pre>
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
             if (taskResponse.length < 800) {
-                showTaskStatus('Please complete all 3 trader evaluations (minimum 800 characters).', 'error');
+                var needed = 800 - taskResponse.length;
+                showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 

@@ -1403,16 +1403,33 @@ I understand that this journal is my path to becoming a better trader...</pre>
 
         function submitTask() {
             var textarea = document.querySelector('textarea');
-            if (textarea.value.trim().length < 50) {
-                alert('Please write at least 50 characters about your commitment.');
+            var taskText = textarea ? textarea.value.trim() : '';
+            var minChars = 50;
+
+            if (taskText.length < minChars) {
+                var needed = minChars - taskText.length;
+                alert('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + taskText.length + ')');
                 return;
             }
-            
+
+            // Check for file upload
+            var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+            var taskFileEl = document.getElementById('taskFile');
+            var pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+            var totalFiles = preUploadedUrls.length + pendingFiles;
+
+            if (totalFiles === 0) {
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
+                return;
+            }
+
             taskSubmitted = true;
-            var btn = document.querySelector('.task-section button');
-            btn.disabled = true;
-            btn.textContent = 'Task Submitted ✓';
-            btn.style.background = '#10b981';
+            var btn = document.getElementById('submitTaskBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Task Submitted ✓';
+                btn.style.background = '#10b981';
+            }
         }
 
         function completeDay27() {

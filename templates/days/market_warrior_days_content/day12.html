@@ -1159,12 +1159,29 @@ Your browser does not support the video tag.
 
         function submitTask() {
             const response = document.getElementById('taskResponse').value.trim();
-            const fileInput = document.getElementById('taskFile');
-            
-            if (!response || response.length < 200) {
-                showTaskStatus('Please provide complete company research (minimum 200 characters).', 'error');
+            const minChars = 150;
+
+            if (response.length < minChars) {
+                var needed = minChars - response.length;
+                showTaskStatus('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')', 'error');
                 return;
             }
+
+            // Check for file upload
+            var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+            var taskFileEl = document.getElementById('taskFile');
+            var pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+            var totalFiles = preUploadedUrls.length + pendingFiles;
+
+            if (totalFiles === 0) {
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                return;
+            }
+
+            taskSubmitted = true;
+            showTaskStatus('✅ Company research submitted successfully!', 'success');
+            showTaskSubmitted();
+        }
 
         function reviewAnswers() {
             document.getElementById('quizResults').style.display = 'none';
@@ -1241,7 +1258,7 @@ Your browser does not support the video tag.
 
             
             if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload at least 1 screenshot showing financial statements.', 'error');
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
             

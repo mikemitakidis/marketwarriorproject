@@ -1458,12 +1458,13 @@ Am I ready for Phase 3 (Risk Management & Advanced Strategies)?</pre>
             const fileInput = document.getElementById('taskFile');
             
             if (taskResponse.length < 100) {
-                showTaskStatus('Please provide detailed trade analysis (minimum 100 characters).', 'error');
+                var needed = 100 - taskResponse.length;
+                showTaskStatus('Minimum 100 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
             
             if (!fileInput.files || fileInput.files.length < 10) {
-                showTaskStatus('Please upload at least 10 screenshots (5 charts + 5 order executions).', 'error');
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
             

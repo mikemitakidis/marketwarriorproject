@@ -1443,13 +1443,14 @@ Your browser does not support the video tag.
             const taskResponse = document.getElementById('taskResponse').value.trim();
             const taskFile = document.getElementById('taskFile').files[0];
             
-            if (!taskResponse) {
-                showTaskStatus('Please write your observations.', 'error');
+            if (taskResponse.length < 50) {
+                var needed = 50 - taskResponse.length;
+                showTaskStatus('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 
             if (!taskFile) {
-                showTaskStatus('Please upload your order screenshots.', 'error');
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
 

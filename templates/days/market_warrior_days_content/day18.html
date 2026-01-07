@@ -1205,12 +1205,13 @@ Your browser does not support the video tag.
             const fileInput = document.getElementById('taskFile');
             
             if (taskResponse.length < 300) {
-                showTaskStatus('Please provide detailed backtest report (minimum 300 characters).', 'error');
+                var needed = 300 - taskResponse.length;
+                showTaskStatus('Minimum 300 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
             
             if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload at least 1 screenshot of your backtest results.', 'error');
+                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
                 return;
             }
             

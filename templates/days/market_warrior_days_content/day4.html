@@ -1307,8 +1307,9 @@ Next year: [Your target]</pre>
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
-            if (!taskResponse) {
-                showTaskStatus('Please complete your self-assessment.', 'error');
+            if (taskResponse.length < 50) {
+                var needed = 50 - taskResponse.length;
+                showTaskStatus('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 

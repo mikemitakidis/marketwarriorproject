@@ -1634,17 +1634,32 @@ Your browser does not support the video tag.
 
         function submitTask() {
             const taskResponse = document.getElementById('taskResponse');
-            if (!taskResponse || taskResponse.value.trim().length < 50) {
-                alert('Please write at least 50 characters for your task response.');
+            const taskText = taskResponse ? taskResponse.value.trim() : '';
+            const minChars = 50;
+
+            if (taskText.length < minChars) {
+                var needed = minChars - taskText.length;
+                alert('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + taskText.length + ')');
                 return;
             }
-            
+
+            // Check for file upload
+            var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+            const taskFileEl = document.getElementById('taskFile');
+            const pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+            const totalFiles = preUploadedUrls.length + pendingFiles;
+
+            if (totalFiles === 0) {
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
+                return;
+            }
+
             taskSubmitted = true;
             const btn = document.getElementById('submitTaskBtn');
             btn.disabled = true;
             btn.textContent = 'Task Submitted ✓';
             btn.style.background = '#10b981';
-            
+
             alert('Task submitted successfully! You can now complete Day 2.');
         }
 

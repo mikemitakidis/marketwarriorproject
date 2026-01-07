@@ -1322,7 +1322,8 @@ www.marketwarrior.club</pre>
             const taskResponse = document.getElementById('taskResponse').value.trim();
             
             if (taskResponse.length < 800) {
-                showTaskStatus('Please complete your 90-day SMART goals plan (minimum 800 characters).', 'error');
+                var needed = 800 - taskResponse.length;
+                showTaskStatus('Minimum 800 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
                 return;
             }
 
