@@ -92,6 +92,36 @@ export default async function handler(req, res) {
   visibility: visible !important;
   opacity: 1 !important;
 }
+/* VALIDATION ERROR MESSAGE - visible on page since alert() is blocked in sandbox */
+#mw-validation-error {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: #dc3545 !important;
+  color: white !important;
+  padding: 20px 30px !important;
+  border-radius: 10px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  z-index: 999999 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+  text-align: center !important;
+  max-width: 90% !important;
+  animation: mw-shake 0.5s ease-in-out !important;
+}
+@keyframes mw-shake {
+  0%, 100% { transform: translateX(-50%) rotate(0); }
+  25% { transform: translateX(-50%) rotate(-2deg); }
+  75% { transform: translateX(-50%) rotate(2deg); }
+}
+#mw-validation-error .mw-close {
+  position: absolute !important;
+  top: 5px !important;
+  right: 10px !important;
+  cursor: pointer !important;
+  font-size: 20px !important;
+}
 </style>
 <script>
 (function() {
@@ -108,6 +138,29 @@ export default async function handler(req, res) {
     if (window.parent !== window) {
       window.parent.postMessage({ type, day: DAY, ...data }, '*');
     }
+  }
+
+  // Show validation error on page (alert() is blocked in sandboxed iframe)
+  function showValidationError(message) {
+    console.log('[MWBridge] Showing validation error: ' + message);
+    // Remove existing error if any
+    var existing = document.getElementById('mw-validation-error');
+    if (existing) existing.remove();
+
+    // Create error element
+    var errorDiv = document.createElement('div');
+    errorDiv.id = 'mw-validation-error';
+    errorDiv.innerHTML = '<span class="mw-close" onclick="this.parentElement.remove()">×</span>' + message;
+    document.body.appendChild(errorDiv);
+
+    // Auto-remove after 8 seconds
+    setTimeout(function() {
+      var el = document.getElementById('mw-validation-error');
+      if (el) el.remove();
+    }, 8000);
+
+    // Scroll to top so user sees it
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Track if we've already sent completion messages
@@ -373,8 +426,8 @@ export default async function handler(req, res) {
         if (taskText.length < dayReqs.minChars) {
           var needed = dayReqs.minChars - taskText.length;
           var msg = 'Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')';
-          console.log('[MWBridge] VALIDATION FAILED - showing alert: ' + msg);
-          alert(msg);
+          console.log('[MWBridge] VALIDATION FAILED: ' + msg);
+          showValidationError(msg);
           return;
         }
 
@@ -382,8 +435,8 @@ export default async function handler(req, res) {
         console.log('[MWBridge] Checking file requirement: minFiles=' + dayReqs.minFiles + ', totalFiles=' + totalFiles);
         if (dayReqs.minFiles > 0 && totalFiles === 0) {
           var fileMsg = 'Please upload at least 1 screenshot for this task. File upload is required.';
-          console.log('[MWBridge] VALIDATION FAILED - showing alert: ' + fileMsg);
-          alert(fileMsg);
+          console.log('[MWBridge] VALIDATION FAILED: ' + fileMsg);
+          showValidationError(fileMsg);
           return;
         }
 
@@ -458,7 +511,7 @@ export default async function handler(req, res) {
 
         } catch (err) {
           console.error('[MWBridge] Task submission error:', err);
-          alert('Error: ' + err.message);
+          showValidationError('Error: ' + err.message);
           if (submitBtn) {
             submitBtn.textContent = 'Submit Day ' + DAY + ' Task';
             submitBtn.disabled = false;
@@ -552,7 +605,7 @@ export default async function handler(req, res) {
           e.stopPropagation();
           e.stopImmediatePropagation();
           var needed = dayReqs.minChars - taskText.length;
-          alert('Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')');
+          showValidationError('Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')');
           return false;
         }
 
@@ -561,7 +614,7 @@ export default async function handler(req, res) {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
-          alert('Please upload at least 1 screenshot for this task. File upload is required.');
+          showValidationError('Please upload at least 1 screenshot for this task. File upload is required.');
           return false;
         }
 
