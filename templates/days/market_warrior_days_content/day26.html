@@ -1305,12 +1305,14 @@ Will test for minimum 3-6 months before considering real money.</pre>
             document.getElementById('quizResults').style.display = 'block';
             
             const percentage = (score / correctAnswers.length * 100).toFixed(0);
+            const isPassed = score >= 3;
             const resultHTML = `
-                <h2 style="color: ${score >= 3 ? '#10b981' : '#ef4444'}; margin: 20px 0;">
+                <h2 style="color: ${isPassed ? '#10b981' : '#ef4444'}; margin: 20px 0;">
                     Score: ${score}/${correctAnswers.length} (${percentage}%)
                 </h2>
-                <p>${score >= 3 ? 'Excellent! You understand strategy optimization!' : 'Review the material and try again. Need 60% to pass.'}</p>
-                <button onclick="retakeQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">Retake Quiz</button>
+                <p>${isPassed ? 'Excellent! You understand strategy optimization!' : 'Review the material and try again. Need 60% to pass.'}</p>
+                <button onclick="reviewAnswers()" style="background: #3b82f6; color: white; padding: 12px 30px; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer; margin-right: 10px;">Review Answers</button>
+                ${!isPassed ? '<button onclick="retakeQuiz()" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">Retake Quiz</button>' : ''}
             `;
             document.getElementById('scoreDisplay').innerHTML = resultHTML;
         }
