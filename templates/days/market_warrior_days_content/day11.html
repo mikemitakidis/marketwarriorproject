@@ -1812,6 +1812,10 @@ What was your biggest 'aha' moment about economic cycles?
         function showQuizResults() {
             document.getElementById('quizContent').style.display = 'none';
             document.querySelector('.quiz-navigation').style.display = 'none';
+
+            // Check if user passed the quiz (60% or more)
+            const totalQ = typeof totalQuestions !== 'undefined' ? totalQuestions : correctAnswers.length;
+            const passed = (quizScore / totalQ) >= 0.6;
             document.getElementById('quizResults').style.display = 'block';
             
             const scorePercentage = Math.round((quizScore / totalQuestions) * 100);
@@ -1878,6 +1882,10 @@ What was your biggest 'aha' moment about economic cycles?
             document.getElementById('quizContent').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
+            // Check if user passed the quiz (60% or more)
+            const totalQ = typeof totalQuestions !== 'undefined' ? totalQuestions : correctAnswers.length;
+            const passed = (quizScore / totalQ) >= 0.6;
+
             // Show all questions
             document.querySelectorAll('.question-container').forEach((q, idx) => {
                 q.style.display = 'block';
@@ -1899,18 +1907,22 @@ What was your biggest 'aha' moment about economic cycles?
                             userOption.classList.add('user-correct');
                         } else {
                             userOption.classList.add('user-wrong');
-                            // Show correct answer
+                            // Only show correct answer if user passed the quiz
+                            if (passed) {
                             const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
                             if (correctOption) {
                                 correctOption.classList.add('correct-answer');
                             }
+                            }
                         }
                     }
                 } else {
-                    // User didn't answer - show correct
+                    // User didn't answer - show correct only if passed
+                    if (passed) {
                     const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
                     if (correctOption) {
                         correctOption.classList.add('correct-answer');
+                    }
                     }
                 }
             });

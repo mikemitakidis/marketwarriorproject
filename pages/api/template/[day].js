@@ -95,6 +95,8 @@ export default async function handler(req, res) {
 </style>
 <script>
 (function() {
+  console.log('[MWBridge] Bridge script loading for Day ' + ${dayNum});
+
   // PostMessage bridge to communicate with parent app
   const DAY = ${dayNum};
 
@@ -256,6 +258,8 @@ export default async function handler(req, res) {
 
   // Hook into template functions after DOM is ready
   function hookFunctions() {
+    console.log('[MWBridge] hookFunctions() running - attempting to hook template functions');
+
     // Hook finishQuiz - this is called when user completes the quiz
     if (typeof window.finishQuiz === 'function' && !window.finishQuiz._hooked) {
       const originalFinishQuiz = window.finishQuiz;
@@ -308,9 +312,12 @@ export default async function handler(req, res) {
     }
 
     // Hook submitTask - this is called when user submits their task
+    console.log('[MWBridge] Checking submitTask: exists=' + (typeof window.submitTask === 'function') + ', hooked=' + (window.submitTask && window.submitTask._hooked));
     if (typeof window.submitTask === 'function' && !window.submitTask._hooked) {
       const originalSubmitTask = window.submitTask;
       window.submitTask = async function() {
+        console.log('[MWBridge] *** HOOKED submitTask CALLED ***');
+
         // Requirements per day
         // minFiles: 1 = file required (user can upload multiple), 0 = optional
         const requirements = {
@@ -362,17 +369,25 @@ export default async function handler(req, res) {
         console.log('[MWBridge] Day ' + DAY + ' requires: ' + dayReqs.minChars + ' chars, ' + dayReqs.minFiles + ' files');
 
         // Check minimum character length
+        console.log('[MWBridge] Checking char length: ' + taskText.length + ' < ' + dayReqs.minChars + ' = ' + (taskText.length < dayReqs.minChars));
         if (taskText.length < dayReqs.minChars) {
           var needed = dayReqs.minChars - taskText.length;
-          alert('Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')');
+          var msg = 'Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')';
+          console.log('[MWBridge] VALIDATION FAILED - showing alert: ' + msg);
+          alert(msg);
           return;
         }
 
         // Check if file upload is required
+        console.log('[MWBridge] Checking file requirement: minFiles=' + dayReqs.minFiles + ', totalFiles=' + totalFiles);
         if (dayReqs.minFiles > 0 && totalFiles === 0) {
-          alert('Please upload at least 1 screenshot for this task. File upload is required.');
+          var fileMsg = 'Please upload at least 1 screenshot for this task. File upload is required.';
+          console.log('[MWBridge] VALIDATION FAILED - showing alert: ' + fileMsg);
+          alert(fileMsg);
           return;
         }
+
+        console.log('[MWBridge] Validation PASSED - proceeding with submission');
 
         // If already reported, don't re-submit
         if (taskReported) {
@@ -477,13 +492,94 @@ export default async function handler(req, res) {
     });
   }
 
+  // FALLBACK: Add direct click validation to submit button
+  // This runs even if function hooking fails
+  function addDirectButtonValidation() {
+    var submitBtn = document.getElementById('submitTaskBtn');
+    if (submitBtn && !submitBtn._mwValidationAdded) {
+      console.log('[MWBridge] Adding direct click validation to submit button');
+      submitBtn.addEventListener('click', function(e) {
+        console.log('[MWBridge] Submit button clicked (direct listener)');
+
+        // Requirements per day
+        var requirements = {
+          1: { minChars: 50, minFiles: 0 },
+          2: { minChars: 50, minFiles: 1 },
+          3: { minChars: 50, minFiles: 1 },
+          4: { minChars: 50, minFiles: 1 },
+          5: { minChars: 50, minFiles: 1 },
+          6: { minChars: 100, minFiles: 1 },
+          7: { minChars: 100, minFiles: 1 },
+          8: { minChars: 100, minFiles: 1 },
+          9: { minChars: 100, minFiles: 1 },
+          10: { minChars: 100, minFiles: 1 },
+          11: { minChars: 100, minFiles: 1 },
+          12: { minChars: 150, minFiles: 1 },
+          13: { minChars: 200, minFiles: 1 },
+          14: { minChars: 100, minFiles: 1 },
+          15: { minChars: 150, minFiles: 1 },
+          16: { minChars: 150, minFiles: 1 },
+          17: { minChars: 150, minFiles: 1 },
+          18: { minChars: 200, minFiles: 1 },
+          19: { minChars: 100, minFiles: 1 },
+          20: { minChars: 200, minFiles: 1 },
+          21: { minChars: 200, minFiles: 1 },
+          22: { minChars: 200, minFiles: 1 },
+          23: { minChars: 200, minFiles: 1 },
+          24: { minChars: 200, minFiles: 1 },
+          25: { minChars: 200, minFiles: 1 },
+          26: { minChars: 200, minFiles: 1 },
+          27: { minChars: 50, minFiles: 1 },
+          28: { minChars: 200, minFiles: 1 },
+          29: { minChars: 200, minFiles: 1 },
+          30: { minChars: 0, minFiles: 0 }
+        };
+
+        var dayReqs = requirements[DAY] || { minChars: 50, minFiles: 0 };
+        var taskResponseEl = document.getElementById('taskResponse');
+        var taskText = taskResponseEl ? taskResponseEl.value.trim() : '';
+
+        var preUploadedUrls = typeof getUploadedUrls === 'function' ? getUploadedUrls() : [];
+        var taskFileEl = document.getElementById('taskFile');
+        var pendingFiles = taskFileEl ? taskFileEl.files.length : 0;
+        var totalFiles = preUploadedUrls.length + pendingFiles;
+
+        console.log('[MWBridge] Direct validation: chars=' + taskText.length + '/' + dayReqs.minChars + ', files=' + totalFiles + '/' + dayReqs.minFiles);
+
+        // Check minimum character length FIRST
+        if (taskText.length < dayReqs.minChars) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          var needed = dayReqs.minChars - taskText.length;
+          alert('Minimum ' + dayReqs.minChars + ' characters required. You need ' + needed + ' more characters. (Current: ' + taskText.length + ')');
+          return false;
+        }
+
+        // Check file requirement
+        if (dayReqs.minFiles > 0 && totalFiles === 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          alert('Please upload at least 1 screenshot for this task. File upload is required.');
+          return false;
+        }
+
+        console.log('[MWBridge] Direct validation PASSED');
+      }, true); // Use capture phase to run BEFORE onclick
+      submitBtn._mwValidationAdded = true;
+    }
+  }
+
   // Run hooks after short delay to ensure template JS has run
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(hookFunctions, 100);
+      setTimeout(addDirectButtonValidation, 150);
     });
   } else {
     setTimeout(hookFunctions, 100);
+    setTimeout(addDirectButtonValidation, 150);
   }
 })();
 </script>
