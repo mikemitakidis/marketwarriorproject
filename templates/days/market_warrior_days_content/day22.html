@@ -1398,7 +1398,7 @@ KEY LESSONS FROM DAY 22:
             
             if (taskResponse.length < 500) {
                 var needed = 500 - taskResponse.length;
-                showTaskStatus('Minimum 500 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 500 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
             

@@ -261,8 +261,8 @@ export default async function handler(req, res) {
       const originalFinishQuiz = window.finishQuiz;
       window.finishQuiz = function() {
         originalFinishQuiz.apply(this, arguments);
-        // After original runs, send results to parent
-        if (!quizReported && typeof quizScore !== 'undefined' && typeof totalQuestions !== 'undefined') {
+        // After original runs, send results to parent (always send, even on retake)
+        if (typeof quizScore !== 'undefined' && typeof totalQuestions !== 'undefined') {
           const passed = (quizScore / totalQuestions) >= 0.6;
           sendToParent('QUIZ_COMPLETE', {
             score: quizScore,
@@ -281,8 +281,8 @@ export default async function handler(req, res) {
       const originalSubmitQuiz = window.submitQuiz;
       window.submitQuiz = function() {
         originalSubmitQuiz.apply(this, arguments);
-        // After original runs, send results to parent
-        if (!quizReported && typeof quizScore !== 'undefined' && typeof correctAnswers !== 'undefined') {
+        // After original runs, send results to parent (always send, even on retake)
+        if (typeof quizScore !== 'undefined' && typeof correctAnswers !== 'undefined') {
           const total = correctAnswers.length;
           const passed = (quizScore / total) >= 0.6;
           sendToParent('QUIZ_COMPLETE', {
@@ -295,6 +295,16 @@ export default async function handler(req, res) {
         }
       };
       window.submitQuiz._hooked = true;
+    }
+
+    // Hook retakeQuiz - reset quizReported so next attempt is reported
+    if (typeof window.retakeQuiz === 'function' && !window.retakeQuiz._hooked) {
+      const originalRetakeQuiz = window.retakeQuiz;
+      window.retakeQuiz = function() {
+        quizReported = false; // Reset so next completion is reported
+        originalRetakeQuiz.apply(this, arguments);
+      };
+      window.retakeQuiz._hooked = true;
     }
 
     // Hook submitTask - this is called when user submits their task

@@ -1467,12 +1467,12 @@ Am I ready for Phase 3 (Risk Management & Advanced Strategies)?</pre>
             
             if (taskResponse.length < 100) {
                 var needed = 100 - taskResponse.length;
-                showTaskStatus('Minimum 100 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 100 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
             
             if (!fileInput.files || fileInput.files.length < 10) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
             

@@ -1171,7 +1171,7 @@ Your browser does not support the video tag.
 
             if (response.length < minChars) {
                 var needed = minChars - response.length;
-                showTaskStatus('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')', 'error');
+                alert('Minimum ' + minChars + ' characters required. You need ' + needed + ' more. (Current: ' + response.length + ')');
                 return;
             }
 
@@ -1182,7 +1182,7 @@ Your browser does not support the video tag.
             var totalFiles = preUploadedUrls.length + pendingFiles;
 
             if (totalFiles === 0) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
 
@@ -1264,9 +1264,9 @@ Your browser does not support the video tag.
             });
         }
 
-            
+
             if (!fileInput.files || fileInput.files.length < 1) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
             

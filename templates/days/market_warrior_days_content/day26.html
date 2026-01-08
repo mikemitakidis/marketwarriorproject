@@ -1342,7 +1342,7 @@ Will test for minimum 3-6 months before considering real money.</pre>
 
             if (taskResponse.length < 600) {
                 var needed = 600 - taskResponse.length;
-                showTaskStatus('Minimum 600 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 600 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
 

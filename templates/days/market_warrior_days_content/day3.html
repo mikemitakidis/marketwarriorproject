@@ -1455,12 +1455,12 @@ Your browser does not support the video tag.
             
             if (taskResponse.length < 50) {
                 var needed = 50 - taskResponse.length;
-                showTaskStatus('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')', 'error');
+                alert('Minimum 50 characters required. You need ' + needed + ' more. (Current: ' + taskResponse.length + ')');
                 return;
             }
 
             if (!taskFile) {
-                showTaskStatus('Please upload at least 1 file/screenshot. File upload is required.', 'error');
+                alert('Please upload at least 1 file/screenshot. File upload is required.');
                 return;
             }
 
