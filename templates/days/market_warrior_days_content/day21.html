@@ -1299,6 +1299,10 @@ KEY LESSONS FROM DAY 21:
             
             document.getElementById('quizQuestions').style.display = 'none';
             document.querySelector('.quiz-navigation').style.display = 'none';
+
+            // Check if user passed the quiz (60% or more)
+            const totalQ = typeof totalQuestions !== 'undefined' ? totalQuestions : correctAnswers.length;
+            const passed = (quizScore / totalQ) >= 0.6;
             document.getElementById('quizResults').style.display = 'block';
             
             const percentage = (score / correctAnswers.length * 100).toFixed(0);
@@ -1391,6 +1395,10 @@ KEY LESSONS FROM DAY 21:
             document.getElementById('quizQuestions').classList.add('review-mode');
             document.querySelector('.quiz-navigation').style.display = 'none';
 
+            // Check if user passed the quiz (60% or more)
+            const totalQ = typeof totalQuestions !== 'undefined' ? totalQuestions : correctAnswers.length;
+            const passed = (quizScore / totalQ) >= 0.6;
+
             // Show all questions
             document.querySelectorAll('.question-container').forEach((q, idx) => {
                 q.style.display = 'block';
@@ -1412,18 +1420,22 @@ KEY LESSONS FROM DAY 21:
                             userOption.classList.add('user-correct');
                         } else {
                             userOption.classList.add('user-wrong');
-                            // Show correct answer
+                            // Only show correct answer if user passed the quiz
+                            if (passed) {
                             const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
                             if (correctOption) {
                                 correctOption.classList.add('correct-answer');
                             }
+                            }
                         }
                     }
                 } else {
-                    // User didn't answer - show correct
+                    // User didn't answer - show correct only if passed
+                    if (passed) {
                     const correctOption = q.querySelector('.quiz-option[data-answer="' + correctAnswer + '"]');
                     if (correctOption) {
                         correctOption.classList.add('correct-answer');
+                    }
                     }
                 }
             });
