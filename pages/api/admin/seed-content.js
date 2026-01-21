@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest } , verifyAdminAccess } from '../../../lib/serverAuth';
 import fs from 'fs';
 import path from 'path';
 
@@ -324,23 +324,18 @@ function extractContentFromHTML(html) {
 
 export default async function handler(req, res) {
   try {
+    // SECURITY: Verify admin authorization (checks is_admin + email allowlist)
     const user = await getUserFromRequest(req);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const supabase = getServiceSupabase();
-
-    // Check if admin
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
+    const isAdmin = await verifyAdminAccess(user);
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
       // Return current content status

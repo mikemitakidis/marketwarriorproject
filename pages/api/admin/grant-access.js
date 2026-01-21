@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
 
 /**
  * Admin API: Grant access to a user (bypass payment for testing)
@@ -15,20 +15,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get the requesting user
-    const requestingUser = await getUserFromRequest(req);
-    if (!requestingUser) {
+    // SECURITY: Verify admin authorization (checks is_admin + email allowlist)
+    const user = await getUserFromRequest(req);
+    if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    // Check if requesting user is admin
-    const allowList = (process.env.ADMIN_EMAIL_ALLOWLIST || '')
-      .split(',')
-      .map(e => e.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (!allowList.includes(requestingUser.email.toLowerCase())) {
-      return res.status(403).json({ error: 'Not authorized - admin only' });
+    const isAdmin = await verifyAdminAccess(user);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
     }
 
     const { email } = req.body;

@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest } , verifyAdminAccess } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/admin/unlock-all-days
@@ -14,23 +14,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const adminUser = await getUserFromRequest(req);
-    if (!adminUser) {
+    // SECURITY: Verify admin authorization (checks is_admin + email allowlist)
+    const user = await getUserFromRequest(req);
+    if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const supabase = getServiceSupabase();
-
-    // Check if current user is admin
-    const { data: adminProfile } = await supabase
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('id', adminUser.id)
-      .single();
-
-    if (!adminProfile?.is_admin) {
+    const isAdmin = await verifyAdminAccess(user);
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    const supabase = getServiceSupabase();
 
     const { userId, email } = req.body;
 
