@@ -90,12 +90,33 @@ export default async function handler(req, res) {
 
       const now = new Date().toISOString();
 
+      // Fetch net amount from Stripe balance_transaction
+      let netAmountCents = null;
+      const paymentIntentId = typeof checkout.payment_intent === 'string' ? checkout.payment_intent : null;
+
+      if (paymentIntentId) {
+        try {
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          const balanceTransactionId = paymentIntent.charges?.data?.[0]?.balance_transaction;
+
+          if (balanceTransactionId) {
+            const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
+            netAmountCents = balanceTransaction.net || null;
+            console.log(`Net amount for payment ${paymentIntentId}: ${netAmountCents} cents`);
+          }
+        } catch (err) {
+          console.error('Error fetching net amount from Stripe:', err.message);
+          // Continue without net amount - we can backfill later
+        }
+      }
+
       // 1. Record payment in payments table (using CORRECT column names from schema!)
       const { error: paymentError } = await supabase.from('payments').insert({
         user_id: userId,
         stripe_session_id: checkout.id,
-        payment_intent_id: typeof checkout.payment_intent === 'string' ? checkout.payment_intent : null,
+        payment_intent_id: paymentIntentId,
         amount_cents: checkout.amount_total,
+        net_amount_cents: netAmountCents,
         currency: checkout.currency || 'usd',
         status: 'succeeded',
         paid_at: now,

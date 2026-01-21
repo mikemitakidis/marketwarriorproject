@@ -34,19 +34,32 @@ async function getNetAmountFromStripe(stripe, paymentIntentId) {
 
 /**
  * Calculate total net revenue from payments
+ * Uses stored net_amount_cents when available, falls back to Stripe API for missing values
  * @param {Stripe} stripe - Stripe instance
- * @param {Array} payments - Array of payment records
+ * @param {Array} payments - Array of payment records with net_amount_cents and payment_intent_id
  * @returns {Promise<number>} Total net revenue in cents
  */
 async function calculateNetRevenue(stripe, payments) {
   if (!payments || payments.length === 0) return 0;
 
-  // Fetch net amounts for all payments in parallel
-  const netAmounts = await Promise.all(
-    payments.map(payment => getNetAmountFromStripe(stripe, payment.payment_intent_id))
-  );
+  // Separate payments with stored net amount vs ones that need fetching
+  const paymentsWithNet = payments.filter(p => p.net_amount_cents != null);
+  const paymentsNeedFetch = payments.filter(p => p.net_amount_cents == null && p.payment_intent_id);
 
-  return netAmounts.reduce((sum, amount) => sum + amount, 0);
+  // Sum already-stored net amounts
+  const storedNet = paymentsWithNet.reduce((sum, p) => sum + p.net_amount_cents, 0);
+
+  // Fetch missing net amounts from Stripe API (for old payments)
+  let fetchedNet = 0;
+  if (paymentsNeedFetch.length > 0) {
+    console.log(`Fetching net amounts for ${paymentsNeedFetch.length} payments from Stripe API`);
+    const netAmounts = await Promise.all(
+      paymentsNeedFetch.map(p => getNetAmountFromStripe(stripe, p.payment_intent_id))
+    );
+    fetchedNet = netAmounts.reduce((sum, amount) => sum + amount, 0);
+  }
+
+  return storedNet + fetchedNet;
 }
 
 /**
@@ -95,7 +108,7 @@ export default async function handler(req, res) {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    // Fetch all data in parallel - include payment_intent_id for fee calculation
+    // Fetch all data in parallel - use stored net_amount_cents for performance
     const [
       paymentsAll,
       paymentsThisMonth,
@@ -109,14 +122,14 @@ export default async function handler(req, res) {
       affiliateData,
       affiliateLastMonth,
     ] = await Promise.all([
-      // All payments - include payment_intent_id for Stripe balance_transaction lookup
-      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded'),
+      // All payments - use net_amount_cents (stored from webhook)
+      supabase.from('payments').select('amount_cents, net_amount_cents, payment_intent_id').eq('status', 'succeeded'),
       // This month payments
-      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', monthStart.toISOString()),
+      supabase.from('payments').select('amount_cents, net_amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', monthStart.toISOString()),
       // Last month payments
-      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', lastMonthStart.toISOString()).lte('paid_at', lastMonthEnd.toISOString()),
+      supabase.from('payments').select('amount_cents, net_amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', lastMonthStart.toISOString()).lte('paid_at', lastMonthEnd.toISOString()),
       // Today payments
-      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', today.toISOString()),
+      supabase.from('payments').select('amount_cents, net_amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', today.toISOString()),
       // All users
       supabase.from('user_profiles').select('id, has_paid, created_at'),
       // Users created today
