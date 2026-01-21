@@ -59,10 +59,10 @@ Fill in your values:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SERVICE_KEY=your-service-role-key
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 4. Run development server
@@ -93,7 +93,7 @@ UPDATE public.users SET is_admin = true WHERE email = 'your@email.com';
 3. Add all environment variables
 4. Deploy
 
-**Important:** Update `NEXT_PUBLIC_BASE_URL` to your production URL.
+**Important:** Update `NEXT_PUBLIC_APP_URL` to your production URL.
 
 ## Routes
 

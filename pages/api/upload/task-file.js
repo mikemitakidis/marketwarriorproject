@@ -49,10 +49,57 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Day number is required' });
     }
 
+    // SECURITY: Validate file type
+    const allowedMimeTypes = [
+      // Images
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      // Documents
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      // Text
+      'text/plain',
+      'text/csv',
+      // Other
+      'application/zip',
+    ];
+
+    const allowedExtensions = [
+      'jpg', 'jpeg', 'png', 'gif', 'webp',
+      'pdf', 'doc', 'docx', 'xls', 'xlsx',
+      'txt', 'csv', 'zip'
+    ];
+
+    const fileName = file.originalFilename || 'file';
+    const fileExt = fileName.split('.').pop()?.toLowerCase();
+    const fileMimeType = file.mimetype || 'application/octet-stream';
+
+    // Check both extension and MIME type for security
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      return res.status(400).json({
+        error: `File type .${fileExt} not allowed. Allowed types: ${allowedExtensions.join(', ')}`
+      });
+    }
+
+    if (!allowedMimeTypes.includes(fileMimeType)) {
+      return res.status(400).json({
+        error: `File MIME type ${fileMimeType} not allowed. Please upload a valid file.`
+      });
+    }
+
+    // Additional file size check (already set in formidable, but double-check)
+    if (file.size > 50 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File size exceeds 50MB limit' });
+    }
+
     // Read file content
     const fileBuffer = fs.readFileSync(file.filepath);
-    const fileName = file.originalFilename || 'file';
-    const fileExt = fileName.split('.').pop();
 
     // Generate unique file path
     const timestamp = Date.now();
@@ -64,7 +111,7 @@ export default async function handler(req, res) {
     const { data, error: uploadError } = await supabase.storage
       .from('user-uploads')
       .upload(storagePath, fileBuffer, {
-        contentType: file.mimetype || 'application/octet-stream',
+        contentType: fileMimeType,
         upsert: false,
       });
 

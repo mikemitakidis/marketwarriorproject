@@ -1,0 +1,27 @@
+name: Keep Supabase Alive
+
+# Run every 6 days to prevent Supabase free tier from pausing (7 day inactivity limit)
+on:
+  schedule:
+    - cron: '0 0 */6 * *'  # At 00:00 UTC every 6 days
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keep-alive endpoint
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/keep-alive" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail --show-error
+        continue-on-error: false
+
+      - name: Report status
+        if: success()
+        run: echo "✅ Supabase keep-alive ping successful"
+
+      - name: Report failure
+        if: failure()
+        run: echo "❌ Supabase keep-alive ping failed"

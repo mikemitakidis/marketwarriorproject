@@ -5,8 +5,18 @@ import Head from 'next/head';
  * Development bypass page - ONLY FOR TESTING
  *
  * This page allows bypassing payment in development mode.
- * In production, this should be disabled or protected.
+ * In production, this page returns 404.
  */
+export async function getServerSideProps({ res }) {
+  // SECURITY: Disable this page in production
+  if (process.env.NODE_ENV === 'production') {
+    res.statusCode = 404;
+    return { notFound: true };
+  }
+
+  return { props: {} };
+}
+
 export default function DevBypassPage() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
