@@ -1,10 +1,59 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import Stripe from 'stripe';
+
+/**
+ * Fetch net amount from Stripe balance transaction for a payment intent
+ * @param {Stripe} stripe - Stripe instance
+ * @param {string} paymentIntentId - Payment intent ID
+ * @returns {Promise<number>} Net amount in cents
+ */
+async function getNetAmountFromStripe(stripe, paymentIntentId) {
+  try {
+    if (!paymentIntentId) return 0;
+
+    // Get payment intent with balance transaction
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (!paymentIntent.charges?.data?.[0]?.balance_transaction) {
+      // Fallback to original amount if balance_transaction not available
+      return paymentIntent.amount || 0;
+    }
+
+    const balanceTransactionId = paymentIntent.charges.data[0].balance_transaction;
+
+    // Fetch balance transaction to get net amount
+    const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
+
+    // Return net amount (amount after fees)
+    return balanceTransaction.net || 0;
+  } catch (err) {
+    console.error('Error fetching balance transaction:', err.message);
+    return 0;
+  }
+}
+
+/**
+ * Calculate total net revenue from payments
+ * @param {Stripe} stripe - Stripe instance
+ * @param {Array} payments - Array of payment records
+ * @returns {Promise<number>} Total net revenue in cents
+ */
+async function calculateNetRevenue(stripe, payments) {
+  if (!payments || payments.length === 0) return 0;
+
+  // Fetch net amounts for all payments in parallel
+  const netAmounts = await Promise.all(
+    payments.map(payment => getNetAmountFromStripe(stripe, payment.payment_intent_id))
+  );
+
+  return netAmounts.reduce((sum, amount) => sum + amount, 0);
+}
 
 /**
  * API route: /api/admin/dashboard-stats
  *
  * Returns dashboard statistics for the admin panel:
- * - Total revenue (all time, monthly, daily)
+ * - Total revenue (NET amount after Stripe fees)
  * - Conversion rate
  * - Total users, paid users, active users
  * - Completion rate
@@ -30,6 +79,13 @@ export default async function handler(req, res) {
 
     const supabase = getServiceSupabase();
 
+    // Initialize Stripe
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      return res.status(500).json({ error: 'Stripe configuration missing' });
+    }
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+
     // Get date boundaries
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -39,7 +95,7 @@ export default async function handler(req, res) {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    // Fetch all data in parallel
+    // Fetch all data in parallel - include payment_intent_id for fee calculation
     const [
       paymentsAll,
       paymentsThisMonth,
@@ -53,14 +109,14 @@ export default async function handler(req, res) {
       affiliateData,
       affiliateLastMonth,
     ] = await Promise.all([
-      // All payments
-      supabase.from('payments').select('amount_cents').eq('status', 'succeeded'),
+      // All payments - include payment_intent_id for Stripe balance_transaction lookup
+      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded'),
       // This month payments
-      supabase.from('payments').select('amount_cents').eq('status', 'succeeded').gte('paid_at', monthStart.toISOString()),
+      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', monthStart.toISOString()),
       // Last month payments
-      supabase.from('payments').select('amount_cents').eq('status', 'succeeded').gte('paid_at', lastMonthStart.toISOString()).lte('paid_at', lastMonthEnd.toISOString()),
+      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', lastMonthStart.toISOString()).lte('paid_at', lastMonthEnd.toISOString()),
       // Today payments
-      supabase.from('payments').select('amount_cents').eq('status', 'succeeded').gte('paid_at', today.toISOString()),
+      supabase.from('payments').select('amount_cents, payment_intent_id').eq('status', 'succeeded').gte('paid_at', today.toISOString()),
       // All users
       supabase.from('user_profiles').select('id, has_paid, created_at'),
       // Users created today
@@ -77,11 +133,16 @@ export default async function handler(req, res) {
       supabase.from('affiliate_referrals').select('commission_amount').gte('created_at', lastMonthStart.toISOString()).lte('created_at', lastMonthEnd.toISOString()),
     ]);
 
-    // Calculate revenue stats
-    const totalRevenue = (paymentsAll.data || []).reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
-    const monthlyRevenue = (paymentsThisMonth.data || []).reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
-    const lastMonthRevenue = (paymentsLastMonth.data || []).reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
-    const dailyRevenue = (paymentsToday.data || []).reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
+    // Calculate NET revenue stats (after Stripe fees) by fetching balance_transaction data
+    const totalRevenueCents = await calculateNetRevenue(stripe, paymentsAll.data || []);
+    const monthlyRevenueCents = await calculateNetRevenue(stripe, paymentsThisMonth.data || []);
+    const lastMonthRevenueCents = await calculateNetRevenue(stripe, paymentsLastMonth.data || []);
+    const todayRevenueCents = await calculateNetRevenue(stripe, paymentsToday.data || []);
+
+    const totalRevenue = totalRevenueCents / 100;
+    const monthlyRevenue = monthlyRevenueCents / 100;
+    const lastMonthRevenue = lastMonthRevenueCents / 100;
+    const dailyRevenue = todayRevenueCents / 100;
 
     // Calculate revenue change percentage
     const revenueChange = lastMonthRevenue > 0
