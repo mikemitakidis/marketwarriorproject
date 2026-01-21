@@ -16,6 +16,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    // SECURITY: Verify admin authorization
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const supabaseAdmin = getServiceSupabase();
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
     const { email } = req.body;
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -27,10 +44,9 @@ export default async function handler(req, res) {
     }
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
-    const supabase = getServiceSupabase();
 
     // Find user in auth.users by email
-    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (listError) {
       return res.status(500).json({ error: 'Failed to list users' });
     }
@@ -59,13 +75,13 @@ export default async function handler(req, res) {
           // Found a successful charge - update database
           const now = new Date().toISOString();
 
-          await supabase.from('user_profiles').upsert({
+          await supabaseAdmin.from('user_profiles').upsert({
             id: user.id,
             has_paid: true,
             paid_at: now,
           }, { onConflict: 'id' });
 
-          await supabase.from('payments').upsert({
+          await supabaseAdmin.from('payments').upsert({
             user_id: user.id,
             stripe_session_id: successfulCharge.id,
             amount_cents: successfulCharge.amount,
@@ -87,13 +103,13 @@ export default async function handler(req, res) {
     // Update database with found session
     const now = new Date().toISOString();
 
-    await supabase.from('user_profiles').upsert({
+    await supabaseAdmin.from('user_profiles').upsert({
       id: user.id,
       has_paid: true,
       paid_at: now,
     }, { onConflict: 'id' });
 
-    await supabase.from('payments').upsert({
+    await supabaseAdmin.from('payments').upsert({
       user_id: user.id,
       stripe_session_id: successfulSession.id,
       amount_cents: successfulSession.amount_total,
@@ -103,7 +119,7 @@ export default async function handler(req, res) {
     }, { onConflict: 'user_id' });
 
     // Create day 1 progress
-    await supabase.from('challenge_progress').upsert({
+    await supabaseAdmin.from('challenge_progress').upsert({
       user_id: user.id,
       day: 1,
       unlocked: true,

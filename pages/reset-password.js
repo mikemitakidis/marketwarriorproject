@@ -37,8 +37,8 @@ export default function ResetPasswordPage({ userEmail }) {
       setMessage({ type: 'error', text: 'Passwords do not match' });
       return;
     }
-    if (password.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      setMessage({ type: 'error', text: 'Password must be at least 8 characters' });
       return;
     }
 
@@ -147,7 +147,7 @@ export default function ResetPasswordPage({ userEmail }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
               placeholder="At least 6 characters"
             />
           </div>

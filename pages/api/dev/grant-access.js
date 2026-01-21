@@ -10,11 +10,8 @@ import { getServiceSupabase } from '../../../lib/serverAuth';
  * It allows bypassing payment for testing purposes.
  */
 export default async function handler(req, res) {
-  // SECURITY: Check if we're in development mode
-  // You can also use an environment variable like DEV_BYPASS_ENABLED=true
-  const isDev = process.env.NODE_ENV !== 'production' || process.env.DEV_BYPASS_ENABLED === 'true';
-
-  if (!isDev) {
+  // SECURITY: Only allow in development mode - NEVER in production
+  if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'This endpoint is disabled in production' });
   }
 

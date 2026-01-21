@@ -82,8 +82,8 @@ export default function LoginPage() {
       setMessage({ type: 'error', text: 'Passwords do not match' });
       return;
     }
-    if (password.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      setMessage({ type: 'error', text: 'Password must be at least 8 characters' });
       return;
     }
 
@@ -296,7 +296,7 @@ export default function LoginPage() {
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             </div>
             <div className="forgot">
               <a onClick={() => setMode('reset')}>Forgot password?</a>
@@ -315,7 +315,7 @@ export default function LoginPage() {
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
