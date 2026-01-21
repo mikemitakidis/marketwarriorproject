@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
 
 /**
  * Sync a payment from Stripe to database.
@@ -16,22 +16,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // SECURITY: Verify admin authorization
+    // SECURITY: Verify admin authorization (checks is_admin + email allowlist)
     const user = await getUserFromRequest(req);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const supabaseAdmin = getServiceSupabase();
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
+    const isAdmin = await verifyAdminAccess(user);
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    const supabaseAdmin = getServiceSupabase();
 
     const { email } = req.body;
     if (!email) {

@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest , verifyAdminAccess } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/admin/users
@@ -16,32 +16,18 @@ import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth'
  */
 export default async function handler(req, res) {
   try {
-    const adminUser = await getUserFromRequest(req);
-    if (!adminUser) {
-      console.log('[ADMIN] No user found in request');
+    // SECURITY: Verify admin authorization (checks is_admin + email allowlist)
+    const user = await getUserFromRequest(req);
+    if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    console.log('[ADMIN] User from request:', adminUser.id, adminUser.email);
-
-    const supabase = getServiceSupabase();
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('is_admin, email')
-      .eq('id', adminUser.id)
-      .single();
-
-    console.log('[ADMIN] Profile lookup:', JSON.stringify(profile), 'Error:', profileError?.message);
-
-    // Only check is_admin flag
-    if (!profile?.is_admin) {
-      console.log('[ADMIN] Access denied - is_admin:', profile?.is_admin);
+    const isAdmin = await verifyAdminAccess(user);
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    console.log('[ADMIN] Access granted for:', adminUser.email);
+    const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
       return handleGet(req, res, supabase);

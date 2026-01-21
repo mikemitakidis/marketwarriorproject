@@ -1233,7 +1233,7 @@ Will use max 5:1 in real trading" style="width: 100%; height: 200px; padding: 15
                 <div class="performance-message" id="performanceMessage">Great job!</div>
                 
                 <div id="passedButtons" style="display: none;">
-                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                    <!-- Retake not allowed after passing (>= 60%) -->
                     <button class="quiz-btn" onclick="proceedToTask()">Continue to Task</button>
                 </div>
                 
@@ -1241,7 +1241,7 @@ Will use max 5:1 in real trading" style="width: 100%; height: 200px; padding: 15
                     <div style="background: #fef2f2; color: #dc2626; padding: 20px; border-radius: 10px; margin: 20px 0;">
                         <p>You need at least 60% (3/5 correct) to proceed. Please review and try again.</p>
                     </div>
-                    <button class="quiz-btn next" onclick="retakeQuiz()">Retake Quiz</button>
+                    <!-- Retake not allowed after passing (>= 60%) -->
                 </div>
             </div>
         </div>

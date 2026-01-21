@@ -18,6 +18,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing day or response' });
     }
 
+    // VALIDATION: Day 2+ requires file upload
+    if (day >= 2 && !attachmentUrl) {
+      return res.status(400).json({ error: 'File upload is required for Day 2 and beyond' });
+    }
+
     const user = await getUserFromRequest(req);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
