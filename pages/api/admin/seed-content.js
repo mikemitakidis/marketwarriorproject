@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } , verifyAdminAccess } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
 import fs from 'fs';
 import path from 'path';
 

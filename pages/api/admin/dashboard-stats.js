@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } , verifyAdminAccess } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
 
 /**
  * API route: /api/admin/dashboard-stats
