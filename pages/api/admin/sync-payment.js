@@ -51,8 +51,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to list users' });
     }
 
-    const user = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-    if (!user) {
+    const targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -76,13 +76,13 @@ export default async function handler(req, res) {
           const now = new Date().toISOString();
 
           await supabaseAdmin.from('user_profiles').upsert({
-            id: user.id,
+            id: targetUser.id,
             has_paid: true,
             paid_at: now,
           }, { onConflict: 'id' });
 
           await supabaseAdmin.from('payments').upsert({
-            user_id: user.id,
+            user_id: targetUser.id,
             stripe_session_id: successfulCharge.id,
             amount_cents: successfulCharge.amount,
             currency: successfulCharge.currency,
@@ -104,13 +104,13 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
 
     await supabaseAdmin.from('user_profiles').upsert({
-      id: user.id,
+      id: targetUser.id,
       has_paid: true,
       paid_at: now,
     }, { onConflict: 'id' });
 
     await supabaseAdmin.from('payments').upsert({
-      user_id: user.id,
+      user_id: targetUser.id,
       stripe_session_id: successfulSession.id,
       amount_cents: successfulSession.amount_total,
       currency: successfulSession.currency,
@@ -120,7 +120,7 @@ export default async function handler(req, res) {
 
     // Create day 1 progress
     await supabaseAdmin.from('challenge_progress').upsert({
-      user_id: user.id,
+      user_id: targetUser.id,
       day: 1,
       unlocked: true,
     }, { onConflict: 'user_id,day' });
