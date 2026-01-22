@@ -218,6 +218,59 @@ export default function AdminPanel() {
     setLoading(false);
   }
 
+  async function uploadFile(file, type) {
+    if (!file) {
+      alert('Please select a file');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      const res = await fetch('/api/admin/settings/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update settings state with new URL
+        if (type === 'logo') {
+          setSettings({ ...settings, logoUrl: data.url });
+        } else if (type === 'favicon') {
+          setSettings({ ...settings, faviconUrl: data.url });
+        }
+        alert(`${data.message}\nURL: ${data.url}`);
+        await loadSettings(); // Reload to confirm
+      } else {
+        const error = await res.json();
+        alert('Upload failed: ' + (error.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload failed: ' + err.message);
+    }
+    setLoading(false);
+  }
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFile(file, 'logo');
+    }
+  }
+
+  async function handleFaviconUpload(e) {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFile(file, 'favicon');
+    }
+  }
+
   async function loadCommunity() {
     const res = await fetch('/api/admin/community', { credentials: 'include' });
     if (res.ok) {
@@ -530,8 +583,23 @@ export default function AdminPanel() {
                       <p style={{ marginBottom: '15px', color: '#64748b' }}>
                         Upload your logo (appears on landing page, certificate, and emails)
                       </p>
+                      {/* Logo Upload */}
                       <div style={styles.formGroup}>
-                        <label style={styles.label}>Logo URL (or upload file)</label>
+                        <label style={styles.label}>Upload Logo</label>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={handleLogoUpload}
+                          disabled={loading}
+                          style={{ ...styles.input, padding: '8px' }}
+                        />
+                        <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
+                          📁 Upload PNG, JPG, or WEBP (max 5MB)
+                        </p>
+                      </div>
+
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>Or Enter Logo URL</label>
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <input
                             type="text"
@@ -541,14 +609,33 @@ export default function AdminPanel() {
                             style={{ ...styles.input, flex: 1 }}
                           />
                           <button style={styles.btnPrimary} onClick={saveSettings} disabled={loading}>
-                            {loading ? 'Saving...' : 'Update Logo'}
+                            {loading ? 'Saving...' : 'Save URL'}
                           </button>
                         </div>
+                        {settings.logoUrl && (
+                          <div style={{ marginTop: '10px' }}>
+                            <img src={settings.logoUrl} alt="Logo preview" style={{ maxWidth: '150px', maxHeight: '150px', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                          </div>
+                        )}
                       </div>
 
-                      {/* Favicon */}
+                      {/* Favicon Upload */}
                       <div style={styles.formGroup}>
-                        <label style={styles.label}>Favicon URL (appears in browser tab)</label>
+                        <label style={styles.label}>Upload Favicon (Browser Tab Icon)</label>
+                        <input
+                          type="file"
+                          accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+                          onChange={handleFaviconUpload}
+                          disabled={loading}
+                          style={{ ...styles.input, padding: '8px' }}
+                        />
+                        <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
+                          📁 Upload ICO or PNG (32x32px or 64x64px recommended, max 5MB)
+                        </p>
+                      </div>
+
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>Or Enter Favicon URL</label>
                         <input
                           type="text"
                           value={settings.faviconUrl}
@@ -557,8 +644,13 @@ export default function AdminPanel() {
                           style={styles.input}
                         />
                         <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
-                          ℹ️ Leave empty to use logo as favicon. Recommended: 32x32px or 64x64px PNG/ICO
+                          ℹ️ Leave empty to use logo as favicon
                         </p>
+                        {settings.faviconUrl && (
+                          <div style={{ marginTop: '10px' }}>
+                            <img src={settings.faviconUrl} alt="Favicon preview" style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0', borderRadius: '4px' }} />
+                          </div>
+                        )}
                       </div>
                     </div>
 
