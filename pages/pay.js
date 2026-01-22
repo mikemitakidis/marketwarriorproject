@@ -75,10 +75,41 @@ export default function PayPage({ userEmail }) {
     setError('');
 
     try {
+      // Detect user's currency from browser locale
+      let currency = 'usd';
+      try {
+        const locale = navigator.language || 'en-US';
+        const region = locale.split('-')[1]?.toUpperCase();
+
+        // Map regions to currencies
+        const currencyMap = {
+          'US': 'usd',
+          'GB': 'gbp',
+          'UK': 'gbp',
+          'EU': 'eur',
+          'DE': 'eur',
+          'FR': 'eur',
+          'IT': 'eur',
+          'ES': 'eur',
+          'NL': 'eur',
+          'BE': 'eur',
+          'AT': 'eur',
+          'AU': 'aud',
+          'CA': 'cad',
+          'NZ': 'nzd',
+        };
+
+        currency = currencyMap[region] || 'usd';
+        console.log(`Detected currency: ${currency} from locale: ${locale}`);
+      } catch (e) {
+        console.warn('Could not detect currency, using USD');
+      }
+
       const res = await fetch('/api/checkout/stripe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ currency }),
       });
 
       const data = await res.json();

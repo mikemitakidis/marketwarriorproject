@@ -205,7 +205,17 @@ export default function AdminPanel() {
 
       if (res.ok) {
         const data = await res.json();
-        alert('Settings saved successfully!' + (data.newPriceId ? `\nNew Stripe Price ID: ${data.newPriceId}` : ''));
+        let message = 'Settings saved successfully!';
+        if (data.pricesCreated > 0) {
+          message += `\n\n✓ Created ${data.pricesCreated} currency prices`;
+          if (data.newPriceIds) {
+            message += ':\n';
+            for (const [currency, priceId] of Object.entries(data.newPriceIds)) {
+              message += `  ${currency.toUpperCase()}: ${priceId}\n`;
+            }
+          }
+        }
+        alert(message);
         await loadSettings(); // Reload to get updated values
       } else {
         const error = await res.json();
