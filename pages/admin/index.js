@@ -228,6 +228,32 @@ export default function AdminPanel() {
     setLoading(false);
   }
 
+  async function clearProductCache() {
+    if (!confirm('Clear cached Stripe product ID?\n\nThis will force the system to re-discover "Market Warrior 30-Day Trading Challenge" from Stripe.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/clear-product-cache', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message + '\n\nNow click "Update Price" to re-discover the correct product.');
+      } else {
+        const error = await res.json();
+        alert('Error clearing cache: ' + (error.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Clear cache error:', err);
+      alert('Error clearing cache: ' + err.message);
+    }
+    setLoading(false);
+  }
+
   async function uploadFile(file, type) {
     if (!file) {
       alert('Please select a file');
@@ -583,6 +609,18 @@ export default function AdminPanel() {
                         />
                         <button style={styles.btnSuccess} onClick={saveSettings} disabled={loading}>
                           {loading ? 'Saving...' : 'Update Price'}
+                        </button>
+                      </div>
+                      <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e2e8f0' }}>
+                        <p style={{ fontSize: '0.875em', color: '#64748b', marginBottom: '8px' }}>
+                          ⚠️ If prices are being created on wrong product, clear cache:
+                        </p>
+                        <button
+                          style={{ ...styles.btnWarning, fontSize: '0.875em', padding: '6px 12px' }}
+                          onClick={clearProductCache}
+                          disabled={loading}
+                        >
+                          Clear Product Cache
                         </button>
                       </div>
                     </div>
@@ -1580,6 +1618,16 @@ const styles = {
   btnSuccess: {
     padding: '12px 30px',
     background: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '0.95em',
+  },
+  btnWarning: {
+    padding: '12px 30px',
+    background: '#f59e0b',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
