@@ -100,24 +100,77 @@ export default async function handler(req, res) {
           productId = productSetting?.value;
         }
 
-        // If still no product, create one
+        // If still no product, search for existing product by name before creating new one
         if (!productId) {
-          const product = await stripe.products.create({
-            name: siteName || 'Market Warrior 30-Day Challenge',
-            description: '30-day trading challenge with daily lessons and tasks',
-          });
-          productId = product.id;
+          // Search for existing "Market Warrior 30-Day Trading Challenge" product
+          const products = await stripe.products.list({ limit: 100, active: true });
+          const existingProduct = products.data.find(p =>
+            p.name === 'Market Warrior 30-Day Trading Challenge' ||
+            p.name.includes('Market Warrior') && p.name.includes('30-Day')
+          );
 
-          // Save product ID
-          await supabase.from('app_settings').upsert({
-            key: 'stripe_product_id',
-            value: productId,
-            updated_by: user.id,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'key' });
+          if (existingProduct) {
+            productId = existingProduct.id;
+            console.log(`Found existing product: ${existingProduct.name} (${productId})`);
+
+            // Save this product ID to database for future use
+            await supabase.from('app_settings').upsert({
+              key: 'stripe_product_id',
+              value: productId,
+              updated_by: user.id,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'key' });
+          } else {
+            // Only create new product if none exists
+            const product = await stripe.products.create({
+              name: 'Market Warrior 30-Day Trading Challenge',
+              description: '30-day trading challenge with daily lessons and tasks',
+            });
+            productId = product.id;
+            console.log(`Created new product: ${product.name} (${productId})`);
+
+            // Save product ID
+            await supabase.from('app_settings').upsert({
+              key: 'stripe_product_id',
+              value: productId,
+              updated_by: user.id,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'key' });
+          }
         }
 
-        // Create Stripe prices for all supported currencies
+        // Fetch current exchange rates from USD to other currencies
+        let exchangeRates = {
+          usd: 1.0,
+          eur: 0.92,  // Default fallback rates
+          gbp: 0.79,
+          aud: 1.52,
+          cad: 1.35,
+          nzd: 1.63,
+        };
+
+        try {
+          // Fetch live exchange rates from exchangerate-api.io (free, no API key needed)
+          const ratesResponse = await fetch('https://open.exchangerate-api.com/v6/latest/USD');
+          if (ratesResponse.ok) {
+            const ratesData = await ratesResponse.json();
+            if (ratesData.rates) {
+              exchangeRates = {
+                usd: 1.0,
+                eur: ratesData.rates.EUR || exchangeRates.eur,
+                gbp: ratesData.rates.GBP || exchangeRates.gbp,
+                aud: ratesData.rates.AUD || exchangeRates.aud,
+                cad: ratesData.rates.CAD || exchangeRates.cad,
+                nzd: ratesData.rates.NZD || exchangeRates.nzd,
+              };
+              console.log('Fetched live exchange rates:', exchangeRates);
+            }
+          }
+        } catch (err) {
+          console.warn('Could not fetch live exchange rates, using defaults:', err.message);
+        }
+
+        // Create Stripe prices for all supported currencies with proper conversion
         const currencies = [
           { code: 'usd', symbol: '$' },
           { code: 'eur', symbol: '€' },
@@ -127,19 +180,23 @@ export default async function handler(req, res) {
           { code: 'nzd', symbol: 'NZ$' },
         ];
 
-        const priceInCents = Math.round(parseFloat(challengePrice) * 100);
+        const usdPriceInCents = Math.round(parseFloat(challengePrice) * 100);
 
         for (const { code, symbol } of currencies) {
           try {
+            // Convert USD price to target currency
+            const convertedPrice = parseFloat(challengePrice) * exchangeRates[code];
+            const priceInCents = Math.round(convertedPrice * 100);
+
             const newPrice = await stripe.prices.create({
               product: productId,
               unit_amount: priceInCents,
               currency: code,
-              nickname: `Challenge Price - ${symbol}${challengePrice} ${code.toUpperCase()}`,
+              nickname: `Challenge Price - ${symbol}${convertedPrice.toFixed(2)} ${code.toUpperCase()}`,
             });
 
             newPriceIds[code] = newPrice.id;
-            console.log(`Created Stripe price for ${code.toUpperCase()}: ${newPrice.id} (${symbol}${challengePrice})`);
+            console.log(`Created Stripe price for ${code.toUpperCase()}: ${newPrice.id} (${symbol}${convertedPrice.toFixed(2)} = $${challengePrice} USD)`);
           } catch (err) {
             console.error(`Failed to create price for ${code}:`, err.message);
             // Continue with other currencies even if one fails

@@ -499,15 +499,30 @@
                     // Get promo code from URL if present
                     const promoCode = urlParams.get('promo') || '';
                     const refCode = urlParams.get('ref') || '';
-                    
+
+                    // Detect user's currency from browser locale
+                    let currency = 'usd';
+                    try {
+                        const locale = navigator.language || 'en-US';
+                        const region = locale.split('-')[1]?.toUpperCase();
+                        const currencyMap = {
+                            'US': 'usd', 'GB': 'gbp', 'UK': 'gbp', 'EU': 'eur',
+                            'DE': 'eur', 'FR': 'eur', 'IT': 'eur', 'ES': 'eur',
+                            'NL': 'eur', 'BE': 'eur', 'AT': 'eur', 'AU': 'aud',
+                            'CA': 'cad', 'NZ': 'nzd'
+                        };
+                        currency = currencyMap[region] || 'usd';
+                    } catch (e) {}
+
                     try {
                         const response = await fetch('/api/checkout/stripe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
+                            body: JSON.stringify({
                                 email: email,
                                 promoCode: promoCode,
-                                referralCode: refCode
+                                referralCode: refCode,
+                                currency: currency
                             })
                         });
                         const checkoutData = await response.json();
@@ -685,15 +700,30 @@
             // Get promo code from URL if present
             const promoCode = urlParams.get('promo') || '';
             const refCode = urlParams.get('ref') || '';
-            
+
+            // Detect user's currency from browser locale
+            let currency = 'usd';
+            try {
+                const locale = navigator.language || 'en-US';
+                const region = locale.split('-')[1]?.toUpperCase();
+                const currencyMap = {
+                    'US': 'usd', 'GB': 'gbp', 'UK': 'gbp', 'EU': 'eur',
+                    'DE': 'eur', 'FR': 'eur', 'IT': 'eur', 'ES': 'eur',
+                    'NL': 'eur', 'BE': 'eur', 'AT': 'eur', 'AU': 'aud',
+                    'CA': 'cad', 'NZ': 'nzd'
+                };
+                currency = currencyMap[region] || 'usd';
+            } catch (e) {}
+
             try {
                 const response = await fetch('/api/checkout/stripe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         email: email,
                         promoCode: promoCode,
-                        referralCode: refCode
+                        referralCode: refCode,
+                        currency: currency
                     })
                 });
                 const data = await response.json();
