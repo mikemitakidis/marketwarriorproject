@@ -47,6 +47,7 @@ export default async function handler(req, res) {
         supportEmail: settings.support_email || 'support@marketwarrior.club',
         accessDuration: settings.access_duration || 120,
         logoUrl: settings.logo_url || '',
+        faviconUrl: settings.favicon_url || '',
       });
     }
 
@@ -57,6 +58,7 @@ export default async function handler(req, res) {
         supportEmail,
         accessDuration,
         logoUrl,
+        faviconUrl,
       } = req.body;
 
       // Validate inputs
@@ -174,6 +176,15 @@ export default async function handler(req, res) {
         settingsToUpdate.push({
           key: 'logo_url',
           value: logoUrl,
+          updated_by: user.id,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      if (faviconUrl !== undefined) {
+        settingsToUpdate.push({
+          key: 'favicon_url',
+          value: faviconUrl,
           updated_by: user.id,
           updated_at: new Date().toISOString(),
         });

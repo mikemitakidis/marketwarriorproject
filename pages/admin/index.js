@@ -46,6 +46,7 @@ export default function AdminPanel() {
     accessDuration: 120,
     maxDevices: 2,
     logoUrl: '',
+    faviconUrl: '',
   });
 
   // Promo codes state
@@ -180,6 +181,7 @@ export default function AdminPanel() {
         accessDuration: data.accessDuration || 120,
         maxDevices: 2, // Deprecated - keeping for UI compatibility but not enforced
         logoUrl: data.logoUrl || '',
+        faviconUrl: data.faviconUrl || '',
       });
     }
   }
@@ -197,6 +199,7 @@ export default function AdminPanel() {
           supportEmail: settings.supportEmail,
           accessDuration: settings.accessDuration,
           logoUrl: settings.logoUrl,
+          faviconUrl: settings.faviconUrl,
         }),
       });
 
@@ -541,6 +544,21 @@ export default function AdminPanel() {
                             {loading ? 'Saving...' : 'Update Logo'}
                           </button>
                         </div>
+                      </div>
+
+                      {/* Favicon */}
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>Favicon URL (appears in browser tab)</label>
+                        <input
+                          type="text"
+                          value={settings.faviconUrl}
+                          onChange={(e) => setSettings({ ...settings, faviconUrl: e.target.value })}
+                          placeholder="https://example.com/favicon.png (defaults to logo)"
+                          style={styles.input}
+                        />
+                        <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
+                          ℹ️ Leave empty to use logo as favicon. Recommended: 32x32px or 64x64px PNG/ICO
+                        </p>
                       </div>
                     </div>
 

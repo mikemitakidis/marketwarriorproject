@@ -1,21 +1,49 @@
 import fs from 'fs';
 import path from 'path';
+import { getServiceSupabase } from '../lib/serverAuth';
 
 /**
  * Landing page.
  *
- * This page renders the canonical index template provided in
- * `templates/index.html`.  The content is loaded at build time using
- * getStaticProps and injected into the DOM via
- * `dangerouslySetInnerHTML` to preserve the exact markup and
- * structure defined by the designer.  Any interactive functionality
- * (e.g. referral preservation, journal CTA) should be implemented
- * within the template using inline scripts or replaced with React
- * handlers as the project evolves.
+ * Renders the index template with dynamic price, logo, and site name
+ * fetched from app_settings table. Updates automatically when admin
+ * changes settings.
  */
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const filePath = path.join(process.cwd(), 'templates', 'index.html');
-  const html = fs.readFileSync(filePath, 'utf8');
+  let html = fs.readFileSync(filePath, 'utf8');
+
+  // Fetch settings from database
+  const supabase = getServiceSupabase();
+  const { data: settingsData } = await supabase
+    .from('app_settings')
+    .select('key, value');
+
+  // Convert to object
+  const settings = {};
+  (settingsData || []).forEach(row => {
+    settings[row.key] = row.value;
+  });
+
+  // Get values with defaults
+  const price = settings.challenge_price || '39.99';
+  const logoUrl = settings.logo_url || '/logo.png';
+  const siteName = settings.site_name || 'Market Warrior';
+  const faviconUrl = settings.favicon_url || logoUrl || '/logo.png';
+
+  // Replace dynamic values in HTML
+  // Replace all price occurrences
+  html = html.replace(/\$39\.99/g, `$${price}`);
+  html = html.replace(/Start Your Journey - \$[\d.]+/g, `Start Your Journey - $${price}`);
+
+  // Replace logo URL
+  html = html.replace(/src="\/logo\.png"/g, `src="${logoUrl}"`);
+  html = html.replace(/href="\/logo\.png"/g, `href="${faviconUrl}"`);
+
+  // Replace site name in title and headers
+  html = html.replace(/Market Warrior - 30-Day Trading Challenge/g, `${siteName} - 30-Day Trading Challenge`);
+  html = html.replace(/<div class="logo-text">Market Warrior<\/div>/g, `<div class="logo-text">${siteName}</div>`);
+
   return { props: { html } };
 }
 
