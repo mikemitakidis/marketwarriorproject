@@ -46,6 +46,7 @@ export default function AdminPanel() {
     accessDuration: 120,
     maxDevices: 2,
     logoUrl: '',
+    faviconUrl: '',
   });
 
   // Promo codes state
@@ -120,6 +121,9 @@ export default function AdminPanel() {
         case 'content':
           await loadContent();
           break;
+        case 'settings':
+          await loadSettings();
+          break;
         case 'community':
           await loadCommunity();
           break;
@@ -164,6 +168,54 @@ export default function AdminPanel() {
       const data = await res.json();
       setDays(data.days || []);
     }
+  }
+
+  async function loadSettings() {
+    const res = await fetch('/api/admin/settings/general', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setSettings({
+        challengePrice: data.challengePrice || '39.99',
+        siteName: data.siteName || 'Market Warrior Challenge',
+        supportEmail: data.supportEmail || 'support@marketwarrior.club',
+        accessDuration: data.accessDuration || 120,
+        maxDevices: 2, // Deprecated - keeping for UI compatibility but not enforced
+        logoUrl: data.logoUrl || '',
+        faviconUrl: data.faviconUrl || '',
+      });
+    }
+  }
+
+  async function saveSettings() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/settings/general', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          challengePrice: settings.challengePrice,
+          siteName: settings.siteName,
+          supportEmail: settings.supportEmail,
+          accessDuration: settings.accessDuration,
+          logoUrl: settings.logoUrl,
+          faviconUrl: settings.faviconUrl,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert('Settings saved successfully!' + (data.newPriceId ? `\nNew Stripe Price ID: ${data.newPriceId}` : ''));
+        await loadSettings(); // Reload to get updated values
+      } else {
+        const error = await res.json();
+        alert('Error saving settings: ' + (error.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Save settings error:', err);
+      alert('Error saving settings: ' + err.message);
+    }
+    setLoading(false);
   }
 
   async function loadCommunity() {
@@ -466,8 +518,8 @@ export default function AdminPanel() {
                           style={styles.priceInput}
                           step="0.01"
                         />
-                        <button style={styles.btnSuccess} onClick={() => alert('Price updated!')}>
-                          Update Price
+                        <button style={styles.btnSuccess} onClick={saveSettings} disabled={loading}>
+                          {loading ? 'Saving...' : 'Update Price'}
                         </button>
                       </div>
                     </div>
@@ -488,8 +540,25 @@ export default function AdminPanel() {
                             placeholder="https://example.com/logo.png"
                             style={{ ...styles.input, flex: 1 }}
                           />
-                          <button style={styles.btnPrimary}>Update Logo</button>
+                          <button style={styles.btnPrimary} onClick={saveSettings} disabled={loading}>
+                            {loading ? 'Saving...' : 'Update Logo'}
+                          </button>
                         </div>
+                      </div>
+
+                      {/* Favicon */}
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>Favicon URL (appears in browser tab)</label>
+                        <input
+                          type="text"
+                          value={settings.faviconUrl}
+                          onChange={(e) => setSettings({ ...settings, faviconUrl: e.target.value })}
+                          placeholder="https://example.com/favicon.png (defaults to logo)"
+                          style={styles.input}
+                        />
+                        <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
+                          ℹ️ Leave empty to use logo as favicon. Recommended: 32x32px or 64x64px PNG/ICO
+                        </p>
                       </div>
                     </div>
 
@@ -524,17 +593,23 @@ export default function AdminPanel() {
                       />
                     </div>
 
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Maximum Devices Per User</label>
+                    {/* Device restriction removed for better UX - users can access from any device */}
+                    <div style={{ ...styles.formGroup, opacity: 0.5, pointerEvents: 'none' }}>
+                      <label style={styles.label}>Maximum Devices Per User (Deprecated)</label>
                       <input
-                        type="number"
-                        value={settings.maxDevices}
-                        onChange={(e) => setSettings({ ...settings, maxDevices: e.target.value })}
+                        type="text"
+                        value="Unlimited - No restrictions"
+                        disabled
                         style={styles.input}
                       />
+                      <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
+                        ℹ️ Device restrictions have been removed for better user experience
+                      </p>
                     </div>
 
-                    <button style={styles.btnPrimary}>Save All Settings</button>
+                    <button style={styles.btnPrimary} onClick={saveSettings} disabled={loading}>
+                      {loading ? 'Saving...' : 'Save All Settings'}
+                    </button>
                   </div>
                 </div>
               )}
