@@ -43,6 +43,12 @@ export default async function handler(req, res) {
       return res.status(200).json({
         challengePrice: settings.challenge_price || '39.99',
         stripePriceId: settings.stripe_price_id || '',
+        stripePriceIdUsd: settings.stripe_price_id_usd || '',
+        stripePriceIdEur: settings.stripe_price_id_eur || '',
+        stripePriceIdGbp: settings.stripe_price_id_gbp || '',
+        stripePriceIdAud: settings.stripe_price_id_aud || '',
+        stripePriceIdCad: settings.stripe_price_id_cad || '',
+        stripePriceIdNzd: settings.stripe_price_id_nzd || '',
         siteName: settings.site_name || 'Market Warrior Challenge',
         supportEmail: settings.support_email || 'support@marketwarrior.club',
         accessDuration: settings.access_duration || 120,
@@ -71,7 +77,7 @@ export default async function handler(req, res) {
       }
 
       // Initialize Stripe if price is being updated
-      let newPriceId = null;
+      let newPriceIds = {};
       if (challengePrice) {
         const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
         if (!stripeSecretKey) {
@@ -89,7 +95,7 @@ export default async function handler(req, res) {
             .from('app_settings')
             .select('value')
             .eq('key', 'stripe_product_id')
-            .single();
+            .maybeSingle();
 
           productId = productSetting?.value;
         }
@@ -111,17 +117,34 @@ export default async function handler(req, res) {
           }, { onConflict: 'key' });
         }
 
-        // Create new Stripe price
-        const priceInCents = Math.round(parseFloat(challengePrice) * 100);
-        const newPrice = await stripe.prices.create({
-          product: productId,
-          unit_amount: priceInCents,
-          currency: 'usd',
-          nickname: `Challenge Price - $${challengePrice}`,
-        });
+        // Create Stripe prices for all supported currencies
+        const currencies = [
+          { code: 'usd', symbol: '$' },
+          { code: 'eur', symbol: '€' },
+          { code: 'gbp', symbol: '£' },
+          { code: 'aud', symbol: 'A$' },
+          { code: 'cad', symbol: 'C$' },
+          { code: 'nzd', symbol: 'NZ$' },
+        ];
 
-        newPriceId = newPrice.id;
-        console.log(`Created new Stripe price: ${newPriceId} for $${challengePrice}`);
+        const priceInCents = Math.round(parseFloat(challengePrice) * 100);
+
+        for (const { code, symbol } of currencies) {
+          try {
+            const newPrice = await stripe.prices.create({
+              product: productId,
+              unit_amount: priceInCents,
+              currency: code,
+              nickname: `Challenge Price - ${symbol}${challengePrice} ${code.toUpperCase()}`,
+            });
+
+            newPriceIds[code] = newPrice.id;
+            console.log(`Created Stripe price for ${code.toUpperCase()}: ${newPrice.id} (${symbol}${challengePrice})`);
+          } catch (err) {
+            console.error(`Failed to create price for ${code}:`, err.message);
+            // Continue with other currencies even if one fails
+          }
+        }
       }
 
       // Prepare settings to update
@@ -136,13 +159,26 @@ export default async function handler(req, res) {
         });
       }
 
-      if (newPriceId) {
-        settingsToUpdate.push({
-          key: 'stripe_price_id',
-          value: newPriceId,
-          updated_by: user.id,
-          updated_at: new Date().toISOString(),
-        });
+      // Save all currency price IDs
+      if (Object.keys(newPriceIds).length > 0) {
+        for (const [currency, priceId] of Object.entries(newPriceIds)) {
+          settingsToUpdate.push({
+            key: `stripe_price_id_${currency}`,
+            value: priceId,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+          });
+        }
+
+        // Also save USD price ID as legacy stripe_price_id for backward compatibility
+        if (newPriceIds.usd) {
+          settingsToUpdate.push({
+            key: 'stripe_price_id',
+            value: newPriceIds.usd,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+          });
+        }
       }
 
       if (siteName !== undefined) {
@@ -205,7 +241,8 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: 'Settings updated successfully',
-        newPriceId,
+        newPriceIds,
+        pricesCreated: Object.keys(newPriceIds).length,
       });
     }
 
