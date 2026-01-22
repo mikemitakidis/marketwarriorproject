@@ -100,30 +100,14 @@ export default async function handler(req, res) {
           productId = productSetting?.value;
         }
 
-        // If still no product, search for existing "Market Warrior 30-Day Trading Challenge" ONLY
+        // If still no product ID, error out
         if (!productId) {
-          const products = await stripe.products.list({ limit: 100, active: true });
-          const existingProduct = products.data.find(p =>
-            p.name === 'Market Warrior 30-Day Trading Challenge'
-          );
-
-          if (!existingProduct) {
-            return res.status(500).json({
-              error: 'Product "Market Warrior 30-Day Trading Challenge" not found in Stripe. Please set STRIPE_PRODUCT_ID in environment variables or contact admin.'
-            });
-          }
-
-          productId = existingProduct.id;
-          console.log(`Found existing product: ${existingProduct.name} (${productId})`);
-
-          // Save this product ID to database for future use
-          await supabase.from('app_settings').upsert({
-            key: 'stripe_product_id',
-            value: productId,
-            updated_by: user.id,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'key' });
+          return res.status(500).json({
+            error: 'Stripe product ID not configured. Please run migration: sql/migrations/2026-01-22_set_correct_stripe_product_id.sql'
+          });
         }
+
+        console.log(`Using Stripe product: ${productId}`);
 
         // Conversion rates from USD to other currencies
         // NOTE: These are approximate rates. Stripe will handle the actual payment processing.
