@@ -100,43 +100,29 @@ export default async function handler(req, res) {
           productId = productSetting?.value;
         }
 
-        // If still no product, search for existing product by name before creating new one
+        // If still no product, search for existing "Market Warrior 30-Day Trading Challenge" ONLY
         if (!productId) {
-          // Search for existing "Market Warrior 30-Day Trading Challenge" product
           const products = await stripe.products.list({ limit: 100, active: true });
           const existingProduct = products.data.find(p =>
-            p.name === 'Market Warrior 30-Day Trading Challenge' ||
-            p.name.includes('Market Warrior') && p.name.includes('30-Day')
+            p.name === 'Market Warrior 30-Day Trading Challenge'
           );
 
-          if (existingProduct) {
-            productId = existingProduct.id;
-            console.log(`Found existing product: ${existingProduct.name} (${productId})`);
-
-            // Save this product ID to database for future use
-            await supabase.from('app_settings').upsert({
-              key: 'stripe_product_id',
-              value: productId,
-              updated_by: user.id,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'key' });
-          } else {
-            // Only create new product if none exists
-            const product = await stripe.products.create({
-              name: 'Market Warrior 30-Day Trading Challenge',
-              description: '30-day trading challenge with daily lessons and tasks',
+          if (!existingProduct) {
+            return res.status(500).json({
+              error: 'Product "Market Warrior 30-Day Trading Challenge" not found in Stripe. Please set STRIPE_PRODUCT_ID in environment variables or contact admin.'
             });
-            productId = product.id;
-            console.log(`Created new product: ${product.name} (${productId})`);
-
-            // Save product ID
-            await supabase.from('app_settings').upsert({
-              key: 'stripe_product_id',
-              value: productId,
-              updated_by: user.id,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'key' });
           }
+
+          productId = existingProduct.id;
+          console.log(`Found existing product: ${existingProduct.name} (${productId})`);
+
+          // Save this product ID to database for future use
+          await supabase.from('app_settings').upsert({
+            key: 'stripe_product_id',
+            value: productId,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'key' });
         }
 
         // Conversion rates from USD to other currencies
