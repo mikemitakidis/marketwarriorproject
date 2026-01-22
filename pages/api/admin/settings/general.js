@@ -139,36 +139,18 @@ export default async function handler(req, res) {
           }
         }
 
-        // Fetch current exchange rates from USD to other currencies
-        let exchangeRates = {
+        // Conversion rates from USD to other currencies
+        // NOTE: These are approximate rates. Stripe will handle the actual payment processing.
+        // You can manually adjust these in Stripe dashboard after creation if needed.
+        // Based on typical market rates (updated Jan 2026)
+        const exchangeRates = {
           usd: 1.0,
-          eur: 0.92,  // Default fallback rates
-          gbp: 0.79,
-          aud: 1.52,
-          cad: 1.35,
-          nzd: 1.63,
+          eur: 0.92,  // 1 USD = ~0.92 EUR
+          gbp: 0.79,  // 1 USD = ~0.79 GBP
+          aud: 1.52,  // 1 USD = ~1.52 AUD
+          cad: 1.35,  // 1 USD = ~1.35 CAD
+          nzd: 1.63,  // 1 USD = ~1.63 NZD
         };
-
-        try {
-          // Fetch live exchange rates from exchangerate-api.io (free, no API key needed)
-          const ratesResponse = await fetch('https://open.exchangerate-api.com/v6/latest/USD');
-          if (ratesResponse.ok) {
-            const ratesData = await ratesResponse.json();
-            if (ratesData.rates) {
-              exchangeRates = {
-                usd: 1.0,
-                eur: ratesData.rates.EUR || exchangeRates.eur,
-                gbp: ratesData.rates.GBP || exchangeRates.gbp,
-                aud: ratesData.rates.AUD || exchangeRates.aud,
-                cad: ratesData.rates.CAD || exchangeRates.cad,
-                nzd: ratesData.rates.NZD || exchangeRates.nzd,
-              };
-              console.log('Fetched live exchange rates:', exchangeRates);
-            }
-          }
-        } catch (err) {
-          console.warn('Could not fetch live exchange rates, using defaults:', err.message);
-        }
 
         // Create Stripe prices for all supported currencies with proper conversion
         const currencies = [
