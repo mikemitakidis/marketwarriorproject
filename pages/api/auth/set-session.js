@@ -1,8 +1,13 @@
 import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Apply rate limiting for auth operations
+  const limited = await applyRateLimit(rateLimiters.auth, req, res, getIdentifier);
+  if (limited) return;
   try {
     const { access_token, refresh_token, next } = req.body || {};
     if (!access_token || !refresh_token) return res.status(400).json({ error: 'Missing tokens' });

@@ -1,5 +1,6 @@
 import { getServiceSupabase } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * Keep-alive cron job to prevent Supabase free tier from pausing
@@ -9,6 +10,10 @@ import logger from '../../../lib/logger';
  * Should be called every 6 days by a cron service (Vercel Cron, GitHub Actions, etc.)
  */
 export default async function handler(req, res) {
+  // Apply rate limiting for general API access
+  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  if (limited) return;
+
   // Verify this is a cron request (check authorization header)
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;

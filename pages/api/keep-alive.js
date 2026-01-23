@@ -1,5 +1,6 @@
 import { getServiceSupabase } from '../../lib/serverAuth';
 import logger from '../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../lib/ratelimit';
 
 /**
  * API route: /api/keep-alive
@@ -16,6 +17,10 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Apply rate limiting for general API access
+  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  if (limited) return;
 
   // Verify token
   const { token } = req.query;

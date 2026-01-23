@@ -1,5 +1,6 @@
 import { getServiceSupabase } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * Development-only API: Grant access to any user (bypass payment)
@@ -19,6 +20,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Apply rate limiting for admin operations
+  const limited = await applyRateLimit(rateLimiters.admin, req, res, getIdentifier);
+  if (limited) return;
 
   try {
     const { email } = req.body;

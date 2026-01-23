@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * API route: /api/template/[day]
@@ -10,6 +11,10 @@ import logger from '../../../lib/logger';
  * so the template can communicate quiz/task completion to the parent app.
  */
 export default async function handler(req, res) {
+  // Apply rate limiting for general API access
+  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  if (limited) return;
+
   const { day } = req.query;
   const dayNum = parseInt(day, 10);
 

@@ -1,4 +1,5 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * API route: /api/day/[day]
@@ -7,6 +8,10 @@ import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../
  * Ensures user is authenticated, paid, and has access to the day.
  */
 export default async function handler(req, res) {
+  // Apply rate limiting for general API access
+  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  if (limited) return;
+
   const { query: { day } } = req;
   const dayNum = parseInt(day, 10);
 
