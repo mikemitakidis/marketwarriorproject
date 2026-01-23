@@ -7,7 +7,7 @@
 #### 1. CRITICAL - Stored XSS Vulnerability ✅
 **Problem:** HTML content rendered with `dangerouslySetInnerHTML` without sanitization
 **Impact:** Malicious JavaScript could execute for ALL users viewing lessons
-**Fix:** Added DOMPurify sanitization + Content Security Policy
+**Fix:** Added DOMPurify sanitization in preview and student-facing display (NOT in editor to prevent cursor jumping)
 
 #### 2. MEDIUM - Delete Question Race Condition ✅
 **Problem:** DELETE API call not awaited, UI/DB can desync
@@ -28,6 +28,33 @@
 #### 6. LOW - Unsaved Changes Warning ✅
 **Problem:** User can navigate away and lose work
 **Fix:** Added beforeunload warning when content is modified
+
+### 🔧 ADDITIONAL FUNCTIONAL FIXES (Second Round)
+
+#### 7. CRITICAL - Cursor Jumps During Editing ✅
+**Problem:** Sanitization running on every keystroke causes cursor to reset to start
+**Impact:** Editor unusable - typing impossible as cursor jumps after each character
+**Fix:** Removed sanitization from contentEditable field, only sanitize in preview and display
+
+#### 8. MEDIUM - Inconsistent Quiz Default Options ✅
+**Problem:** New questions default to 4 options but UI designed for 2-6 dynamic
+**Impact:** UI shows 4 empty fields when adding question, inconsistent with design
+**Fix:** Changed default to 2 options to match dynamic options feature
+
+#### 9. MEDIUM - Empty Questions Remain in UI After Save ✅
+**Problem:** Questions with empty text are skipped during save but remain visible in editor
+**Impact:** Confusing UX - user sees "0 saved" but empty question cards still there
+**Fix:** Auto-remove empty questions from UI before save
+
+#### 10. MEDIUM - Options Filtered Without Validation ✅
+**Problem:** Empty options removed during save, but no minimum validation or correct_option adjustment
+**Impact:** Can save quiz with 0-1 options, or correct_option index pointing to non-existent option
+**Fix:** Validate minimum 2 options, adjust correct_option index if out of bounds after filtering
+
+#### 11. LOW - Full Content Reload After Quiz Save ✅
+**Problem:** Saving quiz reloads all content (title, video, HTML, task), losing unsaved changes
+**Impact:** If user edited content but only saved quiz, content changes are lost
+**Fix:** Only reload quiz questions after save, preserve content state
 
 ---
 
@@ -246,19 +273,27 @@ After deploying fixes:
 
 ---
 
-## Security Improvements Summary
+## Security & Functional Improvements Summary
 
 | Issue | Severity | Status | Fix |
 |-------|----------|--------|-----|
-| Stored XSS | CRITICAL | ✅ FIXED | DOMPurify sanitization |
+| **Security Fixes** |
+| Stored XSS | CRITICAL | ✅ FIXED | DOMPurify sanitization (preview/display only) |
 | Delete Race Condition | HIGH | ✅ FIXED | Async/await with error handling |
 | Quiz Save Errors | HIGH | ✅ FIXED | Individual result tracking |
-| Quiz Options Bug | MEDIUM | ✅ FIXED | Dynamic options support |
-| Input Validation | LOW | ✅ FIXED | Day range validation |
+| **Functional Fixes** |
+| Cursor Jumps During Editing | CRITICAL | ✅ FIXED | Removed sanitization from editor |
+| Quiz Options Bug | MEDIUM | ✅ FIXED | Dynamic options (2-6 supported) |
+| Quiz Default Options | MEDIUM | ✅ FIXED | Changed default from 4 to 2 |
+| Empty Questions in UI | MEDIUM | ✅ FIXED | Auto-remove before save |
+| Options Validation | MEDIUM | ✅ FIXED | Min 2 options + correct_option adjustment |
+| Full Content Reload | LOW | ✅ FIXED | Only reload quiz, not content |
+| Input Validation | LOW | ✅ FIXED | Day range validation (1-30) |
 | Unsaved Changes | LOW | ✅ FIXED | beforeunload warning |
+| **Future Improvements** |
 | CSRF Protection | MEDIUM | ⏳ TODO | Need middleware |
 | execCommand Deprecated | MEDIUM | ⏳ TODO | Need editor replacement |
 
 ---
 
-All critical security vulnerabilities are now fixed. The remaining TODO items are non-critical improvements that can be addressed in future updates.
+All critical security and functional issues are now fixed. The editor provides full control during editing and only sanitizes output in preview/display mode. The remaining TODO items are non-critical improvements that can be addressed in future updates.
