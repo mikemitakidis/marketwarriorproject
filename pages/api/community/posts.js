@@ -11,13 +11,25 @@ import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/rateli
 export default async function handler(req, res) {
   // Apply rate limiting: general for GET, submission for POST
   const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
-  const limited = await applyRateLimit(limiter, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, limiter, identifier);
   if (limited) return;
   const supabase = getServiceSupabase();
 
   if (req.method === 'GET') {
     try {
-      const { data: threads, error } = await supabase
+      // Require authentication and payment to view community posts
+      const user = await getUserFromRequest(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const gate = await getGateStatus(user.id);
+      if (!gate.hasPaid) {
+        return res.status(403).json({ error: 'Payment required to access community' });
+      }
+
+      const { data: threads, error} = await supabase
         .from('forum_threads')
         .select(`
           id,

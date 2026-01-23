@@ -94,6 +94,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Invalid price configuration' });
     }
 
+    // Use trusted domain for redirect URLs (not client-controlled origin header)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -105,8 +110,8 @@ export default async function handler(req, res) {
       ],
       mode: 'payment',
       allow_promotion_codes: true,
-      success_url: `${req.headers.origin}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin}/`,
+      success_url: `${appUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/`,
       metadata: {
         userId,
         selectedCurrency,

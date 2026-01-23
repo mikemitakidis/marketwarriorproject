@@ -22,7 +22,8 @@ export default async function handler(req, res) {
   }
 
   // Apply rate limiting for admin operations
-  const limited = await applyRateLimit(rateLimiters.admin, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, rateLimiters.admin, identifier);
   if (limited) return;
 
   try {

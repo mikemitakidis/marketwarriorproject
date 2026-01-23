@@ -10,7 +10,8 @@ import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/rateli
  */
 export default async function handler(req, res) {
   // Apply rate limiting for general API access
-  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, rateLimiters.general, identifier);
   if (limited) return;
 
   try {
