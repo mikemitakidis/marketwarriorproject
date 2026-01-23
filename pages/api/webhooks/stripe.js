@@ -65,28 +65,31 @@ export default async function handler(req, res) {
         expand: ['line_items'],
       });
 
-      // Validate the price ID (optional - log but don't block)
+      // Validate the price ID - ENFORCE (reject mismatched prices)
       const lineItems = checkout.line_items?.data || [];
-      let expectedPriceId = priceId;
-
       const supabase = getServiceSupabase();
 
-      // Try to get price ID from app_settings
-      try {
-        const { data: setting } = await supabase
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'stripe_price_id')
-          .single();
-        if (setting?.value) expectedPriceId = setting.value;
-      } catch (e) {
-        // Use env var if can't fetch from DB
-      }
+      // Fetch ALL valid price IDs (USD, EUR, GBP, etc.) from app_settings
+      const { data: priceSettings, error: priceErr } = await supabase
+        .from('app_settings')
+        .select('key, value')
+        .like('key', 'stripe_price_id%');
 
-      // Log validation but don't block payment processing
-      const validPurchase = lineItems.length >= 1 && lineItems.some(item => item.price?.id === expectedPriceId);
-      if (!validPurchase && expectedPriceId) {
-        logger.warn('Price ID mismatch - processing anyway:', lineItems.map(i => i.price?.id));
+      const validPriceIds = new Set();
+      if (priceSettings) {
+        priceSettings.forEach(s => validPriceIds.add(s.value));
+      }
+      // Also add env var price ID as fallback
+      if (priceId) validPriceIds.add(priceId);
+
+      // Check if ANY line item matches a valid price ID
+      // (Allow promo codes - they don't change the price ID)
+      const hasCoupon = checkout.total_details?.amount_discount > 0;
+      const validPurchase = lineItems.length >= 1 && lineItems.some(item => validPriceIds.has(item.price?.id));
+
+      if (!validPurchase && !hasCoupon) {
+        logger.error('REJECTED: Invalid price ID in webhook:', lineItems.map(i => i.price?.id));
+        return res.status(400).json({ error: 'Invalid product purchased' });
       }
 
       const userId = checkout.metadata?.userId;
@@ -117,8 +120,9 @@ export default async function handler(req, res) {
         }
       }
 
-      // 1. Record payment in payments table (using CORRECT column names from schema!)
-      const { error: paymentError } = await supabase.from('payments').insert({
+      // 1. Record payment in payments table - IDEMPOTENT (use upsert to handle retries)
+      // Use stripe_session_id as unique key to prevent duplicate payments
+      const { error: paymentError } = await supabase.from('payments').upsert({
         user_id: userId,
         stripe_session_id: checkout.id,
         payment_intent_id: paymentIntentId,
@@ -128,6 +132,9 @@ export default async function handler(req, res) {
         status: 'succeeded',
         paid_at: now,
         raw: checkout,
+      }, {
+        onConflict: 'stripe_session_id', // Prevents duplicate payment records on webhook retry
+        ignoreDuplicates: false, // Update if exists
       });
 
       if (paymentError) {

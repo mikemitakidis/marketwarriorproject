@@ -14,7 +14,8 @@ export default async function handler(req, res) {
   }
 
   // Apply rate limiting for comment submissions
-  const limited = await applyRateLimit(rateLimiters.submission, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, rateLimiters.submission, identifier);
   if (limited) return;
 
   try {

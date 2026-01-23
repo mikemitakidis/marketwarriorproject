@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -39,6 +39,18 @@ export default async function handler(req, res) {
 
     const userId = user.id;
     const supabase = getServiceSupabase();
+
+    // SECURITY: Verify payment status
+    const gate = await getGateStatus(userId);
+    if (!gate.hasPaid) {
+      return res.status(403).json({ error: 'Payment required to take quizzes' });
+    }
+
+    // SECURITY: Verify day is unlocked
+    const challengeStatus = await getUserChallengeStatus(userId);
+    if (!challengeStatus.unlockedDays.includes(day)) {
+      return res.status(403).json({ error: `Day ${day} is not unlocked yet` });
+    }
 
     // SECURITY: Always fetch quiz questions and calculate score server-side
     // Fetch quiz questions with correct answers for the day

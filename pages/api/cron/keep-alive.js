@@ -11,14 +11,21 @@ import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/rateli
  */
 export default async function handler(req, res) {
   // Apply rate limiting for general API access
-  const limited = await applyRateLimit(rateLimiters.general, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, rateLimiters.general, identifier);
   if (limited) return;
 
-  // Verify this is a cron request (check authorization header)
+  // SECURITY: ALWAYS require CRON_SECRET (fail hard if missing)
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    logger.error('CRON_SECRET not configured - endpoint disabled');
+    return res.status(500).json({ error: 'Cron endpoint not configured' });
+  }
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    logger.warn('Unauthorized cron access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

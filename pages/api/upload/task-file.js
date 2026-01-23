@@ -136,14 +136,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to upload file: ' + uploadError.message });
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    // Generate signed URL (private, expires in 7 days)
+    // This ensures user submissions are not publicly accessible
+    const { data: signedData, error: signError } = await supabase.storage
       .from('user-uploads')
-      .getPublicUrl(storagePath);
+      .createSignedUrl(storagePath, 60 * 60 * 24 * 7); // 7 days expiry
+
+    if (signError) {
+      logger.error('Error creating signed URL:', signError);
+      return res.status(500).json({ error: 'Failed to create file URL' });
+    }
 
     return res.status(200).json({
       success: true,
-      url: urlData.publicUrl,
+      url: signedData.signedUrl,
       path: storagePath,
       fileName: fileName,
     });
