@@ -31,10 +31,15 @@
 
 ### 🔧 ADDITIONAL FUNCTIONAL FIXES (Second Round)
 
-#### 7. CRITICAL - Cursor Jumps During Editing ✅
-**Problem:** Sanitization running on every keystroke causes cursor to reset to start
-**Impact:** Editor unusable - typing impossible as cursor jumps after each character
-**Fix:** Removed sanitization from contentEditable field, only sanitize in preview and display
+#### 7. CRITICAL - Cursor Jumps to Beginning During Editing ✅
+**Problem:** `dangerouslySetInnerHTML` on contentEditable caused full re-render on every keystroke
+**Impact:** Editor completely unusable - cursor resets to start after typing each character
+**Root Cause:** User types → onInput fires → setState → React re-renders → dangerouslySetInnerHTML replaces entire innerHTML → cursor position lost
+**Fix:**
+- Removed `dangerouslySetInnerHTML` from contentEditable div
+- Added `suppressContentEditableWarning` to prevent React warnings
+- Use `useEffect` with `isTypingRef` flag to only sync content when loading from DB or switching modes (not during typing)
+- Cursor now stays exactly where you're typing
 
 #### 8. MEDIUM - Inconsistent Quiz Default Options ✅
 **Problem:** New questions default to 4 options but UI designed for 2-6 dynamic
