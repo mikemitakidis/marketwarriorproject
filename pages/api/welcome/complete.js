@@ -1,4 +1,5 @@
 import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/welcome/complete
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
+        logger.error('Error updating profile:', profileError);
         return res.status(500).json({ error: 'Failed to save profile' });
       }
     } else {
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
         });
 
       if (profileError) {
-        console.error('Error creating profile:', profileError);
+        logger.error('Error creating profile:', profileError);
         return res.status(500).json({ error: 'Failed to save profile' });
       }
     }
@@ -82,13 +83,13 @@ export default async function handler(req, res) {
       }, { onConflict: 'user_id' });
 
     if (onboardingError) {
-      console.error('Error updating onboarding:', onboardingError);
+      logger.error('Error updating onboarding:', onboardingError);
       return res.status(500).json({ error: 'Failed to save onboarding status' });
     }
 
     return res.status(200).json({ ok: true, next: '/dashboard' });
   } catch (err) {
-    console.error('Welcome complete error:', err);
+    logger.error('Welcome complete error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 import Stripe from 'stripe';
 
 /**
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
     if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
 
     const { dryRun = false } = req.body;
     const supabase = getServiceSupabase();
@@ -58,7 +65,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`Found ${payments.length} payments to backfill`);
+    logger.log(`Found ${payments.length} payments to backfill`);
 
     const results = {
       updated: 0,
@@ -79,7 +86,7 @@ export default async function handler(req, res) {
 
             const balanceTransactionId = paymentIntent.charges?.data?.[0]?.balance_transaction;
             if (!balanceTransactionId) {
-              console.warn(`No balance_transaction for payment ${payment.id}`);
+              logger.warn(`No balance_transaction for payment ${payment.id}`);
               results.failed++;
               return;
             }
@@ -89,7 +96,7 @@ export default async function handler(req, res) {
             const netAmountCents = balanceTransaction.net;
 
             if (dryRun) {
-              console.log(`[DRY RUN] Would update payment ${payment.id}: ${netAmountCents} cents`);
+              logger.log(`[DRY RUN] Would update payment ${payment.id}: ${netAmountCents} cents`);
               results.updated++;
             } else {
               // Update payment with net amount
@@ -99,7 +106,7 @@ export default async function handler(req, res) {
                 .eq('id', payment.id);
 
               if (updateError) {
-                console.error(`Error updating payment ${payment.id}:`, updateError);
+                logger.error(`Error updating payment ${payment.id}:`, updateError);
                 results.failed++;
                 results.errors.push({ paymentId: payment.id, error: updateError.message });
               } else {
@@ -107,7 +114,7 @@ export default async function handler(req, res) {
               }
             }
           } catch (err) {
-            console.error(`Error processing payment ${payment.id}:`, err.message);
+            logger.error(`Error processing payment ${payment.id}:`, err.message);
             results.failed++;
             results.errors.push({ paymentId: payment.id, error: err.message });
           }
@@ -133,7 +140,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Backfill error:', err);
+    logger.error('Backfill error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

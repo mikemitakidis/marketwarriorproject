@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 import Stripe from 'stripe';
 
 /**
@@ -27,7 +29,7 @@ async function getNetAmountFromStripe(stripe, paymentIntentId) {
     // Return net amount (amount after fees)
     return balanceTransaction.net || 0;
   } catch (err) {
-    console.error('Error fetching balance transaction:', err.message);
+    logger.error('Error fetching balance transaction:', err.message);
     return 0;
   }
 }
@@ -52,7 +54,7 @@ async function calculateNetRevenue(stripe, payments) {
   // Fetch missing net amounts from Stripe API (for old payments)
   let fetchedNet = 0;
   if (paymentsNeedFetch.length > 0) {
-    console.log(`Fetching net amounts for ${paymentsNeedFetch.length} payments from Stripe API`);
+    logger.log(`Fetching net amounts for ${paymentsNeedFetch.length} payments from Stripe API`);
     const netAmounts = await Promise.all(
       paymentsNeedFetch.map(p => getNetAmountFromStripe(stripe, p.payment_intent_id))
     );
@@ -89,6 +91,11 @@ export default async function handler(req, res) {
     if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
 
     const supabase = getServiceSupabase();
 
@@ -210,7 +217,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Dashboard stats error:', err);
+    logger.error('Dashboard stats error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

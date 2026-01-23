@@ -1,7 +1,15 @@
 import { getAnonSupabase, getServiceSupabase } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Apply rate limiting
+  const identifier = getIdentifier(req);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.auth, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Missing email/password' });
@@ -36,7 +44,7 @@ export default async function handler(req, res) {
         : 'Account created. Check your inbox to confirm your email before logging in.'
     });
   } catch (e) {
-    console.error('signup error:', e);
+    logger.error('signup error:', e);
     return res.status(500).json({ error: e?.message || 'Server error' });
   }
 }

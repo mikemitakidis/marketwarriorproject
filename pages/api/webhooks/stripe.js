@@ -1,6 +1,8 @@
 // Stripe webhook handler - processes checkout completions
 import Stripe from 'stripe';
 import { getServiceSupabase } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 export const config = {
   api: {
@@ -21,12 +23,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Apply rate limiting (lenient for webhooks)
+  const identifier = getIdentifier(req);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.general, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const priceId = process.env.STRIPE_PRICE_ID;
 
   if (!stripeSecretKey || !webhookSecret) {
-    console.error('Missing Stripe configuration');
+    logger.error('Missing Stripe configuration');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -44,7 +51,7 @@ export default async function handler(req, res) {
     });
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    logger.error('Webhook signature verification failed:', err.message);
     return res.status(400).json({ error: `Webhook Error: ${err.message}` });
   }
 
@@ -79,12 +86,12 @@ export default async function handler(req, res) {
       // Log validation but don't block payment processing
       const validPurchase = lineItems.length >= 1 && lineItems.some(item => item.price?.id === expectedPriceId);
       if (!validPurchase && expectedPriceId) {
-        console.warn('Price ID mismatch - processing anyway:', lineItems.map(i => i.price?.id));
+        logger.warn('Price ID mismatch - processing anyway:', lineItems.map(i => i.price?.id));
       }
 
       const userId = checkout.metadata?.userId;
       if (!userId) {
-        console.error('Missing userId in checkout metadata');
+        logger.error('Missing userId in checkout metadata');
         return res.status(400).json({ error: 'Missing user ID in metadata' });
       }
 
@@ -102,10 +109,10 @@ export default async function handler(req, res) {
           if (balanceTransactionId) {
             const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
             netAmountCents = balanceTransaction.net || null;
-            console.log(`Net amount for payment ${paymentIntentId}: ${netAmountCents} cents`);
+            logger.log(`Net amount for payment ${paymentIntentId}: ${netAmountCents} cents`);
           }
         } catch (err) {
-          console.error('Error fetching net amount from Stripe:', err.message);
+          logger.error('Error fetching net amount from Stripe:', err.message);
           // Continue without net amount - we can backfill later
         }
       }
@@ -124,7 +131,7 @@ export default async function handler(req, res) {
       });
 
       if (paymentError) {
-        console.error('Error recording payment:', paymentError);
+        logger.error('Error recording payment:', paymentError);
         // Continue anyway - user profile update is critical
       }
 
@@ -140,7 +147,7 @@ export default async function handler(req, res) {
         .eq('id', userId);
 
       if (profileError) {
-        console.error('Error updating user profile, trying upsert:', profileError);
+        logger.error('Error updating user profile, trying upsert:', profileError);
         // Fallback to upsert
         const { error: upsertError } = await supabase
           .from('user_profiles')
@@ -151,7 +158,7 @@ export default async function handler(req, res) {
           }, { onConflict: 'id' });
 
         if (upsertError) {
-          console.error('CRITICAL: Failed to set has_paid:', upsertError);
+          logger.error('CRITICAL: Failed to set has_paid:', upsertError);
           return res.status(500).json({ error: 'Failed to grant access' });
         }
       }
@@ -173,10 +180,10 @@ export default async function handler(req, res) {
           }, { onConflict: 'user_id,day' });
       }
 
-      console.log(`SUCCESS: Payment processed for user ${userId}, has_paid=true`);
+      logger.log(`SUCCESS: Payment processed for user ${userId}, has_paid=true`);
 
     } catch (err) {
-      console.error('Error processing checkout:', err);
+      logger.error('Error processing checkout:', err);
       return res.status(500).json({ error: 'Processing error' });
     }
   }

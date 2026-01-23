@@ -1,4 +1,5 @@
 import { getServiceSupabase } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * Development-only API: Grant access to any user (bypass payment)
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     // Find the user by email in auth.users
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
-      console.error('Error listing users:', listError);
+      logger.error('Error listing users:', listError);
       return res.status(500).json({ error: 'Failed to list users: ' + listError.message });
     }
 
@@ -53,7 +54,7 @@ export default async function handler(req, res) {
       }, { onConflict: 'id' });
 
     if (upsertError) {
-      console.error('Error granting access:', upsertError);
+      logger.error('Error granting access:', upsertError);
       return res.status(500).json({ error: 'Failed to grant access: ' + upsertError.message });
     }
 
@@ -66,7 +67,7 @@ export default async function handler(req, res) {
       }, { onConflict: 'user_id' });
 
     if (onboardError) {
-      console.warn('Warning: Could not update onboarding:', onboardError.message);
+      logger.warn('Warning: Could not update onboarding:', onboardError.message);
     }
 
     // Create initial progress for day 1
@@ -79,10 +80,10 @@ export default async function handler(req, res) {
       }, { onConflict: 'user_id,day' });
 
     if (progressError) {
-      console.warn('Warning: Could not create progress:', progressError.message);
+      logger.warn('Warning: Could not create progress:', progressError.message);
     }
 
-    console.log(`[DEV] Access granted to ${email} (user: ${targetUser.id})`);
+    logger.log(`[DEV] Access granted to ${email} (user: ${targetUser.id})`);
 
     return res.status(200).json({
       success: true,
@@ -92,7 +93,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Dev grant access error:', err);
+    logger.error('Dev grant access error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/admin/affiliates
@@ -20,6 +22,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
@@ -38,7 +45,7 @@ export default async function handler(req, res) {
         .eq('affiliate_role', 'affiliate');
 
       if (error) {
-        console.error('Error fetching affiliates:', error);
+        logger.error('Error fetching affiliates:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -143,7 +150,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error('Affiliates API error:', err);
+    logger.error('Affiliates API error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

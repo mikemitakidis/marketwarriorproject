@@ -1,4 +1,5 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * API endpoint for listing and creating forum threads.
@@ -27,13 +28,13 @@ export default async function handler(req, res) {
         .limit(100);
 
       if (error) {
-        console.error('Error fetching threads:', error);
+        logger.error('Error fetching threads:', error);
         return res.status(500).json({ error: 'Failed to fetch threads' });
       }
 
       return res.status(200).json(threads || []);
     } catch (err) {
-      console.error('community/posts GET error:', err);
+      logger.error('community/posts GET error:', err);
       return res.status(500).json({ error: err.message });
     }
 
@@ -66,13 +67,13 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('Error creating thread:', error);
+        logger.error('Error creating thread:', error);
         return res.status(500).json({ error: 'Failed to create thread' });
       }
 
       return res.status(201).json(thread);
     } catch (err) {
-      console.error('community/posts POST error:', err);
+      logger.error('community/posts POST error:', err);
       return res.status(500).json({ error: err.message });
     }
   } else {

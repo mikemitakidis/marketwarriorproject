@@ -7,7 +7,9 @@
  * server‑side logic such as Supabase and Stripe integration.
  */
 
-module.exports = {
+const { withSentryConfig } = require('@sentry/nextjs');
+
+const moduleExports = {
   reactStrictMode: true,
   // By default next/image optimises images. Disable to allow local
   // images in static HTML pages.
@@ -57,7 +59,7 @@ module.exports = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://accounts.google.com",
+              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://accounts.google.com https://*.sentry.io",
               "frame-src 'self' https://js.stripe.com https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",
@@ -70,3 +72,20 @@ module.exports = {
     ];
   },
 };
+
+// Sentry configuration options
+const sentryWebpackPluginOptions = {
+  // Additional config options for the Sentry Webpack plugin. Keep in mind that
+  // the following options are set automatically, and overriding them is not
+  // recommended:
+  //   release, url, org, project, authToken, configFile, stripPrefix,
+  //   urlPrefix, include, ignore
+
+  silent: true, // Suppresses all logs
+
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options.
+};
+
+// Make sure adding Sentry options is the last code to run before exporting
+module.exports = withSentryConfig(moduleExports, sentryWebpackPluginOptions);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { createClient } from '@supabase/supabase-js';
@@ -52,7 +53,7 @@ export default function ResetPasswordPage({ userEmail }) {
       setMessage({ type: 'success', text: 'Password updated! Redirecting...' });
       setTimeout(() => router.push('/dashboard'), 2000);
     } catch (err) {
-      console.error('Password reset error:', err);
+      logger.error('Password reset error:', err);
       setMessage({ type: 'error', text: err.message || 'Failed to update password' });
     } finally {
       setLoading(false);

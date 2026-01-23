@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
+import logger from '../../../../lib/logger';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -33,6 +35,11 @@ export default async function handler(req, res) {
     if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
 
     // Parse multipart form data
     const form = formidable({
@@ -91,7 +98,7 @@ export default async function handler(req, res) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      logger.error('Upload error:', uploadError);
       return res.status(500).json({ error: 'Failed to upload file: ' + uploadError.message });
     }
 
@@ -126,7 +133,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Upload error:', err);
+    logger.error('Upload error:', err);
     return res.status(500).json({ error: err.message || 'Upload failed' });
   }
 }

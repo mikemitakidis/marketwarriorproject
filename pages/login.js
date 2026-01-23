@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import Head from 'next/head';
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,8 +18,8 @@ export default function LoginPage() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    console.log('Supabase URL:', url ? 'SET' : 'MISSING');
-    console.log('Supabase Key:', key ? 'SET' : 'MISSING');
+    logger.log('Supabase URL:', url ? 'SET' : 'MISSING');
+    logger.log('Supabase Key:', key ? 'SET' : 'MISSING');
 
     if (url && key) {
       setSupabase(createClient(url, key));
@@ -68,7 +69,7 @@ export default function LoginPage() {
       window.location.href = json.next || '/dashboard';
 
     } catch (err) {
-      console.error('Login error:', err);
+      logger.error('Login error:', err);
       setMessage({ type: 'error', text: err.message || 'Login failed' });
       setLoading(false);
     }
@@ -92,7 +93,7 @@ export default function LoginPage() {
 
     try {
       const redirectUrl = `${window.location.origin}/auth/callback?next=/pay`;
-      console.log('Redirect URL:', redirectUrl);
+      logger.log('Redirect URL:', redirectUrl);
 
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
@@ -113,7 +114,7 @@ export default function LoginPage() {
       }
 
     } catch (err) {
-      console.error('Register error:', err);
+      logger.error('Register error:', err);
       setMessage({ type: 'error', text: err.message || 'Registration failed' });
     } finally {
       setLoading(false);

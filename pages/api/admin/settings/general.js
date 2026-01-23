@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
+import logger from '../../../../lib/logger';
 import Stripe from 'stripe';
 
 /**
@@ -20,6 +22,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
@@ -29,7 +36,7 @@ export default async function handler(req, res) {
         .select('key, value');
 
       if (fetchError) {
-        console.error('Error fetching settings:', fetchError);
+        logger.error('Error fetching settings:', fetchError);
         return res.status(500).json({ error: 'Failed to fetch settings' });
       }
 
@@ -107,7 +114,7 @@ export default async function handler(req, res) {
           });
         }
 
-        console.log(`Using Stripe product: ${productId}`);
+        logger.log(`Using Stripe product: ${productId}`);
 
         // Conversion rates from USD to other currencies
         // NOTE: These are approximate rates. Stripe will handle the actual payment processing.
@@ -148,9 +155,9 @@ export default async function handler(req, res) {
             });
 
             newPriceIds[code] = newPrice.id;
-            console.log(`Created Stripe price for ${code.toUpperCase()}: ${newPrice.id} (${symbol}${convertedPrice.toFixed(2)} = $${challengePrice} USD)`);
+            logger.log(`Created Stripe price for ${code.toUpperCase()}: ${newPrice.id} (${symbol}${convertedPrice.toFixed(2)} = $${challengePrice} USD)`);
           } catch (err) {
-            console.error(`Failed to create price for ${code}:`, err.message);
+            logger.error(`Failed to create price for ${code}:`, err.message);
             // Continue with other currencies even if one fails
           }
         }
@@ -242,7 +249,7 @@ export default async function handler(req, res) {
           .upsert(settingsToUpdate, { onConflict: 'key' });
 
         if (upsertError) {
-          console.error('Error updating settings:', upsertError);
+          logger.error('Error updating settings:', upsertError);
           return res.status(500).json({ error: 'Failed to update settings' });
         }
       }
@@ -258,7 +265,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error('Settings API error:', err);
+    logger.error('Settings API error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

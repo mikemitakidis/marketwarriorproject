@@ -1,4 +1,5 @@
 import { getServiceSupabase } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * Keep-alive cron job to prevent Supabase free tier from pausing
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
       .limit(1);
 
     if (error) {
-      console.error('Keep-alive query failed:', error);
+      logger.error('Keep-alive query failed:', error);
       return res.status(500).json({
         success: false,
         error: error.message,
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Keep-alive error:', err);
+    logger.error('Keep-alive error:', err);
     return res.status(500).json({
       success: false,
       error: err.message,

@@ -1,4 +1,5 @@
 import { getServiceSupabase } from '../../lib/serverAuth';
+import logger from '../../lib/logger';
 
 /**
  * API route: /api/keep-alive
@@ -21,12 +22,12 @@ export default async function handler(req, res) {
   const expectedToken = process.env.KEEP_ALIVE_TOKEN;
 
   if (!expectedToken) {
-    console.error('[keep-alive] KEEP_ALIVE_TOKEN not configured');
+    logger.error('[keep-alive] KEEP_ALIVE_TOKEN not configured');
     return res.status(500).json({ error: 'Server not configured' });
   }
 
   if (token !== expectedToken) {
-    console.warn('[keep-alive] Invalid token attempt');
+    logger.warn('[keep-alive] Invalid token attempt');
     return res.status(401).json({ error: 'Invalid token' });
   }
 
@@ -40,12 +41,12 @@ export default async function handler(req, res) {
       .limit(1);
 
     if (error) {
-      console.error('[keep-alive] DB error:', error.message);
+      logger.error('[keep-alive] DB error:', error.message);
       return res.status(500).json({ error: 'Database error', details: error.message });
     }
 
     const timestamp = new Date().toISOString();
-    console.log(`[keep-alive] Success at ${timestamp}`);
+    logger.log(`[keep-alive] Success at ${timestamp}`);
 
     return res.status(200).json({
       success: true,
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('[keep-alive] Error:', err);
+    logger.error('[keep-alive] Error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

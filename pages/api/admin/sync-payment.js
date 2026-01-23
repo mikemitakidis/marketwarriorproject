@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * Sync a payment from Stripe to database.
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
     if (!isAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
 
     const supabaseAdmin = getServiceSupabase();
 
@@ -128,7 +135,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Sync payment error:', err);
+    logger.error('Sync payment error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/template/[day]

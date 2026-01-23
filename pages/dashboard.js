@@ -1,4 +1,5 @@
 import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../lib/serverAuth';
+import logger from '../lib/logger';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
@@ -70,7 +71,7 @@ export async function getServerSideProps({ req }) {
       },
     };
   } catch (err) {
-    console.error('Dashboard error:', err);
+    logger.error('Dashboard error:', err);
     return { redirect: { destination: '/login', permanent: false } };
   }
 }

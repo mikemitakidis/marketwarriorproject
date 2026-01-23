@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/task/submit
@@ -12,6 +14,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Get user first for rate limiting
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  // Apply rate limiting per user
+  const identifier = getIdentifier(req, user.id);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.submission, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { day, response: taskResponse, attachmentUrl } = req.body;
     if (!day || !taskResponse) {
@@ -21,11 +34,6 @@ export default async function handler(req, res) {
     // VALIDATION: Day 2+ requires file upload
     if (day >= 2 && !attachmentUrl) {
       return res.status(400).json({ error: 'File upload is required for Day 2 and beyond' });
-    }
-
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return res.status(401).json({ error: 'Not authenticated' });
     }
 
     const userId = user.id;
@@ -64,7 +72,7 @@ export default async function handler(req, res) {
       });
 
     if (insertErr) {
-      console.error('Error saving task:', insertErr);
+      logger.error('Error saving task:', insertErr);
       return res.status(500).json({ error: 'Could not save task' });
     }
 
@@ -105,7 +113,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, nextDay: nextDay <= 30 ? nextDay : null });
 
   } catch (err) {
-    console.error('Task submit error:', err);
+    logger.error('Task submit error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
