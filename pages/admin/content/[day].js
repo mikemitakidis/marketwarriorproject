@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getSupabaseClient } from '../../../lib/supabase';
+import DOMPurify from 'isomorphic-dompurify';
 
 export default function ContentEditor() {
   const router = useRouter();
@@ -26,6 +27,15 @@ export default function ContentEditor() {
 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [seeding, setSeeding] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // XSS Protection: Sanitize HTML content
+  const sanitizeHtml = (html) => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'h4', 'h5', 'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'div', 'span', 'blockquote', 'code', 'pre'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'style', 'class', 'target', 'rel']
+    });
+  };
 
   useEffect(() => {
     if (day) {
@@ -33,8 +43,29 @@ export default function ContentEditor() {
     }
   }, [day]);
 
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   async function checkAdminAndLoad() {
     try {
+      // Validate day parameter
+      const dayNum = parseInt(day);
+      if (isNaN(dayNum) || dayNum < 1 || dayNum > 30) {
+        setMessage({ type: 'error', text: 'Invalid day number. Must be between 1 and 30.' });
+        router.push('/admin');
+        return;
+      }
+
       const supabase = getSupabaseClient();
       if (!supabase) {
         router.push('/login');
@@ -107,11 +138,12 @@ export default function ContentEditor() {
       const data = await res.json();
       if (data.success) {
         setMessage({ type: 'success', text: 'Content saved successfully!' });
+        setHasUnsavedChanges(false);
       } else {
         throw new Error(data.error || 'Failed to save');
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      setMessage({ type: 'error', text: `Save failed: ${err.message}` });
     }
     setSaving(false);
   }
@@ -126,6 +158,7 @@ export default function ContentEditor() {
   function updateHtmlContent() {
     if (editorRef.current) {
       setHtmlContent(editorRef.current.innerHTML);
+      setHasUnsavedChanges(true);
     }
   }
 
@@ -175,76 +208,112 @@ export default function ContentEditor() {
       ...quizQuestions,
       { id: null, question: '', options: ['', '', '', ''], correct_option: 0, isNew: true }
     ]);
+    setHasUnsavedChanges(true);
   }
 
   function updateQuestion(index, field, value) {
     const updated = [...quizQuestions];
     updated[index] = { ...updated[index], [field]: value };
     setQuizQuestions(updated);
+    setHasUnsavedChanges(true);
   }
 
   function updateOption(qIndex, optIndex, value) {
     const updated = [...quizQuestions];
     updated[qIndex].options[optIndex] = value;
     setQuizQuestions(updated);
+    setHasUnsavedChanges(true);
   }
 
-  function removeQuestion(index) {
+  async function removeQuestion(index) {
     if (!confirm('Delete this question?')) return;
     const q = quizQuestions[index];
+
+    // Delete from database if it exists
     if (q.id && !q.isNew) {
-      // Delete from database
-      fetch('/api/admin/quiz', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: q.id }),
-      });
+      try {
+        const res = await fetch('/api/admin/quiz', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: q.id }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Delete failed');
+        }
+      } catch (err) {
+        setMessage({ type: 'error', text: `Failed to delete question: ${err.message}` });
+        return; // Don't remove from UI if API call failed
+      }
     }
+
+    // Only remove from UI if API succeeded (or if it was a new unsaved question)
     setQuizQuestions(quizQuestions.filter((_, i) => i !== index));
+    setHasUnsavedChanges(true);
   }
 
   async function saveQuiz() {
     setSavingQuiz(true);
     setMessage({ type: '', text: '' });
 
+    let successCount = 0;
+    let failCount = 0;
+    const errors = [];
+
     try {
       for (const q of quizQuestions) {
         if (!q.question.trim()) continue;
 
-        if (q.isNew || !q.id) {
-          // Create new question
-          await fetch('/api/admin/quiz', {
-            method: 'POST',
+        try {
+          const method = (q.isNew || !q.id) ? 'POST' : 'PUT';
+          const body = (q.isNew || !q.id)
+            ? {
+                day: parseInt(day),
+                question: q.question,
+                options: q.options.filter(o => o.trim()),
+                correct_option: q.correct_option,
+              }
+            : {
+                id: q.id,
+                question: q.question,
+                options: q.options.filter(o => o.trim()),
+                correct_option: q.correct_option,
+              };
+
+          const res = await fetch('/api/admin/quiz', {
+            method,
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({
-              day: parseInt(day),
-              question: q.question,
-              options: q.options.filter(o => o.trim()),
-              correct_option: q.correct_option,
-            }),
+            body: JSON.stringify(body),
           });
-        } else {
-          // Update existing
-          await fetch('/api/admin/quiz', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              id: q.id,
-              question: q.question,
-              options: q.options.filter(o => o.trim()),
-              correct_option: q.correct_option,
-            }),
-          });
+
+          if (res.ok) {
+            successCount++;
+          } else {
+            failCount++;
+            const errorData = await res.json();
+            errors.push(errorData.error || 'Unknown error');
+          }
+        } catch (err) {
+          failCount++;
+          errors.push(err.message);
         }
       }
 
-      setMessage({ type: 'success', text: 'Quiz saved successfully!' });
-      loadContent(); // Reload to get updated IDs
+      if (failCount === 0) {
+        setMessage({ type: 'success', text: `Successfully saved ${successCount} question(s)!` });
+        setHasUnsavedChanges(false);
+        loadContent(); // Reload to get updated IDs
+      } else {
+        setMessage({
+          type: 'error',
+          text: `Saved ${successCount} question(s), but ${failCount} failed. Errors: ${errors.join(', ')}`
+        });
+      }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      setMessage({ type: 'error', text: `Save failed: ${err.message}` });
     }
     setSavingQuiz(false);
   }
@@ -390,7 +459,7 @@ export default function ContentEditor() {
               type="text"
               style={styles.input}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="e.g., Introduction to Trading"
             />
           </div>
@@ -401,7 +470,7 @@ export default function ContentEditor() {
               type="text"
               style={styles.input}
               value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
+              onChange={(e) => { setVideoUrl(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="e.g., https://www.youtube.com/embed/VIDEO_ID"
             />
             <small style={styles.hint}>Use embed URL format: https://www.youtube.com/embed/VIDEO_ID</small>
@@ -458,7 +527,7 @@ export default function ContentEditor() {
                   ref={editorRef}
                   contentEditable
                   style={styles.editor}
-                  dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }}
                   onInput={updateHtmlContent}
                   onBlur={updateHtmlContent}
                 />
@@ -469,14 +538,14 @@ export default function ContentEditor() {
               <textarea
                 style={styles.htmlEditor}
                 value={htmlContent}
-                onChange={(e) => setHtmlContent(e.target.value)}
+                onChange={(e) => { setHtmlContent(e.target.value); setHasUnsavedChanges(true); }}
                 placeholder="Enter HTML content directly..."
                 spellCheck={false}
               />
             )}
 
             {showPreview && (
-              <div className="preview-container mw-lesson" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div className="preview-container mw-lesson" dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }} />
             )}
           </div>
 
@@ -485,7 +554,7 @@ export default function ContentEditor() {
             <textarea
               style={styles.textarea}
               value={taskPrompt}
-              onChange={(e) => setTaskPrompt(e.target.value)}
+              onChange={(e) => { setTaskPrompt(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="Describe the task the user needs to complete..."
               rows={4}
             />
@@ -528,7 +597,7 @@ export default function ContentEditor() {
               />
 
               <div style={styles.optionsGrid}>
-                {(q.options || ['', '', '', '']).map((opt, optIndex) => (
+                {(q.options || ['', '']).map((opt, optIndex) => (
                   <div key={optIndex} style={styles.optionRow}>
                     <input
                       type="radio"
@@ -547,6 +616,26 @@ export default function ContentEditor() {
                     {q.correct_option === optIndex && (
                       <span style={styles.correctBadge}>✓ Correct</span>
                     )}
+                    {q.options && q.options.length > 2 && (
+                      <button
+                        style={styles.removeOptionBtn}
+                        onClick={() => {
+                          const updated = [...quizQuestions];
+                          updated[qIndex].options = updated[qIndex].options.filter((_, i) => i !== optIndex);
+                          // Adjust correct_option if needed
+                          if (updated[qIndex].correct_option === optIndex) {
+                            updated[qIndex].correct_option = 0;
+                          } else if (updated[qIndex].correct_option > optIndex) {
+                            updated[qIndex].correct_option -= 1;
+                          }
+                          setQuizQuestions(updated);
+                          setHasUnsavedChanges(true);
+                        }}
+                        title="Remove this option"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -555,8 +644,14 @@ export default function ContentEditor() {
                 style={styles.addOptionBtn}
                 onClick={() => {
                   const updated = [...quizQuestions];
-                  updated[qIndex].options = [...(updated[qIndex].options || []), ''];
+                  const currentOptions = updated[qIndex].options || ['', ''];
+                  if (currentOptions.length >= 6) {
+                    setMessage({ type: 'error', text: 'Maximum 6 options per question' });
+                    return;
+                  }
+                  updated[qIndex].options = [...currentOptions, ''];
                   setQuizQuestions(updated);
+                  setHasUnsavedChanges(true);
                 }}
               >
                 + Add Option
@@ -1143,5 +1238,16 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     marginTop: '10px',
+  },
+  removeOptionBtn: {
+    background: '#fee2e2',
+    color: '#dc2626',
+    border: 'none',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginLeft: '5px',
   },
 };
