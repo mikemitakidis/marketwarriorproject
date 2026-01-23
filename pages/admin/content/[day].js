@@ -30,6 +30,11 @@ export default function ContentEditor() {
   const [seeding, setSeeding] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Link modal state
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkText, setLinkText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+
   // XSS Protection: Sanitize HTML content
   const sanitizeHtml = (html) => {
     return DOMPurify.sanitize(html, {
@@ -186,10 +191,47 @@ export default function ContentEditor() {
   }
 
   function insertLink() {
-    const url = prompt('Enter URL:');
-    if (url) {
-      execCommand('createLink', url);
+    // Check if there's selected text
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (selectedText) {
+      setLinkText(selectedText);
+    } else {
+      setLinkText('');
     }
+    setLinkUrl('https://');
+    setShowLinkModal(true);
+  }
+
+  function handleInsertLink() {
+    if (!linkUrl || linkUrl === 'https://') {
+      alert('Please enter a valid URL');
+      return;
+    }
+
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (selectedText) {
+      // If text is selected, just create the link
+      execCommand('createLink', linkUrl);
+    } else if (linkText) {
+      // If no selection but user provided text, insert it
+      document.execCommand('insertHTML', false, `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`);
+      if (editorRef.current) {
+        editorRef.current.focus();
+        updateHtmlContent();
+      }
+    } else {
+      alert('Please enter link text or select text first');
+      return;
+    }
+
+    // Close modal and reset
+    setShowLinkModal(false);
+    setLinkText('');
+    setLinkUrl('https://');
   }
 
   function insertImage() {
@@ -580,6 +622,7 @@ export default function ContentEditor() {
                   ref={editorRef}
                   contentEditable
                   suppressContentEditableWarning
+                  className="visual-editor mw-lesson"
                   style={styles.editor}
                   onInput={updateHtmlContent}
                   onBlur={updateHtmlContent}
@@ -723,6 +766,57 @@ export default function ContentEditor() {
           )}
         </div>
       </div>
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h3 style={styles.modalTitle}>Insert Link</h3>
+
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>Link Text</label>
+              <input
+                type="text"
+                style={styles.modalInput}
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Enter link text (or select text first)"
+                autoFocus
+              />
+            </div>
+
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>URL</label>
+              <input
+                type="text"
+                style={styles.modalInput}
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+              />
+            </div>
+
+            <div style={styles.modalActions}>
+              <button
+                style={styles.modalCancelBtn}
+                onClick={() => {
+                  setShowLinkModal(false);
+                  setLinkText('');
+                  setLinkUrl('https://');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                style={styles.modalInsertBtn}
+                onClick={handleInsertLink}
+              >
+                Insert Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1000,6 +1094,79 @@ export default function ContentEditor() {
         .preview-container .rewards-section h2 {
           color: white !important;
         }
+
+        /* Visual Editor - Match Template Styling 1:1 */
+        .visual-editor h2 {
+          color: #1e293b;
+          margin: 30px 0 20px;
+          font-size: 1.8em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .visual-editor h3 {
+          color: #3b82f6;
+          font-size: 1.4em;
+          margin: 25px 0 15px;
+        }
+        .visual-editor h4 {
+          color: #3b82f6;
+          font-size: 1.2em;
+          margin: 20px 0 10px;
+        }
+        .visual-editor p {
+          margin-bottom: 15px;
+          color: #475569;
+        }
+        .visual-editor ul, .visual-editor ol {
+          margin: 15px 0 15px 25px;
+        }
+        .visual-editor li {
+          margin-bottom: 8px;
+        }
+        .visual-editor strong {
+          color: #1e293b;
+          font-weight: 600;
+        }
+        .visual-editor a {
+          color: #3b82f6;
+          text-decoration: underline;
+        }
+        .visual-editor a:hover {
+          color: #1d4ed8;
+        }
+        .visual-editor table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 25px 0;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .visual-editor th {
+          background: #3b82f6;
+          color: white;
+          padding: 18px 15px;
+          text-align: left;
+          font-weight: 600;
+        }
+        .visual-editor td {
+          padding: 16px 15px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .visual-editor tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .visual-editor tbody tr:hover {
+          background: #f1f5f9;
+        }
+        .visual-editor img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 12px;
+          margin: 20px 0;
+        }
       `}</style>
     </>
   );
@@ -1163,13 +1330,15 @@ const styles = {
   },
   editor: {
     minHeight: '400px',
-    padding: '20px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '0 0 8px 8px',
+    padding: '30px',
+    border: '2px solid #3b82f6',
+    borderRadius: '0 0 12px 12px',
     fontSize: '15px',
-    lineHeight: '1.7',
+    lineHeight: '1.6',
     outline: 'none',
-    background: 'white',
+    background: '#f5f7fa',
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    color: '#1e293b',
   },
   editorModeToggle: {
     display: 'flex',
@@ -1302,5 +1471,77 @@ const styles = {
     fontSize: '14px',
     fontWeight: 'bold',
     marginLeft: '5px',
+  },
+  // Link Modal Styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+  },
+  modalContent: {
+    background: 'white',
+    padding: '30px',
+    borderRadius: '12px',
+    width: '90%',
+    maxWidth: '500px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: '20px',
+  },
+  modalField: {
+    marginBottom: '20px',
+  },
+  modalLabel: {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#475569',
+    marginBottom: '8px',
+  },
+  modalInput: {
+    width: '100%',
+    padding: '12px',
+    border: '2px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '12px',
+    justifyContent: 'flex-end',
+    marginTop: '24px',
+  },
+  modalCancelBtn: {
+    padding: '10px 20px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    background: 'white',
+    color: '#64748b',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  modalInsertBtn: {
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '8px',
+    background: '#3b82f6',
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
   },
 };
