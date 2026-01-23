@@ -8,6 +8,7 @@ export default function ContentEditor() {
   const router = useRouter();
   const { day } = router.query;
   const editorRef = useRef(null);
+  const isTypingRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -157,10 +158,24 @@ export default function ContentEditor() {
 
   function updateHtmlContent() {
     if (editorRef.current) {
-      setHtmlContent(editorRef.current.innerHTML);
+      isTypingRef.current = true;
+      const newContent = editorRef.current.innerHTML;
+      setHtmlContent(newContent);
       setHasUnsavedChanges(true);
+      // Reset flag after state update completes
+      setTimeout(() => { isTypingRef.current = false; }, 0);
     }
   }
+
+  // Sync editor content when htmlContent changes from external sources (e.g., loading from DB or switching modes)
+  useEffect(() => {
+    if (editorRef.current && editMode === 'visual' && !isTypingRef.current) {
+      // Only update if content actually changed (prevent cursor reset during typing)
+      if (editorRef.current.innerHTML !== htmlContent) {
+        editorRef.current.innerHTML = htmlContent;
+      }
+    }
+  }, [htmlContent, editMode]);
 
   function insertHeading() {
     execCommand('formatBlock', 'h3');
@@ -564,8 +579,8 @@ export default function ContentEditor() {
                 <div
                   ref={editorRef}
                   contentEditable
+                  suppressContentEditableWarning
                   style={styles.editor}
-                  dangerouslySetInnerHTML={{ __html: htmlContent }}
                   onInput={updateHtmlContent}
                   onBlur={updateHtmlContent}
                 />
