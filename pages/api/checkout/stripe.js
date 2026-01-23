@@ -95,9 +95,8 @@ export default async function handler(req, res) {
     }
 
     // Use trusted domain for redirect URLs (not client-controlled origin header)
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
