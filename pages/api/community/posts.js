@@ -1,5 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * API endpoint for listing and creating forum threads.
@@ -8,6 +9,10 @@ import logger from '../../../lib/logger';
  * POST: Creates a new thread. Requires authentication and payment.
  */
 export default async function handler(req, res) {
+  // Apply rate limiting: general for GET, submission for POST
+  const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
+  const limited = await applyRateLimit(limiter, req, res, getIdentifier);
+  if (limited) return;
   const supabase = getServiceSupabase();
 
   if (req.method === 'GET') {

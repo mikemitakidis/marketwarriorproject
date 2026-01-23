@@ -1,5 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
  * API endpoint for creating comments on forum threads.
@@ -11,6 +12,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Apply rate limiting for comment submissions
+  const limited = await applyRateLimit(rateLimiters.submission, req, res, getIdentifier);
+  if (limited) return;
 
   try {
     const user = await getUserFromRequest(req);
