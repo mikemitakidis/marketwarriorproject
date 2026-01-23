@@ -82,12 +82,11 @@ export default async function handler(req, res) {
       // Also add env var price ID as fallback
       if (priceId) validPriceIds.add(priceId);
 
-      // Check if ANY line item matches a valid price ID
-      // (Allow promo codes - they don't change the price ID)
-      const hasCoupon = checkout.total_details?.amount_discount > 0;
+      // ENFORCE: Check if ANY line item matches a valid price ID
+      // Coupons/discounts don't change the price ID, so we ALWAYS validate
       const validPurchase = lineItems.length >= 1 && lineItems.some(item => validPriceIds.has(item.price?.id));
 
-      if (!validPurchase && !hasCoupon) {
+      if (!validPurchase) {
         logger.error('REJECTED: Invalid price ID in webhook:', lineItems.map(i => i.price?.id));
         return res.status(400).json({ error: 'Invalid product purchased' });
       }
