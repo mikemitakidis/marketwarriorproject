@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import logger from '../lib/logger';
 import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../lib/serverAuth';
 
 export default function AuthCallback() {
@@ -82,7 +81,7 @@ export async function getServerSideProps(ctx) {
     // The client-side useEffect will handle hash-based tokens
     return { props: {} };
   } catch (e) {
-    logger.error('Auth callback error:', e);
+    console.error('Auth callback error:', e);
     return { redirect: { destination: '/login?error=callback', permanent: false } };
   }
 }

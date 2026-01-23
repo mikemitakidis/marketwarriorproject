@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../../../lib/serverAuth';
-import logger from '../../../lib/logger';
 
 /**
  * Single thread view with comments.
@@ -71,7 +70,7 @@ export async function getServerSideProps({ req, params }) {
       },
     };
   } catch (err) {
-    logger.error('Thread page error:', err);
+    console.error('Thread page error:', err);
     return { notFound: true };
   }
 }

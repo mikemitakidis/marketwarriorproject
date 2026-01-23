@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import logger from '../lib/logger';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../../lib/serverAuth';
@@ -69,7 +68,7 @@ export async function getServerSideProps({ req }) {
       },
     };
   } catch (err) {
-    logger.error('Community error:', err);
+    console.error('Community error:', err);
     return { redirect: { destination: '/dashboard', permanent: false } };
   }
 }

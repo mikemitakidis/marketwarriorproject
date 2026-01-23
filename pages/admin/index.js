@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import logger from '../lib/logger';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -104,7 +103,7 @@ export default function AdminPanel() {
       setIsAdmin(true);
       loadTabData('dashboard');
     } catch (err) {
-      logger.error('Admin check error:', err);
+      console.error('Admin check error:', err);
       router.push('/dashboard');
     }
   }
@@ -133,7 +132,7 @@ export default function AdminPanel() {
           break;
       }
     } catch (err) {
-      logger.error('Load data error:', err);
+      console.error('Load data error:', err);
     }
     setLoading(false);
   }
@@ -223,7 +222,7 @@ export default function AdminPanel() {
         alert('Error saving settings: ' + (error.error || 'Unknown error'));
       }
     } catch (err) {
-      logger.error('Save settings error:', err);
+      console.error('Save settings error:', err);
       alert('Error saving settings: ' + err.message);
     }
     setLoading(false);
@@ -262,7 +261,7 @@ export default function AdminPanel() {
         alert('Upload failed: ' + (error.error || 'Unknown error'));
       }
     } catch (err) {
-      logger.error('Upload error:', err);
+      console.error('Upload error:', err);
       alert('Upload failed: ' + err.message);
     }
     setLoading(false);

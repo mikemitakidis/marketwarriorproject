@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import logger from '../lib/logger';
 import { getSupabaseClient, getServiceSupabase } from '../lib/supabase';
 import { getUserFromRequest } from '../lib/serverAuth';
 import Head from 'next/head';
@@ -63,7 +62,7 @@ export async function getServerSideProps({ req }) {
       },
     };
   } catch (err) {
-    logger.error('Journal error:', err);
+    console.error('Journal error:', err);
     return {
       redirect: {
         destination: '/login',

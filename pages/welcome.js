@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import logger from '../lib/logger';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
@@ -35,7 +34,7 @@ export async function getServerSideProps({ req }) {
 
     return { props: { userEmail: user.email } };
   } catch (err) {
-    logger.error('Welcome SSR error:', err);
+    console.error('Welcome SSR error:', err);
     return { redirect: { destination: '/login', permanent: false } };
   }
 }

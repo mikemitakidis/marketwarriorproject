@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
-import logger from '../../lib/logger';
 
 /**
  * Admin Forum Moderation Page.
@@ -45,7 +44,7 @@ export async function getServerSideProps({ req }) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      logger.error('Error fetching threads:', error);
+      console.error('Error fetching threads:', error);
       throw new Error(error.message);
     }
 
@@ -59,7 +58,7 @@ export async function getServerSideProps({ req }) {
       },
     };
   } catch (err) {
-    logger.error('Admin forum error:', err);
+    console.error('Admin forum error:', err);
     return {
       props: { accessDenied: true, threads: [] },
     };

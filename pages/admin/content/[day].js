@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getSupabaseClient } from '../../../lib/supabase';
-import logger from '../../../lib/logger';
 
 export default function ContentEditor() {
   const router = useRouter();
@@ -56,7 +55,7 @@ export default function ContentEditor() {
       setIsAdmin(true);
       loadContent();
     } catch (err) {
-      logger.error('Admin check error:', err);
+      console.error('Admin check error:', err);
       router.push('/dashboard');
     }
   }
@@ -81,7 +80,7 @@ export default function ContentEditor() {
       setQuizQuestions(quizData.questions || []);
 
     } catch (err) {
-      logger.error('Load error:', err);
+      console.error('Load error:', err);
       setMessage({ type: 'error', text: 'Failed to load content' });
     }
     setLoading(false);
