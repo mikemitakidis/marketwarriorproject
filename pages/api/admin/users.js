@@ -1,3 +1,4 @@
+import Stripe from 'stripe';
 import { getServiceSupabase, getUserFromRequest , verifyAdminAccess } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       return handleGet(req, res, supabase);
     } else if (req.method === 'POST') {
-      return handlePost(req, res, supabase);
+      return handlePost(req, res, supabase, user);
     } else {
       return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -61,7 +62,7 @@ async function handleGet(req, res, supabase) {
   // List all users
   let query = supabase
     .from('user_profiles')
-    .select('id, email, full_name, has_paid, paid_at, is_admin, created_at')
+    .select('id, email, full_name, has_paid, paid_at, is_admin, created_at, suspended_until, access_expires_at, admin_notes')
     .order('created_at', { ascending: false });
 
   if (search) {
@@ -138,12 +139,27 @@ async function handleGet(req, res, supabase) {
   return res.status(200).json({ users: usersWithStats });
 }
 
-async function handlePost(req, res, supabase) {
+async function handlePost(req, res, supabase, adminUser) {
   const { action, userId } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
   }
+
+  // Helper function to log admin actions
+  const logAction = async (actionName, details = {}) => {
+    try {
+      await supabase.from('admin_audit_logs').insert({
+        admin_id: adminUser.id,
+        admin_email: adminUser.email,
+        target_user_id: userId,
+        action: actionName,
+        details,
+      });
+    } catch (err) {
+      logger.warn('Failed to log admin action:', err.message);
+    }
+  };
 
   if (action === 'unlock_all') {
     // Unlock all 30 days for the user
@@ -164,6 +180,7 @@ async function handlePost(req, res, supabase) {
       return res.status(500).json({ error: 'Failed to update onboarding: ' + onboardingError.message });
     }
 
+    await logAction('unlock_all_days', { days: 30 });
     logger.log(`[ADMIN] Unlocked all days for user ${userId}`);
     return res.status(200).json({ success: true, message: 'All 30 days unlocked for user' });
 
@@ -207,11 +224,295 @@ async function handlePost(req, res, supabase) {
       return res.status(500).json({ error: 'Partial reset: ' + errors.join(', ') });
     }
 
+    await logAction('reset_user_progress', {});
     logger.log(`[ADMIN] Reset all progress for user ${userId}`);
     return res.status(200).json({ success: true, message: 'User progress reset successfully' });
 
+  } else if (action === 'lock_all') {
+    // Lock all days - reset to day 1 only
+    const now = new Date().toISOString();
+    const { error: onboardingError } = await supabase
+      .from('user_onboarding')
+      .update({
+        welcome_completed: true,
+        welcome_completed_at: now,
+      })
+      .eq('user_id', userId);
+
+    if (onboardingError) {
+      logger.error('Lock all - onboarding error:', onboardingError);
+      return res.status(500).json({ error: 'Failed to lock days: ' + onboardingError.message });
+    }
+
+    await logAction('lock_all_days', { reset_to_day: 1 });
+    return res.status(200).json({ success: true, message: 'Access locked to Day 1' });
+
+  } else if (action === 'suspend_user') {
+    // Suspend user for specified duration
+    const { durationDays, reason } = req.body;
+    const suspendedUntil = new Date();
+    suspendedUntil.setDate(suspendedUntil.getDate() + (parseInt(durationDays) || 7));
+
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        suspended_until: suspendedUntil.toISOString(),
+        suspension_reason: reason || null,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('suspend_user', { suspended_until: suspendedUntil.toISOString(), reason });
+    return res.status(200).json({ success: true, suspended_until: suspendedUntil.toISOString() });
+
+  } else if (action === 'unsuspend_user') {
+    // Remove suspension
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        suspended_until: null,
+        suspension_reason: null,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('unsuspend_user', {});
+    return res.status(200).json({ success: true });
+
+  } else if (action === 'grant_paid_access') {
+    // Grant paid access with optional duration
+    const { durationDays, reason } = req.body;
+    const now = new Date();
+    const duration = parseInt(durationDays) || 120;
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + duration);
+
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        has_paid: true,
+        paid_at: now.toISOString(),
+        access_expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('grant_paid_access', { reason, duration_days: duration, expires_at: expiresAt.toISOString() });
+    return res.status(200).json({ success: true, access_expires_at: expiresAt.toISOString() });
+
+  } else if (action === 'revoke_paid_access') {
+    // Revoke paid access
+    const { reason } = req.body;
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        has_paid: false,
+        access_expires_at: null,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('revoke_paid_access', { reason });
+    return res.status(200).json({ success: true });
+
+  } else if (action === 'extend_access') {
+    // Extend access expiry
+    const { extendDays } = req.body;
+    const daysToAdd = parseInt(extendDays);
+    if (isNaN(daysToAdd) || daysToAdd < 1) {
+      return res.status(400).json({ error: 'extendDays must be a positive number' });
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('access_expires_at, paid_at')
+      .eq('id', userId)
+      .single();
+
+    // Base the extension on current expiry, or now if already expired/not set
+    let baseDate = new Date();
+    if (profile?.access_expires_at) {
+      const expiryDate = new Date(profile.access_expires_at);
+      if (expiryDate > baseDate) {
+        baseDate = expiryDate;
+      }
+    }
+
+    baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        access_expires_at: baseDate.toISOString(),
+        has_paid: true,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('extend_access', { extend_days: daysToAdd, new_expires_at: baseDate.toISOString() });
+    return res.status(200).json({ success: true, access_expires_at: baseDate.toISOString() });
+
+  } else if (action === 'mark_paid') {
+    // Manually mark as paid with reason
+    const { reason, durationDays } = req.body;
+    const now = new Date();
+    const duration = parseInt(durationDays) || 120;
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + duration);
+
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        has_paid: true,
+        paid_at: now.toISOString(),
+        access_expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('mark_paid', { reason, duration_days: duration });
+    return res.status(200).json({ success: true });
+
+  } else if (action === 'mark_unpaid') {
+    // Manually mark as unpaid with reason
+    const { reason } = req.body;
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        has_paid: false,
+        access_expires_at: null,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('mark_unpaid', { reason });
+    return res.status(200).json({ success: true });
+
+  } else if (action === 'reset_password') {
+    // Send password reset email
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
+
+    if (!profile) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email: profile.email,
+    });
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    await logAction('reset_password', { email: profile.email });
+    logger.log(`[ADMIN] Password reset sent to ${profile.email}`);
+    return res.status(200).json({ success: true, message: 'Password reset email sent' });
+
+  } else if (action === 'refund_payment') {
+    // Refund latest payment and revoke access
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ error: 'Stripe not configured' });
+    }
+
+    // Get latest successful payment
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('id, stripe_session_id, amount_cents, currency')
+      .eq('user_id', userId)
+      .eq('status', 'succeeded')
+      .order('paid_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!payment) {
+      return res.status(404).json({ error: 'No refundable payment found' });
+    }
+
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+
+      // Get the checkout session to find the payment intent
+      const session = await stripe.checkout.sessions.retrieve(payment.stripe_session_id);
+
+      if (!session.payment_intent) {
+        return res.status(400).json({ error: 'Payment intent not found for this session' });
+      }
+
+      // Create refund
+      await stripe.refunds.create({
+        payment_intent: session.payment_intent,
+      });
+
+      // Update payment status in database
+      await supabase
+        .from('payments')
+        .update({ status: 'refunded' })
+        .eq('id', payment.id);
+
+      // Revoke paid access
+      await supabase
+        .from('user_profiles')
+        .update({
+          has_paid: false,
+          access_expires_at: null,
+        })
+        .eq('id', userId);
+
+      await logAction('refund_payment', {
+        payment_id: payment.id,
+        amount: payment.amount_cents / 100,
+        currency: payment.currency
+      });
+
+      return res.status(200).json({ success: true, message: 'Payment refunded and access revoked' });
+    } catch (err) {
+      logger.error('Refund error:', err);
+      return res.status(500).json({ error: 'Stripe refund failed: ' + err.message });
+    }
+
+  } else if (action === 'update_notes') {
+    // Update admin notes
+    const { notes } = req.body;
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({ admin_notes: notes || null })
+      .eq('id', userId);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    await logAction('update_notes', { notes_length: (notes || '').length });
+    return res.status(200).json({ success: true });
+
   } else {
-    return res.status(400).json({ error: 'Unknown action. Use: unlock_all, reset_user' });
+    return res.status(400).json({ error: 'Unknown action' });
   }
 }
 
@@ -255,11 +556,28 @@ async function getUserDetails(res, supabase, userId) {
     .eq('user_id', userId)
     .order('submitted_at', { ascending: false });
 
+  // Get payment history
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('user_id', userId)
+    .order('paid_at', { ascending: false });
+
+  // Get audit logs for this user
+  const { data: auditLogs } = await supabase
+    .from('admin_audit_logs')
+    .select('*')
+    .eq('target_user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
   return res.status(200).json({
     profile,
     onboarding,
     progress: progress || [],
     quizAttempts: quizAttempts || [],
     taskSubmissions: taskSubmissions || [],
+    payments: payments || [],
+    auditLogs: auditLogs || [],
   });
 }
