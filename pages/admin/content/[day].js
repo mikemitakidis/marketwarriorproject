@@ -597,7 +597,7 @@ export default function ContentEditor() {
               />
 
               <div style={styles.optionsGrid}>
-                {(q.options || ['', '', '', '']).map((opt, optIndex) => (
+                {(q.options || ['', '']).map((opt, optIndex) => (
                   <div key={optIndex} style={styles.optionRow}>
                     <input
                       type="radio"
@@ -616,6 +616,26 @@ export default function ContentEditor() {
                     {q.correct_option === optIndex && (
                       <span style={styles.correctBadge}>✓ Correct</span>
                     )}
+                    {q.options && q.options.length > 2 && (
+                      <button
+                        style={styles.removeOptionBtn}
+                        onClick={() => {
+                          const updated = [...quizQuestions];
+                          updated[qIndex].options = updated[qIndex].options.filter((_, i) => i !== optIndex);
+                          // Adjust correct_option if needed
+                          if (updated[qIndex].correct_option === optIndex) {
+                            updated[qIndex].correct_option = 0;
+                          } else if (updated[qIndex].correct_option > optIndex) {
+                            updated[qIndex].correct_option -= 1;
+                          }
+                          setQuizQuestions(updated);
+                          setHasUnsavedChanges(true);
+                        }}
+                        title="Remove this option"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -624,8 +644,14 @@ export default function ContentEditor() {
                 style={styles.addOptionBtn}
                 onClick={() => {
                   const updated = [...quizQuestions];
-                  updated[qIndex].options = [...(updated[qIndex].options || []), ''];
+                  const currentOptions = updated[qIndex].options || ['', ''];
+                  if (currentOptions.length >= 6) {
+                    setMessage({ type: 'error', text: 'Maximum 6 options per question' });
+                    return;
+                  }
+                  updated[qIndex].options = [...currentOptions, ''];
                   setQuizQuestions(updated);
+                  setHasUnsavedChanges(true);
                 }}
               >
                 + Add Option
@@ -1212,5 +1238,16 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     marginTop: '10px',
+  },
+  removeOptionBtn: {
+    background: '#fee2e2',
+    color: '#dc2626',
+    border: 'none',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginLeft: '5px',
   },
 };

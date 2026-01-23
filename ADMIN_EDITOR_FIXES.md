@@ -19,7 +19,7 @@
 
 #### 4. MEDIUM - Quiz Options Array Mismatch ✅
 **Problem:** Assumes exactly 4 options, breaks with more/less
-**Fix:** Dynamic options handling, supports 2-6 options
+**Fix:** Dynamic options handling, supports 2-6 options (defaults to 2, allows adding/removing)
 
 #### 5. LOW - Input Validation ✅
 **Problem:** Day parameter not validated
