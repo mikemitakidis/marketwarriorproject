@@ -1,4 +1,5 @@
 import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/progress/status
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ completedDays, unlockedDays, nextUnlockTime: null });
   } catch (err) {
-    console.error('progress/status error:', err);
+    logger.error('progress/status error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

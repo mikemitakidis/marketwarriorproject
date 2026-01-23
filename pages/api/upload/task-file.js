@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 import formidable from 'formidable';
 import fs from 'fs';
 
@@ -20,11 +22,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Get user first for rate limiting
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  // Apply rate limiting per user
+  const identifier = getIdentifier(req, user.id);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.upload, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
 
     // Parse the form data
     const form = formidable({
@@ -123,7 +132,7 @@ export default async function handler(req, res) {
     }
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      logger.error('Upload error:', uploadError);
       return res.status(500).json({ error: 'Failed to upload file: ' + uploadError.message });
     }
 
@@ -140,7 +149,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('File upload error:', err);
+    logger.error('File upload error:', err);
     return res.status(500).json({ error: err.message || 'Upload failed' });
   }
 }

@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/admin/community
@@ -21,6 +23,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
@@ -40,7 +47,7 @@ export default async function handler(req, res) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching threads:', error);
+        logger.error('Error fetching threads:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -155,7 +162,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error('Community API error:', err);
+    logger.error('Community API error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

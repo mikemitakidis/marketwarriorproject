@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * Admin API: Toggle unlimited access for a user (bypass 120-day expiration)
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const { email, unlimited } = req.body;
     if (!email || unlimited === undefined) {
       return res.status(400).json({ error: 'Email and unlimited flag are required' });
@@ -36,7 +43,7 @@ export default async function handler(req, res) {
     // Find the user by email in auth.users
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
-      console.error('Error listing users:', listError);
+      logger.error('Error listing users:', listError);
       return res.status(500).json({ error: 'Failed to list users' });
     }
 
@@ -52,7 +59,7 @@ export default async function handler(req, res) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('Error updating unlimited access:', updateError);
+      logger.error('Error updating unlimited access:', updateError);
       return res.status(500).json({ error: 'Failed to update access: ' + updateError.message });
     }
 
@@ -64,7 +71,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Toggle unlimited access error:', err);
+    logger.error('Toggle unlimited access error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

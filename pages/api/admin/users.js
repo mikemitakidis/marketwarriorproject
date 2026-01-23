@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest , verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/admin/users
@@ -27,6 +29,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
@@ -38,7 +45,7 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error('Admin users error:', err);
+    logger.error('Admin users error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
@@ -153,11 +160,11 @@ async function handlePost(req, res, supabase) {
       .eq('user_id', userId);
 
     if (onboardingError) {
-      console.error('Unlock all - onboarding error:', onboardingError);
+      logger.error('Unlock all - onboarding error:', onboardingError);
       return res.status(500).json({ error: 'Failed to update onboarding: ' + onboardingError.message });
     }
 
-    console.log(`[ADMIN] Unlocked all days for user ${userId}`);
+    logger.log(`[ADMIN] Unlocked all days for user ${userId}`);
     return res.status(200).json({ success: true, message: 'All 30 days unlocked for user' });
 
   } else if (action === 'reset_user') {
@@ -196,11 +203,11 @@ async function handlePost(req, res, supabase) {
     if (onboardingError) errors.push('user_onboarding: ' + onboardingError.message);
 
     if (errors.length > 0) {
-      console.error('Reset user errors:', errors);
+      logger.error('Reset user errors:', errors);
       return res.status(500).json({ error: 'Partial reset: ' + errors.join(', ') });
     }
 
-    console.log(`[ADMIN] Reset all progress for user ${userId}`);
+    logger.log(`[ADMIN] Reset all progress for user ${userId}`);
     return res.status(200).json({ success: true, message: 'User progress reset successfully' });
 
   } else {

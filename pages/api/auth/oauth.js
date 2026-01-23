@@ -1,6 +1,13 @@
 import { getAnonSupabase } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 export default async function handler(req, res) {
+  // Apply rate limiting
+  const identifier = getIdentifier(req);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.auth, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const provider = (req.query.provider || 'google').toString();
     const next = (req.query.next || '/pay').toString();
@@ -23,7 +30,7 @@ export default async function handler(req, res) {
     res.writeHead(302, { Location: data.url });
     res.end();
   } catch (e) {
-    console.error('oauth error:', e);
+    logger.error('oauth error:', e);
     res.status(500).send(e.message || 'Server error');
   }
 }

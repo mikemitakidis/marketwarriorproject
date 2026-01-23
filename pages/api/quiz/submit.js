@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/quiz/submit
@@ -14,6 +16,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Get user first for rate limiting
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  // Apply rate limiting per user
+  const identifier = getIdentifier(req, user.id);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.submission, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { day, answers } = req.body;
     if (!day) {
@@ -22,11 +35,6 @@ export default async function handler(req, res) {
 
     if (!answers) {
       return res.status(400).json({ error: 'Missing answers' });
-    }
-
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return res.status(401).json({ error: 'Not authenticated' });
     }
 
     const userId = user.id;
@@ -40,7 +48,7 @@ export default async function handler(req, res) {
       .eq('day', day);
 
     if (qErr) {
-      console.error('Error fetching questions:', qErr);
+      logger.error('Error fetching questions:', qErr);
       return res.status(500).json({ error: 'Could not load quiz questions' });
     }
 
@@ -79,7 +87,7 @@ export default async function handler(req, res) {
       }, { onConflict: 'user_id,day' });
 
     if (insertErr) {
-      console.error('Error saving quiz attempt:', insertErr);
+      logger.error('Error saving quiz attempt:', insertErr);
       // Try insert if upsert fails (might not have unique constraint)
       const { error: fallbackErr } = await supabase
         .from('quiz_attempts')
@@ -94,7 +102,7 @@ export default async function handler(req, res) {
         });
 
       if (fallbackErr) {
-        console.error('Error inserting quiz attempt:', fallbackErr);
+        logger.error('Error inserting quiz attempt:', fallbackErr);
       }
     }
 
@@ -113,7 +121,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ score, total, passed });
 
   } catch (err) {
-    console.error('Quiz submit error:', err);
+    logger.error('Quiz submit error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

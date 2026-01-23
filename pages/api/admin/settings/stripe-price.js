@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest } from '../../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
+import logger from '../../../../lib/logger';
 
 /**
  * Admin API route: /api/admin/settings/stripe-price
@@ -35,6 +37,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     // Parse payload
     const { priceId } = req.body || {};
     if (!priceId || typeof priceId !== 'string' || !priceId.startsWith('price_')) {
@@ -50,13 +57,13 @@ export default async function handler(req, res) {
       );
 
     if (error) {
-      console.error('Failed to update app settings', error);
+      logger.error('Failed to update app settings', error);
       return res.status(500).json({ error: 'Could not update price' });
     }
 
     return res.status(200).json({ success: true, priceId });
   } catch (err) {
-    console.error('admin/settings/stripe-price error:', err);
+    logger.error('admin/settings/stripe-price error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

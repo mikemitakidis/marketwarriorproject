@@ -1,4 +1,5 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
+import logger from '../../../lib/logger';
 
 /**
  * API endpoint for creating comments on forum threads.
@@ -57,13 +58,13 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      console.error('Error creating comment:', error);
+      logger.error('Error creating comment:', error);
       return res.status(500).json({ error: 'Failed to create comment' });
     }
 
     return res.status(201).json(comment);
   } catch (err) {
-    console.error('comments POST error:', err);
+    logger.error('comments POST error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

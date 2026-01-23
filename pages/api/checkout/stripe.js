@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * API route: /api/checkout/stripe
@@ -12,6 +14,12 @@ import { getServiceSupabase, getUserFromRequest } from '../../../lib/serverAuth'
  */
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Apply rate limiting
+  const identifier = getIdentifier(req);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.payment, identifier);
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
@@ -47,12 +55,12 @@ export default async function handler(req, res) {
         priceId = setting.value;
       }
     } catch (err) {
-      console.error(`Error fetching ${priceIdKey}:`, err);
+      logger.error(`Error fetching ${priceIdKey}:`, err);
     }
 
     // Fallback to USD if selected currency price not found
     if (!priceId && selectedCurrency !== 'usd') {
-      console.log(`Price for ${selectedCurrency} not found, falling back to USD`);
+      logger.log(`Price for ${selectedCurrency} not found, falling back to USD`);
       try {
         const { data: usdSetting } = await supabase
           .from('app_settings')
@@ -112,7 +120,7 @@ export default async function handler(req, res) {
       priceId,
     });
   } catch (err) {
-    console.error('Stripe checkout error:', err);
+    logger.error('Stripe checkout error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

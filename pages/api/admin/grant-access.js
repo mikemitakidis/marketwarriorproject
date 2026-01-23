@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 
 /**
  * Admin API: Grant access to a user (bypass payment for testing)
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const { email } = req.body;
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -36,7 +43,7 @@ export default async function handler(req, res) {
     // Find the user by email in auth.users
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
-      console.error('Error listing users:', listError);
+      logger.error('Error listing users:', listError);
       return res.status(500).json({ error: 'Failed to list users' });
     }
 
@@ -57,7 +64,7 @@ export default async function handler(req, res) {
       }, { onConflict: 'id' });
 
     if (upsertError) {
-      console.error('Error granting access:', upsertError);
+      logger.error('Error granting access:', upsertError);
       return res.status(500).json({ error: 'Failed to grant access: ' + upsertError.message });
     }
 
@@ -85,7 +92,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Grant access error:', err);
+    logger.error('Grant access error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }

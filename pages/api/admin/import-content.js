@@ -1,4 +1,6 @@
 import { getServiceSupabase, getUserFromRequest, verifyAdminAccess } from '../../../lib/serverAuth';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import logger from '../../../lib/logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -59,6 +61,11 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Apply rate limiting
+    const identifier = getIdentifier(req);
+    const rateLimitResult = await applyRateLimit(req, res, rateLimiters.admin, identifier);
+    if (rateLimitResult) return rateLimitResult;
+
     const supabase = getServiceSupabase();
 
     const { day } = req.body;
@@ -79,7 +86,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('Import error:', err);
+    logger.error('Import error:', err);
     return res.status(500).json({ error: err.message || 'Import failed' });
   }
 }
