@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getSupabaseClient } from '../../../lib/supabase';
+import DOMPurify from 'isomorphic-dompurify';
 
 export default function ContentEditor() {
   const router = useRouter();
   const { day } = router.query;
   const editorRef = useRef(null);
+  const isTypingRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +28,20 @@ export default function ContentEditor() {
 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [seeding, setSeeding] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Link modal state
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkText, setLinkText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+
+  // XSS Protection: Sanitize HTML content
+  const sanitizeHtml = (html) => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'h4', 'h5', 'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'div', 'span', 'blockquote', 'code', 'pre'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'style', 'class', 'target', 'rel']
+    });
+  };
 
   useEffect(() => {
     if (day) {
@@ -33,8 +49,29 @@ export default function ContentEditor() {
     }
   }, [day]);
 
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   async function checkAdminAndLoad() {
     try {
+      // Validate day parameter
+      const dayNum = parseInt(day);
+      if (isNaN(dayNum) || dayNum < 1 || dayNum > 30) {
+        setMessage({ type: 'error', text: 'Invalid day number. Must be between 1 and 30.' });
+        router.push('/admin');
+        return;
+      }
+
       const supabase = getSupabaseClient();
       if (!supabase) {
         router.push('/login');
@@ -107,11 +144,12 @@ export default function ContentEditor() {
       const data = await res.json();
       if (data.success) {
         setMessage({ type: 'success', text: 'Content saved successfully!' });
+        setHasUnsavedChanges(false);
       } else {
         throw new Error(data.error || 'Failed to save');
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      setMessage({ type: 'error', text: `Save failed: ${err.message}` });
     }
     setSaving(false);
   }
@@ -125,9 +163,24 @@ export default function ContentEditor() {
 
   function updateHtmlContent() {
     if (editorRef.current) {
-      setHtmlContent(editorRef.current.innerHTML);
+      isTypingRef.current = true;
+      const newContent = editorRef.current.innerHTML;
+      setHtmlContent(newContent);
+      setHasUnsavedChanges(true);
+      // Reset flag after state update completes
+      setTimeout(() => { isTypingRef.current = false; }, 0);
     }
   }
+
+  // Sync editor content when htmlContent changes from external sources (e.g., loading from DB or switching modes)
+  useEffect(() => {
+    if (editorRef.current && editMode === 'visual' && !isTypingRef.current) {
+      // Only update if content actually changed (prevent cursor reset during typing)
+      if (editorRef.current.innerHTML !== htmlContent) {
+        editorRef.current.innerHTML = htmlContent;
+      }
+    }
+  }, [htmlContent, editMode]);
 
   function insertHeading() {
     execCommand('formatBlock', 'h3');
@@ -138,10 +191,47 @@ export default function ContentEditor() {
   }
 
   function insertLink() {
-    const url = prompt('Enter URL:');
-    if (url) {
-      execCommand('createLink', url);
+    // Check if there's selected text
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (selectedText) {
+      setLinkText(selectedText);
+    } else {
+      setLinkText('');
     }
+    setLinkUrl('https://');
+    setShowLinkModal(true);
+  }
+
+  function handleInsertLink() {
+    if (!linkUrl || linkUrl === 'https://') {
+      alert('Please enter a valid URL');
+      return;
+    }
+
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (selectedText) {
+      // If text is selected, just create the link
+      execCommand('createLink', linkUrl);
+    } else if (linkText) {
+      // If no selection but user provided text, insert it
+      document.execCommand('insertHTML', false, `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`);
+      if (editorRef.current) {
+        editorRef.current.focus();
+        updateHtmlContent();
+      }
+    } else {
+      alert('Please enter link text or select text first');
+      return;
+    }
+
+    // Close modal and reset
+    setShowLinkModal(false);
+    setLinkText('');
+    setLinkUrl('https://');
   }
 
   function insertImage() {
@@ -173,78 +263,152 @@ export default function ContentEditor() {
   function addQuestion() {
     setQuizQuestions([
       ...quizQuestions,
-      { id: null, question: '', options: ['', '', '', ''], correct_option: 0, isNew: true }
+      { id: null, question: '', options: ['', ''], correct_option: 0, isNew: true }
     ]);
+    setHasUnsavedChanges(true);
   }
 
   function updateQuestion(index, field, value) {
     const updated = [...quizQuestions];
     updated[index] = { ...updated[index], [field]: value };
     setQuizQuestions(updated);
+    setHasUnsavedChanges(true);
   }
 
   function updateOption(qIndex, optIndex, value) {
     const updated = [...quizQuestions];
     updated[qIndex].options[optIndex] = value;
     setQuizQuestions(updated);
+    setHasUnsavedChanges(true);
   }
 
-  function removeQuestion(index) {
+  async function removeQuestion(index) {
     if (!confirm('Delete this question?')) return;
     const q = quizQuestions[index];
+
+    // Delete from database if it exists
     if (q.id && !q.isNew) {
-      // Delete from database
-      fetch('/api/admin/quiz', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: q.id }),
-      });
+      try {
+        const res = await fetch('/api/admin/quiz', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: q.id }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Delete failed');
+        }
+      } catch (err) {
+        setMessage({ type: 'error', text: `Failed to delete question: ${err.message}` });
+        return; // Don't remove from UI if API call failed
+      }
     }
+
+    // Only remove from UI if API succeeded (or if it was a new unsaved question)
     setQuizQuestions(quizQuestions.filter((_, i) => i !== index));
+    setHasUnsavedChanges(true);
   }
 
   async function saveQuiz() {
     setSavingQuiz(true);
     setMessage({ type: '', text: '' });
 
-    try {
-      for (const q of quizQuestions) {
-        if (!q.question.trim()) continue;
+    let successCount = 0;
+    let failCount = 0;
+    const errors = [];
+    const validationErrors = [];
 
-        if (q.isNew || !q.id) {
-          // Create new question
-          await fetch('/api/admin/quiz', {
-            method: 'POST',
+    try {
+      // First, remove empty questions from UI
+      const nonEmptyQuestions = quizQuestions.filter(q => q.question.trim());
+      if (nonEmptyQuestions.length < quizQuestions.length) {
+        setQuizQuestions(nonEmptyQuestions);
+      }
+
+      for (const q of nonEmptyQuestions) {
+        try {
+          // Validate and filter options
+          const filledOptions = q.options.filter(o => o.trim());
+
+          // Validate minimum 2 options
+          if (filledOptions.length < 2) {
+            validationErrors.push(`Question "${q.question.substring(0, 50)}..." needs at least 2 options`);
+            failCount++;
+            continue;
+          }
+
+          // Adjust correct_option if it's out of bounds after filtering
+          let adjustedCorrectOption = q.correct_option;
+          if (adjustedCorrectOption >= filledOptions.length) {
+            adjustedCorrectOption = 0; // Reset to first option if index invalid
+          }
+
+          const method = (q.isNew || !q.id) ? 'POST' : 'PUT';
+          const body = (q.isNew || !q.id)
+            ? {
+                day: parseInt(day),
+                question: q.question,
+                options: filledOptions,
+                correct_option: adjustedCorrectOption,
+              }
+            : {
+                id: q.id,
+                question: q.question,
+                options: filledOptions,
+                correct_option: adjustedCorrectOption,
+              };
+
+          const res = await fetch('/api/admin/quiz', {
+            method,
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({
-              day: parseInt(day),
-              question: q.question,
-              options: q.options.filter(o => o.trim()),
-              correct_option: q.correct_option,
-            }),
+            body: JSON.stringify(body),
           });
-        } else {
-          // Update existing
-          await fetch('/api/admin/quiz', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              id: q.id,
-              question: q.question,
-              options: q.options.filter(o => o.trim()),
-              correct_option: q.correct_option,
-            }),
-          });
+
+          if (res.ok) {
+            successCount++;
+          } else {
+            failCount++;
+            const errorData = await res.json();
+            errors.push(errorData.error || 'Unknown error');
+          }
+        } catch (err) {
+          failCount++;
+          errors.push(err.message);
         }
       }
 
-      setMessage({ type: 'success', text: 'Quiz saved successfully!' });
-      loadContent(); // Reload to get updated IDs
+      // Reload ONLY quiz questions to get updated IDs (don't reload content)
+      if (successCount > 0) {
+        try {
+          const quizRes = await fetch(`/api/admin/quiz?day=${day}`, { credentials: 'include' });
+          const quizData = await quizRes.json();
+          setQuizQuestions(quizData.questions || []);
+        } catch (err) {
+          console.error('Failed to reload quiz:', err);
+        }
+      }
+
+      // Show results
+      const allErrors = [...validationErrors, ...errors];
+      if (failCount === 0) {
+        setMessage({ type: 'success', text: `Successfully saved ${successCount} question(s)!` });
+        setHasUnsavedChanges(false);
+      } else if (successCount > 0) {
+        setMessage({
+          type: 'error',
+          text: `Saved ${successCount} question(s), but ${failCount} failed. ${allErrors.slice(0, 3).join('; ')}`
+        });
+      } else {
+        setMessage({
+          type: 'error',
+          text: `Save failed: ${allErrors.slice(0, 3).join('; ')}`
+        });
+      }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      setMessage({ type: 'error', text: `Save failed: ${err.message}` });
     }
     setSavingQuiz(false);
   }
@@ -390,7 +554,7 @@ export default function ContentEditor() {
               type="text"
               style={styles.input}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="e.g., Introduction to Trading"
             />
           </div>
@@ -401,7 +565,7 @@ export default function ContentEditor() {
               type="text"
               style={styles.input}
               value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
+              onChange={(e) => { setVideoUrl(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="e.g., https://www.youtube.com/embed/VIDEO_ID"
             />
             <small style={styles.hint}>Use embed URL format: https://www.youtube.com/embed/VIDEO_ID</small>
@@ -457,8 +621,9 @@ export default function ContentEditor() {
                 <div
                   ref={editorRef}
                   contentEditable
+                  suppressContentEditableWarning
+                  className="visual-editor mw-lesson"
                   style={styles.editor}
-                  dangerouslySetInnerHTML={{ __html: htmlContent }}
                   onInput={updateHtmlContent}
                   onBlur={updateHtmlContent}
                 />
@@ -469,14 +634,14 @@ export default function ContentEditor() {
               <textarea
                 style={styles.htmlEditor}
                 value={htmlContent}
-                onChange={(e) => setHtmlContent(e.target.value)}
+                onChange={(e) => { setHtmlContent(e.target.value); setHasUnsavedChanges(true); }}
                 placeholder="Enter HTML content directly..."
                 spellCheck={false}
               />
             )}
 
             {showPreview && (
-              <div className="preview-container mw-lesson" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div className="preview-container mw-lesson" dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }} />
             )}
           </div>
 
@@ -485,7 +650,7 @@ export default function ContentEditor() {
             <textarea
               style={styles.textarea}
               value={taskPrompt}
-              onChange={(e) => setTaskPrompt(e.target.value)}
+              onChange={(e) => { setTaskPrompt(e.target.value); setHasUnsavedChanges(true); }}
               placeholder="Describe the task the user needs to complete..."
               rows={4}
             />
@@ -528,7 +693,7 @@ export default function ContentEditor() {
               />
 
               <div style={styles.optionsGrid}>
-                {(q.options || ['', '', '', '']).map((opt, optIndex) => (
+                {(q.options || ['', '']).map((opt, optIndex) => (
                   <div key={optIndex} style={styles.optionRow}>
                     <input
                       type="radio"
@@ -547,6 +712,26 @@ export default function ContentEditor() {
                     {q.correct_option === optIndex && (
                       <span style={styles.correctBadge}>✓ Correct</span>
                     )}
+                    {q.options && q.options.length > 2 && (
+                      <button
+                        style={styles.removeOptionBtn}
+                        onClick={() => {
+                          const updated = [...quizQuestions];
+                          updated[qIndex].options = updated[qIndex].options.filter((_, i) => i !== optIndex);
+                          // Adjust correct_option if needed
+                          if (updated[qIndex].correct_option === optIndex) {
+                            updated[qIndex].correct_option = 0;
+                          } else if (updated[qIndex].correct_option > optIndex) {
+                            updated[qIndex].correct_option -= 1;
+                          }
+                          setQuizQuestions(updated);
+                          setHasUnsavedChanges(true);
+                        }}
+                        title="Remove this option"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -555,8 +740,14 @@ export default function ContentEditor() {
                 style={styles.addOptionBtn}
                 onClick={() => {
                   const updated = [...quizQuestions];
-                  updated[qIndex].options = [...(updated[qIndex].options || []), ''];
+                  const currentOptions = updated[qIndex].options || ['', ''];
+                  if (currentOptions.length >= 6) {
+                    setMessage({ type: 'error', text: 'Maximum 6 options per question' });
+                    return;
+                  }
+                  updated[qIndex].options = [...currentOptions, ''];
                   setQuizQuestions(updated);
+                  setHasUnsavedChanges(true);
                 }}
               >
                 + Add Option
@@ -575,6 +766,57 @@ export default function ContentEditor() {
           )}
         </div>
       </div>
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h3 style={styles.modalTitle}>Insert Link</h3>
+
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>Link Text</label>
+              <input
+                type="text"
+                style={styles.modalInput}
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Enter link text (or select text first)"
+                autoFocus
+              />
+            </div>
+
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>URL</label>
+              <input
+                type="text"
+                style={styles.modalInput}
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+              />
+            </div>
+
+            <div style={styles.modalActions}>
+              <button
+                style={styles.modalCancelBtn}
+                onClick={() => {
+                  setShowLinkModal(false);
+                  setLinkText('');
+                  setLinkUrl('https://');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                style={styles.modalInsertBtn}
+                onClick={handleInsertLink}
+              >
+                Insert Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -852,6 +1094,79 @@ export default function ContentEditor() {
         .preview-container .rewards-section h2 {
           color: white !important;
         }
+
+        /* Visual Editor - Match Template Styling 1:1 */
+        .visual-editor h2 {
+          color: #1e293b;
+          margin: 30px 0 20px;
+          font-size: 1.8em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .visual-editor h3 {
+          color: #3b82f6;
+          font-size: 1.4em;
+          margin: 25px 0 15px;
+        }
+        .visual-editor h4 {
+          color: #3b82f6;
+          font-size: 1.2em;
+          margin: 20px 0 10px;
+        }
+        .visual-editor p {
+          margin-bottom: 15px;
+          color: #475569;
+        }
+        .visual-editor ul, .visual-editor ol {
+          margin: 15px 0 15px 25px;
+        }
+        .visual-editor li {
+          margin-bottom: 8px;
+        }
+        .visual-editor strong {
+          color: #1e293b;
+          font-weight: 600;
+        }
+        .visual-editor a {
+          color: #3b82f6;
+          text-decoration: underline;
+        }
+        .visual-editor a:hover {
+          color: #1d4ed8;
+        }
+        .visual-editor table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 25px 0;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .visual-editor th {
+          background: #3b82f6;
+          color: white;
+          padding: 18px 15px;
+          text-align: left;
+          font-weight: 600;
+        }
+        .visual-editor td {
+          padding: 16px 15px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .visual-editor tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .visual-editor tbody tr:hover {
+          background: #f1f5f9;
+        }
+        .visual-editor img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 12px;
+          margin: 20px 0;
+        }
       `}</style>
     </>
   );
@@ -1015,13 +1330,15 @@ const styles = {
   },
   editor: {
     minHeight: '400px',
-    padding: '20px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '0 0 8px 8px',
+    padding: '30px',
+    border: '2px solid #3b82f6',
+    borderRadius: '0 0 12px 12px',
     fontSize: '15px',
-    lineHeight: '1.7',
+    lineHeight: '1.6',
     outline: 'none',
-    background: 'white',
+    background: '#f5f7fa',
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    color: '#1e293b',
   },
   editorModeToggle: {
     display: 'flex',
@@ -1143,5 +1460,88 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     marginTop: '10px',
+  },
+  removeOptionBtn: {
+    background: '#fee2e2',
+    color: '#dc2626',
+    border: 'none',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginLeft: '5px',
+  },
+  // Link Modal Styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+  },
+  modalContent: {
+    background: 'white',
+    padding: '30px',
+    borderRadius: '12px',
+    width: '90%',
+    maxWidth: '500px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: '20px',
+  },
+  modalField: {
+    marginBottom: '20px',
+  },
+  modalLabel: {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#475569',
+    marginBottom: '8px',
+  },
+  modalInput: {
+    width: '100%',
+    padding: '12px',
+    border: '2px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '12px',
+    justifyContent: 'flex-end',
+    marginTop: '24px',
+  },
+  modalCancelBtn: {
+    padding: '10px 20px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    background: 'white',
+    color: '#64748b',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  modalInsertBtn: {
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '8px',
+    background: '#3b82f6',
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
   },
 };

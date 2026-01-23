@@ -6,7 +6,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Apply rate limiting for auth operations
-  const limited = await applyRateLimit(rateLimiters.auth, req, res, getIdentifier);
+  const identifier = getIdentifier(req);
+  const limited = await applyRateLimit(req, res, rateLimiters.auth, identifier);
   if (limited) return;
   try {
     const { access_token, refresh_token, next } = req.body || {};
