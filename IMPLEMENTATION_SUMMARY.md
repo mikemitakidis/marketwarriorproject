@@ -68,13 +68,13 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token
 ## 2. Logger Migration
 
 ### What Was Fixed
-- **BEFORE:** 147 `console.log/error` calls exposing sensitive data in production logs
-- **AFTER:** All logging uses dev-only logger that sanitizes production output
+- **BEFORE:** API routes had `console.log/error` calls exposing sensitive data in production logs
+- **AFTER:** All API routes use dev-only logger that sanitizes production output
 
 ### Files Modified
-**49 files** migrated from `console.*` to `logger.*`:
+**38 API route files** migrated from `console.*` to `logger.*`:
 
-#### API Routes (38 files)
+#### API Routes (Server-Side Only)
 - All admin endpoints (17 files)
 - All auth endpoints (4 files)
 - All payment endpoints (2 files)
@@ -83,11 +83,8 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token
 - Upload endpoint (1 file)
 - Other API routes (10 files)
 
-#### Frontend Pages (11 files)
-- Dashboard, journal, login, pay, welcome
-- Admin pages (index, content, forum)
-- Community pages (index, post)
-- Auth callback
+#### Frontend Pages
+- Frontend pages (pages/*.js) use `console.*` directly - they run in the browser, so logger is not applicable
 
 ### Logger Features
 ```javascript
@@ -282,7 +279,7 @@ Before deploying to production:
 
 ### Modified (50+ files)
 - All 37 API route files (rate limiting)
-- 49 files (logger migration)
+- 38 API route files (logger migration - server-side only)
 - `next.config.js` (Sentry wrapper)
 - `package.json` (dependencies + test scripts)
 - `.env.example` (new environment variables)
