@@ -206,7 +206,7 @@ export default function ContentEditor() {
   function addQuestion() {
     setQuizQuestions([
       ...quizQuestions,
-      { id: null, question: '', options: ['', '', '', ''], correct_option: 0, isNew: true }
+      { id: null, question: '', options: ['', ''], correct_option: 0, isNew: true }
     ]);
     setHasUnsavedChanges(true);
   }
@@ -261,25 +261,46 @@ export default function ContentEditor() {
     let successCount = 0;
     let failCount = 0;
     const errors = [];
+    const validationErrors = [];
 
     try {
-      for (const q of quizQuestions) {
-        if (!q.question.trim()) continue;
+      // First, remove empty questions from UI
+      const nonEmptyQuestions = quizQuestions.filter(q => q.question.trim());
+      if (nonEmptyQuestions.length < quizQuestions.length) {
+        setQuizQuestions(nonEmptyQuestions);
+      }
 
+      for (const q of nonEmptyQuestions) {
         try {
+          // Validate and filter options
+          const filledOptions = q.options.filter(o => o.trim());
+
+          // Validate minimum 2 options
+          if (filledOptions.length < 2) {
+            validationErrors.push(`Question "${q.question.substring(0, 50)}..." needs at least 2 options`);
+            failCount++;
+            continue;
+          }
+
+          // Adjust correct_option if it's out of bounds after filtering
+          let adjustedCorrectOption = q.correct_option;
+          if (adjustedCorrectOption >= filledOptions.length) {
+            adjustedCorrectOption = 0; // Reset to first option if index invalid
+          }
+
           const method = (q.isNew || !q.id) ? 'POST' : 'PUT';
           const body = (q.isNew || !q.id)
             ? {
                 day: parseInt(day),
                 question: q.question,
-                options: q.options.filter(o => o.trim()),
-                correct_option: q.correct_option,
+                options: filledOptions,
+                correct_option: adjustedCorrectOption,
               }
             : {
                 id: q.id,
                 question: q.question,
-                options: q.options.filter(o => o.trim()),
-                correct_option: q.correct_option,
+                options: filledOptions,
+                correct_option: adjustedCorrectOption,
               };
 
           const res = await fetch('/api/admin/quiz', {
@@ -302,14 +323,31 @@ export default function ContentEditor() {
         }
       }
 
+      // Reload ONLY quiz questions to get updated IDs (don't reload content)
+      if (successCount > 0) {
+        try {
+          const quizRes = await fetch(`/api/admin/quiz?day=${day}`, { credentials: 'include' });
+          const quizData = await quizRes.json();
+          setQuizQuestions(quizData.questions || []);
+        } catch (err) {
+          console.error('Failed to reload quiz:', err);
+        }
+      }
+
+      // Show results
+      const allErrors = [...validationErrors, ...errors];
       if (failCount === 0) {
         setMessage({ type: 'success', text: `Successfully saved ${successCount} question(s)!` });
         setHasUnsavedChanges(false);
-        loadContent(); // Reload to get updated IDs
+      } else if (successCount > 0) {
+        setMessage({
+          type: 'error',
+          text: `Saved ${successCount} question(s), but ${failCount} failed. ${allErrors.slice(0, 3).join('; ')}`
+        });
       } else {
         setMessage({
           type: 'error',
-          text: `Saved ${successCount} question(s), but ${failCount} failed. Errors: ${errors.join(', ')}`
+          text: `Save failed: ${allErrors.slice(0, 3).join('; ')}`
         });
       }
     } catch (err) {
@@ -527,7 +565,7 @@ export default function ContentEditor() {
                   ref={editorRef}
                   contentEditable
                   style={styles.editor}
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }}
+                  dangerouslySetInnerHTML={{ __html: htmlContent }}
                   onInput={updateHtmlContent}
                   onBlur={updateHtmlContent}
                 />
