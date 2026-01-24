@@ -31,8 +31,10 @@ export default function AdminPanel() {
   // Users state
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
+  const [userNotes, setUserNotes] = useState('');
 
   // Content state
   const [days, setDays] = useState([]);
@@ -304,7 +306,268 @@ export default function AdminPanel() {
     if (res.ok) {
       const data = await res.json();
       setUserDetails(data);
+      setUserNotes(data.profile?.admin_notes || '');
     }
+  }
+
+  async function suspendUser(userId) {
+    const durationDays = prompt('Suspend for how many days?', '7');
+    if (!durationDays) return;
+    const reason = prompt('Reason for suspension (optional):');
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'suspend_user', userId, durationDays, reason }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('User suspended successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to suspend user'));
+    }
+  }
+
+  async function unsuspendUser(userId) {
+    if (!confirm('Remove suspension from this user?')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'unsuspend_user', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('User unsuspended successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to unsuspend user'));
+    }
+  }
+
+  async function grantPaidAccess(userId) {
+    const durationDays = prompt('Grant access for how many days?', '120');
+    if (!durationDays) return;
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'grant_paid_access', userId, durationDays }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Paid access granted successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to grant access'));
+    }
+  }
+
+  async function revokePaidAccess(userId) {
+    if (!confirm('Revoke paid access from this user?')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'revoke_paid_access', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Paid access revoked successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to revoke access'));
+    }
+  }
+
+  async function extendAccess(userId) {
+    const extendDays = prompt('Extend access by how many days?', '30');
+    if (!extendDays) return;
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'extend_access', userId, extendDays }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Access extended successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to extend access'));
+    }
+  }
+
+  async function markAsPaid(userId) {
+    const reason = prompt('Reason for marking as paid:');
+    if (!reason) return;
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'mark_paid', userId, reason }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('User marked as paid!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to mark as paid'));
+    }
+  }
+
+  async function markAsUnpaid(userId) {
+    const reason = prompt('Reason for marking as unpaid:');
+    if (!reason) return;
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'mark_unpaid', userId, reason }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('User marked as unpaid!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to mark as unpaid'));
+    }
+  }
+
+  async function resetPassword(userId) {
+    if (!confirm('Send password reset email to this user?')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'reset_password', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Password reset email sent successfully!');
+    } else {
+      alert('Error: ' + (data.error || 'Failed to send reset email'));
+    }
+  }
+
+  async function refundPayment(userId) {
+    if (!confirm('Refund the most recent payment and revoke access? This will process a Stripe refund.')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'refund_payment', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Payment refunded successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to refund payment'));
+    }
+  }
+
+  async function lockAllDays(userId) {
+    if (!confirm('Lock all days (reset to day 1 only) for this user?')) return;
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'lock_all', userId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('All days locked successfully!');
+      loadUsers();
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to lock days'));
+    }
+  }
+
+  async function saveAdminNotes(userId) {
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'update_notes', userId, notes: userNotes }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Admin notes saved successfully!');
+      loadUserDetails(userId);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to save notes'));
+    }
+  }
+
+  function exportToCSV() {
+    if (users.length === 0) {
+      alert('No users to export');
+      return;
+    }
+
+    const headers = ['Name', 'Email', 'Status', 'Has Paid', 'Days Unlocked', 'Days Completed', 'Joined Date', 'Last Active', 'Suspended Until', 'Access Expires'];
+    const rows = users.map(u => [
+      u.full_name || '-',
+      u.email,
+      u.has_paid ? 'Paid' : 'Free',
+      u.has_paid ? 'Yes' : 'No',
+      u.all_days_unlocked ? 'All 30' : (u.days_unlocked || 0),
+      u.days_completed || 0,
+      u.created_at ? new Date(u.created_at).toLocaleDateString() : '-',
+      u.last_active ? new Date(u.last_active).toLocaleString() : '-',
+      u.suspended_until || '-',
+      u.access_expires_at || '-',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+  function checkIfSuspended(user) {
+    if (!user.suspended_until) return false;
+    const suspendedDate = new Date(user.suspended_until);
+    const now = new Date();
+    return now < suspendedDate;
+  }
+
+  function checkIfExpired(user) {
+    if (!user.has_paid || !user.access_expires_at) return false;
+    const expiresDate = new Date(user.access_expires_at);
+    const now = new Date();
+    return now > expiresDate;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString();
   }
 
   async function seedAllContent() {
@@ -382,11 +645,22 @@ export default function AdminPanel() {
     loadUsers();
   }
 
-  const filteredUsers = users.filter(u =>
-    !userSearch ||
-    u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.full_name?.toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    // Search filter
+    const matchesSearch = !userSearch ||
+      u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.full_name?.toLowerCase().includes(userSearch.toLowerCase());
+
+    // Status filter
+    let matchesStatus = true;
+    if (statusFilter === 'paid') matchesStatus = u.has_paid;
+    else if (statusFilter === 'free') matchesStatus = !u.has_paid;
+    else if (statusFilter === 'suspended') matchesStatus = checkIfSuspended(u);
+    else if (statusFilter === 'expired') matchesStatus = checkIfExpired(u);
+    else if (statusFilter === 'active') matchesStatus = u.has_paid && !checkIfExpired(u) && !checkIfSuspended(u);
+
+    return matchesSearch && matchesStatus;
+  });
 
   const navItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
@@ -806,18 +1080,34 @@ export default function AdminPanel() {
                         }}>
                           + Grant Access
                         </button>
-                        <button style={styles.btnSuccess}>Export to CSV</button>
+                        <button style={styles.btnSuccess} onClick={exportToCSV}>Export to CSV</button>
                       </div>
                     </div>
 
-                    <div style={styles.formGroup}>
-                      <input
-                        type="text"
-                        placeholder="Search users by name or email..."
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                        style={styles.input}
-                      />
+                    <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                      <div style={{ flex: 2 }}>
+                        <input
+                          type="text"
+                          placeholder="Search users by name or email..."
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                          style={styles.input}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          style={styles.select}
+                        >
+                          <option value="all">All Users</option>
+                          <option value="paid">Paid Only</option>
+                          <option value="free">Free Only</option>
+                          <option value="active">Active (Paid & Not Expired)</option>
+                          <option value="expired">Expired Access</option>
+                          <option value="suspended">Suspended</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div style={styles.splitView}>
@@ -830,99 +1120,264 @@ export default function AdminPanel() {
                               <th>Status</th>
                               <th>Days Unlocked</th>
                               <th>Progress</th>
+                              <th>Last Active</th>
                               <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredUsers.map(user => (
-                              <tr
-                                key={user.id}
-                                style={selectedUser === user.id ? styles.selectedRow : {}}
-                              >
-                                <td>{user.full_name || '-'}</td>
-                                <td>{user.email}</td>
-                                <td>
-                                  <span style={{
-                                    ...styles.badge,
-                                    ...(user.has_paid ? styles.badgeSuccess : styles.badgeWarning)
-                                  }}>
-                                    {user.has_paid ? 'Paid' : 'Free'}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span style={{
-                                    ...styles.badge,
-                                    ...(user.all_days_unlocked ? styles.badgeSuccess : styles.badgeInfo)
-                                  }}>
-                                    {user.all_days_unlocked ? '🔓 All 30' : `🔒 ${user.days_unlocked || 0}/30`}
-                                  </span>
-                                </td>
-                                <td>
-                                  <div style={{ marginBottom: '5px' }}>{user.days_completed}/30 days</div>
-                                  <div style={styles.progressBar}>
-                                    <div style={{
-                                      ...styles.progressFill,
-                                      width: `${(user.days_completed / 30) * 100}%`,
-                                      background: user.days_completed >= 30 ? '#10b981' : '#667eea'
-                                    }}></div>
-                                  </div>
-                                </td>
-                                <td>
-                                  <button
-                                    style={styles.btnSmPrimary}
-                                    onClick={() => loadUserDetails(user.id)}
-                                  >
-                                    View
-                                  </button>
-                                  <button
-                                    style={{ ...styles.btnSmWarning, marginLeft: '5px' }}
-                                    onClick={() => unlockAllDays(user.id)}
-                                  >
-                                    Unlock
-                                  </button>
-                                  <button
-                                    style={{ ...styles.btnSmDanger, marginLeft: '5px' }}
-                                    onClick={() => resetUserProgress(user.id)}
-                                  >
-                                    Reset
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
+                            {filteredUsers.map(user => {
+                              const isSuspended = checkIfSuspended(user);
+                              const isExpired = checkIfExpired(user);
+                              return (
+                                <tr
+                                  key={user.id}
+                                  style={selectedUser === user.id ? styles.selectedRow : {}}
+                                >
+                                  <td>{user.full_name || '-'}</td>
+                                  <td>{user.email}</td>
+                                  <td>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                      <span style={{
+                                        ...styles.badge,
+                                        ...(user.has_paid ? styles.badgeSuccess : styles.badgeWarning)
+                                      }}>
+                                        {user.has_paid ? 'Paid' : 'Free'}
+                                      </span>
+                                      {isSuspended && (
+                                        <span style={{ ...styles.badge, ...styles.badgeDanger }}>
+                                          🚫 Suspended
+                                        </span>
+                                      )}
+                                      {isExpired && (
+                                        <span style={{ ...styles.badge, ...styles.badgeWarning }}>
+                                          ⏰ Expired
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span style={{
+                                      ...styles.badge,
+                                      ...(user.all_days_unlocked ? styles.badgeSuccess : styles.badgeInfo)
+                                    }}>
+                                      {user.all_days_unlocked ? '🔓 All 30' : `🔒 ${user.days_unlocked || 0}/30`}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <div style={{ marginBottom: '5px' }}>{user.days_completed || 0}/30 days</div>
+                                    <div style={styles.progressBar}>
+                                      <div style={{
+                                        ...styles.progressFill,
+                                        width: `${((user.days_completed || 0) / 30) * 100}%`,
+                                        background: user.days_completed >= 30 ? '#10b981' : '#667eea'
+                                      }}></div>
+                                    </div>
+                                  </td>
+                                  <td style={{ fontSize: '0.85em', color: '#64748b' }}>
+                                    {user.last_active ? new Date(user.last_active).toLocaleDateString() : '-'}
+                                  </td>
+                                  <td>
+                                    <button
+                                      style={styles.btnSmPrimary}
+                                      onClick={() => loadUserDetails(user.id)}
+                                    >
+                                      View
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
 
                       {userDetails && (
                         <div style={styles.userDetailsPanel}>
-                          <h3>User Details</h3>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h3>User Details</h3>
+                            <button
+                              style={{ ...styles.btnSmDanger, fontSize: '0.75em' }}
+                              onClick={() => {
+                                setSelectedUser(null);
+                                setUserDetails(null);
+                              }}
+                            >
+                              Close
+                            </button>
+                          </div>
+
                           <div style={styles.detailCard}>
                             <p><strong>Email:</strong> {userDetails.profile?.email}</p>
                             <p><strong>Name:</strong> {userDetails.profile?.full_name || '-'}</p>
                             <p><strong>Paid:</strong> {userDetails.profile?.has_paid ? 'Yes' : 'No'}</p>
-                            <p><strong>Admin:</strong> {userDetails.profile?.is_admin ? 'Yes' : 'No'}</p>
-                            <p><strong>Joined:</strong> {new Date(userDetails.profile?.created_at).toLocaleDateString()}</p>
+                            <p><strong>Joined:</strong> {formatDate(userDetails.profile?.created_at)}</p>
+                            <p><strong>Last Active:</strong> {formatDate(userDetails.profile?.last_active)}</p>
+
+                            {userDetails.profile?.suspended_until && checkIfSuspended({ suspended_until: userDetails.profile.suspended_until }) && (
+                              <div style={{ marginTop: '10px', padding: '10px', background: '#fee2e2', borderRadius: '8px' }}>
+                                <p style={{ color: '#991b1b', fontWeight: 600 }}>🚫 SUSPENDED</p>
+                                <p style={{ fontSize: '0.85em', color: '#7f1d1d' }}>Until: {formatDate(userDetails.profile.suspended_until)}</p>
+                                {userDetails.profile.suspension_reason && (
+                                  <p style={{ fontSize: '0.85em', color: '#7f1d1d' }}>Reason: {userDetails.profile.suspension_reason}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {userDetails.profile?.access_expires_at && (
+                              <div style={{ marginTop: '10px', padding: '10px', background: '#fef3c7', borderRadius: '8px' }}>
+                                <p style={{ fontSize: '0.85em', color: '#92400e' }}>Access Expires: {formatDate(userDetails.profile.access_expires_at)}</p>
+                              </div>
+                            )}
 
                             <hr style={{ margin: '15px 0' }} />
 
-                            <h4>Progress ({userDetails.progress?.length || 0} days)</h4>
-                            <div style={styles.progressList}>
-                              {userDetails.progress?.map(p => (
-                                <div key={p.day} style={styles.progressItem}>
-                                  Day {p.day}: {p.completed ? '✓ Completed' : 'In Progress'}
-                                </div>
-                              ))}
+                            {/* Admin Actions */}
+                            <h4 style={{ marginBottom: '10px' }}>Admin Actions</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
+                              {checkIfSuspended({ suspended_until: userDetails.profile?.suspended_until }) ? (
+                                <button style={styles.btnSmSuccess} onClick={() => unsuspendUser(selectedUser)}>
+                                  ✓ Unsuspend User
+                                </button>
+                              ) : (
+                                <button style={styles.btnSmDanger} onClick={() => suspendUser(selectedUser)}>
+                                  🚫 Suspend User
+                                </button>
+                              )}
+
+                              {userDetails.profile?.has_paid ? (
+                                <button style={styles.btnSmWarning} onClick={() => revokePaidAccess(selectedUser)}>
+                                  ✖ Revoke Paid Access
+                                </button>
+                              ) : (
+                                <button style={styles.btnSmSuccess} onClick={() => grantPaidAccess(selectedUser)}>
+                                  ✓ Grant Paid Access
+                                </button>
+                              )}
+
+                              <button style={styles.btnSmPrimary} onClick={() => extendAccess(selectedUser)}>
+                                ⏰ Extend Access
+                              </button>
+
+                              <button style={styles.btnSmWarning} onClick={() => unlockAllDays(selectedUser)}>
+                                🔓 Unlock All Days
+                              </button>
+
+                              <button style={styles.btnSmDanger} onClick={() => lockAllDays(selectedUser)}>
+                                🔒 Lock All Days
+                              </button>
+
+                              <button style={styles.btnSmPrimary} onClick={() => resetPassword(selectedUser)}>
+                                🔑 Reset Password
+                              </button>
+
+                              <button style={styles.btnSmDanger} onClick={() => resetUserProgress(selectedUser)}>
+                                ⚠️ Reset Progress
+                              </button>
+
+                              {userDetails.payments && userDetails.payments.length > 0 && (
+                                <button style={styles.btnSmDanger} onClick={() => refundPayment(selectedUser)}>
+                                  💸 Refund Payment
+                                </button>
+                              )}
+
+                              <button style={styles.btnSmSuccess} onClick={() => markAsPaid(selectedUser)}>
+                                ✓ Mark as Paid
+                              </button>
+
+                              <button style={styles.btnSmWarning} onClick={() => markAsUnpaid(selectedUser)}>
+                                ✖ Mark as Unpaid
+                              </button>
                             </div>
 
                             <hr style={{ margin: '15px 0' }} />
 
+                            {/* Admin Notes */}
+                            <h4 style={{ marginBottom: '10px' }}>Admin Notes</h4>
+                            <textarea
+                              value={userNotes}
+                              onChange={(e) => setUserNotes(e.target.value)}
+                              placeholder="Internal notes for this user..."
+                              style={{ ...styles.textarea, minHeight: '80px', marginBottom: '10px' }}
+                            />
+                            <button style={styles.btnSmSuccess} onClick={() => saveAdminNotes(selectedUser)}>
+                              Save Notes
+                            </button>
+
+                            <hr style={{ margin: '15px 0' }} />
+
+                            {/* Payment History */}
+                            <h4>Payment History ({userDetails.payments?.length || 0})</h4>
+                            <div style={styles.progressList}>
+                              {userDetails.payments && userDetails.payments.length > 0 ? (
+                                userDetails.payments.slice(0, 5).map((payment, i) => (
+                                  <div key={i} style={styles.progressItem}>
+                                    <div style={{ fontWeight: 600 }}>
+                                      ${(payment.amount_cents / 100).toFixed(2)} {payment.currency?.toUpperCase()}
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', color: '#64748b' }}>
+                                      {formatDate(payment.paid_at)} - Status: {payment.status}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p style={{ color: '#64748b', fontSize: '0.9em' }}>No payment history</p>
+                              )}
+                            </div>
+
+                            <hr style={{ margin: '15px 0' }} />
+
+                            {/* Progress */}
+                            <h4>Progress ({userDetails.progress?.length || 0} days)</h4>
+                            <div style={styles.progressList}>
+                              {userDetails.progress && userDetails.progress.length > 0 ? (
+                                userDetails.progress.slice(0, 5).map(p => (
+                                  <div key={p.day} style={styles.progressItem}>
+                                    Day {p.day}: {p.completed ? '✓ Completed' : 'In Progress'}
+                                  </div>
+                                ))
+                              ) : (
+                                <p style={{ color: '#64748b', fontSize: '0.9em' }}>No progress yet</p>
+                              )}
+                            </div>
+
+                            <hr style={{ margin: '15px 0' }} />
+
+                            {/* Quiz Attempts */}
                             <h4>Quiz Attempts ({userDetails.quizAttempts?.length || 0})</h4>
                             <div style={styles.progressList}>
-                              {userDetails.quizAttempts?.slice(0, 5).map((q, i) => (
-                                <div key={i} style={styles.progressItem}>
-                                  Day {q.day}: {q.score}/{q.total_questions} ({q.passed ? 'Passed' : 'Failed'})
-                                </div>
-                              ))}
+                              {userDetails.quizAttempts && userDetails.quizAttempts.length > 0 ? (
+                                userDetails.quizAttempts.slice(0, 5).map((q, i) => (
+                                  <div key={i} style={styles.progressItem}>
+                                    Day {q.day}: {q.score}/{q.total_questions} ({q.passed ? 'Passed' : 'Failed'})
+                                  </div>
+                                ))
+                              ) : (
+                                <p style={{ color: '#64748b', fontSize: '0.9em' }}>No quiz attempts yet</p>
+                              )}
+                            </div>
+
+                            <hr style={{ margin: '15px 0' }} />
+
+                            {/* Audit Logs */}
+                            <h4>Admin Audit Logs ({userDetails.auditLogs?.length || 0})</h4>
+                            <div style={styles.progressList}>
+                              {userDetails.auditLogs && userDetails.auditLogs.length > 0 ? (
+                                userDetails.auditLogs.slice(0, 10).map((log, i) => (
+                                  <div key={i} style={styles.progressItem}>
+                                    <div style={{ fontWeight: 600 }}>{log.action}</div>
+                                    <div style={{ fontSize: '0.85em', color: '#64748b' }}>
+                                      By: {log.admin_email} - {formatDate(log.created_at)}
+                                    </div>
+                                    {log.details && (
+                                      <div style={{ fontSize: '0.8em', color: '#94a3b8' }}>
+                                        {JSON.stringify(log.details)}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <p style={{ color: '#64748b', fontSize: '0.9em' }}>No audit logs yet</p>
+                              )}
                             </div>
                           </div>
                         </div>

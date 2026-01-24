@@ -226,6 +226,7 @@ async function handlePost(req, res, supabase, adminUser) {
 
     await logAction('reset_user_progress', {});
     logger.log(`[ADMIN] Reset all progress for user ${userId}`);
+    await logAction('reset_user', { userId });
     return res.status(200).json({ success: true, message: 'User progress reset successfully' });
 
   } else if (action === 'lock_all') {
