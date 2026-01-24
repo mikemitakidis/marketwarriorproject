@@ -9,7 +9,7 @@ export async function getServerSideProps({ req }) {
       return { redirect: { destination: '/login', permanent: false } };
     }
 
-    const gate = await getGateStatus(user.id);
+    const gate = await getGateStatus(user.id, user.email);
 
     // Gate logic: must be paid and welcome completed
     if (!gate.hasPaid) {
