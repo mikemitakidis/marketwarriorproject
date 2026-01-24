@@ -33,6 +33,14 @@ export default function AdminPanel() {
   const [userSearch, setUserSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 50,
+    totalUsers: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [userDetails, setUserDetails] = useState(null);
   const [userNotes, setUserNotes] = useState('');
 
@@ -156,11 +164,14 @@ export default function AdminPanel() {
     }
   }
 
-  async function loadUsers() {
-    const res = await fetch('/api/admin/users', { credentials: 'include' });
+  async function loadUsers(page = 1) {
+    const res = await fetch(`/api/admin/users?page=${page}`, { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       setUsers(data.users || []);
+      if (data.pagination) {
+        setPagination(data.pagination);
+      }
     }
   }
 
@@ -1190,6 +1201,48 @@ export default function AdminPanel() {
                           </tbody>
                         </table>
                       </div>
+
+                      {/* Pagination Controls */}
+                      {pagination.totalPages > 1 && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '15px 20px',
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          marginTop: '15px',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <button
+                            style={{
+                              ...styles.btnSmPrimary,
+                              opacity: pagination.hasPrevPage ? 1 : 0.5,
+                              cursor: pagination.hasPrevPage ? 'pointer' : 'not-allowed'
+                            }}
+                            onClick={() => pagination.hasPrevPage && loadUsers(pagination.currentPage - 1)}
+                            disabled={!pagination.hasPrevPage}
+                          >
+                            ← Previous
+                          </button>
+
+                          <span style={{ color: '#64748b', fontSize: '0.9em' }}>
+                            Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalUsers} total users)
+                          </span>
+
+                          <button
+                            style={{
+                              ...styles.btnSmPrimary,
+                              opacity: pagination.hasNextPage ? 1 : 0.5,
+                              cursor: pagination.hasNextPage ? 'pointer' : 'not-allowed'
+                            }}
+                            onClick={() => pagination.hasNextPage && loadUsers(pagination.currentPage + 1)}
+                            disabled={!pagination.hasNextPage}
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      )}
 
                       {userDetails && (
                         <div style={styles.userDetailsPanel}>

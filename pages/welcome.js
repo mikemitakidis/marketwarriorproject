@@ -20,7 +20,7 @@ export async function getServerSideProps({ req }) {
       return { redirect: { destination: '/login', permanent: false } };
     }
 
-    const gate = await getGateStatus(user.id);
+    const gate = await getGateStatus(user.id, user.email);
 
     // If not paid, redirect to payment
     if (!gate.hasPaid) {

@@ -52,12 +52,29 @@ export default async function handler(req, res) {
 }
 
 async function handleGet(req, res, supabase) {
-  const { userId, search } = req.query;
+  const { userId, search, page } = req.query;
 
   if (userId) {
     // Get specific user details
     return getUserDetails(res, supabase, userId);
   }
+
+  // Pagination: 50 users per page
+  const pageSize = 50;
+  const currentPage = parseInt(page) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize - 1;
+
+  // Get total count for pagination
+  let countQuery = supabase
+    .from('user_profiles')
+    .select('id', { count: 'exact', head: true });
+
+  if (search) {
+    countQuery = countQuery.ilike('email', `%${search}%`);
+  }
+
+  const { count: totalUsers } = await countQuery;
 
   // List all users
   let query = supabase
@@ -69,7 +86,7 @@ async function handleGet(req, res, supabase) {
     query = query.ilike('email', `%${search}%`);
   }
 
-  const { data: users, error } = await query.limit(100);
+  const { data: users, error } = await query.range(startIndex, endIndex);
 
   if (error) {
     return res.status(500).json({ error: error.message });
@@ -136,7 +153,19 @@ async function handleGet(req, res, supabase) {
     days_unlocked: onboardingMap[u.id]?.days_unlocked || 0,
   }));
 
-  return res.status(200).json({ users: usersWithStats });
+  // Return users with pagination metadata
+  const totalPages = Math.ceil((totalUsers || 0) / pageSize);
+  return res.status(200).json({
+    users: usersWithStats,
+    pagination: {
+      currentPage,
+      pageSize,
+      totalUsers: totalUsers || 0,
+      totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPrevPage: currentPage > 1,
+    }
+  });
 }
 
 async function handlePost(req, res, supabase, adminUser) {
