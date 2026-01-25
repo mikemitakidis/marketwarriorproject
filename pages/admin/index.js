@@ -59,9 +59,9 @@ export default function AdminPanel() {
     faviconUrl: '',
   });
 
-  // Promo codes state
+  // Promo codes state (fetched from Stripe)
   const [promoCodes, setPromoCodes] = useState([]);
-  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [couponsLoading, setCouponsLoading] = useState(false);
 
   // Affiliates state
   const [affiliates, setAffiliates] = useState([]);
@@ -139,6 +139,9 @@ export default function AdminPanel() {
           break;
         case 'affiliates':
           await loadAffiliates();
+          break;
+        case 'promo':
+          await loadCoupons();
           break;
       }
     } catch (err) {
@@ -309,6 +312,25 @@ export default function AdminPanel() {
       setAffiliates(data.affiliates || []);
       if (data.baseCommission) setBaseCommission(data.baseCommission);
     }
+  }
+
+  async function loadCoupons() {
+    setCouponsLoading(true);
+    try {
+      const res = await fetch('/api/admin/coupons', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setPromoCodes(data.coupons || []);
+      } else {
+        const error = await res.json();
+        console.error('Failed to load coupons:', error);
+        setPromoCodes([]);
+      }
+    } catch (err) {
+      console.error('Error loading coupons:', err);
+      setPromoCodes([]);
+    }
+    setCouponsLoading(false);
   }
 
   async function loadUserDetails(userId) {
@@ -1445,47 +1467,145 @@ export default function AdminPanel() {
                 <div>
                   <div style={styles.card}>
                     <div style={styles.cardHeader}>
-                      <h2 style={styles.cardTitle}>Promo Codes</h2>
-                      <button style={styles.btnPrimary} onClick={() => setShowPromoModal(true)}>
-                        + Create Promo Code
+                      <h2 style={styles.cardTitle}>Stripe Promo Codes</h2>
+                      <button
+                        style={styles.btnSmPrimary}
+                        onClick={() => loadCoupons()}
+                        disabled={couponsLoading}
+                      >
+                        {couponsLoading ? 'Refreshing...' : 'Refresh'}
                       </button>
                     </div>
 
-                    <table style={styles.dataTable}>
-                      <thead>
-                        <tr>
-                          <th>Code</th>
-                          <th>Discount</th>
-                          <th>Uses</th>
-                          <th>Expires</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {promoCodes.length > 0 ? promoCodes.map(code => (
-                          <tr key={code.id}>
-                            <td><strong>{code.code}</strong></td>
-                            <td>{code.discount}%</td>
-                            <td>{code.uses}/{code.maxUses}</td>
-                            <td>{code.expires}</td>
-                            <td>
-                              <span style={{ ...styles.badge, ...styles.badgeSuccess }}>Active</span>
-                            </td>
-                            <td>
-                              <button style={styles.btnSmWarning}>Edit</button>
-                              <button style={{ ...styles.btnSmDanger, marginLeft: '5px' }}>Delete</button>
-                            </td>
-                          </tr>
-                        )) : (
+                    <div style={{
+                      background: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      marginBottom: '20px',
+                      color: '#0369a1'
+                    }}>
+                      <strong>Note:</strong> Promo codes are managed directly in your{' '}
+                      <a
+                        href="https://dashboard.stripe.com/coupons"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#0284c7', textDecoration: 'underline' }}
+                      >
+                        Stripe Dashboard
+                      </a>
+                      . This view is read-only for performance monitoring.
+                    </div>
+
+                    {couponsLoading ? (
+                      <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                        <div style={styles.spinner}></div>
+                        <p>Loading promo codes from Stripe...</p>
+                      </div>
+                    ) : (
+                      <table style={styles.dataTable}>
+                        <thead>
                           <tr>
-                            <td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>
-                              No promo codes created yet
-                            </td>
+                            <th>Code Name</th>
+                            <th>Discount</th>
+                            <th>Duration</th>
+                            <th>Usage / Limits</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {promoCodes.length > 0 ? promoCodes.map(code => (
+                            <tr key={code.id}>
+                              <td>
+                                <strong style={{ fontFamily: 'monospace', fontSize: '1.05em' }}>{code.code}</strong>
+                                {code.couponName && (
+                                  <div style={{ fontSize: '0.85em', color: '#64748b', marginTop: '2px' }}>
+                                    {code.couponName}
+                                  </div>
+                                )}
+                              </td>
+                              <td>
+                                <span style={{
+                                  background: '#dcfce7',
+                                  color: '#166534',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  fontWeight: 600
+                                }}>
+                                  {code.discount}
+                                </span>
+                              </td>
+                              <td style={{ textTransform: 'capitalize' }}>
+                                {code.duration}
+                                {code.duration === 'repeating' && code.durationInMonths && (
+                                  <span style={{ color: '#64748b', fontSize: '0.9em' }}>
+                                    {' '}({code.durationInMonths} months)
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                {code.timesRedeemed} / {code.maxRedemptions !== null ? code.maxRedemptions : 'Unlimited'}
+                              </td>
+                              <td>
+                                {code.expiresAt ? (
+                                  <>
+                                    {new Date(code.expiresAt).toLocaleDateString()}
+                                    {code.isExpired && (
+                                      <span style={{
+                                        ...styles.badge,
+                                        ...styles.badgeDanger,
+                                        marginLeft: '8px',
+                                        fontSize: '0.75em'
+                                      }}>
+                                        Expired
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span style={{ color: '#64748b' }}>No Expiration</span>
+                                )}
+                              </td>
+                              <td>
+                                {code.active && !code.isExpired ? (
+                                  <span style={{ ...styles.badge, ...styles.badgeSuccess }}>Active</span>
+                                ) : (
+                                  <span style={{ ...styles.badge, ...styles.badgeDanger }}>Inactive</span>
+                                )}
+                              </td>
+                            </tr>
+                          )) : (
+                            <tr>
+                              <td colSpan={6} style={{ textAlign: 'center', color: '#64748b', padding: '40px' }}>
+                                No promo codes found in Stripe.
+                                <br />
+                                <a
+                                  href="https://dashboard.stripe.com/coupons"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: '#667eea', marginTop: '10px', display: 'inline-block' }}
+                                >
+                                  Create one in Stripe Dashboard
+                                </a>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    )}
+
+                    {promoCodes.length > 0 && (
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '10px 15px',
+                        background: '#f8fafc',
+                        borderRadius: '8px',
+                        fontSize: '0.9em',
+                        color: '#64748b'
+                      }}>
+                        Showing {promoCodes.length} promo code{promoCodes.length !== 1 ? 's' : ''} from Stripe
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
