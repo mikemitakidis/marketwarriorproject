@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Affiliate Programme (30%) - Market Warrior</title>
+    <meta name="description" content="Exclusive 30% commission affiliate programme for verified MarketWarrior students. Earn more by sharing your experience.">
+    <link rel="icon" type="image/png" href="/logo.png">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            max-width: 40px;
+            max-height: 40px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-link:hover {
+            opacity: 0.8;
+        }
+
+        .btn-login {
+            background: white;
+            color: #10b981;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu { display: none; }
+            .mobile-menu-btn { display: block; }
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 80px 20px 100px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 25px;
+            border-radius: 50px;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4em;
+            margin-bottom: 35px;
+            opacity: 0.95;
+        }
+
+        .commission-highlight {
+            display: inline-block;
+            background: white;
+            color: #059669;
+            padding: 20px 50px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .commission-rate {
+            font-size: 4em;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .commission-label {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta {
+            display: inline-block;
+            background: white;
+            color: #059669;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            background: transparent;
+            color: white;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #059669;
+        }
+
+        /* Section Styles */
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 1.2em;
+            margin-bottom: 50px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Exclusive Benefits */
+        .benefits {
+            padding: 80px 20px;
+            background: #f0fdf4;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .benefit-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-10px);
+            border-color: #10b981;
+            box-shadow: 0 20px 50px rgba(16, 185, 129, 0.2);
+        }
+
+        .benefit-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            margin: 0 auto 20px;
+        }
+
+        .benefit-card h3 {
+            color: #1e293b;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .benefit-card p {
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        /* Comparison Section */
+        .comparison {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .comparison-table {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-header {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+        }
+
+        .comparison-cell {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .comparison-header .comparison-cell {
+            font-weight: 700;
+        }
+
+        .comparison-cell.feature {
+            text-align: left;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .comparison-cell.public {
+            background: #f8fafc;
+        }
+
+        .comparison-cell.student {
+            background: #f0fdf4;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .highlight-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .how-it-works .section-title {
+            color: white;
+        }
+
+        .how-it-works .section-subtitle {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: white;
+            color: #059669;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+
+        .step-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .step-card p {
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        /* Terms Summary */
+        .terms-summary {
+            padding: 80px 20px;
+            background: #f8fafc;
+        }
+
+        .terms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .terms-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .terms-card h3 {
+            color: #1e293b;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .terms-card ul {
+            list-style: none;
+        }
+
+        .terms-card li {
+            padding: 10px 0;
+            color: #475569;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .terms-card li:last-child {
+            border-bottom: none;
+        }
+
+        .check {
+            color: #10b981;
+        }
+
+        /* Best Practices */
+        .best-practices {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .practice-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #10b981;
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .practice-card h4 {
+            color: #059669;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .practice-card p {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        /* Warning Section */
+        .warning {
+            padding: 60px 20px;
+            background: #fef3c7;
+        }
+
+        .warning-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .warning-content h3 {
+            color: #92400e;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .warning-content p {
+            color: #78350f;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            text-align: center;
+            color: white;
+        }
+
+        .cta h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 1.2em;
+            margin-bottom: 35px;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer-links {
+            margin-top: 20px;
+        }
+
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2em; }
+            .hero-subtitle { font-size: 1.1em; }
+            .section-title { font-size: 1.8em; }
+            .commission-rate { font-size: 3em; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .btn-cta, .btn-secondary { width: 100%; max-width: 300px; }
+            .comparison-row { grid-template-columns: 1fr; }
+            .comparison-cell { border-bottom: 1px solid #e2e8f0; }
+            .comparison-cell:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo-section">
+                <img src="/logo.png" alt="Market Warrior" class="logo">
+                <span class="logo-text">Market Warrior</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/affiliate" class="nav-link">Public Programme</a>
+                <a href="https://affiliates.marketwarrior.club/login" class="nav-link">Affiliate Login</a>
+                <a href="https://affiliates.marketwarrior.club/signup?campaign=4683" class="btn-login">Join Now (30%)</a>
+            </nav>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">🎓 Exclusive for Verified Students</div>
+            <h1>Student Affiliate Programme</h1>
+            <p class="hero-subtitle">As a verified MarketWarrior student, you get access to our premium affiliate tier with higher commission rates.</p>
+
+            <div class="commission-highlight">
+                <div class="commission-rate">30%</div>
+                <div class="commission-label">Commission Rate</div>
+            </div>
+
+            <div class="hero-buttons">
+                <a href="https://affiliates.marketwarrior.club/signup?campaign=4683" class="btn-cta">Join Student Programme</a>
+                <a href="https://affiliates.marketwarrior.club/login" class="btn-secondary">Affiliate Login</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exclusive Benefits -->
+    <section class="benefits">
+        <div class="section-container">
+            <h2 class="section-title">Student Exclusive Benefits</h2>
+            <p class="section-subtitle">Verified students get premium perks not available to public affiliates</p>
+
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <h3>30% Commission</h3>
+                    <p>Earn 50% more than public affiliates on every successful referral you make.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🎯</div>
+                    <h3>Authentic Experience</h3>
+                    <p>You've taken the course. Share your genuine experience and results with your audience.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">📊</div>
+                    <h3>Higher Conversions</h3>
+                    <p>Students who share their real journey typically see higher conversion rates.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔗</div>
+                    <h3>Unique Tracking</h3>
+                    <p>Get your own tracking link with 30-day cookie attribution.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="comparison">
+        <div class="section-container">
+            <h2 class="section-title">Student vs Public Comparison</h2>
+            <p class="section-subtitle">See why the student programme offers better value</p>
+
+            <div class="comparison-table">
+                <div class="comparison-row comparison-header">
+                    <div class="comparison-cell">Feature</div>
+                    <div class="comparison-cell">Public (20%)</div>
+                    <div class="comparison-cell">Student (30%)</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Commission Rate</div>
+                    <div class="comparison-cell public">20%</div>
+                    <div class="comparison-cell student">30% <span class="highlight-badge">+50%</span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Cookie Window</div>
+                    <div class="comparison-cell public">30 days</div>
+                    <div class="comparison-cell student">30 days</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Payout Schedule</div>
+                    <div class="comparison-cell public">Net-15</div>
+                    <div class="comparison-cell student">Net-15</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Minimum Payout</div>
+                    <div class="comparison-cell public">$50</div>
+                    <div class="comparison-cell student">$50</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Link Activity</div>
+                    <div class="comparison-cell public">5 months</div>
+                    <div class="comparison-cell student">5 months</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell feature">Earning per $39.99 sale</div>
+                    <div class="comparison-cell public">~$8.00</div>
+                    <div class="comparison-cell student">~$12.00 <span class="highlight-badge">+$4</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="section-container">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Get started in minutes</p>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Sign Up</h3>
+                    <p>Click the join button to register for the student affiliate programme with your 30% rate.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Get Your Link</h3>
+                    <p>Receive your unique tracking link from the affiliate portal dashboard.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Share & Earn</h3>
+                    <p>Share your experience and link. Earn 30% on every successful referral.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Get Paid</h3>
+                    <p>Receive payouts via PayPal or Wise on our Net-15 schedule.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terms Summary -->
+    <section class="terms-summary">
+        <div class="section-container">
+            <h2 class="section-title">Programme Terms</h2>
+            <p class="section-subtitle">Quick overview of the key terms and conditions</p>
+
+            <div class="terms-grid">
+                <div class="terms-card">
+                    <h3>💵 Earnings</h3>
+                    <ul>
+                        <li><span class="check">✓</span> 30% commission on eligible sales</li>
+                        <li><span class="check">✓</span> Commission on final paid amount</li>
+                        <li><span class="check">✓</span> 30-day cookie attribution</li>
+                        <li><span class="check">✓</span> Track via affiliate portal</li>
+                    </ul>
+                </div>
+                <div class="terms-card">
+                    <h3>📤 Payouts</h3>
+                    <ul>
+                        <li><span class="check">✓</span> Net-15 payout schedule</li>
+                        <li><span class="check">✓</span> $50 minimum threshold</li>
+                        <li><span class="check">✓</span> PayPal supported</li>
+                        <li><span class="check">✓</span> Wise batch payments</li>
+                    </ul>
+                </div>
+                <div class="terms-card">
+                    <h3>⚠️ Important</h3>
+                    <ul>
+                        <li><span class="check">✓</span> 5-month link activity period</li>
+                        <li><span class="check">✓</span> FTC disclosure required</li>
+                        <li><span class="check">✓</span> No self-referrals allowed</li>
+                        <li><span class="check">✓</span> Refunds reverse commissions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Best Practices -->
+    <section class="best-practices">
+        <div class="section-container">
+            <h2 class="section-title">Best Practices</h2>
+            <p class="section-subtitle">Maximise your conversions with these tips</p>
+
+            <div class="practices-grid">
+                <div class="practice-card">
+                    <h4>🔗 One Link Everywhere</h4>
+                    <p>Use your unique link consistently across bio, pinned comments, and stories.</p>
+                </div>
+                <div class="practice-card">
+                    <h4>💬 Add Personal Reason</h4>
+                    <p>Tell people who it's for and why you personally recommend it.</p>
+                </div>
+                <div class="practice-card">
+                    <h4>📢 Clear CTA</h4>
+                    <p>"Start the 30-Day Challenge" + "Link in bio" - be direct.</p>
+                </div>
+                <div class="practice-card">
+                    <h4>🔄 Be Consistent</h4>
+                    <p>Repeat your link during launches through stories, reels, and pinned posts.</p>
+                </div>
+                <div class="practice-card">
+                    <h4>⭐ Short Review</h4>
+                    <p>1-2 honest sentences about your experience perform better than generic promo.</p>
+                </div>
+                <div class="practice-card">
+                    <h4>📋 FTC Disclosure</h4>
+                    <p>Always disclose that you're an affiliate and may earn commission.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Warning -->
+    <section class="warning">
+        <div class="warning-content">
+            <h3>⚠️ Tracking Disclaimer</h3>
+            <p>Tracking relies on cookies. Attribution may be affected by ad blockers, browser privacy settings (Safari/Brave), VPNs, iOS/Android restrictions, or switching devices before purchase.</p>
+            <p>A referral is counted only when payment is completed and properly tracked by PromoteKit. MarketWarrior Club is not responsible for unattributed sales caused by technical limitations.</p>
+            <p style="margin-top: 20px;"><a href="/affiliate-terms" style="color: #92400e; font-weight: 600;">Read Full Terms & Conditions →</a></p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Ready to Earn 30%?</h2>
+        <p>Join the exclusive student affiliate programme today</p>
+        <div class="hero-buttons">
+            <a href="https://affiliates.marketwarrior.club/signup?campaign=4683" class="btn-cta">Join Student Programme</a>
+            <a href="https://affiliates.marketwarrior.club/login" class="btn-secondary">Affiliate Login</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="section-container">
+            <p>&copy; 2025 Market Warrior. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="/terms" class="footer-link">Terms & Conditions</a>
+                <a href="/privacy" class="footer-link">Privacy Policy</a>
+                <a href="/affiliate-terms" class="footer-link">Affiliate Terms</a>
+                <a href="/affiliate" class="footer-link">Public Programme</a>
+                <a href="https://affiliates.marketwarrior.club/login" class="footer-link">Affiliate Login</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.querySelector('.nav-menu');
+            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+            nav.style.flexDirection = 'column';
+            nav.style.position = 'absolute';
+            nav.style.top = '70px';
+            nav.style.right = '20px';
+            nav.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            nav.style.padding = '20px';
+            nav.style.borderRadius = '15px';
+            nav.style.gap = '15px';
+        }
+    </script>
+</body>
+</html>
