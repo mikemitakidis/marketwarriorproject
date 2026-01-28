@@ -40,25 +40,15 @@ export default async function handler(req, res) {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
-    // Fetch promotion codes from Stripe with expanded coupon data
-    // We fetch both active and inactive to show full list
-    const [activePromos, inactivePromos] = await Promise.all([
-      stripe.promotionCodes.list({
-        limit: 100,
-        active: true,
-        expand: ['data.coupon'],
-      }),
-      stripe.promotionCodes.list({
-        limit: 100,
-        active: false,
-        expand: ['data.coupon'],
-      }),
-    ]);
+    // Fetch ALL promotion codes from Stripe (no active filter - we want all)
+    const allPromos = await stripe.promotionCodes.list({
+      limit: 100,
+      expand: ['data.coupon'],
+    });
 
-    // Combine and format the promotion codes
-    const allPromos = [...activePromos.data, ...inactivePromos.data];
+    const now = new Date();
 
-    const formattedCoupons = allPromos.map((promo) => {
+    const formattedCoupons = allPromos.data.map((promo) => {
       const coupon = promo.coupon;
 
       // Determine discount display
@@ -71,13 +61,28 @@ export default async function handler(req, res) {
         discount = `${coupon.currency?.toUpperCase() || 'USD'} ${amount}`;
       }
 
-      // Determine expiry status
+      // Check expiration - use promo.expires_at OR coupon.redeem_by
       let expiresAt = null;
       let isExpired = false;
+
       if (promo.expires_at) {
         expiresAt = new Date(promo.expires_at * 1000).toISOString();
-        isExpired = new Date(promo.expires_at * 1000) < new Date();
+        isExpired = new Date(promo.expires_at * 1000) < now;
+      } else if (coupon.redeem_by) {
+        expiresAt = new Date(coupon.redeem_by * 1000).toISOString();
+        isExpired = new Date(coupon.redeem_by * 1000) < now;
       }
+
+      // Check if coupon itself is still valid
+      const couponValid = coupon.valid !== false;
+
+      // Determine final active status:
+      // - Promo code must be active
+      // - Coupon must be valid
+      // - Must not be expired
+      // - Must not have hit max redemptions
+      const hitMaxRedemptions = promo.max_redemptions && promo.times_redeemed >= promo.max_redemptions;
+      const isActive = promo.active && couponValid && !isExpired && !hitMaxRedemptions;
 
       return {
         id: promo.id,
@@ -89,7 +94,10 @@ export default async function handler(req, res) {
         maxRedemptions: promo.max_redemptions || null, // null means unlimited
         expiresAt,
         isExpired,
-        active: promo.active,
+        active: isActive,
+        // Keep raw values for debugging
+        promoActive: promo.active,
+        couponValid,
         created: new Date(promo.created * 1000).toISOString(),
         // Additional coupon metadata
         couponName: coupon.name || null,
