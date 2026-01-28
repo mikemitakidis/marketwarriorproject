@@ -70,9 +70,17 @@ export default function AdminPanel() {
   // Community state
   const [threads, setThreads] = useState([]);
 
-  // Live feed state
-  const [liveFeedPosts, setLiveFeedPosts] = useState([]);
-  const [newAnnouncement, setNewAnnouncement] = useState({ message: '', type: 'announcement' });
+  // Live feed / Announcements state
+  const [announcements, setAnnouncements] = useState([]);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    message: '',
+    type: 'student',
+    link_url: '',
+    link_text: '',
+    background_color: '#3b82f6',
+    text_color: '#ffffff',
+  });
 
   // Certificates state
   const [certificates, setCertificates] = useState([]);
@@ -142,6 +150,9 @@ export default function AdminPanel() {
           break;
         case 'promo':
           await loadCoupons();
+          break;
+        case 'livefeed':
+          await loadAnnouncements();
           break;
       }
     } catch (err) {
@@ -331,6 +342,102 @@ export default function AdminPanel() {
       setPromoCodes([]);
     }
     setCouponsLoading(false);
+  }
+
+  async function loadAnnouncements() {
+    try {
+      const res = await fetch('/api/admin/announcements', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setAnnouncements(data.announcements || []);
+      }
+    } catch (err) {
+      console.error('Error loading announcements:', err);
+    }
+  }
+
+  async function createAnnouncement() {
+    if (!newAnnouncement.message.trim()) {
+      alert('Please enter a message');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newAnnouncement),
+      });
+
+      if (res.ok) {
+        setNewAnnouncement({
+          message: '',
+          type: 'student',
+          link_url: '',
+          link_text: '',
+          background_color: '#3b82f6',
+          text_color: '#ffffff',
+        });
+        loadAnnouncements();
+        alert('Announcement created successfully!');
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.error || 'Failed to create announcement'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
+  async function updateAnnouncement(updates) {
+    try {
+      const res = await fetch('/api/admin/announcements', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+
+      if (res.ok) {
+        setEditingAnnouncement(null);
+        loadAnnouncements();
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.error || 'Failed to update announcement'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
+  async function deleteAnnouncement(id) {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+
+    try {
+      const res = await fetch('/api/admin/announcements', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id }),
+      });
+
+      if (res.ok) {
+        loadAnnouncements();
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.error || 'Failed to delete announcement'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
+  async function toggleAnnouncementVisibility(announcement) {
+    await updateAnnouncement({
+      id: announcement.id,
+      is_visible: !announcement.is_visible,
+    });
   }
 
   async function loadUserDetails(userId) {
@@ -1833,53 +1940,328 @@ export default function AdminPanel() {
               {/* Live Feed Tab */}
               {activeTab === 'livefeed' && (
                 <div>
+                  {/* Create New Announcement */}
                   <div style={styles.card}>
                     <div style={styles.cardHeader}>
-                      <h2 style={styles.cardTitle}>Live Feed Announcements</h2>
+                      <h2 style={styles.cardTitle}>Create Announcement</h2>
                     </div>
 
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Message</label>
-                      <textarea
-                        rows={4}
-                        placeholder="Enter announcement message"
-                        value={newAnnouncement.message}
-                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, message: e.target.value })}
-                        style={styles.textarea}
-                      ></textarea>
-                    </div>
-
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Type</label>
-                      <select
-                        value={newAnnouncement.type}
-                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, type: e.target.value })}
-                        style={styles.select}
-                      >
-                        <option value="announcement">Announcement</option>
-                        <option value="alert">Alert</option>
-                        <option value="signal">Trading Signal (Future)</option>
-                      </select>
-                    </div>
-
-                    <button style={styles.btnSuccess}>Post to Live Feed</button>
-
-                    <div style={{ marginTop: '30px' }}>
-                      <h3>Recent Posts</h3>
-                      {liveFeedPosts.length > 0 ? liveFeedPosts.map((post, i) => (
-                        <div key={i} style={styles.liveFeedPost}>
-                          <p><strong>{post.type}:</strong> {post.message}</p>
-                          <p style={{ fontSize: '0.85em', color: '#64748b', marginTop: '5px' }}>
-                            Posted {post.time}
-                          </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div>
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Message *</label>
+                          <textarea
+                            rows={3}
+                            placeholder="Enter announcement message"
+                            value={newAnnouncement.message}
+                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, message: e.target.value })}
+                            style={styles.textarea}
+                          ></textarea>
                         </div>
-                      )) : (
-                        <div style={styles.liveFeedPost}>
-                          <p style={{ color: '#64748b' }}>No announcements yet</p>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Type</label>
+                          <select
+                            value={newAnnouncement.type}
+                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, type: e.target.value })}
+                            style={styles.select}
+                          >
+                            <option value="student">Student Only (Dashboard, Days, Journal, Community)</option>
+                            <option value="public">Public (Landing Page + All Student Pages)</option>
+                          </select>
                         </div>
-                      )}
+                      </div>
+
+                      <div>
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Link URL (optional)</label>
+                          <input
+                            type="url"
+                            placeholder="https://example.com"
+                            value={newAnnouncement.link_url}
+                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, link_url: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Link Text</label>
+                          <input
+                            type="text"
+                            placeholder="Learn More"
+                            value={newAnnouncement.link_text}
+                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, link_text: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={styles.label}>Background Color</label>
+                            <input
+                              type="color"
+                              value={newAnnouncement.background_color}
+                              onChange={(e) => setNewAnnouncement({ ...newAnnouncement, background_color: e.target.value })}
+                              style={{ width: '100%', height: '40px', cursor: 'pointer', border: 'none', borderRadius: '8px' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={styles.label}>Text Color</label>
+                            <input
+                              type="color"
+                              value={newAnnouncement.text_color}
+                              onChange={(e) => setNewAnnouncement({ ...newAnnouncement, text_color: e.target.value })}
+                              style={{ width: '100%', height: '40px', cursor: 'pointer', border: 'none', borderRadius: '8px' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Preview */}
+                    {newAnnouncement.message && (
+                      <div style={{ marginTop: '20px' }}>
+                        <label style={styles.label}>Preview</label>
+                        <div style={{
+                          backgroundColor: newAnnouncement.background_color,
+                          color: newAnnouncement.text_color,
+                          padding: '12px 20px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '15px',
+                        }}>
+                          <span>{newAnnouncement.message}</span>
+                          {newAnnouncement.link_url && (
+                            <span style={{
+                              background: 'rgba(255,255,255,0.2)',
+                              padding: '4px 12px',
+                              borderRadius: '4px',
+                              fontSize: '13px',
+                              fontWeight: 600,
+                            }}>
+                              {newAnnouncement.link_text || 'Learn More'} →
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <button style={{ ...styles.btnSuccess, marginTop: '20px' }} onClick={createAnnouncement}>
+                      Publish Announcement
+                    </button>
                   </div>
+
+                  {/* Existing Announcements */}
+                  <div style={{ ...styles.card, marginTop: '20px' }}>
+                    <div style={styles.cardHeader}>
+                      <h2 style={styles.cardTitle}>All Announcements</h2>
+                      <button style={styles.btnSmPrimary} onClick={loadAnnouncements}>Refresh</button>
+                    </div>
+
+                    {announcements.length > 0 ? (
+                      <table style={styles.dataTable}>
+                        <thead>
+                          <tr>
+                            <th>Message</th>
+                            <th>Type</th>
+                            <th>Link</th>
+                            <th>Clicks</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {announcements.map(ann => (
+                            <tr key={ann.id}>
+                              <td>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '10px',
+                                }}>
+                                  <div style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '4px',
+                                    backgroundColor: ann.background_color,
+                                    border: '1px solid #e2e8f0',
+                                  }}></div>
+                                  <span style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {ann.message}
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <span style={{
+                                  ...styles.badge,
+                                  ...(ann.type === 'public' ? styles.badgeSuccess : styles.badgeInfo),
+                                }}>
+                                  {ann.type === 'public' ? '🌐 Public' : '👥 Student'}
+                                </span>
+                              </td>
+                              <td>
+                                {ann.link_url ? (
+                                  <a href={ann.link_url} target="_blank" rel="noopener noreferrer" style={{ color: '#667eea', textDecoration: 'none' }}>
+                                    {ann.link_text || 'Link'} ↗
+                                  </a>
+                                ) : (
+                                  <span style={{ color: '#94a3b8' }}>—</span>
+                                )}
+                              </td>
+                              <td>
+                                <span style={{ fontWeight: 600, color: ann.link_clicks > 0 ? '#10b981' : '#64748b' }}>
+                                  {ann.link_clicks || 0}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{
+                                  ...styles.badge,
+                                  ...(ann.is_visible ? styles.badgeSuccess : styles.badgeWarning),
+                                }}>
+                                  {ann.is_visible ? '✓ Visible' : '○ Hidden'}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '0.85em', color: '#64748b' }}>
+                                {new Date(ann.created_at).toLocaleDateString()}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                  <button
+                                    style={ann.is_visible ? styles.btnSmWarning : styles.btnSmSuccess}
+                                    onClick={() => toggleAnnouncementVisibility(ann)}
+                                  >
+                                    {ann.is_visible ? 'Hide' : 'Show'}
+                                  </button>
+                                  <button
+                                    style={styles.btnSmPrimary}
+                                    onClick={() => setEditingAnnouncement(ann)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    style={styles.btnSmDanger}
+                                    onClick={() => deleteAnnouncement(ann.id)}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                        <p>No announcements yet. Create your first announcement above!</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Edit Modal */}
+                  {editingAnnouncement && (
+                    <div style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 1000,
+                    }}>
+                      <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '30px',
+                        width: '90%',
+                        maxWidth: '500px',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                      }}>
+                        <h3 style={{ marginBottom: '20px' }}>Edit Announcement</h3>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Message</label>
+                          <textarea
+                            rows={3}
+                            value={editingAnnouncement.message}
+                            onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, message: e.target.value })}
+                            style={styles.textarea}
+                          ></textarea>
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Type</label>
+                          <select
+                            value={editingAnnouncement.type}
+                            onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, type: e.target.value })}
+                            style={styles.select}
+                          >
+                            <option value="student">Student Only</option>
+                            <option value="public">Public</option>
+                          </select>
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Link URL</label>
+                          <input
+                            type="url"
+                            value={editingAnnouncement.link_url || ''}
+                            onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, link_url: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Link Text</label>
+                          <input
+                            type="text"
+                            value={editingAnnouncement.link_text || ''}
+                            onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, link_text: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={styles.label}>Background Color</label>
+                            <input
+                              type="color"
+                              value={editingAnnouncement.background_color || '#3b82f6'}
+                              onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, background_color: e.target.value })}
+                              style={{ width: '100%', height: '40px', cursor: 'pointer', border: 'none', borderRadius: '8px' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={styles.label}>Text Color</label>
+                            <input
+                              type="color"
+                              value={editingAnnouncement.text_color || '#ffffff'}
+                              onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, text_color: e.target.value })}
+                              style={{ width: '100%', height: '40px', cursor: 'pointer', border: 'none', borderRadius: '8px' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                          <button style={styles.btnSmWarning} onClick={() => setEditingAnnouncement(null)}>
+                            Cancel
+                          </button>
+                          <button
+                            style={styles.btnSmSuccess}
+                            onClick={() => updateAnnouncement(editingAnnouncement)}
+                          >
+                            Save Changes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

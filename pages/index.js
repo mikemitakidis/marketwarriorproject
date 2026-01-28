@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { getServiceSupabase } from '../lib/serverAuth';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 
 /**
  * Landing page.
@@ -48,5 +49,10 @@ export async function getServerSideProps() {
 }
 
 export default function IndexPage({ html }) {
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return (
+    <>
+      <AnnouncementBanner type="public" />
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </>
+  );
 }

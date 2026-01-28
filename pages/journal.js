@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getSupabaseClient, getServiceSupabase } from '../lib/supabase';
 import { getUserFromRequest } from '../lib/serverAuth';
 import Head from 'next/head';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 
 /**
  * Paid trading journal page.
@@ -106,11 +107,13 @@ export default function JournalPage({ userId, initialEntries = [] }) {
     setLoading(false);
   }
   return (
-    <div className="container mx-auto p-4">
-      <Head>
-        <title>Trading Journal</title>
-      </Head>
-      <h1 className="text-3xl font-bold mb-4">Your Trading Journal</h1>
+    <>
+      <AnnouncementBanner type="student" />
+      <div className="container mx-auto p-4">
+        <Head>
+          <title>Trading Journal</title>
+        </Head>
+        <h1 className="text-3xl font-bold mb-4">Your Trading Journal</h1>
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex space-x-2 flex-wrap gap-2">
           <input
@@ -155,6 +158,7 @@ export default function JournalPage({ userId, initialEntries = [] }) {
         </ul>
       )}
       {error && <p className="text-red-600 mt-4">{error}</p>}
-    </div>
+      </div>
+    </>
   );
 }

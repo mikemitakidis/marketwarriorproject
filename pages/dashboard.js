@@ -1,6 +1,7 @@
 import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../lib/serverAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 
 export async function getServerSideProps({ req }) {
   try {
@@ -274,6 +275,8 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
           .stats-grid, .actions-grid { grid-template-columns: repeat(2, 1fr); }
         }
       `}</style>
+
+      <AnnouncementBanner type="student" />
 
       <header className="header">
         <div className="logo">

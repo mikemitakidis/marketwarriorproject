@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { getUserFromRequest, getGateStatus, getUserChallengeStatus, getServiceSupabase } from '../../lib/serverAuth';
+import AnnouncementBanner from '../../components/AnnouncementBanner';
 
 /**
  * Iframe Template Mode - renders the day template in an isolated iframe
@@ -224,6 +225,8 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
       <Head>
         <title>Day {day} | Market Warrior</title>
       </Head>
+
+      <AnnouncementBanner type="student" />
 
       <div className="template-container">
         {/* Status Bar */}
