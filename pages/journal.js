@@ -113,6 +113,10 @@ export default function JournalPage({ userId, initialEntries = [] }) {
         <Head>
           <title>Trading Journal</title>
         </Head>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <a href="/dashboard" style={{ color: '#667eea', textDecoration: 'none' }}>← Back to Dashboard</a>
+          <a href="/students-affiliate" style={{ color: '#10b981', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>Refer & Earn 30%</a>
+        </div>
         <h1 className="text-3xl font-bold mb-4">Your Trading Journal</h1>
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex space-x-2 flex-wrap gap-2">

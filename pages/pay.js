@@ -105,11 +105,20 @@ export default function PayPage({ userEmail }) {
         console.warn('Could not detect currency, using USD');
       }
 
+      // Capture PromoteKit referral ID for affiliate attribution
+      const promotekit_referral = typeof window !== 'undefined'
+        ? window.promotekit_referral
+        : undefined;
+
       const res = await fetch('/api/checkout/stripe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ currency }),
+        body: JSON.stringify({
+          currency,
+          // Include PromoteKit referral ID if present
+          ...(promotekit_referral && { promotekit_referral }),
+        }),
       });
 
       const data = await res.json();
