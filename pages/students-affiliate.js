@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { getServiceSupabase } from '../lib/serverAuth';
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { getServiceSupabase, getUserFromRequest } from '../lib/serverAuth';
 import AnnouncementBanner from '../components/AnnouncementBanner';
 
 /**
@@ -10,13 +9,12 @@ import AnnouncementBanner from '../components/AnnouncementBanner';
  * Displays the 30% commission tier information for verified students.
  * Requires authentication - only accessible to logged-in users.
  */
-export async function getServerSideProps({ req, res }) {
+export async function getServerSideProps({ req }) {
   // Check if user is authenticated
-  const supabaseClient = createServerSupabaseClient({ req, res });
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const user = await getUserFromRequest(req);
 
   // Redirect to login if not authenticated
-  if (!session) {
+  if (!user) {
     return {
       redirect: {
         destination: '/login?redirect=/students-affiliate',
