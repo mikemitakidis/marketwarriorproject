@@ -31,8 +31,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Stripe is not configured' });
     }
 
-    // Get user's preferred currency from request body (or detect from location)
-    const { currency = 'usd' } = req.body;
+    // Get user's preferred currency and PromoteKit referral from request body
+    const { currency = 'usd', promotekit_referral } = req.body;
     const currencyLower = currency.toLowerCase();
 
     // Supported currencies
@@ -114,6 +114,8 @@ export default async function handler(req, res) {
       metadata: {
         userId,
         selectedCurrency,
+        // PromoteKit referral ID for affiliate attribution
+        ...(promotekit_referral && { promotekit_referral }),
       },
     });
 
