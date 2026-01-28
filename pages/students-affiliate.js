@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { getServiceSupabase, getUserFromRequest } from '../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../lib/serverAuth';
 import AnnouncementBanner from '../components/AnnouncementBanner';
 
 /**
  * Student Affiliate Programme page.
  *
  * Displays the 30% commission tier information for verified students.
- * Requires authentication - only accessible to logged-in users.
+ * Requires authentication AND payment - only accessible to paid students.
  */
 export async function getServerSideProps({ req }) {
   // Check if user is authenticated
@@ -18,6 +18,18 @@ export async function getServerSideProps({ req }) {
     return {
       redirect: {
         destination: '/login?redirect=/students-affiliate',
+        permanent: false,
+      },
+    };
+  }
+
+  // Check if user has paid (is a verified student)
+  const gate = await getGateStatus(user.id, user.email);
+  if (!gate.hasPaid) {
+    // Redirect non-paying users to the public affiliate page
+    return {
+      redirect: {
+        destination: '/affiliate',
         permanent: false,
       },
     };
