@@ -91,7 +91,9 @@ export default function LoginPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback?next=/pay`;
+      // Use canonical domain from env var, fallback to window.location.origin for local dev
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const redirectUrl = `${appUrl}/auth/callback?next=/pay`;
       console.log('Redirect URL:', redirectUrl);
 
       const { data, error } = await supabase.auth.signUp({
@@ -128,8 +130,9 @@ export default function LoginPage() {
     setMessage({ type: '', text: '' });
 
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+        redirectTo: `${appUrl}/auth/callback?type=recovery`,
       });
       if (error) throw error;
       setMessage({ type: 'success', text: 'Check your email for reset link!' });
@@ -143,10 +146,11 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     if (!supabase) return;
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/pay`,
+          redirectTo: `${appUrl}/auth/callback?next=/pay`,
         },
       });
       if (error) throw error;

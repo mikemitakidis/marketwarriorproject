@@ -1,45 +1,140 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../lib/serverAuth';
+import { createClient } from '@supabase/supabase-js';
 
 export default function AuthCallback() {
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    // Handles cases where Supabase returns tokens in the URL hash.
-    const hash = window.location.hash || '';
-    if (!hash) return;
-    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
-    const queryParams = new URLSearchParams(window.location.search);
+    const processCallback = async () => {
+      try {
+        // Initialize Supabase client
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const access_token = hashParams.get('access_token');
-    const refresh_token = hashParams.get('refresh_token');
-    // Check for recovery type in both hash and query string
-    const type = hashParams.get('type') || queryParams.get('type');
-    const next = queryParams.get('next') || '/pay';
+        if (!supabaseUrl || !supabaseKey) {
+          setError('Configuration error');
+          return;
+        }
 
-    if (!access_token || !refresh_token) return;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const queryParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash || '';
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
 
-    // First set the session
-    fetch('/api/auth/set-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ access_token, refresh_token, next })
-    }).then(async (r) => {
-      const j = await r.json().catch(() => ({}));
+        // Check for error in URL (Supabase returns errors this way sometimes)
+        const errorParam = queryParams.get('error') || hashParams.get('error');
+        const errorDesc = queryParams.get('error_description') || hashParams.get('error_description');
+        if (errorParam) {
+          console.error('OAuth error:', errorParam, errorDesc);
+          setError(errorDesc || errorParam);
+          setTimeout(() => window.location.replace('/login?error=' + errorParam), 2000);
+          return;
+        }
 
-      // If this is password recovery, go to reset password page
-      if (type === 'recovery') {
-        window.location.replace('/reset-password');
-        return;
+        const type = hashParams.get('type') || queryParams.get('type');
+        const next = queryParams.get('next') || '/pay';
+
+        // Method 1: Check for tokens in hash (implicit/PKCE flow)
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+
+        if (access_token && refresh_token) {
+          console.log('Found tokens in hash, setting session...');
+          const res = await fetch('/api/auth/set-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token, refresh_token, next })
+          });
+
+          const data = await res.json().catch(() => ({}));
+
+          if (type === 'recovery') {
+            window.location.replace('/reset-password');
+            return;
+          }
+
+          if (res.ok && data?.next) {
+            window.location.replace(data.next);
+          } else {
+            window.location.replace('/login');
+          }
+          return;
+        }
+
+        // Method 2: Check for code in query (authorization code flow)
+        const code = queryParams.get('code');
+        if (code) {
+          console.log('Found code in query, exchanging for session...');
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            console.error('Code exchange error:', error);
+            setError(error.message);
+            setTimeout(() => window.location.replace('/login?error=exchange'), 2000);
+            return;
+          }
+
+          if (data?.session) {
+            // Set server-side cookies
+            const res = await fetch('/api/auth/set-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+                next
+              })
+            });
+
+            const responseData = await res.json().catch(() => ({}));
+
+            if (type === 'recovery') {
+              window.location.replace('/reset-password');
+              return;
+            }
+
+            if (res.ok && responseData?.next) {
+              window.location.replace(responseData.next);
+            } else {
+              window.location.replace('/dashboard');
+            }
+            return;
+          }
+        }
+
+        // Method 3: Try to get session from Supabase (might already be set)
+        console.log('Checking for existing session...');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('Found existing session, redirecting...');
+          window.location.replace(next || '/dashboard');
+          return;
+        }
+
+        // No auth data found
+        console.log('No auth data found in callback URL');
+        setError('No authentication data received. Please try again.');
+        setTimeout(() => window.location.replace('/login'), 3000);
+
+      } catch (err) {
+        console.error('Callback processing error:', err);
+        setError(err.message || 'Authentication failed');
+        setTimeout(() => window.location.replace('/login?error=callback'), 3000);
       }
+    };
 
-      if (r.ok && j?.next) window.location.replace(j.next);
-      else window.location.replace('/login');
-    });
+    processCallback();
   }, []);
 
   return (
     <div style={{ padding: 24, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
-      <h1>Signing you in…</h1>
-      <p>If this takes more than a few seconds, go back to <a href="/login">Login</a>.</p>
+      <h1>{error ? 'Authentication Error' : 'Signing you in...'}</h1>
+      {error ? (
+        <p style={{ color: '#dc2626' }}>{error}</p>
+      ) : (
+        <p>If this takes more than a few seconds, go back to <a href="/login">Login</a>.</p>
+      )}
     </div>
   );
 }

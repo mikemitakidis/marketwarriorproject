@@ -17,6 +17,27 @@ const moduleExports = {
     unoptimized: true,
   },
 
+  // Redirect non-www to www for canonical domain
+  async redirects() {
+    // Only apply redirects in production
+    if (process.env.NODE_ENV !== 'production') {
+      return [];
+    }
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'marketwarrior.club',
+          },
+        ],
+        destination: 'https://www.marketwarrior.club/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   // Security headers
   async headers() {
     return [
