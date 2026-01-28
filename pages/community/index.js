@@ -246,6 +246,7 @@ export default function CommunityPage({ threads, userName }) {
       <header className="header">
         <a href="/dashboard" className="logo">Market Warrior</a>
         <div className="user-section">
+          <a href="/students-affiliate" style={{ color: '#10b981', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>Refer & Earn 30%</a>
           <span className="user-name">{userName}</span>
           <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>

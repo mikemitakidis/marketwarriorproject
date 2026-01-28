@@ -242,6 +242,7 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
             {statusMessage && !error && <span className="status">{statusMessage}</span>}
           </div>
           <div className="status-right">
+            <a href="/students-affiliate" style={{ color: '#10b981', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600', marginRight: '12px' }}>Refer & Earn 30%</a>
             <span className={`badge ${quizPassed ? 'passed' : ''}`}>
               Quiz: {quizPassed ? '✓' : '○'}
             </span>

@@ -330,7 +330,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
             <div className="action-title">Community</div>
             <div className="action-desc">Connect with traders</div>
           </a>
-          <a href="#" className="action-card">
+          <a href="/students-affiliate" className="action-card">
             <div className="action-icon">🎁</div>
             <div className="action-title">Refer & Earn</div>
             <div className="action-desc">Get 30% commission</div>
