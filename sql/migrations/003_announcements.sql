@@ -34,6 +34,22 @@ CREATE POLICY "Service role can manage announcements"
 CREATE INDEX IF NOT EXISTS idx_announcements_visible ON public.announcements(is_visible, type);
 CREATE INDEX IF NOT EXISTS idx_announcements_created ON public.announcements(created_at DESC);
 
+-- RPC function to atomically increment click count
+CREATE OR REPLACE FUNCTION increment_announcement_clicks(announcement_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.announcements
+  SET link_clicks = link_clicks + 1
+  WHERE id = announcement_id;
+END;
+$$;
+
+-- Grant execute permission to anon and authenticated users
+GRANT EXECUTE ON FUNCTION increment_announcement_clicks(uuid) TO anon, authenticated;
+
 -- Add comment
 COMMENT ON TABLE public.announcements IS 'Announcement banners for students and public pages';
 COMMENT ON COLUMN public.announcements.type IS 'student = visible on student pages only, public = visible everywhere including landing page';

@@ -1,4 +1,4 @@
-import { getServiceSupabase } from '../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest } from '../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../lib/ratelimit';
 import logger from '../../lib/logger';
 
@@ -7,8 +7,9 @@ import logger from '../../lib/logger';
  *
  * GET: Fetch visible announcements for display
  *   - Query param: type=student|public|all (default: all)
- *   - Public users see 'public' announcements
- *   - Students see both 'student' and 'public' announcements
+ *   - Public users see 'public' announcements only
+ *   - Students (authenticated) see both 'student' and 'public' announcements
+ *   - Student announcements require authentication
  *
  * POST: Track link clicks
  *   - Body: { id: announcement_id }
@@ -34,13 +35,27 @@ export default async function handler(req, res) {
 
       // Filter by type if specified
       if (type === 'student') {
+        // Student announcements require authentication
+        const user = await getUserFromRequest(req);
+        if (!user) {
+          return res.status(401).json({ error: 'Authentication required for student announcements' });
+        }
         // Students see both student and public announcements
         query = query.in('type', ['student', 'public']);
       } else if (type === 'public') {
-        // Public pages only see public announcements
+        // Public pages only see public announcements (no auth required)
         query = query.eq('type', 'public');
+      } else {
+        // For 'all' or unspecified, check auth and return appropriate announcements
+        const user = await getUserFromRequest(req);
+        if (user) {
+          // Authenticated users see all announcements
+          // No additional filter needed
+        } else {
+          // Unauthenticated users only see public announcements
+          query = query.eq('type', 'public');
+        }
       }
-      // If type is 'all' or not specified, return all visible announcements
 
       const { data, error } = await query;
 
