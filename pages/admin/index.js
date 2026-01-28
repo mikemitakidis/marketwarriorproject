@@ -325,6 +325,49 @@ export default function AdminPanel() {
     }
   }
 
+  async function createAffiliate() {
+    const email = prompt('Enter user email to make an affiliate:');
+    if (!email) return;
+
+    const commissionRate = prompt('Enter commission rate (default is base rate):', baseCommission.toString());
+
+    const res = await fetch('/api/admin/affiliates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, commissionRate: parseInt(commissionRate) || baseCommission }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      alert(`Affiliate created! Code: ${data.affiliateCode}`);
+      await loadAffiliates();
+    } else {
+      const error = await res.json();
+      alert(`Error: ${error.error || 'Failed to create affiliate'}`);
+    }
+  }
+
+  async function updateBaseCommission() {
+    const res = await fetch('/api/admin/affiliates', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ baseCommission: parseInt(baseCommission) || 25 }),
+    });
+
+    if (res.ok) {
+      alert('Base commission rate updated!');
+    } else {
+      const error = await res.json();
+      alert(`Error: ${error.error || 'Failed to update rate'}`);
+    }
+  }
+
+  function handlePayOut(affiliate) {
+    alert(`Payouts are managed via PromoteKit.\n\nAffiliate: ${affiliate.name}\nPending: $${affiliate.pendingPayout}\n\nVisit https://affiliates.marketwarrior.club to process payouts.`);
+  }
+
   async function loadCoupons() {
     setCouponsLoading(true);
     try {
@@ -1723,7 +1766,7 @@ export default function AdminPanel() {
                   <div style={styles.card}>
                     <div style={styles.cardHeader}>
                       <h2 style={styles.cardTitle}>Affiliate Program</h2>
-                      <button style={styles.btnPrimary}>+ Create Affiliate</button>
+                      <button style={styles.btnPrimary} onClick={createAffiliate}>+ Create Affiliate</button>
                     </div>
 
                     <div style={styles.affiliateCommissionBox}>
@@ -1736,7 +1779,7 @@ export default function AdminPanel() {
                           style={{ width: '100px', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 700 }}
                         />
                         <span style={{ fontSize: '1.2em' }}>%</span>
-                        <button style={styles.btnSuccess}>Update Rate</button>
+                        <button style={styles.btnSuccess} onClick={updateBaseCommission}>Update Rate</button>
                       </div>
                     </div>
 
@@ -1762,7 +1805,7 @@ export default function AdminPanel() {
                             <td>${aff.revenue}</td>
                             <td>${aff.pendingPayout}</td>
                             <td>
-                              <button style={styles.btnSmSuccess}>Pay Out</button>
+                              <button style={styles.btnSmSuccess} onClick={() => handlePayOut(aff)}>Pay Out</button>
                             </td>
                           </tr>
                         )) : (
