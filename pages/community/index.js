@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../../lib/serverAuth';
+import AnnouncementBanner from '../../components/AnnouncementBanner';
 
 /**
  * Community forum page.
@@ -239,6 +240,8 @@ export default function CommunityPage({ threads, userName }) {
           color: #64748b;
         }
       `}</style>
+
+      <AnnouncementBanner type="student" />
 
       <header className="header">
         <a href="/dashboard" className="logo">Market Warrior</a>
