@@ -12,10 +12,12 @@ export default function Document() {
     <Html lang="en">
       <Head>
         {/* PromoteKit Tracking Script - must be in <head> for all pages */}
+        {/* data-domain ensures cookie is set on root domain for www/non-www compatibility */}
         <script
           async
           src="https://cdn.promotekit.com/promotekit.js"
           data-promotekit="146b8488-69a9-452f-8258-e4a6c06c9ada"
+          data-domain=".marketwarrior.club"
         />
       </Head>
       <body>
