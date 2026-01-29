@@ -23,6 +23,16 @@ const moduleExports = {
   // Security headers
   async headers() {
     return [
+      // Cache control for HTML pages - ensure fresh content after deployments
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
