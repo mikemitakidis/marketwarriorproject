@@ -92,32 +92,72 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
     setError('');
 
     try {
-      // Detect user's currency from browser locale
+      // Detect user's currency using multiple methods for accuracy
       let currency = 'usd';
       try {
-        const locale = navigator.language || 'en-US';
-        const region = locale.split('-')[1]?.toUpperCase();
-
-        // Map regions to currencies
-        const currencyMap = {
-          'US': 'usd',
-          'GB': 'gbp',
-          'UK': 'gbp',
-          'EU': 'eur',
-          'DE': 'eur',
-          'FR': 'eur',
-          'IT': 'eur',
-          'ES': 'eur',
-          'NL': 'eur',
-          'BE': 'eur',
-          'AT': 'eur',
-          'AU': 'aud',
-          'CA': 'cad',
-          'NZ': 'nzd',
+        // Method 1: Check timezone first (most reliable for actual location)
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const timezoneMap = {
+          // New Zealand
+          'Pacific/Auckland': 'nzd',
+          'Pacific/Chatham': 'nzd',
+          // Australia
+          'Australia/Sydney': 'aud',
+          'Australia/Melbourne': 'aud',
+          'Australia/Brisbane': 'aud',
+          'Australia/Perth': 'aud',
+          'Australia/Adelaide': 'aud',
+          'Australia/Hobart': 'aud',
+          'Australia/Darwin': 'aud',
+          // UK
+          'Europe/London': 'gbp',
+          // Europe (EUR)
+          'Europe/Paris': 'eur',
+          'Europe/Berlin': 'eur',
+          'Europe/Rome': 'eur',
+          'Europe/Madrid': 'eur',
+          'Europe/Amsterdam': 'eur',
+          'Europe/Brussels': 'eur',
+          'Europe/Vienna': 'eur',
+          // Canada
+          'America/Toronto': 'cad',
+          'America/Vancouver': 'cad',
+          'America/Montreal': 'cad',
+          // US
+          'America/New_York': 'usd',
+          'America/Chicago': 'usd',
+          'America/Denver': 'usd',
+          'America/Los_Angeles': 'usd',
         };
 
-        currency = currencyMap[region] || 'usd';
-        console.log(`Detected currency: ${currency} from locale: ${locale}`);
+        if (timezoneMap[timezone]) {
+          currency = timezoneMap[timezone];
+          console.log(`Detected currency: ${currency} from timezone: ${timezone}`);
+        } else {
+          // Method 2: Fallback to browser locale
+          const locale = navigator.language || 'en-US';
+          const region = locale.split('-')[1]?.toUpperCase();
+
+          const currencyMap = {
+            'US': 'usd',
+            'GB': 'gbp',
+            'UK': 'gbp',
+            'EU': 'eur',
+            'DE': 'eur',
+            'FR': 'eur',
+            'IT': 'eur',
+            'ES': 'eur',
+            'NL': 'eur',
+            'BE': 'eur',
+            'AT': 'eur',
+            'AU': 'aud',
+            'CA': 'cad',
+            'NZ': 'nzd',
+          };
+
+          currency = currencyMap[region] || 'usd';
+          console.log(`Detected currency: ${currency} from locale: ${locale}`);
+        }
       } catch (e) {
         console.warn('Could not detect currency, using USD');
       }
