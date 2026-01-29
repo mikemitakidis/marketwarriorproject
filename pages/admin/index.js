@@ -1042,6 +1042,44 @@ export default function AdminPanel() {
                           {loading ? 'Saving...' : 'Update Price'}
                         </button>
                       </div>
+                      <div style={{ marginTop: '15px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <p style={{ fontSize: '0.9em', marginBottom: '10px' }}>
+                          <strong>🔄 Sync Existing Stripe Prices</strong><br />
+                          If you've already created prices in Stripe dashboard, click below to sync them.
+                        </p>
+                        <button
+                          style={{ ...styles.btnPrimary, padding: '8px 16px', fontSize: '0.9em' }}
+                          onClick={async () => {
+                            if (!confirm('This will sync all active prices from your Stripe product to the database. Continue?')) return;
+                            setLoading(true);
+                            try {
+                              const res = await fetch('/api/admin/settings/sync-stripe-prices', {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                              const data = await res.json();
+                              if (res.ok) {
+                                let msg = data.message;
+                                if (data.syncedPrices) {
+                                  msg += '\n\nSynced prices:';
+                                  for (const [currency, info] of Object.entries(data.syncedPrices)) {
+                                    msg += `\n${currency.toUpperCase()}: ${info.amount} (${info.priceId})`;
+                                  }
+                                }
+                                alert(msg);
+                              } else {
+                                alert('Error: ' + (data.error || 'Failed to sync'));
+                              }
+                            } catch (err) {
+                              alert('Error: ' + err.message);
+                            }
+                            setLoading(false);
+                          }}
+                          disabled={loading}
+                        >
+                          {loading ? 'Syncing...' : 'Sync Prices from Stripe'}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Logo Editor */}
