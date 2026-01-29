@@ -17,26 +17,8 @@ const moduleExports = {
     unoptimized: true,
   },
 
-  // Redirect non-www to www for canonical domain
-  async redirects() {
-    // Only apply redirects in production
-    if (process.env.NODE_ENV !== 'production') {
-      return [];
-    }
-    return [
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'marketwarrior.club',
-          },
-        ],
-        destination: 'https://www.marketwarrior.club/:path*',
-        permanent: true,
-      },
-    ];
-  },
+  // Note: Non-www to www redirect is handled in vercel.json at the edge level
+  // to ensure query strings (e.g., ?ref=ID) are preserved for affiliate tracking
 
   // Security headers
   async headers() {
