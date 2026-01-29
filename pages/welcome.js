@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
+import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../lib/serverAuth';
+import Stripe from 'stripe';
 
 /**
  * Welcome / Onboarding page.
@@ -13,16 +14,72 @@ import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
  * Once completed, terms acceptance persists in user_profiles and the user
  * is never shown this page again (redirected to dashboard).
  */
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, query }) {
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
       return { redirect: { destination: '/login', permanent: false } };
     }
 
-    const gate = await getGateStatus(user.id, user.email);
+    let gate = await getGateStatus(user.id, user.email);
 
-    // If not paid, redirect to payment
+    // If not paid, check if we have a session_id from Stripe redirect
+    // This handles the race condition where redirect happens before webhook
+    if (!gate.hasPaid && query.session_id) {
+      console.log('[WELCOME] User not marked as paid, but has session_id. Verifying with Stripe...');
+
+      try {
+        const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+        if (stripeSecretKey) {
+          const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+          const session = await stripe.checkout.sessions.retrieve(query.session_id);
+
+          // Verify this session belongs to this user and payment was successful
+          if (session.metadata?.userId === user.id && session.payment_status === 'paid') {
+            console.log('[WELCOME] Stripe session verified as paid. Updating user profile...');
+
+            const supabase = getServiceSupabase();
+            const now = new Date().toISOString();
+
+            // Update user profile to mark as paid
+            await supabase
+              .from('user_profiles')
+              .update({
+                has_paid: true,
+                paid_at: now,
+                stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
+                last_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+              })
+              .eq('id', user.id);
+
+            // Record payment if not already recorded
+            const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
+            await supabase.from('payments').upsert({
+              user_id: user.id,
+              stripe_session_id: session.id,
+              payment_intent_id: paymentIntentId,
+              amount_cents: session.amount_total,
+              currency: session.currency || 'usd',
+              status: 'succeeded',
+              paid_at: now,
+              raw: session,
+            }, {
+              onConflict: 'stripe_session_id',
+              ignoreDuplicates: true,
+            });
+
+            // Re-check gate status
+            gate = await getGateStatus(user.id, user.email);
+            console.log('[WELCOME] User profile updated, hasPaid:', gate.hasPaid);
+          }
+        }
+      } catch (stripeErr) {
+        console.error('[WELCOME] Stripe verification error:', stripeErr.message);
+        // Continue to redirect to /pay if verification fails
+      }
+    }
+
+    // If still not paid after verification attempt, redirect to payment
     if (!gate.hasPaid) {
       return { redirect: { destination: '/pay', permanent: false } };
     }

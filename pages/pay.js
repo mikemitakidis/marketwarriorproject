@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { getUserFromRequest, getGateStatus } from '../lib/serverAuth';
+import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../lib/serverAuth';
 
 /**
  * Payment page.
@@ -31,15 +31,32 @@ export async function getServerSideProps({ req }) {
       return { redirect: { destination: '/dashboard', permanent: false } };
     }
 
+    // Fetch price from settings
+    let displayPrice = '49.99';
+    try {
+      const supabase = getServiceSupabase();
+      const { data: priceSetting } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'challenge_price')
+        .maybeSingle();
+
+      if (priceSetting?.value) {
+        displayPrice = priceSetting.value;
+      }
+    } catch (e) {
+      console.error('[PAY] Error fetching price:', e);
+    }
+
     console.log('[PAY] User has NOT paid, showing payment page');
-    return { props: { userEmail: user.email } };
+    return { props: { userEmail: user.email, displayPrice } };
   } catch (err) {
     console.error('Pay page SSR error:', err);
     return { redirect: { destination: '/login', permanent: false } };
   }
 }
 
-export default function PayPage({ userEmail }) {
+export default function PayPage({ userEmail, displayPrice = '49.99' }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -280,7 +297,7 @@ export default function PayPage({ userEmail }) {
         {error && <div className="error">{error}</div>}
 
         <div className="price-box">
-          <div className="price">$39.99</div>
+          <div className="price">${displayPrice}</div>
           <div className="price-label">One-time payment</div>
         </div>
 
