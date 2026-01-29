@@ -1,17 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/:path(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "marketwarrior.club"
-        }
-      ],
-      "destination": "https://www.marketwarrior.club/:path",
-      "permanent": true
-    }
-  ],
   "crons": [
     {
       "path": "/api/cron/keep-alive",

@@ -17,7 +17,7 @@ const moduleExports = {
     unoptimized: true,
   },
 
-  // Note: Non-www to www redirect is handled in vercel.json at the edge level
+  // Note: Non-www to www redirect is handled in middleware.js
   // to ensure query strings (e.g., ?ref=ID) are preserved for affiliate tracking
 
   // Security headers
