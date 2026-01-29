@@ -181,53 +181,54 @@ export default function LoginPage() {
       <style jsx>{`
         .container {
           background: white;
-          padding: 40px;
-          border-radius: 20px;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-          max-width: 420px;
+          padding: 50px;
+          border-radius: 24px;
+          box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+          max-width: 480px;
           width: 100%;
         }
-        h1 { text-align: center; color: #1e293b; margin-bottom: 8px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 24px; }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 10px; font-size: 2em; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 1.1em; }
         .tabs {
           display: flex;
-          margin-bottom: 24px;
-          border-radius: 8px;
+          margin-bottom: 28px;
+          border-radius: 10px;
           overflow: hidden;
           border: 2px solid #e2e8f0;
         }
         .tab {
           flex: 1;
-          padding: 12px;
+          padding: 14px;
           border: none;
           background: #f8fafc;
           cursor: pointer;
           font-weight: 600;
+          font-size: 15px;
           color: #64748b;
         }
         .tab.active {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
         }
-        .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 15px; }
         input {
           width: 100%;
-          padding: 12px;
+          padding: 14px 16px;
           border: 2px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 10px;
           font-size: 16px;
         }
         input:focus { outline: none; border-color: #667eea; }
         .btn {
           width: 100%;
-          padding: 14px;
+          padding: 16px;
           border: none;
-          border-radius: 8px;
+          border-radius: 10px;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          margin-bottom: 12px;
+          margin-bottom: 14px;
         }
         .btn-primary {
           background: linear-gradient(135deg, #667eea, #764ba2);
@@ -246,7 +247,7 @@ export default function LoginPage() {
         .divider {
           text-align: center;
           color: #94a3b8;
-          margin: 20px 0;
+          margin: 24px 0;
           position: relative;
         }
         .divider::before, .divider::after {
@@ -260,17 +261,21 @@ export default function LoginPage() {
         .divider::before { left: 0; }
         .divider::after { right: 0; }
         .message {
-          padding: 12px;
-          border-radius: 8px;
-          margin-bottom: 16px;
+          padding: 14px;
+          border-radius: 10px;
+          margin-bottom: 20px;
           text-align: center;
         }
         .message.error { background: #fef2f2; color: #dc2626; }
         .message.success { background: #f0fdf4; color: #16a34a; }
-        .links { text-align: center; margin-top: 20px; color: #64748b; }
+        .links { text-align: center; margin-top: 24px; color: #64748b; }
         .links a { color: #667eea; text-decoration: none; cursor: pointer; }
-        .forgot { text-align: right; margin-bottom: 16px; }
+        .forgot { text-align: right; margin-bottom: 20px; }
         .forgot a { color: #667eea; font-size: 14px; cursor: pointer; }
+        @media (max-width: 520px) {
+          .container { padding: 30px 24px; margin: 10px; }
+          h1 { font-size: 1.6em; }
+        }
       `}</style>
 
       <div className="container">
