@@ -76,11 +76,11 @@ const moduleExports = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://accounts.google.com https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://accounts.google.com https://www.googletagmanager.com https://cdn.promotekit.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://accounts.google.com https://*.sentry.io",
+              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://accounts.google.com https://*.sentry.io https://*.promotekit.com",
               "frame-src 'self' https://js.stripe.com https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",
