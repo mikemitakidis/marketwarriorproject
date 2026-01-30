@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   if (rateLimitResult) return rateLimitResult;
 
   try {
-    const { day, response: taskResponse, attachmentUrl } = req.body;
+    const { day, response: taskResponse, attachmentUrl, attachmentPath } = req.body;
     if (!day || !taskResponse) {
       return res.status(400).json({ error: 'Missing day or response' });
     }
@@ -80,6 +80,7 @@ export default async function handler(req, res) {
         day: day,
         submission_text: taskResponse,
         attachment_url: attachmentUrl || null,
+        attachment_path: attachmentPath || null,
         status: 'submitted',
       });
 

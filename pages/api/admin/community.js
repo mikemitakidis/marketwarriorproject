@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         .insert({
           title,
           body,
-          author_id: adminUser.id,
+          author_id: user.id,
           is_pinned: false,
           is_locked: false,
         })

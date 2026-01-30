@@ -53,13 +53,33 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Message is required' });
       }
 
+      // SECURITY: Validate link_url has safe protocol (prevents javascript: XSS)
+      let sanitizedLinkUrl = null;
+      if (link_url && link_url.trim()) {
+        const trimmedUrl = link_url.trim();
+        try {
+          const urlObj = new URL(trimmedUrl);
+          if (!['http:', 'https:'].includes(urlObj.protocol)) {
+            return res.status(400).json({ error: 'Link URL must use http:// or https://' });
+          }
+          sanitizedLinkUrl = trimmedUrl;
+        } catch (e) {
+          // Allow relative URLs starting with /
+          if (trimmedUrl.startsWith('/') && !trimmedUrl.startsWith('//')) {
+            sanitizedLinkUrl = trimmedUrl;
+          } else {
+            return res.status(400).json({ error: 'Invalid link URL format' });
+          }
+        }
+      }
+
       const announcementType = type === 'public' ? 'public' : 'student';
 
       const { data, error } = await supabase
         .from('announcements')
         .insert({
           message: message.trim(),
-          link_url: link_url?.trim() || null,
+          link_url: sanitizedLinkUrl,
           link_text: link_text?.trim() || null,
           type: announcementType,
           background_color: background_color || '#3b82f6',
@@ -87,10 +107,32 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Announcement ID is required' });
       }
 
+      // SECURITY: Validate link_url has safe protocol (prevents javascript: XSS)
+      let sanitizedLinkUrl = null;
+      if (link_url !== undefined) {
+        if (link_url && link_url.trim()) {
+          const trimmedUrl = link_url.trim();
+          try {
+            const urlObj = new URL(trimmedUrl);
+            if (!['http:', 'https:'].includes(urlObj.protocol)) {
+              return res.status(400).json({ error: 'Link URL must use http:// or https://' });
+            }
+            sanitizedLinkUrl = trimmedUrl;
+          } catch (e) {
+            // Allow relative URLs starting with /
+            if (trimmedUrl.startsWith('/') && !trimmedUrl.startsWith('//')) {
+              sanitizedLinkUrl = trimmedUrl;
+            } else {
+              return res.status(400).json({ error: 'Invalid link URL format' });
+            }
+          }
+        }
+      }
+
       const updates = { updated_at: new Date().toISOString() };
 
       if (message !== undefined) updates.message = message.trim();
-      if (link_url !== undefined) updates.link_url = link_url?.trim() || null;
+      if (link_url !== undefined) updates.link_url = sanitizedLinkUrl;
       if (link_text !== undefined) updates.link_text = link_text?.trim() || null;
       if (type !== undefined) updates.type = type === 'public' ? 'public' : 'student';
       if (is_visible !== undefined) updates.is_visible = Boolean(is_visible);
