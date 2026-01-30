@@ -33,7 +33,7 @@ export default function AuthCallback() {
         }
 
         const type = hashParams.get('type') || queryParams.get('type');
-        const next = queryParams.get('next') || '/pay';
+        const next = queryParams.get('next') || '/trading-journal';
 
         // Method 1: Check for tokens in hash (implicit/PKCE flow)
         const access_token = hashParams.get('access_token');
@@ -97,7 +97,7 @@ export default function AuthCallback() {
             if (res.ok && responseData?.next) {
               window.location.replace(responseData.next);
             } else {
-              window.location.replace('/dashboard');
+              window.location.replace('/trading-journal');
             }
             return;
           }
@@ -108,7 +108,7 @@ export default function AuthCallback() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           console.log('Found existing session, redirecting...');
-          window.location.replace(next || '/dashboard');
+          window.location.replace(next || '/trading-journal');
           return;
         }
 

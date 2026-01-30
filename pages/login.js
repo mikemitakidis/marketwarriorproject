@@ -93,7 +93,7 @@ export default function LoginPage() {
     try {
       // Use canonical domain from env var, fallback to window.location.origin for local dev
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const redirectUrl = `${appUrl}/auth/callback?next=/pay`;
+      const redirectUrl = `${appUrl}/auth/callback?next=/trading-journal`;
       console.log('Redirect URL:', redirectUrl);
 
       const { data, error } = await supabase.auth.signUp({
@@ -150,7 +150,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${appUrl}/auth/callback?next=/pay`,
+          redirectTo: `${appUrl}/auth/callback?next=/trading-journal`,
         },
       });
       if (error) throw error;
