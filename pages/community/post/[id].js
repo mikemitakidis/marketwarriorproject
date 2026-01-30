@@ -17,8 +17,9 @@ export async function getServerSideProps({ req, params }) {
     }
 
     const gate = await getGateStatus(user.id);
+    // Free users are redirected to the free trading journal
     if (!gate.hasPaid) {
-      return { redirect: { destination: '/pay', permanent: false } };
+      return { redirect: { destination: '/trading-journal', permanent: false } };
     }
 
     const supabase = getServiceSupabase();
