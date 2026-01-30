@@ -17,7 +17,12 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     { href: '/trading-journal', label: 'Dashboard', icon: '📊' },
     { href: '/trading-journal/trades', label: 'Trade Log', icon: '📝' },
     { href: '/trading-journal/add-trade', label: 'Add Trade', icon: '➕' },
+    { href: '/trading-journal/analytics', label: 'Analytics', icon: '📈' },
+    { href: '/trading-journal/playbook', label: 'Playbook', icon: '📚' },
+    { href: '/trading-journal/ai-coach', label: 'AI Coach', icon: '🤖' },
     { href: '/trading-journal/calculators', label: 'Calculators', icon: '🧮' },
+    { href: '/trading-journal/charts', label: 'Charts', icon: '📉' },
+    { href: '/trading-journal/share', label: 'Share', icon: '🔗' },
     { href: '/trading-journal/challenge', label: 'Challenge', icon: '🎯' },
     { href: '/trading-journal/settings', label: 'Settings', icon: '⚙️' },
   ];
