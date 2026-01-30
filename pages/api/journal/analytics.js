@@ -36,8 +36,21 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to fetch trades' });
     }
 
+    // Fetch trade tags for tag performance analysis
+    // Get trade IDs first, then fetch their tags
+    const tradeIds = (trades || []).map(t => t.id);
+
+    let tradeTags = [];
+    if (tradeIds.length > 0) {
+      const { data: tags } = await supabase
+        .from('journal_trade_tags')
+        .select('trade_id, tag_id, journal_tags(id, name, category, color)')
+        .in('trade_id', tradeIds);
+      tradeTags = tags || [];
+    }
+
     // Calculate comprehensive analytics
-    const analytics = calculateAdvancedAnalytics(trades || []);
+    const analytics = calculateAdvancedAnalytics(trades || [], tradeTags || []);
 
     return res.status(200).json(analytics);
 
@@ -47,7 +60,7 @@ export default async function handler(req, res) {
   }
 }
 
-function calculateAdvancedAnalytics(trades) {
+function calculateAdvancedAnalytics(trades, tradeTags = []) {
   if (!trades || trades.length === 0) {
     return {
       summary: {
@@ -71,6 +84,7 @@ function calculateAdvancedAnalytics(trades) {
       equityCurve: [],
       weeklyPerformance: [],
       monthlyPerformance: [],
+      tagAnalysis: null,
     };
   }
 
@@ -124,6 +138,9 @@ function calculateAdvancedAnalytics(trades) {
   // Monthly performance
   const monthlyPerformance = calculateMonthlyPerformance(trades);
 
+  // Tag performance analysis
+  const tagAnalysis = calculateTagAnalysis(trades, tradeTags);
+
   return {
     summary: {
       totalTrades: trades.length,
@@ -149,6 +166,7 @@ function calculateAdvancedAnalytics(trades) {
     equityCurve,
     weeklyPerformance,
     monthlyPerformance,
+    tagAnalysis,
   };
 }
 
@@ -379,14 +397,57 @@ function calculateEquityCurve(trades) {
   );
 
   let cumulative = 0;
-  return sorted.map(t => {
+  let peak = 0;
+  let maxDrawdown = 0;
+  let maxDrawdownPct = 0;
+
+  const curve = sorted.map(t => {
     cumulative += t.pnl_amount || 0;
+
+    // Track peak for drawdown calculation
+    if (cumulative > peak) {
+      peak = cumulative;
+    }
+
+    // Calculate drawdown from peak
+    const drawdown = peak - cumulative;
+    const drawdownPct = peak > 0 ? (drawdown / peak) * 100 : 0;
+
+    // Track max drawdown
+    if (drawdown > maxDrawdown) {
+      maxDrawdown = drawdown;
+    }
+    if (drawdownPct > maxDrawdownPct && peak > 0) {
+      maxDrawdownPct = drawdownPct;
+    }
+
     return {
       date: (t.exit_date || t.entry_date)?.split('T')[0],
       pnl: Math.round(cumulative * 100) / 100,
+      drawdown: Math.round(drawdown * 100) / 100,
+      drawdownPct: Math.round(drawdownPct * 100) / 100,
+      peak: Math.round(peak * 100) / 100,
       trade: t.symbol,
     };
   });
+
+  // Current drawdown
+  const currentEquity = curve.length > 0 ? curve[curve.length - 1].pnl : 0;
+  const currentPeak = curve.length > 0 ? curve[curve.length - 1].peak : 0;
+  const currentDrawdown = currentPeak - currentEquity;
+  const currentDrawdownPct = currentPeak > 0 ? (currentDrawdown / currentPeak) * 100 : 0;
+
+  return {
+    curve,
+    stats: {
+      maxDrawdown: Math.round(maxDrawdown * 100) / 100,
+      maxDrawdownPct: Math.round(maxDrawdownPct * 100) / 100,
+      currentDrawdown: Math.round(currentDrawdown * 100) / 100,
+      currentDrawdownPct: Math.round(currentDrawdownPct * 100) / 100,
+      peak: Math.round(currentPeak * 100) / 100,
+      currentEquity: Math.round(currentEquity * 100) / 100,
+    },
+  };
 }
 
 function calculateWeeklyPerformance(trades) {
@@ -442,4 +503,97 @@ function calculateMonthlyPerformance(trades) {
     }))
     .sort((a, b) => b.month.localeCompare(a.month))
     .slice(0, 12); // Last 12 months
+}
+
+function calculateTagAnalysis(trades, tradeTags) {
+  if (!tradeTags || tradeTags.length === 0) {
+    return null;
+  }
+
+  // Create a map of trade_id to trade data
+  const tradeMap = new Map();
+  trades.forEach(t => tradeMap.set(t.id, t));
+
+  // Group tags by tag info
+  const tagStats = {};
+
+  tradeTags.forEach(tt => {
+    const trade = tradeMap.get(tt.trade_id);
+    if (!trade || !tt.journal_tags) return;
+
+    const tag = tt.journal_tags;
+    const tagKey = tag.id;
+
+    if (!tagStats[tagKey]) {
+      tagStats[tagKey] = {
+        id: tag.id,
+        name: tag.name,
+        category: tag.category || 'setup',
+        color: tag.color || '#667eea',
+        trades: [],
+      };
+    }
+
+    tagStats[tagKey].trades.push(trade);
+  });
+
+  // Calculate stats for each tag
+  const calculateStats = (tagData) => {
+    const trades = tagData.trades;
+    if (trades.length === 0) return null;
+
+    const wins = trades.filter(t => (t.pnl_amount || 0) > 0);
+    const losses = trades.filter(t => (t.pnl_amount || 0) < 0);
+    const grossProfit = wins.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+    const grossLoss = Math.abs(losses.reduce((sum, t) => sum + (t.pnl_amount || 0), 0));
+    const totalPnl = trades.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+    const avgR = trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length;
+    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 999 : 0;
+
+    return {
+      id: tagData.id,
+      name: tagData.name,
+      category: tagData.category,
+      color: tagData.color,
+      totalTrades: trades.length,
+      winRate: Math.round((wins.length / trades.length) * 100),
+      avgR: Math.round(avgR * 100) / 100,
+      profitFactor: Math.round(profitFactor * 100) / 100,
+      totalPnl: Math.round(totalPnl * 100) / 100,
+      avgPnl: Math.round((totalPnl / trades.length) * 100) / 100,
+    };
+  };
+
+  // Process all tags and separate by category
+  const allTags = Object.values(tagStats).map(calculateStats).filter(Boolean);
+
+  const setupTags = allTags.filter(t => t.category === 'setup').sort((a, b) => b.totalPnl - a.totalPnl);
+  const mistakeTags = allTags.filter(t => t.category === 'mistake').sort((a, b) => a.totalPnl - b.totalPnl);
+  const emotionTags = allTags.filter(t => t.category === 'emotion').sort((a, b) => b.totalPnl - a.totalPnl);
+
+  // Top 3 most profitable tags (setup category)
+  const topProfitableTags = [...allTags]
+    .filter(t => t.category === 'setup')
+    .sort((a, b) => b.totalPnl - a.totalPnl)
+    .slice(0, 3);
+
+  // Worst 3 tags (any category, lowest P&L)
+  const worstTags = [...allTags]
+    .sort((a, b) => a.totalPnl - b.totalPnl)
+    .slice(0, 3);
+
+  // Most used tags
+  const mostUsedTags = [...allTags]
+    .sort((a, b) => b.totalTrades - a.totalTrades)
+    .slice(0, 5);
+
+  return {
+    setupTags,
+    mistakeTags,
+    emotionTags,
+    topProfitableTags,
+    worstTags,
+    mostUsedTags,
+    totalTaggedTrades: new Set(tradeTags.map(tt => tt.trade_id)).size,
+  };
 }
