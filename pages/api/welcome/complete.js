@@ -30,6 +30,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Full name is required' });
     }
 
+    // SECURITY: Enforce all terms must be accepted server-side
+    const requiredAgreements = ['agree1', 'agree2', 'agree3', 'agree4', 'agree5'];
+    const allAccepted = agreements && requiredAgreements.every(key => agreements[key] === true);
+    if (!allAccepted) {
+      return res.status(400).json({ error: 'You must accept all terms and conditions' });
+    }
+
     const supabase = getServiceSupabase();
     const now = new Date().toISOString();
     const userEmail = user.email;
