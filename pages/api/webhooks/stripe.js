@@ -121,6 +121,18 @@ export default async function handler(req, res) {
 
       // 1. Record payment in payments table - IDEMPOTENT (use upsert to handle retries)
       // Use stripe_session_id as unique key to prevent duplicate payments
+      // SECURITY: Only store essential fields from checkout session (minimize PII exposure)
+      const minimalCheckoutData = {
+        id: checkout.id,
+        customer: typeof checkout.customer === 'string' ? checkout.customer : null,
+        payment_status: checkout.payment_status,
+        amount_total: checkout.amount_total,
+        currency: checkout.currency,
+        created: checkout.created,
+        mode: checkout.mode,
+        // Omit: customer_details, customer_email, shipping, billing - reduces PII storage
+      };
+
       const { error: paymentError } = await supabase.from('payments').upsert({
         user_id: userId,
         stripe_session_id: checkout.id,
@@ -130,7 +142,7 @@ export default async function handler(req, res) {
         currency: checkout.currency || 'usd',
         status: 'succeeded',
         paid_at: now,
-        raw: checkout,
+        raw: minimalCheckoutData,
       }, {
         onConflict: 'stripe_session_id', // Prevents duplicate payment records on webhook retry
         ignoreDuplicates: false, // Update if exists
