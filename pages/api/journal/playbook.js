@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to fetch playbooks' });
       }
 
-      // Calculate stats for each playbook
+      // Calculate comprehensive stats for each playbook
       const playbooksWithStats = await Promise.all(
         (playbooks || []).map(async (playbook) => {
           if (playbook.example_trade_ids && playbook.example_trade_ids.length > 0) {
@@ -47,21 +47,61 @@ export default async function handler(req, res) {
 
             if (trades && trades.length > 0) {
               const wins = trades.filter(t => (t.pnl_amount || 0) > 0);
+              const losses = trades.filter(t => (t.pnl_amount || 0) < 0);
+
+              const totalPnl = trades.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+              const grossProfit = wins.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+              const grossLoss = Math.abs(losses.reduce((sum, t) => sum + (t.pnl_amount || 0), 0));
+
+              const winRate = Math.round((wins.length / trades.length) * 100);
+              const avgR = trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length;
+              const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 999 : 0;
+
+              // Performance Score (0-100)
+              // Based on: win rate (30%), profit factor (30%), avg R (30%), trade count (10%)
+              let score = 0;
+              score += Math.min(30, (winRate / 100) * 30); // Win rate contribution
+              score += Math.min(30, (Math.min(profitFactor, 3) / 3) * 30); // Profit factor contribution
+              score += Math.min(30, ((avgR + 1) / 2) * 30); // Avg R contribution (normalized)
+              score += Math.min(10, (trades.length / 10) * 10); // Trade count contribution
+
               return {
                 ...playbook,
                 total_trades: trades.length,
-                win_rate: Math.round((wins.length / trades.length) * 100),
-                avg_r_multiple: Math.round(
-                  (trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length) * 100
-                ) / 100,
+                win_rate: winRate,
+                avg_r_multiple: Math.round(avgR * 100) / 100,
+                total_pnl: Math.round(totalPnl * 100) / 100,
+                profit_factor: Math.round(profitFactor * 100) / 100,
+                avg_pnl: Math.round((totalPnl / trades.length) * 100) / 100,
+                performance_score: Math.round(score),
               };
             }
           }
-          return playbook;
+          return {
+            ...playbook,
+            total_trades: 0,
+            win_rate: 0,
+            avg_r_multiple: 0,
+            total_pnl: 0,
+            profit_factor: 0,
+            avg_pnl: 0,
+            performance_score: 0,
+          };
         })
       );
 
-      return res.status(200).json({ playbooks: playbooksWithStats });
+      // Sort by performance score (highest first)
+      const sortedPlaybooks = playbooksWithStats.sort((a, b) =>
+        (b.performance_score || 0) - (a.performance_score || 0)
+      );
+
+      // Add rank
+      const rankedPlaybooks = sortedPlaybooks.map((p, i) => ({
+        ...p,
+        rank: i + 1,
+      }));
+
+      return res.status(200).json({ playbooks: rankedPlaybooks });
     }
 
     // POST: Create new playbook entry

@@ -50,7 +50,7 @@ export default function AnalyticsPage({ user, settings }) {
     );
   }
 
-  const { summary, maeAnalysis, mfeAnalysis, timeAnalysis, sessionAnalysis, directionAnalysis, streaks, equityCurve, weeklyPerformance, monthlyPerformance } = analytics || {};
+  const { summary, maeAnalysis, mfeAnalysis, timeAnalysis, sessionAnalysis, directionAnalysis, streaks, equityCurve, weeklyPerformance, monthlyPerformance, tagAnalysis } = analytics || {};
 
   return (
     <JournalLayout user={user} title="Analytics" settings={settings}>
@@ -294,6 +294,90 @@ export default function AnalyticsPage({ user, settings }) {
           padding: 40px 20px;
           color: rgba(255, 255, 255, 0.5);
         }
+        .tag-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+        }
+        .tag-card {
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          padding: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tag-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .tag-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 16px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+        .tag-category {
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.4);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .tag-stats {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .tag-stat {
+          text-align: center;
+        }
+        .tag-stat-label {
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.5);
+          text-transform: uppercase;
+          margin-bottom: 4px;
+        }
+        .tag-stat-value {
+          font-size: 1rem;
+          font-weight: 600;
+          color: white;
+        }
+        .top-tags-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        .top-tag-card {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: 12px;
+          padding: 16px;
+          text-align: center;
+        }
+        .top-tag-card.negative {
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+          border-color: rgba(239, 68, 68, 0.2);
+        }
+        .top-tag-rank {
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.4);
+          text-transform: uppercase;
+          margin-bottom: 8px;
+        }
+        .top-tag-name {
+          font-size: 1rem;
+          font-weight: 600;
+          color: white;
+          margin-bottom: 8px;
+        }
+        .top-tag-pnl {
+          font-size: 1.3rem;
+          font-weight: 700;
+        }
         .direction-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -329,6 +413,9 @@ export default function AnalyticsPage({ user, settings }) {
       <div className="tabs">
         <button className={`tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           Overview
+        </button>
+        <button className={`tab ${activeTab === 'tags' ? 'active' : ''}`} onClick={() => setActiveTab('tags')}>
+          Tag Performance
         </button>
         <button className={`tab ${activeTab === 'mae-mfe' ? 'active' : ''}`} onClick={() => setActiveTab('mae-mfe')}>
           MAE/MFE Analysis
@@ -536,6 +623,259 @@ export default function AnalyticsPage({ user, settings }) {
         </>
       )}
 
+      {/* Tags Tab */}
+      {activeTab === 'tags' && (
+        <>
+          {tagAnalysis ? (
+            <>
+              {/* Summary Stats */}
+              <div className="stats-grid" style={{ marginBottom: '24px' }}>
+                <div className="stat-card">
+                  <div className="stat-label">Tagged Trades</div>
+                  <div className="stat-value">{tagAnalysis.totalTaggedTrades}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Setup Tags</div>
+                  <div className="stat-value">{tagAnalysis.setupTags?.length || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Mistake Tags</div>
+                  <div className="stat-value">{tagAnalysis.mistakeTags?.length || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Emotion Tags</div>
+                  <div className="stat-value">{tagAnalysis.emotionTags?.length || 0}</div>
+                </div>
+              </div>
+
+              {/* Top Profitable Tags */}
+              {tagAnalysis.topProfitableTags && tagAnalysis.topProfitableTags.length > 0 && (
+                <div className="section">
+                  <div className="section-title">🏆 Top Profitable Setups</div>
+                  <div className="top-tags-grid">
+                    {tagAnalysis.topProfitableTags.map((tag, i) => (
+                      <div key={tag.id} className="top-tag-card">
+                        <div className="top-tag-rank">#{i + 1} Most Profitable</div>
+                        <div className="top-tag-name">{tag.name}</div>
+                        <div className="top-tag-pnl positive">${tag.totalPnl}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>
+                          {tag.totalTrades} trades • {tag.winRate}% win rate
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Worst Tags */}
+              {tagAnalysis.worstTags && tagAnalysis.worstTags.some(t => t.totalPnl < 0) && (
+                <div className="section">
+                  <div className="section-title">⚠️ Areas to Improve</div>
+                  <div className="top-tags-grid">
+                    {tagAnalysis.worstTags.filter(t => t.totalPnl < 0).map((tag, i) => (
+                      <div key={tag.id} className="top-tag-card negative">
+                        <div className="top-tag-rank">{tag.category}</div>
+                        <div className="top-tag-name">{tag.name}</div>
+                        <div className="top-tag-pnl negative">${tag.totalPnl}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>
+                          {tag.totalTrades} trades • {tag.winRate}% win rate
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Setup Tags Performance */}
+              {tagAnalysis.setupTags && tagAnalysis.setupTags.length > 0 && (
+                <div className="section">
+                  <div className="section-title">🎯 Setup Performance</div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Setup</th>
+                          <th>Trades</th>
+                          <th>Win Rate</th>
+                          <th>Avg R</th>
+                          <th>Profit Factor</th>
+                          <th>P&L</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tagAnalysis.setupTags.map(tag => (
+                          <tr key={tag.id}>
+                            <td>
+                              <span
+                                className="tag-badge"
+                                style={{
+                                  background: `${tag.color}20`,
+                                  color: tag.color,
+                                  border: `1px solid ${tag.color}40`
+                                }}
+                              >
+                                {tag.name}
+                              </span>
+                            </td>
+                            <td>{tag.totalTrades}</td>
+                            <td className={tag.winRate >= 50 ? 'positive' : 'negative'}>{tag.winRate}%</td>
+                            <td className={tag.avgR >= 0 ? 'positive' : 'negative'}>{tag.avgR}R</td>
+                            <td className={tag.profitFactor >= 1 ? 'positive' : 'negative'}>{tag.profitFactor}</td>
+                            <td className={tag.totalPnl >= 0 ? 'positive' : 'negative'}>${tag.totalPnl}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Mistake Tags Performance */}
+              {tagAnalysis.mistakeTags && tagAnalysis.mistakeTags.length > 0 && (
+                <div className="section">
+                  <div className="section-title">❌ Mistake Impact</div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Mistake</th>
+                          <th>Occurrences</th>
+                          <th>Win Rate</th>
+                          <th>Avg R</th>
+                          <th>Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tagAnalysis.mistakeTags.map(tag => (
+                          <tr key={tag.id}>
+                            <td>
+                              <span
+                                className="tag-badge"
+                                style={{
+                                  background: `${tag.color}20`,
+                                  color: tag.color,
+                                  border: `1px solid ${tag.color}40`
+                                }}
+                              >
+                                {tag.name}
+                              </span>
+                            </td>
+                            <td>{tag.totalTrades}</td>
+                            <td className={tag.winRate >= 50 ? 'positive' : 'negative'}>{tag.winRate}%</td>
+                            <td className={tag.avgR >= 0 ? 'positive' : 'negative'}>{tag.avgR}R</td>
+                            <td className={tag.totalPnl >= 0 ? 'positive' : 'negative'}>${tag.totalPnl}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="insight-box">
+                    💡 Trades tagged with mistakes cost you ${Math.abs(tagAnalysis.mistakeTags.reduce((sum, t) => sum + Math.min(0, t.totalPnl), 0))} total.
+                    Focus on eliminating your most costly mistake to improve your edge.
+                  </div>
+                </div>
+              )}
+
+              {/* Emotion Tags Performance */}
+              {tagAnalysis.emotionTags && tagAnalysis.emotionTags.length > 0 && (
+                <div className="section">
+                  <div className="section-title">😤 Emotional State Impact</div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Emotion</th>
+                          <th>Trades</th>
+                          <th>Win Rate</th>
+                          <th>Avg R</th>
+                          <th>P&L</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tagAnalysis.emotionTags.map(tag => (
+                          <tr key={tag.id}>
+                            <td>
+                              <span
+                                className="tag-badge"
+                                style={{
+                                  background: `${tag.color}20`,
+                                  color: tag.color,
+                                  border: `1px solid ${tag.color}40`
+                                }}
+                              >
+                                {tag.name}
+                              </span>
+                            </td>
+                            <td>{tag.totalTrades}</td>
+                            <td className={tag.winRate >= 50 ? 'positive' : 'negative'}>{tag.winRate}%</td>
+                            <td className={tag.avgR >= 0 ? 'positive' : 'negative'}>{tag.avgR}R</td>
+                            <td className={tag.totalPnl >= 0 ? 'positive' : 'negative'}>${tag.totalPnl}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Most Used Tags */}
+              {tagAnalysis.mostUsedTags && tagAnalysis.mostUsedTags.length > 0 && (
+                <div className="section">
+                  <div className="section-title">📊 Most Used Tags</div>
+                  <div className="tag-grid">
+                    {tagAnalysis.mostUsedTags.map(tag => (
+                      <div key={tag.id} className="tag-card">
+                        <div className="tag-header">
+                          <span
+                            className="tag-badge"
+                            style={{
+                              background: `${tag.color}20`,
+                              color: tag.color,
+                              border: `1px solid ${tag.color}40`
+                            }}
+                          >
+                            {tag.name}
+                          </span>
+                          <span className="tag-category">{tag.category}</span>
+                        </div>
+                        <div className="tag-stats">
+                          <div className="tag-stat">
+                            <div className="tag-stat-label">Trades</div>
+                            <div className="tag-stat-value">{tag.totalTrades}</div>
+                          </div>
+                          <div className="tag-stat">
+                            <div className="tag-stat-label">Win Rate</div>
+                            <div className={`tag-stat-value ${tag.winRate >= 50 ? 'positive' : 'negative'}`}>{tag.winRate}%</div>
+                          </div>
+                          <div className="tag-stat">
+                            <div className="tag-stat-label">Avg R</div>
+                            <div className={`tag-stat-value ${tag.avgR >= 0 ? 'positive' : 'negative'}`}>{tag.avgR}R</div>
+                          </div>
+                          <div className="tag-stat">
+                            <div className="tag-stat-label">Total P&L</div>
+                            <div className={`tag-stat-value ${tag.totalPnl >= 0 ? 'positive' : 'negative'}`}>${tag.totalPnl}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="section">
+              <div className="section-title">🏷️ Tag Performance</div>
+              <div className="no-data">
+                <p style={{ marginBottom: '12px' }}>No tagged trades found.</p>
+                <p style={{ fontSize: '0.85rem' }}>
+                  Add tags to your trades in the Trade Entry form to see performance by setup, mistake, and emotional state.
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {/* MAE/MFE Tab */}
       {activeTab === 'mae-mfe' && (
         <div className="analysis-grid">
@@ -720,31 +1060,83 @@ export default function AnalyticsPage({ user, settings }) {
             </div>
           )}
 
-          {/* Equity Curve */}
-          {equityCurve && equityCurve.length > 0 && (
-            <div className="section">
-              <div className="section-title">📈 Equity Curve</div>
-              <div className="equity-chart">
-                {equityCurve.slice(-50).map((point, i) => {
-                  const max = Math.max(...equityCurve.slice(-50).map(p => Math.abs(p.pnl)));
-                  const height = max > 0 ? (Math.abs(point.pnl) / max) * 100 : 0;
-                  return (
-                    <div
-                      key={i}
-                      className="equity-bar"
-                      style={{
-                        height: `${Math.max(5, height)}%`,
-                        background: point.pnl >= 0 ? '#10b981' : '#ef4444',
-                      }}
-                      title={`${point.date}: $${point.pnl}`}
-                    />
-                  );
-                })}
+          {/* Equity Curve & Drawdown */}
+          {equityCurve && equityCurve.curve && equityCurve.curve.length > 0 && (
+            <>
+              {/* Drawdown Stats */}
+              <div className="stats-grid" style={{ marginBottom: '24px' }}>
+                <div className="stat-card">
+                  <div className="stat-label">Max Drawdown</div>
+                  <div className="stat-value negative">${equityCurve.stats.maxDrawdown}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Max DD %</div>
+                  <div className="stat-value negative">{equityCurve.stats.maxDrawdownPct}%</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Current Drawdown</div>
+                  <div className={`stat-value ${equityCurve.stats.currentDrawdown > 0 ? 'negative' : 'positive'}`}>
+                    ${equityCurve.stats.currentDrawdown}
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Peak Equity</div>
+                  <div className="stat-value positive">${equityCurve.stats.peak}</div>
+                </div>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', textAlign: 'center' }}>
-                Last 50 trades • Final Balance: ${equityCurve[equityCurve.length - 1]?.pnl || 0}
-              </p>
-            </div>
+
+              {/* Equity Curve Chart */}
+              <div className="section">
+                <div className="section-title">📈 Equity Curve</div>
+                <div className="equity-chart">
+                  {equityCurve.curve.slice(-50).map((point, i) => {
+                    const dataSlice = equityCurve.curve.slice(-50);
+                    const max = Math.max(...dataSlice.map(p => Math.abs(p.pnl)), 1);
+                    const height = (Math.abs(point.pnl) / max) * 100;
+                    return (
+                      <div
+                        key={i}
+                        className="equity-bar"
+                        style={{
+                          height: `${Math.max(5, height)}%`,
+                          background: point.pnl >= 0 ? '#10b981' : '#ef4444',
+                        }}
+                        title={`${point.date}: $${point.pnl}`}
+                      />
+                    );
+                  })}
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', textAlign: 'center' }}>
+                  Last 50 trades • Current Equity: ${equityCurve.stats.currentEquity}
+                </p>
+              </div>
+
+              {/* Drawdown Chart */}
+              <div className="section">
+                <div className="section-title">📉 Drawdown Chart</div>
+                <div className="equity-chart">
+                  {equityCurve.curve.slice(-50).map((point, i) => {
+                    const dataSlice = equityCurve.curve.slice(-50);
+                    const maxDD = Math.max(...dataSlice.map(p => p.drawdown), 1);
+                    const height = (point.drawdown / maxDD) * 100;
+                    return (
+                      <div
+                        key={i}
+                        className="equity-bar"
+                        style={{
+                          height: `${Math.max(2, height)}%`,
+                          background: point.drawdown > 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(16, 185, 129, 0.3)',
+                        }}
+                        title={`${point.date}: -$${point.drawdown} (${point.drawdownPct}%)`}
+                      />
+                    );
+                  })}
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', textAlign: 'center' }}>
+                  Drawdown from peak equity • Max: ${equityCurve.stats.maxDrawdown} ({equityCurve.stats.maxDrawdownPct}%)
+                </p>
+              </div>
+            </>
           )}
         </>
       )}

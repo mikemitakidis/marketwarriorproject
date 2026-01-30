@@ -197,6 +197,61 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
           border-radius: 4px;
           font-weight: 600;
         }
+        .rank-badge {
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 0.85rem;
+        }
+        .rank-1 {
+          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          color: #1e293b;
+        }
+        .rank-2 {
+          background: linear-gradient(135deg, #9ca3af, #6b7280);
+          color: white;
+        }
+        .rank-3 {
+          background: linear-gradient(135deg, #d97706, #b45309);
+          color: white;
+        }
+        .rank-other {
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.6);
+        }
+        .score-bar {
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          overflow: hidden;
+          margin-top: 12px;
+        }
+        .score-fill {
+          height: 100%;
+          border-radius: 3px;
+          transition: width 0.5s ease;
+        }
+        .score-label {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 6px;
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.5);
+        }
+        .pnl-badge {
+          font-size: 1rem;
+          font-weight: 700;
+          margin-top: 8px;
+        }
+        .pnl-badge.positive { color: #10b981; }
+        .pnl-badge.negative { color: #ef4444; }
         .playbook-desc {
           color: rgba(255, 255, 255, 0.6);
           font-size: 0.85rem;
@@ -493,7 +548,17 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
               key={playbook.id}
               className="playbook-card"
               onClick={() => setSelectedPlaybook(playbook)}
+              style={{ position: 'relative' }}
             >
+              {playbook.rank && playbook.total_trades > 0 && (
+                <div className={`rank-badge ${
+                  playbook.rank === 1 ? 'rank-1' :
+                  playbook.rank === 2 ? 'rank-2' :
+                  playbook.rank === 3 ? 'rank-3' : 'rank-other'
+                }`}>
+                  #{playbook.rank}
+                </div>
+              )}
               <div className="playbook-header">
                 <div className="playbook-name">{playbook.name}</div>
                 {playbook.is_active && <span className="playbook-badge">Active</span>}
@@ -517,12 +582,39 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
                   <div className="stat-label">Win Rate</div>
                 </div>
                 <div className="playbook-stat">
+                  <div className={`stat-value ${(playbook.profit_factor || 0) >= 1 ? 'positive' : 'negative'}`}>
+                    {(playbook.profit_factor || 0).toFixed(1)}
+                  </div>
+                  <div className="stat-label">PF</div>
+                </div>
+                <div className="playbook-stat">
                   <div className={`stat-value ${(playbook.avg_r_multiple || 0) >= 0 ? 'positive' : 'negative'}`}>
                     {(playbook.avg_r_multiple || 0).toFixed(2)}R
                   </div>
                   <div className="stat-label">Avg R</div>
                 </div>
               </div>
+              {playbook.total_trades > 0 && (
+                <>
+                  <div className={`pnl-badge ${(playbook.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                    {(playbook.total_pnl || 0) >= 0 ? '+' : ''}${(playbook.total_pnl || 0).toLocaleString()}
+                  </div>
+                  <div className="score-bar">
+                    <div
+                      className="score-fill"
+                      style={{
+                        width: `${playbook.performance_score || 0}%`,
+                        background: (playbook.performance_score || 0) >= 70 ? '#10b981' :
+                          (playbook.performance_score || 0) >= 40 ? '#f59e0b' : '#ef4444',
+                      }}
+                    />
+                  </div>
+                  <div className="score-label">
+                    <span>Performance Score</span>
+                    <span>{playbook.performance_score || 0}/100</span>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -701,12 +793,50 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
                   <div className="stat-label">Win Rate</div>
                 </div>
                 <div className="stat">
+                  <div className={`stat-value ${(selectedPlaybook.profit_factor || 0) >= 1 ? 'positive' : 'negative'}`}>
+                    {(selectedPlaybook.profit_factor || 0).toFixed(2)}
+                  </div>
+                  <div className="stat-label">Profit Factor</div>
+                </div>
+                <div className="stat">
                   <div className={`stat-value ${(selectedPlaybook.avg_r_multiple || 0) >= 0 ? 'positive' : 'negative'}`}>
                     {(selectedPlaybook.avg_r_multiple || 0).toFixed(2)}R
                   </div>
-                  <div className="stat-label">Avg R-Multiple</div>
+                  <div className="stat-label">Avg R</div>
+                </div>
+                <div className="stat">
+                  <div className={`stat-value ${(selectedPlaybook.total_pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                    ${(selectedPlaybook.total_pnl || 0).toLocaleString()}
+                  </div>
+                  <div className="stat-label">Total P&L</div>
                 </div>
               </div>
+              {selectedPlaybook.performance_score !== undefined && selectedPlaybook.total_trades > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>Performance Score</span>
+                    <span style={{
+                      color: (selectedPlaybook.performance_score || 0) >= 70 ? '#10b981' :
+                        (selectedPlaybook.performance_score || 0) >= 40 ? '#f59e0b' : '#ef4444',
+                      fontWeight: '700',
+                      fontSize: '1.1rem'
+                    }}>
+                      {selectedPlaybook.performance_score}/100
+                      {selectedPlaybook.rank && ` (Rank #${selectedPlaybook.rank})`}
+                    </span>
+                  </div>
+                  <div className="score-bar" style={{ height: '10px' }}>
+                    <div
+                      className="score-fill"
+                      style={{
+                        width: `${selectedPlaybook.performance_score || 0}%`,
+                        background: (selectedPlaybook.performance_score || 0) >= 70 ? '#10b981' :
+                          (selectedPlaybook.performance_score || 0) >= 40 ? '#f59e0b' : '#ef4444',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {selectedPlaybook.description && (
                 <div className="detail-section">
