@@ -4,15 +4,20 @@ import JournalLayout from '../../components/journal/JournalLayout';
 import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
 
 const SUPPORT_URL = 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03';
+const DAILY_LIMIT = 10;
 
-export default function AICoachPage({ user, settings, hasAccess, stats }) {
+export default function AICoachPage({ user, settings, hasAccess, stats, initialRequestsUsed }) {
   const router = useRouter();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [weeklyReview, setWeeklyReview] = useState(null);
   const [loadingReview, setLoadingReview] = useState(false);
+  const [requestsUsed, setRequestsUsed] = useState(initialRequestsUsed || 0);
+  const [pastedImage, setPastedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -22,20 +27,71 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
     scrollToBottom();
   }, [messages]);
 
+  // Handle paste event for images
+  useEffect(() => {
+    const handlePaste = async (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const base64 = event.target.result.split(',')[1];
+              setPastedImage({
+                data: base64,
+                mimeType: file.type,
+              });
+              setImagePreview(event.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
+
+  const removeImage = () => {
+    setPastedImage(null);
+    setImagePreview(null);
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && !pastedImage) || loading) return;
+    if (requestsUsed >= DAILY_LIMIT) return;
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+
+    // Add user message to chat (with image indicator if present)
+    const userChatMessage = {
+      role: 'user',
+      content: userMessage || (pastedImage ? '[Chart Image]' : ''),
+      hasImage: !!pastedImage,
+      imagePreview: imagePreview,
+    };
+    setMessages(prev => [...prev, userChatMessage]);
+
     setLoading(true);
 
     try {
       const res = await fetch('/api/journal/ai-coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userMessage, mode: 'chat' }),
+        body: JSON.stringify({
+          message: userMessage || 'Please analyze this chart',
+          mode: 'chat',
+          image: pastedImage,
+        }),
       });
 
       const data = await res.json();
@@ -45,6 +101,13 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           role: 'assistant',
           content: data.response,
           stats: data.stats,
+          devMode: data.devMode,
+        }]);
+        setRequestsUsed(data.requestsUsed || requestsUsed);
+      } else if (res.status === 429) {
+        setMessages(prev => [...prev, {
+          role: 'error',
+          content: data.message || 'Daily limit reached. Try again tomorrow.',
         }]);
       } else {
         setMessages(prev => [...prev, {
@@ -59,11 +122,15 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
       }]);
     } finally {
       setLoading(false);
+      setPastedImage(null);
+      setImagePreview(null);
     }
   };
 
   const getWeeklyReview = async () => {
+    if (requestsUsed >= DAILY_LIMIT) return;
     setLoadingReview(true);
+
     try {
       const res = await fetch('/api/journal/ai-coach', {
         method: 'POST',
@@ -74,6 +141,7 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
       const data = await res.json();
       if (res.ok) {
         setWeeklyReview(data.response);
+        setRequestsUsed(data.requestsUsed || requestsUsed);
       }
     } catch (err) {
       console.error('Failed to get weekly review:', err);
@@ -190,9 +258,9 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
               <div className="feature-desc">Find your strengths & weaknesses</div>
             </div>
             <div className="feature">
-              <div className="feature-icon">🧠</div>
-              <div className="feature-title">Behavioral Coaching</div>
-              <div className="feature-desc">Improve discipline & mindset</div>
+              <div className="feature-icon">📸</div>
+              <div className="feature-title">Chart Analysis</div>
+              <div className="feature-desc">Paste charts for AI review</div>
             </div>
           </div>
         </div>
@@ -228,6 +296,11 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           display: flex;
           align-items: center;
+          justify-content: space-between;
+        }
+        .header-left {
+          display: flex;
+          align-items: center;
           gap: 12px;
         }
         .coach-avatar {
@@ -259,6 +332,25 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           background: #10b981;
           border-radius: 50%;
         }
+        .rate-limit {
+          background: rgba(255, 255, 255, 0.05);
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+        }
+        .rate-limit-count {
+          color: white;
+          font-weight: 600;
+        }
+        .rate-limit-label {
+          color: rgba(255, 255, 255, 0.6);
+        }
+        .rate-limit.warning {
+          background: rgba(251, 191, 36, 0.2);
+        }
+        .rate-limit.exhausted {
+          background: rgba(239, 68, 68, 0.2);
+        }
         .messages {
           flex: 1;
           overflow-y: auto;
@@ -268,7 +360,7 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           gap: 16px;
         }
         .message {
-          max-width: 80%;
+          max-width: 85%;
           padding: 14px 18px;
           border-radius: 16px;
           line-height: 1.5;
@@ -293,6 +385,20 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
         }
         .message-content {
           white-space: pre-wrap;
+        }
+        .message-image {
+          max-width: 200px;
+          border-radius: 8px;
+          margin-top: 8px;
+        }
+        .dev-badge {
+          display: inline-block;
+          background: rgba(251, 191, 36, 0.2);
+          color: #fcd34d;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          margin-bottom: 8px;
         }
         .welcome {
           text-align: center;
@@ -329,6 +435,37 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           padding: 16px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .image-preview {
+          margin-bottom: 12px;
+          position: relative;
+          display: inline-block;
+        }
+        .image-preview img {
+          max-height: 100px;
+          border-radius: 8px;
+          border: 2px solid rgba(102, 126, 234, 0.5);
+        }
+        .remove-image {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          width: 24px;
+          height: 24px;
+          background: #ef4444;
+          border: none;
+          border-radius: 50%;
+          color: white;
+          font-size: 14px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .paste-hint {
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.4);
+          margin-bottom: 8px;
+        }
         .input-form {
           display: flex;
           gap: 12px;
@@ -345,6 +482,9 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
         }
         .input-field:focus {
           border-color: #667eea;
+        }
+        .input-field:disabled {
+          opacity: 0.5;
         }
         .send-btn {
           padding: 14px 24px;
@@ -475,10 +615,16 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
       <div className="coach-container">
         <div className="chat-section">
           <div className="chat-header">
-            <div className="coach-avatar">🤖</div>
-            <div className="coach-info">
-              <h2>AI Trading Coach</h2>
-              <div className="coach-status">Online • Powered by Gemini</div>
+            <div className="header-left">
+              <div className="coach-avatar">🤖</div>
+              <div className="coach-info">
+                <h2>AI Trading Coach</h2>
+                <div className="coach-status">Online • Powered by Gemini</div>
+              </div>
+            </div>
+            <div className={`rate-limit ${requestsUsed >= DAILY_LIMIT - 2 ? 'warning' : ''} ${requestsUsed >= DAILY_LIMIT ? 'exhausted' : ''}`}>
+              <span className="rate-limit-count">{requestsUsed}/{DAILY_LIMIT}</span>
+              <span className="rate-limit-label"> requests today</span>
             </div>
           </div>
 
@@ -487,12 +633,16 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
               <div className="welcome">
                 <h3>Welcome to your AI Trading Coach!</h3>
                 <p>Ask me anything about your trading performance, patterns, or psychology.</p>
+                <p style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+                  💡 Tip: Paste chart images (Ctrl+V) for AI analysis
+                </p>
                 <div className="suggestions">
                   {suggestedQuestions.map((q, i) => (
                     <button
                       key={i}
                       className="suggestion"
                       onClick={() => setInput(q)}
+                      disabled={requestsUsed >= DAILY_LIMIT}
                     >
                       {q}
                     </button>
@@ -502,7 +652,11 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
             ) : (
               messages.map((msg, i) => (
                 <div key={i} className={`message ${msg.role}`}>
+                  {msg.devMode && <span className="dev-badge">DEV MODE</span>}
                   <div className="message-content">{msg.content}</div>
+                  {msg.hasImage && msg.imagePreview && (
+                    <img src={msg.imagePreview} alt="Chart" className="message-image" />
+                  )}
                 </div>
               ))
             )}
@@ -517,16 +671,30 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
           </div>
 
           <div className="chat-input">
+            {imagePreview && (
+              <div className="image-preview">
+                <img src={imagePreview} alt="Pasted chart" />
+                <button className="remove-image" onClick={removeImage}>×</button>
+              </div>
+            )}
+            {!imagePreview && (
+              <div className="paste-hint">📎 Paste a chart image (Ctrl+V) for AI analysis</div>
+            )}
             <form onSubmit={sendMessage} className="input-form">
               <input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about your trading..."
+                placeholder={requestsUsed >= DAILY_LIMIT ? "Daily limit reached" : "Ask about your trading..."}
                 className="input-field"
-                disabled={loading}
+                disabled={loading || requestsUsed >= DAILY_LIMIT}
               />
-              <button type="submit" className="send-btn" disabled={loading || !input.trim()}>
+              <button
+                type="submit"
+                className="send-btn"
+                disabled={loading || (!input.trim() && !pastedImage) || requestsUsed >= DAILY_LIMIT}
+              >
                 Send
               </button>
             </form>
@@ -565,9 +733,9 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
             <button
               onClick={getWeeklyReview}
               className="review-btn"
-              disabled={loadingReview}
+              disabled={loadingReview || requestsUsed >= DAILY_LIMIT}
             >
-              {loadingReview ? 'Generating...' : 'Generate Weekly Review'}
+              {loadingReview ? 'Generating...' : requestsUsed >= DAILY_LIMIT ? 'Limit Reached' : 'Generate Weekly Review'}
             </button>
           </div>
 
@@ -580,7 +748,7 @@ export default function AICoachPage({ user, settings, hasAccess, stats }) {
 
           <div className="disclaimer">
             ⚠️ AI coaching is for educational purposes only. Never trade based solely on AI suggestions.
-            Always do your own analysis.
+            Always do your own analysis. Limit: {DAILY_LIMIT} requests/day.
           </div>
         </div>
       </div>
@@ -606,11 +774,18 @@ export async function getServerSideProps({ req }) {
 
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('has_paid, full_name, acquisition_source')
+      .select('has_paid, full_name, acquisition_source, ai_requests_today, ai_requests_date')
       .eq('id', user.id)
       .single();
 
     const isSupporter = (supportPayments && supportPayments.length > 0) || profile?.has_paid;
+
+    // Calculate requests used today
+    const today = new Date().toISOString().split('T')[0];
+    let requestsUsed = 0;
+    if (profile?.ai_requests_date === today) {
+      requestsUsed = profile?.ai_requests_today || 0;
+    }
 
     // Get settings
     const { data: settings } = await supabase
@@ -652,6 +827,7 @@ export async function getServerSideProps({ req }) {
         settings: settings || null,
         hasAccess: isSupporter,
         stats,
+        initialRequestsUsed: requestsUsed,
       },
     };
   } catch (err) {

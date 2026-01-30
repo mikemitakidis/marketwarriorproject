@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
@@ -7,11 +8,23 @@ import logger from '../../../lib/logger';
  * POST: Get AI coaching feedback on trading performance
  *
  * Uses Google Gemini Flash (free tier) for AI responses
- * Only available to supporters (users who donated)
+ * Includes rate limiting (10 requests/day per user)
+ * Dev mode when GOOGLE_API_KEY is missing
  */
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const DAILY_LIMIT = 10;
+
+// System prompt - Strict Risk Manager persona
+const SYSTEM_INSTRUCTION = `You are a Risk Manager at a Prop Firm. Your job is to analyze trading data for behavioral patterns including:
+- Revenge trading (trading immediately after a loss)
+- Oversizing (position size too large for account)
+- Overtrading (too many trades in short time)
+- Breaking personal trading rules
+- Emotional decision making
+
+Be strict, concise, and professional. Focus on risk management and discipline.
+NEVER provide buy/sell signals, price predictions, or specific trading recommendations.
+Always end with a brief disclaimer that this is educational only.`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,6 +32,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1. AUTH CHECK
     const user = await getUserFromRequest(req);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -30,17 +44,16 @@ export default async function handler(req, res) {
 
     const supabase = getServiceSupabase();
 
-    // Check if user is a supporter (has donated)
+    // 2. CHECK ACCESS (Supporter or Course Student)
     const { data: supportPayments } = await supabase
       .from('support_payments')
       .select('id')
       .eq('user_id', user.id)
       .limit(1);
 
-    // Also allow course students access
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('has_paid')
+      .select('has_paid, ai_requests_today, ai_requests_date')
       .eq('id', user.id)
       .single();
 
@@ -54,66 +67,157 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'AI service not configured' });
+    // 3. DAILY RATE LIMIT CHECK
+    const today = new Date().toISOString().split('T')[0];
+    let requestsToday = profile?.ai_requests_today || 0;
+    const lastRequestDate = profile?.ai_requests_date;
+
+    // Reset counter if new day
+    if (lastRequestDate !== today) {
+      requestsToday = 0;
     }
 
-    const { query, mode = 'chat' } = req.body;
-
-    // Fetch user's trading data for context
-    const { data: trades } = await supabase
-      .from('journal_trades')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'closed')
-      .order('exit_date', { ascending: false })
-      .limit(50);
-
-    const { data: settings } = await supabase
-      .from('journal_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    const { data: rules } = await supabase
-      .from('journal_challenge_rules')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_active', true);
-
-    const { data: violations } = await supabase
-      .from('journal_rule_violations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    // Calculate stats
-    const stats = calculateTradingStats(trades || []);
-
-    // Build context for AI
-    const tradingContext = buildTradingContext(trades || [], stats, rules || [], violations || [], settings);
-
-    let prompt;
-    if (mode === 'weekly_review') {
-      prompt = buildWeeklyReviewPrompt(tradingContext);
-    } else {
-      prompt = buildChatPrompt(query, tradingContext);
+    if (requestsToday >= DAILY_LIMIT) {
+      return res.status(429).json({
+        error: 'Daily limit reached',
+        message: `You've used all ${DAILY_LIMIT} AI requests for today. Limit resets at midnight UTC.`,
+        requestsUsed: requestsToday,
+        dailyLimit: DAILY_LIMIT,
+      });
     }
 
-    // Call Gemini API
-    const aiResponse = await callGeminiAPI(prompt);
+    // 4. CHECK FOR API KEY (Dev Mode)
+    const apiKey = process.env.GOOGLE_API_KEY;
+    const { message, mode = 'chat', image } = req.body;
 
-    return res.status(200).json({
-      response: aiResponse,
-      stats: stats,
-      tradesAnalyzed: trades?.length || 0,
-    });
+    // Fetch trading context regardless of mode
+    const tradingContext = await fetchTradingContext(supabase, user.id);
+
+    if (!apiKey) {
+      // DEV MODE - Return mock response
+      logger.info('AI Coach running in DEV MODE - no API key');
+
+      const mockResponse = generateMockResponse(message, mode, tradingContext);
+
+      return res.status(200).json({
+        response: mockResponse,
+        stats: tradingContext.stats,
+        tradesAnalyzed: tradingContext.tradesCount,
+        devMode: true,
+        requestsUsed: requestsToday,
+        dailyLimit: DAILY_LIMIT,
+      });
+    }
+
+    // 5. REAL AI CALL
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        systemInstruction: SYSTEM_INSTRUCTION,
+      });
+
+      // Build prompt based on mode
+      let prompt;
+      let parts = [];
+
+      if (mode === 'weekly_review') {
+        prompt = buildWeeklyReviewPrompt(tradingContext);
+        parts.push({ text: prompt });
+      } else {
+        prompt = buildChatPrompt(message, tradingContext);
+        parts.push({ text: prompt });
+      }
+
+      // Handle image if provided (Base64)
+      if (image && image.data && image.mimeType) {
+        parts.push({
+          inlineData: {
+            data: image.data,
+            mimeType: image.mimeType,
+          },
+        });
+        // Add instruction to analyze chart
+        parts.push({
+          text: '\n\nPlease also analyze the attached chart image and provide feedback on the trade setup, entry/exit points, or any patterns you notice.',
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const aiResponse = result.response.text();
+
+      // 6. INCREMENT DAILY COUNTER
+      await supabase
+        .from('user_profiles')
+        .update({
+          ai_requests_today: requestsToday + 1,
+          ai_requests_date: today,
+        })
+        .eq('id', user.id);
+
+      return res.status(200).json({
+        response: aiResponse,
+        stats: tradingContext.stats,
+        tradesAnalyzed: tradingContext.tradesCount,
+        requestsUsed: requestsToday + 1,
+        dailyLimit: DAILY_LIMIT,
+      });
+
+    } catch (aiError) {
+      logger.error('Gemini API error:', aiError);
+      return res.status(500).json({
+        error: 'AI Service Unavailable',
+        message: 'The AI service is temporarily unavailable. Please try again later.',
+      });
+    }
 
   } catch (err) {
     logger.error('AI Coach API error:', err);
-    return res.status(500).json({ error: 'AI service error. Please try again.' });
+    return res.status(500).json({ error: 'Server error. Please try again.' });
   }
+}
+
+async function fetchTradingContext(supabase, userId) {
+  // Fetch recent trades
+  const { data: trades } = await supabase
+    .from('journal_trades')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'closed')
+    .order('exit_date', { ascending: false })
+    .limit(50);
+
+  const { data: settings } = await supabase
+    .from('journal_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  const { data: rules } = await supabase
+    .from('journal_challenge_rules')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true);
+
+  const { data: violations } = await supabase
+    .from('journal_rule_violations')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  const stats = calculateTradingStats(trades || []);
+
+  return {
+    trades: trades || [],
+    tradesCount: trades?.length || 0,
+    stats,
+    settings,
+    rules: rules || [],
+    violations: violations || [],
+    accountSize: settings?.account_size || 10000,
+    riskPercent: settings?.default_risk_percent || 1,
+  };
 }
 
 function calculateTradingStats(trades) {
@@ -126,11 +230,9 @@ function calculateTradingStats(trades) {
       totalPnl: 0,
       avgWin: 0,
       avgLoss: 0,
-      maxDrawdown: 0,
       longWinRate: 0,
       shortWinRate: 0,
-      bestDay: null,
-      worstDay: null,
+      tradingDays: 0,
     };
   }
 
@@ -144,188 +246,141 @@ function calculateTradingStats(trades) {
   const grossLoss = Math.abs(losses.reduce((sum, t) => sum + (t.pnl_amount || 0), 0));
 
   // Group by day
-  const byDay = {};
-  trades.forEach(t => {
-    const day = t.exit_date?.split('T')[0];
-    if (day) {
-      byDay[day] = (byDay[day] || 0) + (t.pnl_amount || 0);
-    }
-  });
-
-  const days = Object.entries(byDay);
-  const bestDay = days.length > 0 ? days.reduce((a, b) => a[1] > b[1] ? a : b) : null;
-  const worstDay = days.length > 0 ? days.reduce((a, b) => a[1] < b[1] ? a : b) : null;
+  const days = new Set(trades.map(t => t.exit_date?.split('T')[0]).filter(Boolean));
 
   return {
     totalTrades: trades.length,
     winRate: trades.length > 0 ? Math.round((wins.length / trades.length) * 100) : 0,
-    avgRMultiple: trades.length > 0 ? trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length : 0,
+    avgRMultiple: trades.length > 0 ? Math.round((trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length) * 100) / 100 : 0,
     profitFactor: grossLoss > 0 ? Math.round((grossProfit / grossLoss) * 100) / 100 : grossProfit > 0 ? 999 : 0,
     totalPnl: Math.round(totalPnl * 100) / 100,
     avgWin: wins.length > 0 ? Math.round((grossProfit / wins.length) * 100) / 100 : 0,
     avgLoss: losses.length > 0 ? Math.round((grossLoss / losses.length) * 100) / 100 : 0,
     longWinRate: longs.length > 0 ? Math.round((longs.filter(t => (t.pnl_amount || 0) > 0).length / longs.length) * 100) : 0,
     shortWinRate: shorts.length > 0 ? Math.round((shorts.filter(t => (t.pnl_amount || 0) > 0).length / shorts.length) * 100) : 0,
-    bestDay: bestDay ? { date: bestDay[0], pnl: bestDay[1] } : null,
-    worstDay: worstDay ? { date: worstDay[0], pnl: worstDay[1] } : null,
-    tradingDays: days.length,
+    tradingDays: days.size,
   };
 }
 
-function buildTradingContext(trades, stats, rules, violations, settings) {
-  // Get tag patterns
-  const tagCounts = {};
-  trades.forEach(t => {
-    if (t.tags) {
-      t.tags.forEach(tag => {
-        tagCounts[tag.name] = (tagCounts[tag.name] || { count: 0, wins: 0 });
-        tagCounts[tag.name].count++;
-        if ((t.pnl_amount || 0) > 0) tagCounts[tag.name].wins++;
-      });
-    }
-  });
+function buildChatPrompt(message, context) {
+  return `TRADING DATA FOR ANALYSIS:
 
-  // Time patterns
-  const hourlyPerformance = {};
-  trades.forEach(t => {
-    if (t.entry_date) {
-      const hour = new Date(t.entry_date).getHours();
-      hourlyPerformance[hour] = hourlyPerformance[hour] || { count: 0, pnl: 0 };
-      hourlyPerformance[hour].count++;
-      hourlyPerformance[hour].pnl += t.pnl_amount || 0;
-    }
-  });
+Account Size: $${context.accountSize}
+Default Risk: ${context.riskPercent}%
 
-  // Session performance
-  const sessionPerformance = {};
-  trades.forEach(t => {
-    if (t.session) {
-      sessionPerformance[t.session] = sessionPerformance[t.session] || { count: 0, wins: 0, pnl: 0 };
-      sessionPerformance[t.session].count++;
-      sessionPerformance[t.session].pnl += t.pnl_amount || 0;
-      if ((t.pnl_amount || 0) > 0) sessionPerformance[t.session].wins++;
-    }
-  });
+PERFORMANCE STATS (Last ${context.tradesCount} trades):
+- Win Rate: ${context.stats.winRate}%
+- Profit Factor: ${context.stats.profitFactor}
+- Average R-Multiple: ${context.stats.avgRMultiple}
+- Total P&L: $${context.stats.totalPnl}
+- Long Win Rate: ${context.stats.longWinRate}%
+- Short Win Rate: ${context.stats.shortWinRate}%
+- Avg Win: $${context.stats.avgWin}
+- Avg Loss: $${context.stats.avgLoss}
+- Trading Days: ${context.stats.tradingDays}
 
-  return {
-    stats,
-    rules: rules.map(r => ({ type: r.rule_type, value: r.rule_value })),
-    recentViolations: violations.length,
-    accountSize: settings?.account_size || 10000,
-    riskPercent: settings?.default_risk_percent || 1,
-    topTags: Object.entries(tagCounts)
-      .map(([name, data]) => ({ name, ...data, winRate: data.count > 0 ? Math.round((data.wins / data.count) * 100) : 0 }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10),
-    sessionPerformance: Object.entries(sessionPerformance)
-      .map(([session, data]) => ({ session, ...data, winRate: data.count > 0 ? Math.round((data.wins / data.count) * 100) : 0 })),
-  };
+TRADING RULES:
+${context.rules.map(r => `- ${r.rule_type}: ${JSON.stringify(r.rule_value)}`).join('\n') || 'None configured'}
+
+RECENT RULE VIOLATIONS: ${context.violations.length}
+
+USER MESSAGE: ${message}
+
+Analyze this data and respond to the user's question. Focus on behavioral patterns and risk management.`;
 }
 
-function buildChatPrompt(query, context) {
-  return `You are an AI Trading Coach for a retail trader. Your role is to provide behavioral coaching, identify patterns, and help improve trading discipline. You NEVER give buy/sell signals or predict market direction.
+function buildWeeklyReviewPrompt(context) {
+  return `Generate a WEEKLY TRADING REVIEW for this trader.
 
-TRADING STATISTICS:
+PERFORMANCE DATA (Last ${context.tradesCount} trades):
 - Total Trades: ${context.stats.totalTrades}
 - Win Rate: ${context.stats.winRate}%
 - Profit Factor: ${context.stats.profitFactor}
-- Average R-Multiple: ${context.stats.avgRMultiple?.toFixed(2)}
+- Average R-Multiple: ${context.stats.avgRMultiple}
 - Total P&L: $${context.stats.totalPnl}
 - Long Win Rate: ${context.stats.longWinRate}%
 - Short Win Rate: ${context.stats.shortWinRate}%
 - Average Win: $${context.stats.avgWin}
 - Average Loss: $${context.stats.avgLoss}
-- Trading Days: ${context.stats.tradingDays}
 
-ACCOUNT SETTINGS:
-- Account Size: $${context.accountSize}
-- Default Risk: ${context.riskPercent}%
+RULE VIOLATIONS: ${context.violations.length}
 
-TRADING RULES SET BY USER:
-${context.rules.map(r => `- ${r.type}: ${JSON.stringify(r.value)}`).join('\n') || 'None set'}
+FORMAT YOUR RESPONSE AS:
 
-RECENT RULE VIOLATIONS: ${context.recentViolations}
+**WEEKLY PERFORMANCE SUMMARY**
+[2-3 sentences]
 
-TOP SETUP TAGS (by frequency):
-${context.topTags.map(t => `- ${t.name}: ${t.count} trades, ${t.winRate}% win rate`).join('\n') || 'None'}
+**BEHAVIORAL PATTERNS IDENTIFIED**
+- [Pattern 1]
+- [Pattern 2]
+- [Pattern 3]
 
-SESSION PERFORMANCE:
-${context.sessionPerformance.map(s => `- ${s.session}: ${s.count} trades, ${s.winRate}% win rate, $${s.pnl.toFixed(2)} P&L`).join('\n') || 'None'}
+**GRADES**
+- Risk Management: [A-F]
+- Discipline: [A-F]
+- Execution: [A-F]
 
-USER QUESTION: ${query}
+**ACTION ITEMS FOR NEXT WEEK**
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
 
-Provide helpful, actionable coaching advice. Focus on:
-1. Identifying behavioral patterns
-2. Risk management suggestions
-3. Discipline improvement
-4. Process over outcome
+**FINAL THOUGHTS**
+[1 encouraging sentence]
 
-Keep response concise (2-3 paragraphs max). Be encouraging but honest.
-
-IMPORTANT: Never provide trading signals, price predictions, or specific buy/sell advice. Always include a disclaimer that this is educational only.`;
+---
+*Educational purposes only. Not financial advice.*`;
 }
 
-function buildWeeklyReviewPrompt(context) {
-  return `You are an AI Trading Coach generating a weekly review for a trader.
+function generateMockResponse(message, mode, context) {
+  if (mode === 'weekly_review') {
+    return `[DEV MODE - AI Key Not Configured]
 
-TRADING STATISTICS (Last 50 trades):
-- Total Trades: ${context.stats.totalTrades}
-- Win Rate: ${context.stats.winRate}%
-- Profit Factor: ${context.stats.profitFactor}
-- Average R-Multiple: ${context.stats.avgRMultiple?.toFixed(2)}
-- Total P&L: $${context.stats.totalPnl}
-- Long Win Rate: ${context.stats.longWinRate}%
-- Short Win Rate: ${context.stats.shortWinRate}%
+**WEEKLY PERFORMANCE SUMMARY**
+This is a simulated weekly review. Your actual trading data shows ${context.stats.totalTrades} trades with a ${context.stats.winRate}% win rate.
 
-SETUP PERFORMANCE:
-${context.topTags.map(t => `- ${t.name}: ${t.count} trades, ${t.winRate}% win rate`).join('\n') || 'None'}
+**BEHAVIORAL PATTERNS IDENTIFIED**
+- Pattern analysis requires live AI connection
+- Your profit factor is ${context.stats.profitFactor}
+- Average R-Multiple: ${context.stats.avgRMultiple}
 
-SESSION PERFORMANCE:
-${context.sessionPerformance.map(s => `- ${s.session}: ${s.count} trades, ${s.winRate}% win rate`).join('\n') || 'None'}
+**GRADES**
+- Risk Management: [Requires AI]
+- Discipline: [Requires AI]
+- Execution: [Requires AI]
 
-RULE VIOLATIONS: ${context.recentViolations}
+**ACTION ITEMS**
+1. Configure GOOGLE_API_KEY in environment variables
+2. Restart the application
+3. Test the AI Coach again
 
-Generate a weekly review with:
-1. **Summary** (2-3 sentences on overall performance)
-2. **Patterns Identified** (3 bullet points)
-3. **Grades** (Risk: A-F, Discipline: A-F, Execution: A-F)
-4. **Action Items** (3 specific things to work on)
-5. **Encouragement** (1 sentence)
-
-Keep it concise and actionable. Include disclaimer that this is educational only.`;
-}
-
-async function callGeminiAPI(prompt) {
-  try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-        ],
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
-    }
-
-    throw new Error('Invalid response from AI');
-  } catch (err) {
-    logger.error('Gemini API error:', err);
-    throw err;
+---
+*DEV MODE: The UI is working correctly. Add GOOGLE_API_KEY to enable real AI responses.*`;
   }
+
+  return `[DEV MODE - AI Key Not Configured]
+
+I'm the AI Trading Coach running in development mode. I can see your trading data:
+- ${context.stats.totalTrades} trades analyzed
+- ${context.stats.winRate}% win rate
+- $${context.stats.totalPnl} total P&L
+
+Your question was: "${message || 'No message provided'}"
+
+To get real AI coaching responses:
+1. Add GOOGLE_API_KEY to your environment variables in Vercel
+2. The key should be from Google AI Studio (makersuite.google.com)
+3. Redeploy your application
+
+---
+*DEV MODE: The integration is working correctly. Just needs the API key.*`;
 }
+
+// Increase body size limit for image uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
