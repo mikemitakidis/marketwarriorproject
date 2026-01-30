@@ -181,58 +181,65 @@ export default function LoginPage() {
       <style jsx>{`
         .container {
           background: white;
-          padding: 50px;
-          border-radius: 24px;
-          box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-          max-width: 480px;
+          padding: 60px 55px;
+          border-radius: 28px;
+          box-shadow: 0 30px 70px rgba(0,0,0,0.35);
+          max-width: 520px;
           width: 100%;
         }
-        h1 { text-align: center; color: #1e293b; margin-bottom: 10px; font-size: 2em; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 1.1em; }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 12px; font-size: 2.2em; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 35px; font-size: 1.15em; }
         .tabs {
           display: flex;
-          margin-bottom: 28px;
-          border-radius: 10px;
+          margin-bottom: 32px;
+          border-radius: 12px;
           overflow: hidden;
           border: 2px solid #e2e8f0;
         }
         .tab {
           flex: 1;
-          padding: 14px;
+          padding: 16px;
           border: none;
           background: #f8fafc;
           cursor: pointer;
           font-weight: 600;
-          font-size: 15px;
+          font-size: 16px;
           color: #64748b;
+          transition: all 0.2s;
         }
         .tab.active {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
         }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 15px; }
+        .form-group { margin-bottom: 24px; }
+        label { display: block; margin-bottom: 10px; color: #374151; font-weight: 500; font-size: 15px; }
         input {
           width: 100%;
-          padding: 14px 16px;
+          padding: 16px 18px;
           border: 2px solid #e2e8f0;
-          border-radius: 10px;
+          border-radius: 12px;
           font-size: 16px;
+          transition: border-color 0.2s;
         }
         input:focus { outline: none; border-color: #667eea; }
         .btn {
           width: 100%;
-          padding: 16px;
+          padding: 18px;
           border: none;
-          border-radius: 10px;
-          font-size: 16px;
+          border-radius: 12px;
+          font-size: 17px;
           font-weight: 600;
           cursor: pointer;
-          margin-bottom: 14px;
+          margin-bottom: 16px;
+          transition: transform 0.2s, box-shadow 0.2s;
         }
         .btn-primary {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-google {
@@ -242,8 +249,9 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 12px;
         }
+        .btn-google:hover { border-color: #667eea; background: #f8fafc; }
         .divider {
           text-align: center;
           color: #94a3b8;
