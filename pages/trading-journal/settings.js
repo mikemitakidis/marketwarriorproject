@@ -1,35 +1,58 @@
-import { getJournalUser, getServiceSupabase } from '../../lib/journalAuth';
+import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
 import JournalLayout from '../../components/journal/JournalLayout';
 import { useState } from 'react';
 
 export async function getServerSideProps({ req }) {
   try {
-    const journalUser = await getJournalUser(req);
-    if (!journalUser) {
-      return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return { redirect: { destination: '/login?next=/trading-journal/settings', permanent: false } };
+    }
+
+    const supabase = getServiceSupabase();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('full_name, has_paid')
+      .eq('id', user.id)
+      .single();
+
+    // Get or create settings
+    let { data: settings } = await supabase
+      .from('journal_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!settings) {
+      const { data: newSettings } = await supabase
+        .from('journal_settings')
+        .insert({ user_id: user.id })
+        .select()
+        .single();
+      settings = newSettings;
     }
 
     return {
       props: {
         user: {
-          id: journalUser.id,
-          email: journalUser.email,
-          fullName: journalUser.full_name || null,
+          id: user.id,
+          email: user.email,
+          fullName: profile?.full_name || null,
+          isStudent: profile?.has_paid || false,
         },
-        initialSettings: {
-          account_size: journalUser.account_size || 10000,
-          base_currency: journalUser.base_currency || 'USD',
-          default_risk_percent: journalUser.default_risk_percent || 1,
-          default_commission: journalUser.default_commission || 0,
-          trading_sessions: journalUser.trading_sessions || ['London', 'New York', 'Asia'],
-          show_r_multiples: journalUser.show_r_multiples !== false,
-          show_dollar_amounts: journalUser.show_dollar_amounts !== false,
-          timezone: journalUser.timezone || 'UTC',
+        initialSettings: settings || {
+          account_size: 10000,
+          base_currency: 'USD',
+          default_risk_percent: 1,
+          default_commission: 0,
+          trading_sessions: ['London', 'New York', 'Asia'],
+          show_r_multiples: true,
+          show_dollar_amounts: true,
         },
       },
     };
   } catch (err) {
-    return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    return { redirect: { destination: '/login', permanent: false } };
   }
 }
 

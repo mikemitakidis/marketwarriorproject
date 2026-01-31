@@ -320,7 +320,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
             <div className="action-title">Continue Learning</div>
             <div className="action-desc">Day {stats.currentDay}</div>
           </a>
-          <a href="/trading-journal" target="_blank" rel="noopener noreferrer" className="action-card">
+          <a href="/journal" className="action-card">
             <div className="action-icon">📓</div>
             <div className="action-title">Trading Journal</div>
             <div className="action-desc">Track your trades</div>
