@@ -13,9 +13,8 @@ export async function getServerSideProps({ req }) {
     const gate = await getGateStatus(user.id, user.email);
 
     // Gate logic: must be paid and welcome completed
-    // Free users are redirected to the free trading journal
     if (!gate.hasPaid) {
-      return { redirect: { destination: '/trading-journal', permanent: false } };
+      return { redirect: { destination: '/pay', permanent: false } };
     }
     if (!gate.welcomeCompleted) {
       return { redirect: { destination: '/welcome', permanent: false } };

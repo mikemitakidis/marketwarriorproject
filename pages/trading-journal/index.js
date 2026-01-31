@@ -1,55 +1,34 @@
-import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
+import { getJournalUser } from '../../lib/journalAuth';
 import JournalLayout from '../../components/journal/JournalLayout';
 import { useState, useEffect } from 'react';
 
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return { redirect: { destination: '/login?next=/trading-journal', permanent: false } };
+    // Use Trading Journal auth (completely separate from course)
+    const journalUser = await getJournalUser(req);
+    if (!journalUser) {
+      return { redirect: { destination: '/trading-journal/login', permanent: false } };
     }
-
-    const supabase = getServiceSupabase();
-
-    // Get user profile
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('full_name, email, has_paid, acquisition_source')
-      .eq('id', user.id)
-      .single();
-
-    // Determine if user is a course student
-    const isStudent = profile?.has_paid || false;
-
-    // Update acquisition_source if not set
-    if (!profile?.acquisition_source || profile.acquisition_source === 'unknown') {
-      await supabase
-        .from('user_profiles')
-        .update({ acquisition_source: isStudent ? 'course' : 'journal' })
-        .eq('id', user.id);
-    }
-
-    // Get journal settings
-    const { data: settings } = await supabase
-      .from('journal_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
 
     return {
       props: {
         user: {
-          id: user.id,
-          email: user.email,
-          fullName: profile?.full_name || null,
-          isStudent,
+          id: journalUser.id,  // This is journal_user_id
+          email: journalUser.email,
+          fullName: journalUser.full_name || null,
         },
-        settings: settings || null,
+        // Settings are now in journal_users table
+        settings: {
+          account_size: journalUser.account_size,
+          base_currency: journalUser.base_currency,
+          default_risk_percent: journalUser.default_risk_percent,
+          timezone: journalUser.timezone,
+        },
       },
     };
   } catch (err) {
     console.error('Journal dashboard error:', err);
-    return { redirect: { destination: '/login', permanent: false } };
+    return { redirect: { destination: '/trading-journal/login', permanent: false } };
   }
 }
 

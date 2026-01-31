@@ -79,9 +79,9 @@ export async function getServerSideProps({ req, query }) {
       }
     }
 
-    // If still not paid after verification attempt, redirect to free trading journal
+    // If still not paid after verification attempt, redirect to payment
     if (!gate.hasPaid) {
-      return { redirect: { destination: '/trading-journal', permanent: false } };
+      return { redirect: { destination: '/pay', permanent: false } };
     }
 
     // If already completed welcome (terms accepted), go to dashboard

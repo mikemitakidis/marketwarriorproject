@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../lib/journalAuth';
 
 const SUPPORT_URL = 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03';
 const DAILY_LIMIT = 10;
@@ -758,47 +758,34 @@ export default function AICoachPage({ user, settings, hasAccess, stats, initialR
 
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return { redirect: { destination: '/login', permanent: false } };
+    const journalUser = await getJournalUser(req);
+    if (!journalUser) {
+      return { redirect: { destination: '/trading-journal/login', permanent: false } };
     }
 
     const supabase = getServiceSupabase();
 
-    // Check supporter status
+    // Check supporter status via journal_support_payments table
     const { data: supportPayments } = await supabase
-      .from('support_payments')
+      .from('journal_support_payments')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', journalUser.id)
       .limit(1);
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('has_paid, full_name, acquisition_source, ai_requests_today, ai_requests_date')
-      .eq('id', user.id)
-      .single();
+    const isSupporter = supportPayments && supportPayments.length > 0;
 
-    const isSupporter = (supportPayments && supportPayments.length > 0) || profile?.has_paid;
-
-    // Calculate requests used today
+    // Calculate requests used today from journal_users
     const today = new Date().toISOString().split('T')[0];
     let requestsUsed = 0;
-    if (profile?.ai_requests_date === today) {
-      requestsUsed = profile?.ai_requests_today || 0;
+    if (journalUser.ai_requests_date === today) {
+      requestsUsed = journalUser.ai_requests_today || 0;
     }
-
-    // Get settings
-    const { data: settings } = await supabase
-      .from('journal_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
 
     // Get basic stats for sidebar
     const { data: trades } = await supabase
       .from('journal_trades')
       .select('pnl_amount, r_multiple')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', journalUser.id)
       .eq('status', 'closed')
       .order('exit_date', { ascending: false })
       .limit(50);
@@ -819,12 +806,16 @@ export async function getServerSideProps({ req }) {
     return {
       props: {
         user: {
-          id: user.id,
-          email: user.email,
-          fullName: profile?.full_name || null,
-          isStudent: profile?.has_paid || false,
+          id: journalUser.id,
+          email: journalUser.email,
+          fullName: journalUser.full_name || null,
         },
-        settings: settings || null,
+        settings: {
+          account_size: journalUser.account_size,
+          base_currency: journalUser.base_currency,
+          default_risk_percent: journalUser.default_risk_percent,
+          timezone: journalUser.timezone,
+        },
         hasAccess: isSupporter,
         stats,
         initialRequestsUsed: requestsUsed,
@@ -832,6 +823,6 @@ export async function getServerSideProps({ req }) {
     };
   } catch (err) {
     console.error('AI Coach page error:', err);
-    return { redirect: { destination: '/login', permanent: false } };
+    return { redirect: { destination: '/trading-journal/login', permanent: false } };
   }
 }

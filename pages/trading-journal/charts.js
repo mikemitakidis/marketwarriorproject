@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../lib/journalAuth';
 
 export default function ChartsPage({ user, settings, recentSymbols }) {
   const [symbol, setSymbol] = useState('BTCUSD');
@@ -645,30 +645,18 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
 
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return { redirect: { destination: '/login', permanent: false } };
+    const journalUser = await getJournalUser(req);
+    if (!journalUser) {
+      return { redirect: { destination: '/trading-journal/login', permanent: false } };
     }
 
     const supabase = getServiceSupabase();
-
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('has_paid, full_name')
-      .eq('id', user.id)
-      .single();
-
-    const { data: settings } = await supabase
-      .from('journal_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
 
     // Get recent traded symbols
     const { data: recentTrades } = await supabase
       .from('journal_trades')
       .select('symbol')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', journalUser.id)
       .order('created_at', { ascending: false })
       .limit(20);
 
@@ -679,17 +667,21 @@ export async function getServerSideProps({ req }) {
     return {
       props: {
         user: {
-          id: user.id,
-          email: user.email,
-          fullName: profile?.full_name || null,
-          isStudent: profile?.has_paid || false,
+          id: journalUser.id,
+          email: journalUser.email,
+          fullName: journalUser.full_name || null,
         },
-        settings: settings || null,
+        settings: {
+          account_size: journalUser.account_size,
+          base_currency: journalUser.base_currency,
+          default_risk_percent: journalUser.default_risk_percent,
+          timezone: journalUser.timezone,
+        },
         recentSymbols,
       },
     };
   } catch (err) {
     console.error('Charts page error:', err);
-    return { redirect: { destination: '/login', permanent: false } };
+    return { redirect: { destination: '/trading-journal/login', permanent: false } };
   }
 }
