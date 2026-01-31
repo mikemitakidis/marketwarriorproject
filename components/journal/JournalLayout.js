@@ -9,8 +9,8 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
   const currentPath = router.pathname;
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    await fetch('/api/journal/auth/logout', { method: 'POST' });
+    router.push('/trading-journal/login');
   };
 
   // Header navigation items (Core actions)
@@ -393,11 +393,6 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
               <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="support-btn">
                 Support Development
               </a>
-              {user.isStudent && (
-                <Link href="/dashboard" className="course-link">
-                  ← Back to Course
-                </Link>
-              )}
             </div>
           </aside>
 
