@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getJournalUser, getServiceSupabase } from '../../lib/journalAuth';
+import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
 
 export default function PlaybookPage({ user, settings, initialPlaybooks, trades }) {
   const router = useRouter();
@@ -921,23 +921,35 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
 
 export async function getServerSideProps({ req }) {
   try {
-    const journalUser = await getJournalUser(req);
-    if (!journalUser) {
-      return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return { redirect: { destination: '/login', permanent: false } };
     }
 
     const supabase = getServiceSupabase();
 
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('has_paid, full_name')
+      .eq('id', user.id)
+      .single();
+
+    const { data: settings } = await supabase
+      .from('journal_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     const { data: playbooks } = await supabase
       .from('journal_playbook')
       .select('*')
-      .eq('journal_user_id', journalUser.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     const { data: trades } = await supabase
       .from('journal_trades')
       .select('id, symbol, entry_date, pnl_amount')
-      .eq('journal_user_id', journalUser.id)
+      .eq('user_id', user.id)
       .eq('status', 'closed')
       .order('entry_date', { ascending: false })
       .limit(100);
@@ -945,22 +957,18 @@ export async function getServerSideProps({ req }) {
     return {
       props: {
         user: {
-          id: journalUser.id,
-          email: journalUser.email,
-          fullName: journalUser.full_name || null,
+          id: user.id,
+          email: user.email,
+          fullName: profile?.full_name || null,
+          isStudent: profile?.has_paid || false,
         },
-        settings: {
-          account_size: journalUser.account_size,
-          base_currency: journalUser.base_currency,
-          default_risk_percent: journalUser.default_risk_percent,
-          timezone: journalUser.timezone,
-        },
+        settings: settings || null,
         initialPlaybooks: playbooks || [],
         trades: trades || [],
       },
     };
   } catch (err) {
     console.error('Playbook page error:', err);
-    return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    return { redirect: { destination: '/login', permanent: false } };
   }
 }

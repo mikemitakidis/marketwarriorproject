@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getJournalUser, getServiceSupabase } from '../../lib/journalAuth';
+import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
 
 export default function ImportPage({ user, settings }) {
   const router = useRouter();
@@ -615,27 +615,38 @@ export default function ImportPage({ user, settings }) {
 
 export async function getServerSideProps({ req }) {
   try {
-    const journalUser = await getJournalUser(req);
-    if (!journalUser) {
-      return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return { redirect: { destination: '/login', permanent: false } };
     }
+
+    const supabase = getServiceSupabase();
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('has_paid, full_name')
+      .eq('id', user.id)
+      .single();
+
+    const { data: settings } = await supabase
+      .from('journal_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
     return {
       props: {
         user: {
-          id: journalUser.id,
-          email: journalUser.email,
-          fullName: journalUser.full_name || null,
+          id: user.id,
+          email: user.email,
+          fullName: profile?.full_name || null,
+          isStudent: profile?.has_paid || false,
         },
-        settings: {
-          account_size: journalUser.account_size,
-          base_currency: journalUser.base_currency,
-          timezone: journalUser.timezone,
-        },
+        settings: settings || null,
       },
     };
   } catch (err) {
     console.error('Import page error:', err);
-    return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    return { redirect: { destination: '/login', permanent: false } };
   }
 }

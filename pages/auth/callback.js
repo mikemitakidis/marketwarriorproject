@@ -33,8 +33,7 @@ export default function AuthCallback() {
         }
 
         const type = hashParams.get('type') || queryParams.get('type');
-        // Don't default to any route - let server's determineNextRoute() decide based on user status
-        const next = queryParams.get('next') || null;
+        const next = queryParams.get('next') || '/pay';
 
         // Method 1: Check for tokens in hash (implicit/PKCE flow)
         const access_token = hashParams.get('access_token');
@@ -98,7 +97,6 @@ export default function AuthCallback() {
             if (res.ok && responseData?.next) {
               window.location.replace(responseData.next);
             } else {
-              // Fallback - server will determine correct route
               window.location.replace('/dashboard');
             }
             return;
@@ -110,7 +108,6 @@ export default function AuthCallback() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           console.log('Found existing session, redirecting...');
-          // Fallback to dashboard - server-side redirect will handle properly
           window.location.replace(next || '/dashboard');
           return;
         }
