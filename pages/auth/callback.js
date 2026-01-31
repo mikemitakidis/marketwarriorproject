@@ -33,7 +33,8 @@ export default function AuthCallback() {
         }
 
         const type = hashParams.get('type') || queryParams.get('type');
-        const next = queryParams.get('next') || '/trading-journal';
+        // Don't default to any route - let server's determineNextRoute() decide based on user status
+        const next = queryParams.get('next') || null;
 
         // Method 1: Check for tokens in hash (implicit/PKCE flow)
         const access_token = hashParams.get('access_token');
@@ -97,7 +98,8 @@ export default function AuthCallback() {
             if (res.ok && responseData?.next) {
               window.location.replace(responseData.next);
             } else {
-              window.location.replace('/trading-journal');
+              // Fallback - server will determine correct route
+              window.location.replace('/dashboard');
             }
             return;
           }
@@ -108,7 +110,8 @@ export default function AuthCallback() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           console.log('Found existing session, redirecting...');
-          window.location.replace(next || '/trading-journal');
+          // Fallback to dashboard - server-side redirect will handle properly
+          window.location.replace(next || '/dashboard');
           return;
         }
 

@@ -4,122 +4,6 @@ import { useRouter } from 'next/router';
 
 const SUPPORT_URL = 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03';
 
-// Clean SVG icons as components
-const Icons = {
-  dashboard: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" />
-    </svg>
-  ),
-  trades: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14,2 14,8 20,8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
-  addTrade: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-    </svg>
-  ),
-  import: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7,10 12,15 17,10" /><line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  ),
-  analytics: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  ),
-  goals: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
-    </svg>
-  ),
-  aiCoach: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" /><path d="M6 10v1a6 6 0 0 0 12 0v-1" /><path d="M12 17v5" /><path d="M8 22h8" />
-    </svg>
-  ),
-  playbook: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  ),
-  calculators: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="8" y2="10" /><line x1="12" y1="10" x2="12" y2="10" /><line x1="16" y1="10" x2="16" y2="10" /><line x1="8" y1="14" x2="8" y2="14" /><line x1="12" y1="14" x2="12" y2="14" /><line x1="16" y1="14" x2="16" y2="14" /><line x1="8" y1="18" x2="8" y2="18" /><line x1="12" y1="18" x2="16" y2="18" />
-    </svg>
-  ),
-  charts: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
-    </svg>
-  ),
-  share: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-    </svg>
-  ),
-  challenge: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-    </svg>
-  ),
-  settings: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  ),
-  guide: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  back: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12,19 5,12 12,5" />
-    </svg>
-  ),
-};
-
-// Navigation grouped by section
-const navSections = [
-  {
-    label: 'Core',
-    items: [
-      { href: '/trading-journal', label: 'Dashboard', icon: 'dashboard' },
-      { href: '/trading-journal/trades', label: 'Trade Log', icon: 'trades' },
-      { href: '/trading-journal/add-trade', label: 'Add Trade', icon: 'addTrade' },
-      { href: '/trading-journal/import', label: 'Import CSV', icon: 'import' },
-    ],
-  },
-  {
-    label: 'Insights',
-    items: [
-      { href: '/trading-journal/analytics', label: 'Analytics', icon: 'analytics' },
-      { href: '/trading-journal/goals', label: 'Goals', icon: 'goals' },
-      { href: '/trading-journal/ai-coach', label: 'AI Coach', icon: 'aiCoach' },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      { href: '/trading-journal/playbook', label: 'Playbook', icon: 'playbook' },
-      { href: '/trading-journal/calculators', label: 'Calculators', icon: 'calculators' },
-      { href: '/trading-journal/charts', label: 'Charts', icon: 'charts' },
-      { href: '/trading-journal/share', label: 'Share', icon: 'share' },
-      { href: '/trading-journal/challenge', label: 'Challenge', icon: 'challenge' },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      { href: '/trading-journal/settings', label: 'Settings', icon: 'settings' },
-    ],
-  },
-];
-
 export default function JournalLayout({ children, user, title = 'Trading Journal', settings, accountSize }) {
   const router = useRouter();
   const currentPath = router.pathname;
@@ -128,6 +12,27 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
   };
+
+  // Header navigation items (Core actions)
+  const headerNavItems = [
+    { href: '/trading-journal', label: 'Dashboard' },
+    { href: '/trading-journal/trades', label: 'Trade Log' },
+    { href: '/trading-journal/add-trade', label: 'Add Trade' },
+    { href: '/trading-journal/analytics', label: 'Analytics' },
+  ];
+
+  // Sidebar navigation items (Tools & Settings)
+  const sidebarNavItems = [
+    { href: '/trading-journal/import', label: 'Import CSV' },
+    { href: '/trading-journal/goals', label: 'Goals' },
+    { href: '/trading-journal/ai-coach', label: 'AI Coach' },
+    { href: '/trading-journal/playbook', label: 'Playbook' },
+    { href: '/trading-journal/calculators', label: 'Calculators' },
+    { href: '/trading-journal/charts', label: 'Charts' },
+    { href: '/trading-journal/share', label: 'Share' },
+    { href: '/trading-journal/challenge', label: 'Challenge' },
+    { href: '/trading-journal/settings', label: 'Settings' },
+  ];
 
   // Format account size for display
   const formatAccountSize = (size) => {
@@ -162,28 +67,31 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
       <style jsx>{`
         .layout {
           display: flex;
+          flex-direction: column;
           min-height: 100vh;
         }
-        .sidebar {
-          width: 240px;
+
+        /* Top Header with Logo and Main Nav */
+        .top-header {
           background: rgba(15, 23, 42, 0.98);
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 12px 24px;
           display: flex;
-          flex-direction: column;
-          position: fixed;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
           top: 0;
-          left: 0;
-          height: 100vh;
           z-index: 100;
         }
-        .sidebar-header {
-          padding: 20px 16px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 32px;
         }
         .logo {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           text-decoration: none;
         }
         .logo-icon {
@@ -197,111 +105,57 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           font-size: 12px;
           font-weight: 700;
           color: white;
-          letter-spacing: -0.5px;
         }
         .logo-text {
           color: white;
-          font-size: 1rem;
+          font-size: 1.1rem;
           font-weight: 600;
         }
-        .logo-subtitle {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.7rem;
-        }
-        .nav {
-          flex: 1;
-          padding: 16px 12px;
-          overflow-y: auto;
-        }
-        .nav-section {
-          margin-bottom: 20px;
-        }
-        .nav-section-label {
-          font-size: 0.65rem;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.4);
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          padding: 0 12px;
-          margin-bottom: 8px;
-        }
-        .nav-item {
+
+        /* Header Navigation - White framed buttons */
+        .header-nav {
           display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: none;
-          border-radius: 6px;
-          margin-bottom: 2px;
-          transition: all 0.15s;
-          font-size: 0.875rem;
-        }
-        .nav-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .nav-item.active {
-          background: rgba(102, 126, 234, 0.15);
-          color: #818cf8;
-        }
-        .nav-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          opacity: 0.8;
-        }
-        .nav-item.active .nav-icon {
-          opacity: 1;
-        }
-        .sidebar-footer {
-          padding: 16px 12px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .guide-link {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: none;
-          border-radius: 6px;
-          margin-bottom: 10px;
-          transition: all 0.15s;
-          font-size: 0.875rem;
-        }
-        .guide-link:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .support-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
           gap: 8px;
-          width: 100%;
-          padding: 10px 12px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
+        }
+        .header-nav-item {
+          padding: 8px 16px;
+          background: white;
+          color: #1e293b;
           text-decoration: none;
           border-radius: 6px;
-          font-weight: 500;
           font-size: 0.85rem;
-          margin-bottom: 12px;
-          transition: all 0.2s;
+          font-weight: 500;
+          transition: all 0.15s;
+          border: 2px solid white;
         }
-        .support-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        .header-nav-item:hover {
+          background: #f1f5f9;
         }
-        .user-info {
+        .header-nav-item.active {
+          background: #667eea;
+          color: white;
+          border-color: #667eea;
+        }
+
+        /* Header Right - Account Size & User */
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .account-badge {
+          padding: 6px 12px;
+          background: rgba(74, 222, 128, 0.15);
+          border: 1px solid rgba(74, 222, 128, 0.3);
+          border-radius: 6px;
+          font-size: 0.8rem;
+          color: #4ade80;
+          font-weight: 500;
+        }
+        .user-menu {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 10px;
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 6px;
         }
         .user-avatar {
           width: 32px;
@@ -314,212 +168,244 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           color: white;
           font-weight: 600;
           font-size: 0.8rem;
-          flex-shrink: 0;
-        }
-        .user-details {
-          flex: 1;
-          min-width: 0;
         }
         .user-name {
-          color: white;
-          font-weight: 500;
-          font-size: 0.8rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .user-badge {
-          display: inline-block;
-          padding: 2px 6px;
-          font-size: 0.6rem;
-          border-radius: 3px;
-          text-transform: uppercase;
-          font-weight: 600;
-          letter-spacing: 0.3px;
-        }
-        .badge-student {
-          background: rgba(102, 126, 234, 0.2);
-          color: #818cf8;
-        }
-        .badge-free {
-          background: rgba(16, 185, 129, 0.2);
-          color: #34d399;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.85rem;
         }
         .logout-btn {
           background: none;
-          border: none;
-          color: rgba(255, 255, 255, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: rgba(255, 255, 255, 0.6);
+          padding: 6px 12px;
+          border-radius: 4px;
           cursor: pointer;
-          font-size: 0.7rem;
-          padding: 4px;
-          transition: color 0.15s;
+          font-size: 0.75rem;
+          transition: all 0.15s;
         }
         .logout-btn:hover {
+          border-color: #f87171;
           color: #f87171;
         }
-        .course-link {
+
+        /* Main Content Area with Sidebar */
+        .main-area {
           display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 12px;
+          flex: 1;
+        }
+
+        /* Left Sidebar - Tools */
+        .sidebar {
+          width: 200px;
+          background: rgba(15, 23, 42, 0.6);
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 20px 12px;
+          display: flex;
+          flex-direction: column;
+        }
+        .sidebar-title {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.4);
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          padding: 0 8px;
+          margin-bottom: 12px;
+        }
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          flex: 1;
+        }
+
+        /* Sidebar Nav Items - White framed */
+        .sidebar-nav-item {
+          padding: 10px 14px;
+          background: white;
+          color: #1e293b;
+          text-decoration: none;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.15s;
+          border: 2px solid white;
+        }
+        .sidebar-nav-item:hover {
+          background: #f1f5f9;
+        }
+        .sidebar-nav-item.active {
+          background: #667eea;
+          color: white;
+          border-color: #667eea;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+          margin-top: auto;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .guide-link {
+          display: block;
+          padding: 10px 14px;
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.7);
+          text-decoration: none;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          margin-bottom: 8px;
+          transition: all 0.15s;
+          text-align: center;
+        }
+        .guide-link:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+        .support-btn {
+          display: block;
+          width: 100%;
+          padding: 10px 14px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: 500;
+          font-size: 0.85rem;
+          text-align: center;
+          transition: all 0.2s;
+        }
+        .support-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .course-link {
+          display: block;
+          padding: 10px 14px;
           color: rgba(255, 255, 255, 0.5);
           text-decoration: none;
           font-size: 0.8rem;
-          transition: color 0.15s;
+          text-align: center;
           margin-top: 8px;
+          transition: color 0.15s;
         }
         .course-link:hover {
           color: #818cf8;
         }
-        .main {
+
+        /* Main Content */
+        .main-content {
           flex: 1;
-          margin-left: 240px;
-          min-height: 100vh;
-        }
-        .top-bar {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          padding: 12px 30px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-          background: rgba(15, 23, 42, 0.5);
-        }
-        .account-badge {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 12px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 6px;
-          font-size: 0.8rem;
-        }
-        .account-label {
-          color: rgba(255, 255, 255, 0.5);
-        }
-        .account-value {
-          color: #4ade80;
-          font-weight: 600;
-        }
-        .content {
-          padding: 24px 30px;
+          padding: 24px 32px;
           max-width: 1400px;
-          margin: 0 auto;
         }
-        @media (max-width: 768px) {
-          .sidebar {
-            width: 100%;
-            height: auto;
-            position: relative;
-          }
-          .main {
-            margin-left: 0;
-          }
-          .nav {
-            display: flex;
-            overflow-x: auto;
-            padding: 10px;
-            gap: 4px;
-          }
-          .nav-section {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 0;
-          }
-          .nav-section-label {
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+          .header-nav {
             display: none;
           }
-          .nav-item {
-            flex-shrink: 0;
-            padding: 8px 12px;
+          .sidebar {
+            width: 180px;
           }
-          .top-bar {
-            padding: 10px 16px;
+        }
+        @media (max-width: 768px) {
+          .top-header {
+            flex-wrap: wrap;
+            gap: 12px;
           }
-          .content {
+          .header-right {
+            order: 3;
+            width: 100%;
+            justify-content: space-between;
+          }
+          .sidebar {
+            display: none;
+          }
+          .main-content {
             padding: 16px;
           }
         }
       `}</style>
 
       <div className="layout">
-        <aside className="sidebar">
-          <div className="sidebar-header">
+        {/* Top Header */}
+        <header className="top-header">
+          <div className="header-left">
             <Link href="/trading-journal" className="logo">
               <div className="logo-icon">MW</div>
-              <div>
-                <div className="logo-text">Trading Journal</div>
-                <div className="logo-subtitle">Market Warrior</div>
-              </div>
+              <span className="logo-text">Trading Journal</span>
             </Link>
+
+            {/* Header Navigation - Core actions */}
+            <nav className="header-nav">
+              {headerNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`header-nav-item ${currentPath === item.href ? 'active' : ''}`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
 
-          <nav className="nav">
-            {navSections.map((section) => (
-              <div key={section.label} className="nav-section">
-                <div className="nav-section-label">{section.label}</div>
-                {section.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-item ${currentPath === item.href ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon">{Icons[item.icon]}</span>
-                    {item.label}
-                  </Link>
-                ))}
+          <div className="header-right">
+            {displayAccountSize && (
+              <div className="account-badge">
+                Account: {formatAccountSize(displayAccountSize)}
               </div>
-            ))}
-
-            {user.isStudent && (
-              <Link href="/dashboard" className="course-link">
-                {Icons.back}
-                Back to 30-Day Challenge
-              </Link>
             )}
-          </nav>
-
-          <div className="sidebar-footer">
-            <Link href="/trading-journal-user-guide" className="guide-link">
-              {Icons.guide}
-              User Guide
-            </Link>
-
-            <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="support-btn">
-              <span style={{ fontSize: '14px' }}>&#10084;</span>
-              Support Development
-            </a>
-
-            <div className="user-info">
+            <div className="user-menu">
               <div className="user-avatar">
                 {(user.fullName || user.email || 'U').charAt(0).toUpperCase()}
               </div>
-              <div className="user-details">
-                <div className="user-name">{user.fullName || user.email}</div>
-                <span className={`user-badge ${user.isStudent ? 'badge-student' : 'badge-free'}`}>
-                  {user.isStudent ? 'Student' : 'Free'}
-                </span>
-              </div>
-              <button onClick={handleLogout} className="logout-btn" title="Logout">
+              <span className="user-name">{user.fullName || user.email}</span>
+              <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>
             </div>
           </div>
-        </aside>
+        </header>
 
-        <main className="main">
-          {displayAccountSize && (
-            <div className="top-bar">
-              <div className="account-badge">
-                <span className="account-label">Account Size:</span>
-                <span className="account-value">{formatAccountSize(displayAccountSize)}</span>
-              </div>
+        {/* Main Area with Sidebar */}
+        <div className="main-area">
+          {/* Left Sidebar - Tools */}
+          <aside className="sidebar">
+            <div className="sidebar-title">Tools</div>
+            <nav className="sidebar-nav">
+              {sidebarNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`sidebar-nav-item ${currentPath === item.href ? 'active' : ''}`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="sidebar-footer">
+              <Link href="/trading-journal-user-guide" className="guide-link">
+                User Guide
+              </Link>
+              <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="support-btn">
+                Support Development
+              </a>
+              {user.isStudent && (
+                <Link href="/dashboard" className="course-link">
+                  ← Back to Course
+                </Link>
+              )}
             </div>
-          )}
-          <div className="content">
+          </aside>
+
+          {/* Main Content */}
+          <main className="main-content">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </>
   );
