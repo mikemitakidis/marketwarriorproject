@@ -59,6 +59,14 @@ export default function AdminPanel() {
     faviconUrl: '',
   });
 
+  // Journal settings state
+  const [journalSettings, setJournalSettings] = useState({
+    aiChatEnabled: true,
+    paidEnabled: false,
+    paymentLink: '',
+  });
+  const [journalSaving, setJournalSaving] = useState(false);
+
   // Promo codes state (fetched from Stripe)
   const [promoCodes, setPromoCodes] = useState([]);
   const [couponsLoading, setCouponsLoading] = useState(false);
@@ -141,6 +149,9 @@ export default function AdminPanel() {
           break;
         case 'settings':
           await loadSettings();
+          break;
+        case 'journal':
+          await loadJournalSettings();
           break;
         case 'community':
           await loadCommunity();
@@ -253,6 +264,45 @@ export default function AdminPanel() {
       alert('Error saving settings: ' + err.message);
     }
     setLoading(false);
+  }
+
+  async function loadJournalSettings() {
+    try {
+      const res = await fetch('/api/admin/journal-settings', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setJournalSettings({
+          aiChatEnabled: data.aiChatEnabled !== false,
+          paidEnabled: data.paidEnabled === true,
+          paymentLink: data.paymentLink || '',
+        });
+      }
+    } catch (err) {
+      console.error('Load journal settings error:', err);
+    }
+  }
+
+  async function saveJournalSettings() {
+    setJournalSaving(true);
+    try {
+      const res = await fetch('/api/admin/journal-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(journalSettings),
+      });
+
+      if (res.ok) {
+        alert('Journal settings saved successfully!');
+      } else {
+        const error = await res.json();
+        alert('Error saving journal settings: ' + (error.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Save journal settings error:', err);
+      alert('Error saving journal settings: ' + err.message);
+    }
+    setJournalSaving(false);
   }
 
   async function uploadFile(file, type) {
@@ -848,6 +898,7 @@ export default function AdminPanel() {
   const navItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
     { id: 'settings', icon: '⚙️', label: 'Site Settings' },
+    { id: 'journal', icon: '📓', label: 'Trading Journal' },
     { id: 'content', icon: '📝', label: 'Content Editor' },
     { id: 'users', icon: '👥', label: 'User Management' },
     { id: 'promo', icon: '🎟️', label: 'Promo Codes' },
@@ -862,6 +913,7 @@ export default function AdminPanel() {
   const pageTitles = {
     dashboard: 'Dashboard',
     settings: 'Site Settings',
+    journal: 'Trading Journal Settings',
     content: 'Content Editor',
     users: 'User Management',
     promo: 'Promo Codes',
@@ -1206,6 +1258,126 @@ export default function AdminPanel() {
 
                     <button style={styles.btnPrimary} onClick={saveSettings} disabled={loading}>
                       {loading ? 'Saving...' : 'Save All Settings'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Trading Journal Settings Tab */}
+              {activeTab === 'journal' && (
+                <div>
+                  <div style={styles.card}>
+                    <div style={styles.cardHeader}>
+                      <h2 style={styles.cardTitle}>Trading Journal Settings</h2>
+                      <p style={{ opacity: 0.7, marginTop: '5px' }}>
+                        Configure the standalone Trading Journal product settings
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '30px', marginTop: '20px' }}>
+                      {/* AI Chat Toggle */}
+                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              🤖 AI Chat Coach
+                            </h3>
+                            <p style={{ color: '#64748b', fontSize: '0.9em' }}>
+                              Enable or disable the AI Coach chat feature for all journal users
+                            </p>
+                          </div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={journalSettings.aiChatEnabled}
+                              onChange={(e) => setJournalSettings({ ...journalSettings, aiChatEnabled: e.target.checked })}
+                              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontWeight: '600', color: journalSettings.aiChatEnabled ? '#10b981' : '#ef4444' }}>
+                              {journalSettings.aiChatEnabled ? 'ENABLED' : 'DISABLED'}
+                            </span>
+                          </label>
+                        </div>
+                        {!journalSettings.aiChatEnabled && (
+                          <div style={{ marginTop: '15px', padding: '12px', background: '#fef3c7', borderRadius: '8px', color: '#92400e', fontSize: '0.9em' }}>
+                            When disabled, users will see: &quot;Chat has hit the usage limit. It will be back soon.&quot;
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Paid Mode Toggle */}
+                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              💰 Paid Mode
+                            </h3>
+                            <p style={{ color: '#64748b', fontSize: '0.9em' }}>
+                              When enabled, users must pay to access the Trading Journal
+                            </p>
+                          </div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={journalSettings.paidEnabled}
+                              onChange={(e) => setJournalSettings({ ...journalSettings, paidEnabled: e.target.checked })}
+                              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontWeight: '600', color: journalSettings.paidEnabled ? '#ef4444' : '#10b981' }}>
+                              {journalSettings.paidEnabled ? 'PAID REQUIRED' : 'FREE ACCESS'}
+                            </span>
+                          </label>
+                        </div>
+                        {!journalSettings.paidEnabled && (
+                          <div style={{ marginTop: '15px', padding: '12px', background: '#d1fae5', borderRadius: '8px', color: '#065f46', fontSize: '0.9em' }}>
+                            Currently FREE - All registered users can access the Trading Journal
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Payment Link */}
+                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          🔗 Stripe Payment Link
+                        </h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9em', marginBottom: '15px' }}>
+                          When paid mode is enabled, users will be redirected to this Stripe payment link
+                        </p>
+                        <input
+                          type="url"
+                          value={journalSettings.paymentLink}
+                          onChange={(e) => setJournalSettings({ ...journalSettings, paymentLink: e.target.value })}
+                          placeholder="https://buy.stripe.com/..."
+                          style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '1em',
+                          }}
+                        />
+                        <p style={{ marginTop: '10px', color: '#64748b', fontSize: '0.8em' }}>
+                          Create a Payment Link in your Stripe Dashboard: Products → Payment Links
+                        </p>
+                      </div>
+
+                      {/* Journal Stats */}
+                      <div style={{ padding: '20px', background: 'linear-gradient(135deg, #667eea20, #764ba220)', borderRadius: '12px', border: '1px solid #667eea40' }}>
+                        <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          📊 Quick Stats
+                        </h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9em' }}>
+                          View Trading Journal statistics in the Analytics tab
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      style={{ ...styles.btnPrimary, marginTop: '30px' }}
+                      onClick={saveJournalSettings}
+                      disabled={journalSaving}
+                    >
+                      {journalSaving ? 'Saving...' : 'Save Journal Settings'}
                     </button>
                   </div>
                 </div>

@@ -9,8 +9,8 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
   const currentPath = router.pathname;
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    await fetch('/api/journal/auth/logout', { method: 'POST' });
+    router.push('/trading-journal/login');
   };
 
   const navItems = [

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../lib/journalAuth';
 
 export default function ImportPage({ user, settings }) {
   const router = useRouter();
@@ -615,18 +615,17 @@ export default function ImportPage({ user, settings }) {
 
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req);
     if (!user) {
-      return { redirect: { destination: '/login', permanent: false } };
+      return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    }
+
+    const access = await checkJournalAccess(user);
+    if (!access.hasAccess && access.paymentLink) {
+      return { redirect: { destination: access.paymentLink, permanent: false } };
     }
 
     const supabase = getServiceSupabase();
-
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('has_paid, full_name')
-      .eq('id', user.id)
-      .single();
 
     const { data: settings } = await supabase
       .from('journal_settings')
@@ -639,14 +638,13 @@ export async function getServerSideProps({ req }) {
         user: {
           id: user.id,
           email: user.email,
-          fullName: profile?.full_name || null,
-          isStudent: profile?.has_paid || false,
+          fullName: user.fullName || null,
         },
         settings: settings || null,
       },
     };
   } catch (err) {
     console.error('Import page error:', err);
-    return { redirect: { destination: '/login', permanent: false } };
+    return { redirect: { destination: '/trading-journal/login', permanent: false } };
   }
 }

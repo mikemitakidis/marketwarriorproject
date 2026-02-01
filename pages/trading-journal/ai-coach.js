@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { getUserFromRequest, getServiceSupabase } from '../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase, checkJournalAccess, getJournalSettings } from '../../lib/journalAuth';
 
 const SUPPORT_URL = 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03';
 const DAILY_LIMIT = 10;
@@ -187,82 +187,32 @@ export default function AICoachPage({ user, settings, hasAccess, stats, initialR
             margin-bottom: 32px;
             line-height: 1.6;
           }
-          .support-btn {
+          .back-btn {
             display: inline-block;
             padding: 16px 32px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             text-decoration: none;
             border-radius: 12px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
           }
-          .support-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-          }
-          .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 48px;
-            max-width: 600px;
-          }
-          .feature {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: left;
-          }
-          .feature-icon {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-          }
-          .feature-title {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 4px;
-          }
-          .feature-desc {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.85rem;
+          .back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
           }
         `}</style>
 
         <div className="locked-container">
-          <div className="lock-icon">🔒</div>
-          <h1>AI Trading Coach</h1>
+          <div className="lock-icon">⏸️</div>
+          <h1>AI Coach Temporarily Unavailable</h1>
           <p className="description">
-            Get personalized AI coaching powered by Google Gemini. Unlock insights about your trading patterns,
-            behavioral analysis, and weekly performance reviews.
+            Chat has hit the usage limit. It will be back soon.
           </p>
-          <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="support-btn">
-            ❤️ Support to Unlock
+          <a href="/trading-journal" className="back-btn">
+            Back to Dashboard
           </a>
-
-          <div className="features">
-            <div className="feature">
-              <div className="feature-icon">💬</div>
-              <div className="feature-title">Chat with AI</div>
-              <div className="feature-desc">Ask questions about your trading</div>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">📊</div>
-              <div className="feature-title">Weekly Reviews</div>
-              <div className="feature-desc">Automated performance analysis</div>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">🎯</div>
-              <div className="feature-title">Pattern Detection</div>
-              <div className="feature-desc">Find your strengths & weaknesses</div>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">📸</div>
-              <div className="feature-title">Chart Analysis</div>
-              <div className="feature-desc">Paste charts for AI review</div>
-            </div>
-          </div>
         </div>
       </JournalLayout>
     );
@@ -758,36 +708,23 @@ export default function AICoachPage({ user, settings, hasAccess, stats, initialR
 
 export async function getServerSideProps({ req }) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req);
     if (!user) {
-      return { redirect: { destination: '/login', permanent: false } };
+      return { redirect: { destination: '/trading-journal/login', permanent: false } };
+    }
+
+    const access = await checkJournalAccess(user);
+    if (!access.hasAccess && access.paymentLink) {
+      return { redirect: { destination: access.paymentLink, permanent: false } };
     }
 
     const supabase = getServiceSupabase();
 
-    // Check supporter status
-    const { data: supportPayments } = await supabase
-      .from('support_payments')
-      .select('id')
-      .eq('user_id', user.id)
-      .limit(1);
+    // Check if AI chat is enabled
+    const journalSettings = await getJournalSettings();
+    const aiChatEnabled = journalSettings.aiChatEnabled;
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('has_paid, full_name, acquisition_source, ai_requests_today, ai_requests_date')
-      .eq('id', user.id)
-      .single();
-
-    const isSupporter = (supportPayments && supportPayments.length > 0) || profile?.has_paid;
-
-    // Calculate requests used today
-    const today = new Date().toISOString().split('T')[0];
-    let requestsUsed = 0;
-    if (profile?.ai_requests_date === today) {
-      requestsUsed = profile?.ai_requests_today || 0;
-    }
-
-    // Get settings
+    // Get user's journal settings
     const { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
@@ -821,17 +758,16 @@ export async function getServerSideProps({ req }) {
         user: {
           id: user.id,
           email: user.email,
-          fullName: profile?.full_name || null,
-          isStudent: profile?.has_paid || false,
+          fullName: user.fullName || null,
         },
         settings: settings || null,
-        hasAccess: isSupporter,
+        hasAccess: aiChatEnabled,
         stats,
-        initialRequestsUsed: requestsUsed,
+        initialRequestsUsed: 0,
       },
     };
   } catch (err) {
     console.error('AI Coach page error:', err);
-    return { redirect: { destination: '/login', permanent: false } };
+    return { redirect: { destination: '/trading-journal/login', permanent: false } };
   }
 }
