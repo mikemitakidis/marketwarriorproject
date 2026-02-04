@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -32,14 +32,8 @@ export default async function handler(req, res) {
     const { type = 'weekly', tradeId } = req.query;
     const supabase = getServiceSupabase();
 
-    // Get user profile for name
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single();
-
-    const displayName = profile?.full_name?.split(' ')[0] || 'Trader';
+    // Get display name from journal user (already fetched via getJournalUser)
+    const displayName = user.fullName?.split(' ')[0] || 'Trader';
 
     let cardData;
 
@@ -83,7 +77,7 @@ async function generateDailyCard(supabase, userId, displayName) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('pnl_amount, r_multiple, symbol')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .gte('entry_date', today)
     .eq('status', 'closed');
 
@@ -123,7 +117,7 @@ async function generateWeeklyCard(supabase, userId, displayName) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('pnl_amount, r_multiple, symbol')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .gte('entry_date', weekAgo.toISOString())
     .eq('status', 'closed');
 
@@ -170,7 +164,7 @@ async function generateMonthlyCard(supabase, userId, displayName) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('pnl_amount, r_multiple')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .gte('entry_date', monthAgo.toISOString())
     .eq('status', 'closed');
 
@@ -207,7 +201,7 @@ async function generateStreakCard(supabase, userId, displayName) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('pnl_amount, exit_date')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .eq('status', 'closed')
     .order('exit_date', { ascending: false })
     .limit(50);
@@ -258,7 +252,7 @@ async function generateTradeCard(supabase, userId, tradeId, displayName) {
     .from('journal_trades')
     .select('*')
     .eq('id', tradeId)
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .single();
 
   if (!trade) {
@@ -293,7 +287,7 @@ async function generateMilestoneCard(supabase, userId, displayName) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('pnl_amount, created_at')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .eq('status', 'closed')
     .order('created_at', { ascending: true });
 

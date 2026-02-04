@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
 import logger from '../../../../lib/logger';
 
@@ -9,7 +9,7 @@ import logger from '../../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       let query = supabase
         .from('journal_trades')
         .select('*, journal_trade_tags(tag_id, journal_tags(id, name, category, color))', { count: 'exact' })
-        .eq('user_id', user.id);
+        .eq('journal_user_id', user.id);
 
       // Apply filters
       if (status) {
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
       const { data: trade, error: insertError } = await supabase
         .from('journal_trades')
         .insert({
-          user_id: user.id,
+          journal_user_id: user.id,
           symbol: symbol.toUpperCase(),
           direction,
           asset_class,

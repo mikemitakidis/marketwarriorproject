@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -9,7 +9,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         const { data: reports, error } = await supabase
           .from('journal_daily_reports')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('journal_user_id', user.id)
           .gte('report_date', startDate.toISOString().split('T')[0])
           .order('report_date', { ascending: false });
 
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       const { data: report, error } = await supabase
         .from('journal_daily_reports')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .eq('report_date', reportDate)
         .maybeSingle();
 
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       const { data: trades } = await supabase
         .from('journal_trades')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .gte('entry_date', dayStart.toISOString())
         .lt('entry_date', dayEnd.toISOString());
 
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       const { data: trades } = await supabase
         .from('journal_trades')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .gte('entry_date', dayStart.toISOString())
         .lt('entry_date', dayEnd.toISOString());
 
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
       consistency_score = Math.min(100, consistency_score);
 
       const reportData = {
-        user_id: user.id,
+        journal_user_id: user.id,
         report_date: date,
         total_trades,
         winning_trades,
@@ -158,7 +158,7 @@ export default async function handler(req, res) {
 
       const { data: report, error } = await supabase
         .from('journal_daily_reports')
-        .upsert(reportData, { onConflict: 'user_id,report_date' })
+        .upsert(reportData, { onConflict: 'journal_user_id,report_date' })
         .select()
         .single();
 

@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -11,7 +11,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -46,7 +46,7 @@ async function handleGet(req, res, supabase, user) {
   let query = supabase
     .from('journal_goals')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('journal_user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (status) {
@@ -100,7 +100,7 @@ async function handlePost(req, res, supabase, user) {
   const { data, error } = await supabase
     .from('journal_goals')
     .insert({
-      user_id: user.id,
+      journal_user_id: user.id,
       name,
       description,
       goal_type,
@@ -144,7 +144,7 @@ async function handlePut(req, res, supabase, user) {
     .from('journal_goals')
     .update(updates)
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('journal_user_id', user.id)
     .select()
     .single();
 
@@ -167,7 +167,7 @@ async function handleDelete(req, res, supabase, user) {
     .from('journal_goals')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id);
+    .eq('journal_user_id', user.id);
 
   if (error) {
     logger.error('Error deleting goal:', error);
@@ -207,7 +207,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('pnl_amount')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', goal.start_date);
 
@@ -223,7 +223,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('pnl_amount')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', monthStart.toISOString());
 
@@ -235,7 +235,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('pnl_amount')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', goal.start_date);
 
@@ -250,7 +250,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('r_multiple')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', goal.start_date);
 
@@ -265,7 +265,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('pnl_amount')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', goal.start_date);
 
@@ -287,7 +287,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { count } = await supabase
           .from('journal_trades')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .gte('exit_date', goal.start_date);
 
@@ -301,7 +301,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: trades } = await supabase
           .from('journal_trades')
           .select('pnl_amount, exit_date')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .eq('status', 'closed')
           .order('exit_date', { ascending: true });
 
@@ -327,7 +327,7 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const { data: reports } = await supabase
           .from('journal_daily_reports')
           .select('report_date, followed_plan, stayed_within_risk')
-          .eq('user_id', userId)
+          .eq('journal_user_id', userId)
           .order('report_date', { ascending: false })
           .limit(60);
 

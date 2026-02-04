@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -11,7 +11,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       let query = supabase
         .from('journal_challenge_rules')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (active_only === 'true') {
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       const { data: violations } = await supabase
         .from('journal_rule_violations')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       const { data: rule, error } = await supabase
         .from('journal_challenge_rules')
         .insert({
-          user_id: user.id,
+          journal_user_id: user.id,
           rule_type,
           rule_value,
           description: description || null,
@@ -110,7 +110,7 @@ export default async function handler(req, res) {
         .from('journal_challenge_rules')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .maybeSingle();
 
       if (!existing) {
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
         .from('journal_challenge_rules')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .select()
         .single();
 
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
         .from('journal_challenge_rules')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('journal_user_id', user.id);
 
       if (error) {
         logger.error('Error deleting rule:', error);

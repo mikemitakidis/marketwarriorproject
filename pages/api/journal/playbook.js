@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -11,7 +11,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const { data: playbooks, error } = await supabase
         .from('journal_playbook')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
       const { data: playbook, error } = await supabase
         .from('journal_playbook')
         .insert({
-          user_id: user.id,
+          journal_user_id: user.id,
           name: name.trim(),
           description: description?.trim() || null,
           entry_rules: entry_rules?.trim() || null,
@@ -175,7 +175,7 @@ export default async function handler(req, res) {
         .from('journal_playbook')
         .update(sanitizedUpdates)
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .select()
         .single();
 
@@ -203,7 +203,7 @@ export default async function handler(req, res) {
         .from('journal_playbook')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('journal_user_id', user.id);
 
       if (error) {
         logger.error('Error deleting playbook:', error);

@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const { data: trades, error } = await supabase
       .from('journal_trades')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .gte('entry_date', sevenDaysAgo.toISOString())
       .order('entry_date', { ascending: true });
 
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     const { data: rules } = await supabase
       .from('journal_challenge_rules')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('is_active', true);
 
     // Analyze for tilt patterns

@@ -728,14 +728,14 @@ export async function getServerSideProps({ req }) {
     const { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .maybeSingle();
 
     // Get basic stats for sidebar
     const { data: trades } = await supabase
       .from('journal_trades')
       .select('pnl_amount, r_multiple')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('status', 'closed')
       .order('exit_date', { ascending: false })
       .limit(50);
