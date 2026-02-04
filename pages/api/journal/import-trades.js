@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     // Insert trades into database
     const supabase = getServiceSupabase();
     const tradesToInsert = parsedTrades.map((trade) => ({
-      user_id: user.id,
+      journal_user_id: user.id,
       ...trade,
       status: trade.exit_date ? 'closed' : 'open',
     }));

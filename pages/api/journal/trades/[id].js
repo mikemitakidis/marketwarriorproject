@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
 import logger from '../../../../lib/logger';
 
@@ -10,7 +10,7 @@ import logger from '../../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       .from('journal_trades')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .maybeSingle();
 
     if (fetchError) {
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         .from('journal_trades')
         .select('*, journal_trade_tags(tag_id, journal_tags(id, name, category, color))')
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .single();
 
       if (error) {
@@ -186,7 +186,7 @@ export default async function handler(req, res) {
         .from('journal_trades')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .select()
         .single();
 
@@ -228,7 +228,7 @@ export default async function handler(req, res) {
         .from('journal_trades')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('journal_user_id', user.id);
 
       if (deleteError) {
         logger.error('Error deleting trade:', deleteError);

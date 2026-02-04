@@ -20,13 +20,13 @@ export async function getServerSideProps({ req }) {
     let { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .maybeSingle();
 
     if (!settings) {
       const { data: newSettings } = await supabase
         .from('journal_settings')
-        .insert({ user_id: user.id })
+        .insert({ journal_user_id: user.id })
         .select()
         .single();
       settings = newSettings;

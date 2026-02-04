@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -10,7 +10,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       let query = supabase
         .from('journal_tags')
         .select('*')
-        .or(`is_system.eq.true,user_id.eq.${user.id}`)
+        .or(`is_system.eq.true,journal_user_id.eq.${user.id}`)
         .order('category')
         .order('name');
 
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       const { data: existing } = await supabase
         .from('journal_tags')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .eq('name', name.trim())
         .eq('category', category)
         .maybeSingle();
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
       const { data: tag, error } = await supabase
         .from('journal_tags')
         .insert({
-          user_id: user.id,
+          journal_user_id: user.id,
           name: name.trim(),
           category,
           color,
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
         .from('journal_tags')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .eq('is_system', false)
         .maybeSingle();
 

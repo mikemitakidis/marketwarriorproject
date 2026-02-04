@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase, getJournalSettings } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
   try {
     // 1. AUTH CHECK
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -44,33 +44,26 @@ export default async function handler(req, res) {
 
     const supabase = getServiceSupabase();
 
-    // 2. CHECK ACCESS (Supporter or Course Student)
-    const { data: supportPayments } = await supabase
-      .from('support_payments')
-      .select('id')
-      .eq('user_id', user.id)
-      .limit(1);
-
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('has_paid, ai_requests_today, ai_requests_date')
-      .eq('id', user.id)
-      .single();
-
-    const isSupporter = (supportPayments && supportPayments.length > 0) || profile?.has_paid;
-
-    if (!isSupporter) {
+    // 2. CHECK AI CHAT ACCESS (Journal settings)
+    const journalSettings = await getJournalSettings();
+    if (!journalSettings.aiChatEnabled) {
       return res.status(403).json({
-        error: 'AI Coach is available for supporters only',
-        message: 'Support development to unlock the AI Trading Coach feature!',
-        supportUrl: 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03',
+        error: 'AI Coach is currently disabled',
+        message: 'The AI Coach feature is temporarily unavailable.',
       });
     }
 
-    // 3. DAILY RATE LIMIT CHECK
+    // 3. GET JOURNAL USER DATA FOR RATE LIMITING
+    const { data: journalUserData } = await supabase
+      .from('journal_users')
+      .select('ai_requests_today, ai_requests_date')
+      .eq('id', user.id)
+      .single();
+
+    // 4. DAILY RATE LIMIT CHECK
     const today = new Date().toISOString().split('T')[0];
-    let requestsToday = profile?.ai_requests_today || 0;
-    const lastRequestDate = profile?.ai_requests_date;
+    let requestsToday = journalUserData?.ai_requests_today || 0;
+    const lastRequestDate = journalUserData?.ai_requests_date;
 
     // Reset counter if new day
     if (lastRequestDate !== today) {
@@ -146,9 +139,9 @@ export default async function handler(req, res) {
       const result = await model.generateContent(parts);
       const aiResponse = result.response.text();
 
-      // 6. INCREMENT DAILY COUNTER
+      // 6. INCREMENT DAILY COUNTER (in journal_users table)
       await supabase
-        .from('user_profiles')
+        .from('journal_users')
         .update({
           ai_requests_today: requestsToday + 1,
           ai_requests_date: today,
@@ -182,7 +175,7 @@ async function fetchTradingContext(supabase, userId) {
   const { data: trades } = await supabase
     .from('journal_trades')
     .select('*')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .eq('status', 'closed')
     .order('exit_date', { ascending: false })
     .limit(50);
@@ -190,19 +183,19 @@ async function fetchTradingContext(supabase, userId) {
   const { data: settings } = await supabase
     .from('journal_settings')
     .select('*')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .maybeSingle();
 
   const { data: rules } = await supabase
     .from('journal_challenge_rules')
     .select('*')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .eq('is_active', true);
 
   const { data: violations } = await supabase
     .from('journal_rule_violations')
     .select('*')
-    .eq('user_id', userId)
+    .eq('journal_user_id', userId)
     .order('created_at', { ascending: false })
     .limit(10);
 

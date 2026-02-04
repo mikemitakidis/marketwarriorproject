@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     let query = supabase
       .from('journal_trades')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('status', 'closed');
 
     if (startDate) {
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     const { count: openTradesCount } = await supabase
       .from('journal_trades')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('status', 'open');
 
     // Get today's stats
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     const { data: todayTrades } = await supabase
       .from('journal_trades')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .gte('entry_date', today.toISOString());
 
     const todayStats = {
@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     const { data: recentTrades } = await supabase
       .from('journal_trades')
       .select('exit_date, pnl_amount, r_multiple')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('status', 'closed')
       .order('exit_date', { ascending: true })
       .limit(100);
@@ -111,7 +111,7 @@ export default async function handler(req, res) {
     const { count: violationsCount } = await supabase
       .from('journal_rule_violations')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .eq('acknowledged', false);
 
     return res.status(200).json({

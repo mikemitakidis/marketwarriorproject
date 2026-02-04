@@ -1161,7 +1161,7 @@ export async function getServerSideProps({ req }) {
     const { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .maybeSingle();
 
     return {

@@ -1,4 +1,4 @@
-import { getUserFromRequest, getServiceSupabase } from '../../../lib/serverAuth';
+import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -9,7 +9,7 @@ import logger from '../../../lib/logger';
  */
 export default async function handler(req, res) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       let { data: settings, error } = await supabase
         .from('journal_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('journal_user_id', user.id)
         .maybeSingle();
 
       if (error) {
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       if (!settings) {
         const { data: newSettings, error: insertError } = await supabase
           .from('journal_settings')
-          .insert({ user_id: user.id })
+          .insert({ journal_user_id: user.id })
           .select()
           .single();
 
@@ -111,9 +111,9 @@ export default async function handler(req, res) {
       const { data, error } = await supabase
         .from('journal_settings')
         .upsert({
-          user_id: user.id,
+          journal_user_id: user.id,
           ...updates,
-        }, { onConflict: 'user_id' })
+        }, { onConflict: 'journal_user_id' })
         .select()
         .single();
 

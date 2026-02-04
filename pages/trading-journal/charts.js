@@ -660,14 +660,14 @@ export async function getServerSideProps({ req }) {
     const { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .maybeSingle();
 
     // Get recent traded symbols
     const { data: recentTrades } = await supabase
       .from('journal_trades')
       .select('symbol')
-      .eq('user_id', user.id)
+      .eq('journal_user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20);
 
