@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const { data: settings, error } = await supabase
         .from('app_settings')
         .select('key, value')
-        .in('key', ['journal_ai_chat_enabled', 'journal_paid_enabled', 'journal_payment_link']);
+        .in('key', ['journal_ai_chat_enabled', 'journal_paid_enabled']);
 
       if (error) {
         console.error('Error fetching journal settings:', error);
@@ -37,7 +37,6 @@ export default async function handler(req, res) {
       const result = {
         aiChatEnabled: true,
         paidEnabled: false,
-        paymentLink: '',
       };
 
       if (settings) {
@@ -46,8 +45,6 @@ export default async function handler(req, res) {
             result.aiChatEnabled = s.value === 'true';
           } else if (s.key === 'journal_paid_enabled') {
             result.paidEnabled = s.value === 'true';
-          } else if (s.key === 'journal_payment_link') {
-            result.paymentLink = s.value || '';
           }
         });
       }
@@ -56,13 +53,12 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { aiChatEnabled, paidEnabled, paymentLink } = req.body;
+      const { aiChatEnabled, paidEnabled } = req.body;
 
       // Upsert each setting
       const settingsToUpsert = [
         { key: 'journal_ai_chat_enabled', value: String(aiChatEnabled === true) },
         { key: 'journal_paid_enabled', value: String(paidEnabled === true) },
-        { key: 'journal_payment_link', value: paymentLink || '' },
       ];
 
       for (const setting of settingsToUpsert) {

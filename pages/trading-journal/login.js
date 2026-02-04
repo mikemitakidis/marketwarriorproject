@@ -196,16 +196,6 @@ export default function JournalLoginPage() {
         }
         h1 { text-align: center; color: white; margin-bottom: 12px; font-size: 2.2em; }
         .subtitle { text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 35px; font-size: 1.15em; }
-        .free-badge {
-          display: inline-block;
-          background: linear-gradient(135deg, #4ade80, #22c55e);
-          color: #000;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 0.8em;
-          font-weight: 600;
-          margin-left: 8px;
-        }
         .tabs {
           display: flex;
           margin-bottom: 32px;
@@ -328,8 +318,8 @@ export default function JournalLoginPage() {
         <div className="logo-area">
           <div className="logo-icon">📊</div>
         </div>
-        <h1>Trading Journal <span className="free-badge">FREE</span></h1>
-        <p className="subtitle">{mode === 'register' ? 'Create your free account' : 'Welcome back, trader'}</p>
+        <h1>Trading Journal</h1>
+        <p className="subtitle">{mode === 'register' ? 'Create your account' : 'Welcome back, trader'}</p>
 
         {message.text && <div className={`message ${message.type}`}>{message.text}</div>}
 

@@ -53,29 +53,39 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. GET JOURNAL USER DATA FOR RATE LIMITING
+    // 3. GET JOURNAL USER DATA FOR RATE LIMITING AND SUSPENSION CHECK
     const { data: journalUserData } = await supabase
       .from('journal_users')
-      .select('ai_requests_today, ai_requests_date')
+      .select('ai_requests_today, ai_requests_date, ai_daily_limit, is_suspended')
       .eq('id', user.id)
       .single();
+
+    // Check if user is suspended
+    if (journalUserData?.is_suspended) {
+      return res.status(403).json({
+        error: 'Account suspended',
+        message: 'Your account has been suspended. Please contact support.',
+      });
+    }
 
     // 4. DAILY RATE LIMIT CHECK
     const today = new Date().toISOString().split('T')[0];
     let requestsToday = journalUserData?.ai_requests_today || 0;
     const lastRequestDate = journalUserData?.ai_requests_date;
+    // Use custom limit if set, otherwise default
+    const userDailyLimit = journalUserData?.ai_daily_limit || DAILY_LIMIT;
 
     // Reset counter if new day
     if (lastRequestDate !== today) {
       requestsToday = 0;
     }
 
-    if (requestsToday >= DAILY_LIMIT) {
+    if (requestsToday >= userDailyLimit) {
       return res.status(429).json({
         error: 'Daily limit reached',
-        message: `You've used all ${DAILY_LIMIT} AI requests for today. Limit resets at midnight UTC.`,
+        message: `You've used all ${userDailyLimit} AI requests for today. Limit resets at midnight UTC.`,
         requestsUsed: requestsToday,
-        dailyLimit: DAILY_LIMIT,
+        dailyLimit: userDailyLimit,
       });
     }
 
@@ -98,7 +108,7 @@ export default async function handler(req, res) {
         tradesAnalyzed: tradingContext.tradesCount,
         devMode: true,
         requestsUsed: requestsToday,
-        dailyLimit: DAILY_LIMIT,
+        dailyLimit: userDailyLimit,
       });
     }
 
@@ -153,7 +163,7 @@ export default async function handler(req, res) {
         stats: tradingContext.stats,
         tradesAnalyzed: tradingContext.tradesCount,
         requestsUsed: requestsToday + 1,
-        dailyLimit: DAILY_LIMIT,
+        dailyLimit: userDailyLimit,
       });
 
     } catch (aiError) {
