@@ -919,9 +919,9 @@ export default function PlaybookPage({ user, settings, initialPlaybooks, trades 
   );
 }
 
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, res }) {
   try {
-    const user = await getJournalUser(req);
+    const user = await getJournalUser(req, res);
     if (!user) {
       return { redirect: { destination: '/trading-journal/login', permanent: false } };
     }
