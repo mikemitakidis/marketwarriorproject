@@ -217,7 +217,6 @@ export default function UpgradePage({ user }) {
           </p>
 
           <div className="price-box">
-            <div className="price">$29</div>
             <div className="price-label">One-time payment - Lifetime access</div>
           </div>
 

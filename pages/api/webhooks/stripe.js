@@ -65,6 +65,12 @@ export default async function handler(req, res) {
         expand: ['line_items'],
       });
 
+      // Check if this is a Trading Journal purchase - if so, skip (handled by journal-stripe webhook)
+      if (checkout.metadata?.product === 'trading_journal') {
+        logger.log('Skipping Trading Journal checkout - handled by journal webhook');
+        return res.status(200).json({ received: true, skipped: 'trading_journal' });
+      }
+
       // Validate the price ID - ENFORCE (reject mismatched prices)
       const lineItems = checkout.line_items?.data || [];
       const supabase = getServiceSupabase();
@@ -87,8 +93,10 @@ export default async function handler(req, res) {
       const validPurchase = lineItems.length >= 1 && lineItems.some(item => validPriceIds.has(item.price?.id));
 
       if (!validPurchase) {
-        logger.error('REJECTED: Invalid price ID in webhook:', lineItems.map(i => i.price?.id));
-        return res.status(400).json({ error: 'Invalid product purchased' });
+        // Don't reject with 400 - just skip and return 200 to prevent Stripe retries
+        // This handles other products (donations, other subscriptions) gracefully
+        logger.log('Skipping: Price ID not recognized for course:', lineItems.map(i => i.price?.id));
+        return res.status(200).json({ received: true, skipped: 'unrecognized_product' });
       }
 
       const userId = checkout.metadata?.userId;
