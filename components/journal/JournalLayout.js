@@ -11,10 +11,9 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     router.push('/trading-journal/login');
   };
 
+  // Consolidated nav - Dashboard contains Trade Log and Add Trade as sub-tabs
   const navItems = [
     { href: '/trading-journal', label: 'Dashboard' },
-    { href: '/trading-journal/trades', label: 'Trade Log' },
-    { href: '/trading-journal/add-trade', label: 'Add Trade' },
     { href: '/trading-journal/import', label: 'Import CSV' },
     { href: '/trading-journal/analytics', label: 'Analytics' },
     { href: '/trading-journal/goals', label: 'Goals' },
@@ -27,6 +26,16 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     { href: '/trading-journal/challenge', label: 'Challenge' },
     { href: '/trading-journal/settings', label: 'Settings' },
   ];
+
+  const isActive = (href) => {
+    if (href === '/trading-journal') {
+      // Dashboard is active for dashboard, trades, and add-trade
+      return currentPath === '/trading-journal' ||
+             currentPath === '/trading-journal/trades' ||
+             currentPath === '/trading-journal/add-trade';
+    }
+    return currentPath === href;
+  };
 
   return (
     <>
@@ -42,6 +51,40 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           color: #e0e0e0;
           min-height: 100vh;
         }
+
+        /* Sidebar navigation styles - using global to override Link defaults */
+        .journal-sidebar-nav a {
+          display: block;
+          padding: 11px 16px;
+          margin-bottom: 4px;
+          color: #ffffff !important;
+          text-decoration: none !important;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.03);
+          transition: all 0.15s ease;
+        }
+        .journal-sidebar-nav a:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .journal-sidebar-nav a.active {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+        .journal-sidebar-nav .course-link-item {
+          border: none;
+          background: none;
+          color: rgba(255, 255, 255, 0.5) !important;
+          font-size: 0.8rem;
+          padding: 8px 16px;
+        }
+        .journal-sidebar-nav .course-link-item:hover {
+          color: #ffffff !important;
+          background: none;
+        }
       `}</style>
 
       <style jsx>{`
@@ -50,7 +93,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           min-height: 100vh;
         }
         .sidebar {
-          width: 220px;
+          width: 200px;
           background: rgba(30, 41, 59, 0.95);
           border-right: 1px solid rgba(255, 255, 255, 0.1);
           display: flex;
@@ -62,69 +105,50 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           z-index: 100;
         }
         .sidebar-header {
-          padding: 20px 16px;
+          padding: 18px 14px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         .logo {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           text-decoration: none;
         }
         .logo-icon {
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
           background: linear-gradient(135deg, #667eea, #764ba2);
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 700;
           color: white;
         }
         .logo-text {
           color: white;
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-weight: 700;
         }
         .logo-subtitle {
           color: rgba(255, 255, 255, 0.5);
-          font-size: 0.7rem;
+          font-size: 0.65rem;
         }
         .nav {
           flex: 1;
-          padding: 16px 12px;
+          padding: 14px 10px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
         }
-        .nav-item {
-          display: block;
-          padding: 10px 14px;
-          color: white;
-          text-decoration: none;
-          border-radius: 6px;
-          margin-bottom: 2px;
-          font-size: 0.9rem;
-          border: 1px solid transparent;
-          transition: all 0.15s;
-        }
-        .nav-item:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.2);
-        }
-        .nav-item.active {
-          background: rgba(255, 255, 255, 0.15);
-          border-color: rgba(255, 255, 255, 0.3);
-        }
         .nav-divider {
           height: 1px;
           background: rgba(255, 255, 255, 0.1);
-          margin: 12px 0;
+          margin: 10px 0;
         }
         .sidebar-footer {
-          padding: 16px 12px;
+          padding: 14px 10px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         .user-info {
@@ -133,12 +157,12 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           gap: 10px;
           padding: 10px;
           background: rgba(255, 255, 255, 0.05);
-          border-radius: 6px;
+          border-radius: 8px;
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .user-avatar {
-          width: 32px;
-          height: 32px;
+          width: 30px;
+          height: 30px;
           background: rgba(255, 255, 255, 0.1);
           border-radius: 50%;
           display: flex;
@@ -146,7 +170,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           justify-content: center;
           color: white;
           font-weight: 600;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
         }
         .user-details {
           flex: 1;
@@ -155,7 +179,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         .user-name {
           color: white;
           font-weight: 500;
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -165,7 +189,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           border: none;
           color: rgba(255, 255, 255, 0.5);
           cursor: pointer;
-          font-size: 0.7rem;
+          font-size: 0.65rem;
           padding: 4px;
         }
         .logout-btn:hover {
@@ -173,23 +197,13 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         }
         .main {
           flex: 1;
-          margin-left: 220px;
+          margin-left: 200px;
           min-height: 100vh;
         }
         .content {
           padding: 30px;
           max-width: 1400px;
           margin: 0 auto;
-        }
-        .course-link {
-          display: block;
-          padding: 8px 14px;
-          color: rgba(255, 255, 255, 0.5);
-          text-decoration: none;
-          font-size: 0.8rem;
-        }
-        .course-link:hover {
-          color: white;
         }
         @media (max-width: 768px) {
           .sidebar {
@@ -199,15 +213,6 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           }
           .main {
             margin-left: 0;
-          }
-          .nav {
-            flex-direction: row;
-            flex-wrap: wrap;
-            padding: 10px;
-          }
-          .nav-item {
-            padding: 8px 12px;
-            font-size: 0.8rem;
           }
         }
       `}</style>
@@ -224,12 +229,12 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
             </Link>
           </div>
 
-          <nav className="nav">
+          <nav className="nav journal-sidebar-nav">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`nav-item ${currentPath === item.href ? 'active' : ''}`}
+                className={isActive(item.href) ? 'active' : ''}
               >
                 {item.label}
               </Link>
@@ -238,7 +243,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
             <div className="nav-divider" />
 
             {user.isStudent && (
-              <Link href="/dashboard" className="course-link">
+              <Link href="/dashboard" className="course-link-item">
                 Back to 30-Day Challenge
               </Link>
             )}

@@ -1,5 +1,7 @@
 import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../lib/journalAuth';
 import JournalLayout from '../../components/journal/JournalLayout';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 export async function getServerSideProps({ req, res }) {
@@ -41,9 +43,17 @@ export async function getServerSideProps({ req, res }) {
 }
 
 export default function JournalDashboard({ user, settings }) {
+  const router = useRouter();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
+
+  // Determine active tab based on current path
+  const getActiveTab = () => {
+    if (router.pathname === '/trading-journal/trades') return 'trades';
+    if (router.pathname === '/trading-journal/add-trade') return 'add';
+    return 'dashboard';
+  };
 
   useEffect(() => {
     fetchStats();
@@ -288,6 +298,35 @@ export default function JournalDashboard({ user, settings }) {
           min-height: 200px;
           color: rgba(255, 255, 255, 0.5);
         }
+        .header-tabs {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 24px;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px;
+          border-radius: 10px;
+          width: fit-content;
+        }
+        .header-tab {
+          padding: 10px 20px;
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          text-decoration: none;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .header-tab:hover {
+          color: white;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .header-tab.active {
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+        }
         @media (max-width: 768px) {
           .two-col {
             grid-template-columns: 1fr;
@@ -297,6 +336,19 @@ export default function JournalDashboard({ user, settings }) {
           }
         }
       `}</style>
+
+      {/* Header Tabs */}
+      <div className="header-tabs">
+        <Link href="/trading-journal" className={`header-tab ${getActiveTab() === 'dashboard' ? 'active' : ''}`}>
+          Overview
+        </Link>
+        <Link href="/trading-journal/trades" className={`header-tab ${getActiveTab() === 'trades' ? 'active' : ''}`}>
+          Trade Log
+        </Link>
+        <Link href="/trading-journal/add-trade" className={`header-tab ${getActiveTab() === 'add' ? 'active' : ''}`}>
+          Add Trade
+        </Link>
+      </div>
 
       <div className="page-header">
         <h1 className="page-title">Command Center</h1>
@@ -315,7 +367,7 @@ export default function JournalDashboard({ user, settings }) {
 
       {/* Today's Summary */}
       <div className="today-card">
-        <div className="today-title">📅 Today&apos;s Activity</div>
+        <div className="today-title">Today&apos;s Activity</div>
         <div className="today-stats">
           <div>
             <div className="today-stat-value">{stats?.todayStats?.trades || 0}</div>
@@ -331,14 +383,6 @@ export default function JournalDashboard({ user, settings }) {
             <div className="today-stat-value">{stats?.openTrades || 0}</div>
             <div className="today-stat-label">Open Positions</div>
           </div>
-        </div>
-        <div className="cta-buttons">
-          <a href="/trading-journal/add-trade" className="cta-btn cta-primary">
-            ➕ Log New Trade
-          </a>
-          <a href="/trading-journal/trades" className="cta-btn cta-secondary">
-            📝 View Trade Log
-          </a>
         </div>
       </div>
 

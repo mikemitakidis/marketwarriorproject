@@ -34,6 +34,16 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to fetch settings' });
       }
 
+      // Helper to check truthy values (handles 'true', true, '1', 1, 'yes', 'on')
+      const isTruthy = (val) => {
+        if (val === true || val === 1) return true;
+        if (typeof val === 'string') {
+          const v = val.toLowerCase().trim();
+          return v === 'true' || v === '1' || v === 'yes' || v === 'on';
+        }
+        return false;
+      };
+
       const result = {
         aiChatEnabled: true,
         paidEnabled: false,
@@ -42,9 +52,9 @@ export default async function handler(req, res) {
       if (settings) {
         settings.forEach(s => {
           if (s.key === 'journal_ai_chat_enabled') {
-            result.aiChatEnabled = s.value === 'true';
+            result.aiChatEnabled = isTruthy(s.value);
           } else if (s.key === 'journal_paid_enabled') {
-            result.paidEnabled = s.value === 'true';
+            result.paidEnabled = isTruthy(s.value);
           }
         });
       }
