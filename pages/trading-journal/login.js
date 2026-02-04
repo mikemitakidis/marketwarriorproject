@@ -60,7 +60,14 @@ export default function JournalLoginPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Session error');
 
-      // 3. Redirect to journal dashboard
+      // 3. Check if payment is required
+      if (json.paymentRequired) {
+        setMessage({ type: 'success', text: 'Redirecting to payment...' });
+        window.location.href = '/trading-journal/upgrade';
+        return;
+      }
+
+      // 4. Redirect to journal dashboard
       setMessage({ type: 'success', text: 'Success! Redirecting...' });
       window.location.href = json.next || '/trading-journal';
 

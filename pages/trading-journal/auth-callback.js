@@ -54,8 +54,8 @@ export default function JournalAuthCallback() {
 
           if (res.ok && data?.next) {
             window.location.replace(data.next);
-          } else if (data?.paymentRequired && data?.paymentLink) {
-            window.location.replace(data.paymentLink);
+          } else if (data?.paymentRequired) {
+            window.location.replace('/trading-journal/upgrade');
           } else {
             window.location.replace('/trading-journal');
           }
@@ -94,8 +94,8 @@ export default function JournalAuthCallback() {
 
             if (res.ok && responseData?.next) {
               window.location.replace(responseData.next);
-            } else if (responseData?.paymentRequired && responseData?.paymentLink) {
-              window.location.replace(responseData.paymentLink);
+            } else if (responseData?.paymentRequired) {
+              window.location.replace('/trading-journal/upgrade');
             } else {
               window.location.replace('/trading-journal');
             }
@@ -196,8 +196,8 @@ export async function getServerSideProps(ctx) {
       // Check journal access (paid mode gating)
       const access = await checkJournalAccess(journalUser);
 
-      if (!access.hasAccess && access.paymentLink) {
-        return { redirect: { destination: access.paymentLink, permanent: false } };
+      if (!access.hasAccess && access.requiresPayment) {
+        return { redirect: { destination: '/trading-journal/upgrade', permanent: false } };
       }
 
       return { redirect: { destination: '/trading-journal', permanent: false } };

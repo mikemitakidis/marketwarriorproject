@@ -38,11 +38,10 @@ export default async function handler(req, res) {
       hasPaid: journalUser.has_paid || false,
     });
 
-    if (!access.hasAccess && access.paymentLink) {
+    if (!access.hasAccess && access.requiresPayment) {
       return res.status(200).json({
         success: true,
         paymentRequired: true,
-        paymentLink: access.paymentLink,
       });
     }
 
