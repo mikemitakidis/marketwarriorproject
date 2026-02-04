@@ -63,9 +63,12 @@ export default function AdminPanel() {
   const [journalSettings, setJournalSettings] = useState({
     aiChatEnabled: true,
     paidEnabled: false,
-    paymentLink: '',
   });
   const [journalSaving, setJournalSaving] = useState(false);
+  const [journalUsers, setJournalUsers] = useState([]);
+  const [journalStats, setJournalStats] = useState({ totalUsers: 0, paidUsers: 0, suspendedUsers: 0, totalTrades: 0, activeToday: 0 });
+  const [journalUsersLoading, setJournalUsersLoading] = useState(false);
+  const [editingJournalUser, setEditingJournalUser] = useState(null);
 
   // Promo codes state (fetched from Stripe)
   const [promoCodes, setPromoCodes] = useState([]);
@@ -152,6 +155,7 @@ export default function AdminPanel() {
           break;
         case 'journal':
           await loadJournalSettings();
+          await loadJournalUsers();
           break;
         case 'community':
           await loadCommunity();
@@ -274,7 +278,6 @@ export default function AdminPanel() {
         setJournalSettings({
           aiChatEnabled: data.aiChatEnabled !== false,
           paidEnabled: data.paidEnabled === true,
-          paymentLink: data.paymentLink || '',
         });
       }
     } catch (err) {
@@ -303,6 +306,41 @@ export default function AdminPanel() {
       alert('Error saving journal settings: ' + err.message);
     }
     setJournalSaving(false);
+  }
+
+  async function loadJournalUsers() {
+    setJournalUsersLoading(true);
+    try {
+      const res = await fetch('/api/admin/journal-users', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setJournalUsers(data.users || []);
+        setJournalStats(data.stats || { totalUsers: 0, paidUsers: 0, suspendedUsers: 0, totalTrades: 0, activeToday: 0 });
+      }
+    } catch (err) {
+      console.error('Load journal users error:', err);
+    }
+    setJournalUsersLoading(false);
+  }
+
+  async function updateJournalUser(userId, action, value) {
+    try {
+      const res = await fetch('/api/admin/journal-users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId, action, value }),
+      });
+      if (res.ok) {
+        loadJournalUsers(); // Refresh the list
+        setEditingJournalUser(null);
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error updating user: ' + err.message);
+    }
   }
 
   async function uploadFile(file, type) {
@@ -1335,50 +1373,163 @@ export default function AdminPanel() {
                         )}
                       </div>
 
-                      {/* Payment Link */}
-                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          🔗 Stripe Payment Link
-                        </h3>
-                        <p style={{ color: '#64748b', fontSize: '0.9em', marginBottom: '15px' }}>
-                          When paid mode is enabled, users will be redirected to this Stripe payment link
-                        </p>
-                        <input
-                          type="url"
-                          value={journalSettings.paymentLink}
-                          onChange={(e) => setJournalSettings({ ...journalSettings, paymentLink: e.target.value })}
-                          placeholder="https://buy.stripe.com/..."
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '1em',
-                          }}
-                        />
-                        <p style={{ marginTop: '10px', color: '#64748b', fontSize: '0.8em' }}>
-                          Create a Payment Link in your Stripe Dashboard: Products → Payment Links
-                        </p>
-                      </div>
-
                       {/* Journal Stats */}
                       <div style={{ padding: '20px', background: 'linear-gradient(135deg, #667eea20, #764ba220)', borderRadius: '12px', border: '1px solid #667eea40' }}>
                         <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          📊 Quick Stats
+                          📊 Journal Statistics
                         </h3>
-                        <p style={{ color: '#64748b', fontSize: '0.9em' }}>
-                          View Trading Journal statistics in the Analytics tab
-                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px' }}>
+                          <div style={{ textAlign: 'center', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '1.8em', fontWeight: '700', color: '#667eea' }}>{journalStats.totalUsers}</div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b' }}>Total Users</div>
+                          </div>
+                          <div style={{ textAlign: 'center', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '1.8em', fontWeight: '700', color: '#10b981' }}>{journalStats.paidUsers}</div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b' }}>Paid Users</div>
+                          </div>
+                          <div style={{ textAlign: 'center', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '1.8em', fontWeight: '700', color: '#f59e0b' }}>{journalStats.activeToday}</div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b' }}>Active Today</div>
+                          </div>
+                          <div style={{ textAlign: 'center', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '1.8em', fontWeight: '700', color: '#3b82f6' }}>{journalStats.totalTrades}</div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b' }}>Total Trades</div>
+                          </div>
+                          <div style={{ textAlign: 'center', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '1.8em', fontWeight: '700', color: '#ef4444' }}>{journalStats.suspendedUsers}</div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b' }}>Suspended</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
                     <button
-                      style={{ ...styles.btnPrimary, marginTop: '30px' }}
+                      style={{ ...styles.btnPrimary, marginTop: '20px', marginBottom: '30px' }}
                       onClick={saveJournalSettings}
                       disabled={journalSaving}
                     >
-                      {journalSaving ? 'Saving...' : 'Save Journal Settings'}
+                      {journalSaving ? 'Saving...' : 'Save Settings'}
                     </button>
+
+                    {/* User Management */}
+                    <div style={{ marginTop: '30px' }}>
+                      <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        👥 User Management
+                        <button
+                          onClick={loadJournalUsers}
+                          style={{ marginLeft: 'auto', padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🔄 Refresh
+                        </button>
+                      </h3>
+
+                      {journalUsersLoading ? (
+                        <p>Loading users...</p>
+                      ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9em' }}>
+                            <thead>
+                              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                                <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
+                                <th style={{ padding: '12px', textAlign: 'left' }}>Name</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Trades</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>AI Limit</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Paid</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {journalUsers.map(u => (
+                                <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0', background: u.is_suspended ? '#fef2f2' : 'white' }}>
+                                  <td style={{ padding: '12px' }}>{u.email}</td>
+                                  <td style={{ padding: '12px' }}>{u.full_name || '-'}</td>
+                                  <td style={{ padding: '12px', textAlign: 'center' }}>{u.trade_count}</td>
+                                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                                    {editingJournalUser === u.id ? (
+                                      <input
+                                        type="number"
+                                        defaultValue={u.ai_daily_limit || 10}
+                                        style={{ width: '60px', padding: '4px', textAlign: 'center' }}
+                                        onBlur={(e) => {
+                                          updateJournalUser(u.id, 'set_ai_limit', e.target.value);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            updateJournalUser(u.id, 'set_ai_limit', e.target.value);
+                                          }
+                                        }}
+                                        autoFocus
+                                      />
+                                    ) : (
+                                      <span
+                                        onClick={() => setEditingJournalUser(u.id)}
+                                        style={{ cursor: 'pointer', padding: '4px 8px', background: '#f1f5f9', borderRadius: '4px' }}
+                                      >
+                                        {u.ai_daily_limit || 10}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                                    {u.is_suspended ? (
+                                      <span style={{ color: '#ef4444', fontWeight: '600' }}>Suspended</span>
+                                    ) : (
+                                      <span style={{ color: '#10b981' }}>Active</span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                                    {u.has_paid ? (
+                                      <span style={{ color: '#10b981', fontWeight: '600' }}>✓ Paid</span>
+                                    ) : (
+                                      <span style={{ color: '#94a3b8' }}>Free</span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                      <button
+                                        onClick={() => updateJournalUser(u.id, 'suspend', !u.is_suspended)}
+                                        style={{
+                                          padding: '6px 12px',
+                                          background: u.is_suspended ? '#10b981' : '#ef4444',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '0.85em'
+                                        }}
+                                      >
+                                        {u.is_suspended ? 'Unsuspend' : 'Suspend'}
+                                      </button>
+                                      <button
+                                        onClick={() => updateJournalUser(u.id, 'grant_paid', !u.has_paid)}
+                                        style={{
+                                          padding: '6px 12px',
+                                          background: u.has_paid ? '#94a3b8' : '#3b82f6',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '0.85em'
+                                        }}
+                                      >
+                                        {u.has_paid ? 'Revoke Paid' : 'Grant Paid'}
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                              {journalUsers.length === 0 && (
+                                <tr>
+                                  <td colSpan="7" style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                                    No journal users yet
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
