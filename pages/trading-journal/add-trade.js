@@ -2,6 +2,7 @@ import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../li
 import JournalLayout from '../../components/journal/JournalLayout';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 export async function getServerSideProps({ req, res }) {
   try {
@@ -395,7 +396,49 @@ export default function AddTradePage({ user, settings }) {
             position: static;
           }
         }
+        .header-tabs {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 24px;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px;
+          border-radius: 10px;
+          width: fit-content;
+        }
+        .header-tab {
+          padding: 10px 20px;
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          text-decoration: none;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .header-tab:hover {
+          color: white;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .header-tab.active {
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+        }
       `}</style>
+
+      {/* Header Tabs */}
+      <div className="header-tabs">
+        <Link href="/trading-journal" className="header-tab">
+          Overview
+        </Link>
+        <Link href="/trading-journal/trades" className="header-tab">
+          Trade Log
+        </Link>
+        <Link href="/trading-journal/add-trade" className="header-tab active">
+          Add Trade
+        </Link>
+      </div>
 
       <div className="page-header">
         <h1 className="page-title">Log New Trade</h1>
