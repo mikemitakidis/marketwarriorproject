@@ -714,8 +714,8 @@ export async function getServerSideProps({ req, res }) {
     }
 
     const access = await checkJournalAccess(user);
-    if (!access.hasAccess && access.paymentLink) {
-      return { redirect: { destination: access.paymentLink, permanent: false } };
+    if (!access.hasAccess && access.requiresPayment) {
+      return { redirect: { destination: '/trading-journal/upgrade', permanent: false } };
     }
 
     const supabase = getServiceSupabase();

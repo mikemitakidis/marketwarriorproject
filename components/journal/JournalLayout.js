@@ -2,8 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-const SUPPORT_URL = 'https://buy.stripe.com/8x23cp0kU9gm7m65aKdAk03';
-
 export default function JournalLayout({ children, user, title = 'Trading Journal', settings }) {
   const router = useRouter();
   const currentPath = router.pathname;
@@ -23,6 +21,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     { href: '/trading-journal/playbook', label: 'Playbook', icon: '📚' },
     { href: '/trading-journal/ai-coach', label: 'AI Coach', icon: '🤖' },
     { href: '/trading-journal/calculators', label: 'Calculators', icon: '🧮' },
+    { href: '/trading-journal/widgets', label: 'Widgets', icon: '🔧' },
     { href: '/trading-journal/charts', label: 'Charts', icon: '📉' },
     { href: '/trading-journal/share', label: 'Share', icon: '🔗' },
     { href: '/trading-journal/challenge', label: 'Challenge', icon: '🎯' },
@@ -102,20 +101,22 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           align-items: center;
           gap: 12px;
           padding: 12px 16px;
-          color: rgba(255, 255, 255, 0.7);
+          color: white;
           text-decoration: none;
           border-radius: 8px;
           margin-bottom: 4px;
           transition: all 0.2s;
+          border: 1px solid transparent;
         }
         .nav-item:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.08);
           color: white;
+          border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .nav-item.active {
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-          color: #667eea;
-          border: 1px solid rgba(102, 126, 234, 0.3);
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .nav-icon {
           font-size: 1.2rem;
@@ -127,43 +128,28 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         }
         .sidebar-footer {
           padding: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .support-btn {
-          display: block;
-          width: 100%;
-          padding: 12px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          text-align: center;
-          text-decoration: none;
-          border-radius: 8px;
-          font-weight: 600;
-          margin-bottom: 12px;
-          transition: all 0.2s;
-        }
-        .support-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          border-top: 1px solid rgba(255, 255, 255, 0.15);
         }
         .user-info {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
+          padding: 14px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .user-avatar {
-          width: 36px;
-          height: 36px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          width: 38px;
+          height: 38px;
+          background: rgba(255, 255, 255, 0.15);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-weight: 600;
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .user-details {
           flex: 1;
@@ -179,19 +165,22 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         }
         .user-badge {
           display: inline-block;
-          padding: 2px 6px;
+          padding: 3px 8px;
           font-size: 0.65rem;
           border-radius: 4px;
           text-transform: uppercase;
           font-weight: 600;
+          margin-top: 4px;
         }
         .badge-student {
-          background: rgba(102, 126, 234, 0.2);
-          color: #667eea;
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .badge-free {
-          background: rgba(16, 185, 129, 0.2);
-          color: #10b981;
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .logout-btn {
           background: none;
@@ -280,10 +269,6 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           </nav>
 
           <div className="sidebar-footer">
-            <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="support-btn">
-              ❤️ Support Development
-            </a>
-
             <div className="user-info">
               <div className="user-avatar">
                 {(user.fullName || user.email || 'U').charAt(0).toUpperCase()}

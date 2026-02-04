@@ -10,8 +10,8 @@ export async function getServerSideProps({ req, res }) {
     }
 
     const access = await checkJournalAccess(user);
-    if (!access.hasAccess && access.paymentLink) {
-      return { redirect: { destination: access.paymentLink, permanent: false } };
+    if (!access.hasAccess && access.requiresPayment) {
+      return { redirect: { destination: '/trading-journal/upgrade', permanent: false } };
     }
 
     const supabase = getServiceSupabase();
@@ -289,6 +289,259 @@ function RSICalculator() {
               {result.interpretation}
             </strong>
           </div>
+        </div>
+      )}
+      {result?.error && <div className="calc-error">{result.error}</div>}
+    </div>
+  );
+}
+
+// Moving Average Calculator
+function MovingAverageCalculator() {
+  const [prices, setPrices] = useState('');
+  const [period, setPeriod] = useState(20);
+  const [maType, setMaType] = useState('sma');
+  const [result, setResult] = useState(null);
+
+  const calculate = () => {
+    const priceArray = prices.split(',').map((p) => parseFloat(p.trim())).filter((p) => !isNaN(p));
+    if (priceArray.length < period) {
+      setResult({ error: `Need at least ${period} prices for a ${period}-period MA` });
+      return;
+    }
+
+    if (maType === 'sma') {
+      // Simple Moving Average
+      const smaValues = [];
+      for (let i = period - 1; i < priceArray.length; i++) {
+        const sum = priceArray.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+        smaValues.push(sum / period);
+      }
+      const currentSMA = smaValues[smaValues.length - 1];
+      const previousSMA = smaValues.length > 1 ? smaValues[smaValues.length - 2] : currentSMA;
+      const trend = currentSMA > previousSMA ? 'Uptrend' : currentSMA < previousSMA ? 'Downtrend' : 'Flat';
+      const currentPrice = priceArray[priceArray.length - 1];
+      const position = currentPrice > currentSMA ? 'Above MA (Bullish)' : currentPrice < currentSMA ? 'Below MA (Bearish)' : 'At MA';
+
+      setResult({ type: 'SMA', period, value: currentSMA, trend, position, currentPrice });
+    } else {
+      // Exponential Moving Average
+      const multiplier = 2 / (period + 1);
+      let ema = priceArray.slice(0, period).reduce((a, b) => a + b, 0) / period;
+      const emaValues = [ema];
+
+      for (let i = period; i < priceArray.length; i++) {
+        ema = (priceArray[i] - ema) * multiplier + ema;
+        emaValues.push(ema);
+      }
+
+      const currentEMA = emaValues[emaValues.length - 1];
+      const previousEMA = emaValues.length > 1 ? emaValues[emaValues.length - 2] : currentEMA;
+      const trend = currentEMA > previousEMA ? 'Uptrend' : currentEMA < previousEMA ? 'Downtrend' : 'Flat';
+      const currentPrice = priceArray[priceArray.length - 1];
+      const position = currentPrice > currentEMA ? 'Above MA (Bullish)' : currentPrice < currentEMA ? 'Below MA (Bearish)' : 'At MA';
+
+      setResult({ type: 'EMA', period, value: currentEMA, trend, position, currentPrice });
+    }
+  };
+
+  return (
+    <div className="calculator-card">
+      <h3>Moving Average Calculator</h3>
+      <p className="calc-desc">Calculate SMA or EMA from price data</p>
+      <div className="calc-inputs">
+        <div className="calc-input full">
+          <label>Closing Prices (comma-separated, oldest to newest)</label>
+          <textarea
+            value={prices}
+            onChange={(e) => setPrices(e.target.value)}
+            placeholder="100, 102, 101, 103, 105, 104, 106, 108, 107, 109, 111, 110, 112, 114, 113, 115, 117, 116, 118, 120"
+            rows={3}
+          />
+        </div>
+        <div className="calc-input">
+          <label>MA Type</label>
+          <select value={maType} onChange={(e) => setMaType(e.target.value)}>
+            <option value="sma">Simple (SMA)</option>
+            <option value="ema">Exponential (EMA)</option>
+          </select>
+        </div>
+        <div className="calc-input">
+          <label>Period</label>
+          <input type="number" value={period} onChange={(e) => setPeriod(parseInt(e.target.value) || 20)} />
+        </div>
+      </div>
+      <button className="calc-btn" onClick={calculate}>Calculate Moving Average</button>
+      {result && !result.error && (
+        <div className="calc-results">
+          <div className="calc-result highlight">
+            <span>{result.type} ({result.period}):</span>
+            <strong>${result.value.toFixed(2)}</strong>
+          </div>
+          <div className="calc-result">
+            <span>Current Price:</span>
+            <strong>${result.currentPrice.toFixed(2)}</strong>
+          </div>
+          <div className="calc-result">
+            <span>Trend:</span>
+            <strong style={{ color: result.trend === 'Uptrend' ? '#4ade80' : result.trend === 'Downtrend' ? '#f87171' : 'inherit' }}>
+              {result.trend}
+            </strong>
+          </div>
+          <div className="calc-result">
+            <span>Price Position:</span>
+            <strong style={{ color: result.position.includes('Bullish') ? '#4ade80' : result.position.includes('Bearish') ? '#f87171' : 'inherit' }}>
+              {result.position}
+            </strong>
+          </div>
+        </div>
+      )}
+      {result?.error && <div className="calc-error">{result.error}</div>}
+    </div>
+  );
+}
+
+// Support & Resistance Calculator
+function SupportResistanceCalculator() {
+  const [highPrice, setHighPrice] = useState('');
+  const [lowPrice, setLowPrice] = useState('');
+  const [closePrice, setClosePrice] = useState('');
+  const [method, setMethod] = useState('pivot');
+  const [result, setResult] = useState(null);
+
+  const calculate = () => {
+    const high = parseFloat(highPrice);
+    const low = parseFloat(lowPrice);
+    const close = parseFloat(closePrice);
+
+    if (!high || !low || !close) {
+      setResult({ error: 'Please enter all price values' });
+      return;
+    }
+
+    if (method === 'pivot') {
+      // Standard Pivot Points
+      const pivot = (high + low + close) / 3;
+      const r1 = (2 * pivot) - low;
+      const r2 = pivot + (high - low);
+      const r3 = high + 2 * (pivot - low);
+      const s1 = (2 * pivot) - high;
+      const s2 = pivot - (high - low);
+      const s3 = low - 2 * (high - pivot);
+
+      setResult({
+        method: 'Standard Pivot Points',
+        levels: [
+          { label: 'R3 (Resistance 3)', value: r3, type: 'resistance' },
+          { label: 'R2 (Resistance 2)', value: r2, type: 'resistance' },
+          { label: 'R1 (Resistance 1)', value: r1, type: 'resistance' },
+          { label: 'Pivot Point', value: pivot, type: 'pivot' },
+          { label: 'S1 (Support 1)', value: s1, type: 'support' },
+          { label: 'S2 (Support 2)', value: s2, type: 'support' },
+          { label: 'S3 (Support 3)', value: s3, type: 'support' },
+        ],
+      });
+    } else if (method === 'fibonacci') {
+      // Fibonacci Pivot Points
+      const pivot = (high + low + close) / 3;
+      const range = high - low;
+      const r1 = pivot + (0.382 * range);
+      const r2 = pivot + (0.618 * range);
+      const r3 = pivot + (1.0 * range);
+      const s1 = pivot - (0.382 * range);
+      const s2 = pivot - (0.618 * range);
+      const s3 = pivot - (1.0 * range);
+
+      setResult({
+        method: 'Fibonacci Pivot Points',
+        levels: [
+          { label: 'R3 (100%)', value: r3, type: 'resistance' },
+          { label: 'R2 (61.8%)', value: r2, type: 'resistance' },
+          { label: 'R1 (38.2%)', value: r1, type: 'resistance' },
+          { label: 'Pivot Point', value: pivot, type: 'pivot' },
+          { label: 'S1 (38.2%)', value: s1, type: 'support' },
+          { label: 'S2 (61.8%)', value: s2, type: 'support' },
+          { label: 'S3 (100%)', value: s3, type: 'support' },
+        ],
+      });
+    } else if (method === 'camarilla') {
+      // Camarilla Pivot Points
+      const range = high - low;
+      const r4 = close + (range * 1.1 / 2);
+      const r3 = close + (range * 1.1 / 4);
+      const r2 = close + (range * 1.1 / 6);
+      const r1 = close + (range * 1.1 / 12);
+      const s1 = close - (range * 1.1 / 12);
+      const s2 = close - (range * 1.1 / 6);
+      const s3 = close - (range * 1.1 / 4);
+      const s4 = close - (range * 1.1 / 2);
+
+      setResult({
+        method: 'Camarilla Pivot Points',
+        levels: [
+          { label: 'R4 (Breakout)', value: r4, type: 'resistance' },
+          { label: 'R3 (Key Resistance)', value: r3, type: 'resistance' },
+          { label: 'R2', value: r2, type: 'resistance' },
+          { label: 'R1', value: r1, type: 'resistance' },
+          { label: 'S1', value: s1, type: 'support' },
+          { label: 'S2', value: s2, type: 'support' },
+          { label: 'S3 (Key Support)', value: s3, type: 'support' },
+          { label: 'S4 (Breakdown)', value: s4, type: 'support' },
+        ],
+      });
+    }
+  };
+
+  return (
+    <div className="calculator-card">
+      <h3>Support & Resistance Calculator</h3>
+      <p className="calc-desc">Calculate pivot points and key S/R levels</p>
+      <div className="calc-inputs">
+        <div className="calc-input">
+          <label>Previous High ($)</label>
+          <input type="number" step="any" value={highPrice} onChange={(e) => setHighPrice(e.target.value)} placeholder="155.00" />
+        </div>
+        <div className="calc-input">
+          <label>Previous Low ($)</label>
+          <input type="number" step="any" value={lowPrice} onChange={(e) => setLowPrice(e.target.value)} placeholder="148.00" />
+        </div>
+        <div className="calc-input">
+          <label>Previous Close ($)</label>
+          <input type="number" step="any" value={closePrice} onChange={(e) => setClosePrice(e.target.value)} placeholder="152.00" />
+        </div>
+        <div className="calc-input">
+          <label>Calculation Method</label>
+          <select value={method} onChange={(e) => setMethod(e.target.value)}>
+            <option value="pivot">Standard Pivot Points</option>
+            <option value="fibonacci">Fibonacci Pivot Points</option>
+            <option value="camarilla">Camarilla Pivot Points</option>
+          </select>
+        </div>
+      </div>
+      <button className="calc-btn" onClick={calculate}>Calculate S/R Levels</button>
+      {result && !result.error && (
+        <div className="calc-results" style={{ gridTemplateColumns: '1fr' }}>
+          <div style={{ marginBottom: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
+            {result.method}
+          </div>
+          {result.levels.map((level, idx) => (
+            <div
+              key={idx}
+              className={`calc-result ${level.type === 'pivot' ? 'highlight' : ''}`}
+              style={{
+                borderLeft: level.type === 'resistance' ? '3px solid #f87171' :
+                           level.type === 'support' ? '3px solid #4ade80' : '3px solid #667eea'
+              }}
+            >
+              <span>{level.label}</span>
+              <strong style={{
+                color: level.type === 'resistance' ? '#f87171' :
+                       level.type === 'support' ? '#4ade80' : '#667eea'
+              }}>
+                ${level.value.toFixed(2)}
+              </strong>
+            </div>
+          ))}
         </div>
       )}
       {result?.error && <div className="calc-error">{result.error}</div>}
@@ -652,6 +905,8 @@ export default function CalculatorsPage({ user, settings }) {
 
         {activeTab === 'technical' && (
           <>
+            <MovingAverageCalculator />
+            <SupportResistanceCalculator />
             <FibonacciCalculator />
             <RSICalculator />
           </>
