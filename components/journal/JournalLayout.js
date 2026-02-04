@@ -12,20 +12,20 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
   };
 
   const navItems = [
-    { href: '/trading-journal', label: 'Dashboard', icon: '📊' },
-    { href: '/trading-journal/trades', label: 'Trade Log', icon: '📝' },
-    { href: '/trading-journal/add-trade', label: 'Add Trade', icon: '➕' },
-    { href: '/trading-journal/import', label: 'Import CSV', icon: '📥' },
-    { href: '/trading-journal/analytics', label: 'Analytics', icon: '📈' },
-    { href: '/trading-journal/goals', label: 'Goals', icon: '🏆' },
-    { href: '/trading-journal/playbook', label: 'Playbook', icon: '📚' },
-    { href: '/trading-journal/ai-coach', label: 'AI Coach', icon: '🤖' },
-    { href: '/trading-journal/calculators', label: 'Calculators', icon: '🧮' },
-    { href: '/trading-journal/widgets', label: 'Widgets', icon: '🔧' },
-    { href: '/trading-journal/charts', label: 'Charts', icon: '📉' },
-    { href: '/trading-journal/share', label: 'Share', icon: '🔗' },
-    { href: '/trading-journal/challenge', label: 'Challenge', icon: '🎯' },
-    { href: '/trading-journal/settings', label: 'Settings', icon: '⚙️' },
+    { href: '/trading-journal', label: 'Dashboard' },
+    { href: '/trading-journal/trades', label: 'Trade Log' },
+    { href: '/trading-journal/add-trade', label: 'Add Trade' },
+    { href: '/trading-journal/import', label: 'Import CSV' },
+    { href: '/trading-journal/analytics', label: 'Analytics' },
+    { href: '/trading-journal/goals', label: 'Goals' },
+    { href: '/trading-journal/playbook', label: 'Playbook' },
+    { href: '/trading-journal/ai-coach', label: 'AI Coach' },
+    { href: '/trading-journal/calculators', label: 'Calculators' },
+    { href: '/trading-journal/widgets', label: 'Widgets' },
+    { href: '/trading-journal/charts', label: 'Charts' },
+    { href: '/trading-journal/share', label: 'Share' },
+    { href: '/trading-journal/challenge', label: 'Challenge' },
+    { href: '/trading-journal/settings', label: 'Settings' },
   ];
 
   return (
@@ -50,7 +50,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           min-height: 100vh;
         }
         .sidebar {
-          width: 260px;
+          width: 220px;
           background: rgba(30, 41, 59, 0.95);
           border-right: 1px solid rgba(255, 255, 255, 0.1);
           display: flex;
@@ -62,7 +62,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           z-index: 100;
         }
         .sidebar-header {
-          padding: 20px;
+          padding: 20px 16px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         .logo {
@@ -72,84 +72,81 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           text-decoration: none;
         }
         .logo-icon {
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 10px;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
+          font-size: 14px;
+          font-weight: 700;
           color: white;
         }
         .logo-text {
           color: white;
-          font-size: 1.1rem;
+          font-size: 1rem;
           font-weight: 700;
         }
         .logo-subtitle {
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.7rem;
         }
         .nav {
           flex: 1;
-          padding: 20px 12px;
+          padding: 16px 12px;
           overflow-y: auto;
+          display: flex;
+          flex-direction: column;
         }
         .nav-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
+          display: block;
+          padding: 10px 14px;
           color: white;
           text-decoration: none;
-          border-radius: 8px;
-          margin-bottom: 4px;
-          transition: all 0.2s;
+          border-radius: 6px;
+          margin-bottom: 2px;
+          font-size: 0.9rem;
           border: 1px solid transparent;
+          transition: all 0.15s;
         }
         .nav-item:hover {
-          background: rgba(255, 255, 255, 0.08);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.2);
         }
         .nav-item.active {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .nav-icon {
-          font-size: 1.2rem;
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.3);
         }
         .nav-divider {
           height: 1px;
           background: rgba(255, 255, 255, 0.1);
-          margin: 16px 0;
+          margin: 12px 0;
         }
         .sidebar-footer {
-          padding: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 16px 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         .user-info {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 14px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          gap: 10px;
+          padding: 10px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .user-avatar {
-          width: 38px;
-          height: 38px;
-          background: rgba(255, 255, 255, 0.15);
+          width: 32px;
+          height: 32px;
+          background: rgba(255, 255, 255, 0.1);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-weight: 600;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          font-size: 0.85rem;
         }
         .user-details {
           flex: 1;
@@ -158,36 +155,17 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         .user-name {
           color: white;
           font-weight: 500;
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .user-badge {
-          display: inline-block;
-          padding: 3px 8px;
-          font-size: 0.65rem;
-          border-radius: 4px;
-          text-transform: uppercase;
-          font-weight: 600;
-          margin-top: 4px;
-        }
-        .badge-student {
-          background: rgba(255, 255, 255, 0.15);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .badge-free {
-          background: rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .logout-btn {
           background: none;
           border: none;
           color: rgba(255, 255, 255, 0.5);
           cursor: pointer;
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           padding: 4px;
         }
         .logout-btn:hover {
@@ -195,7 +173,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         }
         .main {
           flex: 1;
-          margin-left: 260px;
+          margin-left: 220px;
           min-height: 100vh;
         }
         .content {
@@ -205,14 +183,13 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         }
         .course-link {
           display: block;
-          padding: 10px 16px;
-          color: rgba(255, 255, 255, 0.6);
+          padding: 8px 14px;
+          color: rgba(255, 255, 255, 0.5);
           text-decoration: none;
-          font-size: 0.85rem;
-          transition: color 0.2s;
+          font-size: 0.8rem;
         }
         .course-link:hover {
-          color: #667eea;
+          color: white;
         }
         @media (max-width: 768px) {
           .sidebar {
@@ -224,13 +201,13 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
             margin-left: 0;
           }
           .nav {
-            display: flex;
-            overflow-x: auto;
+            flex-direction: row;
+            flex-wrap: wrap;
             padding: 10px;
           }
           .nav-item {
-            flex-shrink: 0;
-            padding: 10px 14px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
           }
         }
       `}</style>
@@ -254,7 +231,6 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
                 href={item.href}
                 className={`nav-item ${currentPath === item.href ? 'active' : ''}`}
               >
-                <span className="nav-icon">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
@@ -263,7 +239,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
 
             {user.isStudent && (
               <Link href="/dashboard" className="course-link">
-                ← Back to 30-Day Challenge
+                Back to 30-Day Challenge
               </Link>
             )}
           </nav>
@@ -275,9 +251,6 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
               </div>
               <div className="user-details">
                 <div className="user-name">{user.fullName || user.email}</div>
-                <span className={`user-badge ${user.isStudent ? 'badge-student' : 'badge-free'}`}>
-                  {user.isStudent ? 'Student' : 'Free'}
-                </span>
               </div>
               <button onClick={handleLogout} className="logout-btn" title="Logout">
                 Logout

@@ -194,7 +194,7 @@ export async function getServerSideProps(ctx) {
       }
 
       // Check journal access (paid mode gating)
-      const access = await checkJournalAccess(journalUser);
+      const access = await checkJournalAccess({ hasPaid: journalUser.has_paid || false });
 
       if (!access.hasAccess && access.requiresPayment) {
         return { redirect: { destination: '/trading-journal/upgrade', permanent: false } };
