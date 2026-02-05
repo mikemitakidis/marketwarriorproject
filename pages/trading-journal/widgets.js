@@ -39,7 +39,6 @@ export async function getServerSideProps({ req, res }) {
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
   const [curatedLists, setCuratedLists] = useState([]);
-  const [trending, setTrending] = useState([]);
   const [gainers, setGainers] = useState([]);
   const [losers, setLosers] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
@@ -91,10 +90,9 @@ export default function WidgetsPage({ user, settings }) {
     setError(null);
 
     try {
-      // Fetch all eToro data in parallel
-      const [listsRes, trendingRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
+      // Fetch eToro data in parallel (removed trending - endpoint returns empty)
+      const [listsRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
         fetch('/api/journal/etoro/curated-lists'),
-        fetch('/api/journal/etoro/trending'),
         fetch('/api/journal/etoro/market-movers?type=gainers'),
         fetch('/api/journal/etoro/market-movers?type=losers'),
         fetch('/api/journal/etoro/copytraders'),
@@ -104,11 +102,6 @@ export default function WidgetsPage({ user, settings }) {
       if (listsRes.status === 'fulfilled' && listsRes.value.ok) {
         const data = await listsRes.value.json();
         setCuratedLists(data.lists || data || []);
-      }
-
-      if (trendingRes.status === 'fulfilled' && trendingRes.value.ok) {
-        const data = await trendingRes.value.json();
-        setTrending(data.assets || data || []);
       }
 
       if (gainersRes.status === 'fulfilled' && gainersRes.value.ok) {
@@ -554,37 +547,6 @@ export default function WidgetsPage({ user, settings }) {
             </div>
           ) : (
             <>
-              {/* Trending Assets */}
-              <div className="section">
-                <h2 className="section-title">
-                  Trending Assets
-                  <span className="section-subtitle">Popular right now</span>
-                </h2>
-                {trending.length > 0 ? (
-                  <div className="card-grid">
-                    {trending.slice(0, 8).map((asset, i) => (
-                      <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                        <div className="asset-header">
-                          <div>
-                            <div className="asset-symbol">{asset.symbol}</div>
-                            <div className="asset-name">{asset.name}</div>
-                          </div>
-                          {asset.change !== undefined && (
-                            <div className={`asset-change ${asset.change >= 0 ? 'positive' : 'negative'}`}>
-                              {asset.change >= 0 ? '+' : ''}{asset.change?.toFixed(2)}%
-                            </div>
-                          )}
-                        </div>
-                        {asset.price && <div className="asset-price">${asset.price?.toFixed(2)}</div>}
-                        <button className="trade-btn">Trade on eToro</button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">No trending data available</div>
-                )}
-              </div>
-
               {/* Top Gainers & Losers */}
               <div className="two-columns">
                 <div className="section">
