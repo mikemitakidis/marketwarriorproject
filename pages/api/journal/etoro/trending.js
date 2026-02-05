@@ -75,10 +75,9 @@ export default async function handler(req, res) {
 
     console.log('eToro trending data keys:', Object.keys(data));
 
-    // eToro returns instrument IDs, we need to use sample data for display
-    // since we don't have instrument details
-    const instrumentIds = data.Recommendations || [];
-    if (instrumentIds.length > 0) {
+    // eToro returns instrument IDs - check both camelCase and PascalCase
+    const instrumentIds = data.recommendations || data.Recommendations || [];
+    if (Array.isArray(instrumentIds) && instrumentIds.length > 0) {
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
       return res.status(200).json({
         instrumentIds,

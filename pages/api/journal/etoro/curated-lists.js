@@ -72,21 +72,21 @@ export default async function handler(req, res) {
 
     console.log('eToro curated-lists data keys:', Object.keys(data || {}));
 
-    // Handle various response formats
+    // Handle various response formats (camelCase and PascalCase)
     let rawLists = [];
     if (Array.isArray(data)) {
       rawLists = data;
     } else if (data && typeof data === 'object') {
-      rawLists = data.CuratedLists || data.Lists || data.Items || data.Results || [];
+      rawLists = data.curatedLists || data.CuratedLists || data.lists || data.Lists || data.items || data.Items || data.results || data.Results || [];
     }
 
     if (Array.isArray(rawLists) && rawLists.length > 0) {
       const lists = rawLists.map(list => ({
-        id: list.Uuid || list.Id || list.id,
-        name: list.Name || list.name,
-        description: list.Description || list.description,
-        imageUrl: list.ListImageUrl || list.ImageUrl || list.imageUrl,
-        count: list.Items?.length || list.Count || list.count || 0,
+        id: list.uuid || list.Uuid || list.id || list.Id,
+        name: list.name || list.Name,
+        description: list.description || list.Description,
+        imageUrl: list.listImageUrl || list.ListImageUrl || list.imageUrl || list.ImageUrl,
+        count: list.items?.length || list.Items?.length || list.count || list.Count || 0,
       }));
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
       return res.status(200).json({ lists, source: 'etoro' });

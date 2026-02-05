@@ -93,24 +93,24 @@ export default async function handler(req, res) {
 
     console.log('eToro market-movers data keys:', Object.keys(data || {}));
 
-    // Extract instruments with price data - handle various response formats
+    // Extract instruments with price data - handle various response formats (camelCase and PascalCase)
     let instruments = [];
     if (Array.isArray(data)) {
       instruments = data;
     } else if (data && typeof data === 'object') {
-      instruments = data.Rates || data.Instruments || data.Items || data.Results || [];
+      instruments = data.rates || data.Rates || data.instruments || data.Instruments || data.items || data.Items || data.results || data.Results || [];
     }
 
     if (Array.isArray(instruments) && instruments.length > 0) {
 
-      // Map to our format and filter out items without change data
+      // Map to our format and filter out items without change data (handle camelCase and PascalCase)
       const mappedInstruments = instruments
-        .filter(item => item.DailyChangePercentage !== undefined || item.PercentChange !== undefined)
+        .filter(item => item && (item.dailyChangePercentage !== undefined || item.DailyChangePercentage !== undefined || item.percentChange !== undefined || item.PercentChange !== undefined))
         .map(item => ({
-          symbol: item.Symbol || item.SymbolFull || item.InstrumentDisplayName || item.Name,
-          name: item.InstrumentDisplayName || item.Name || item.Symbol,
-          price: item.Price || item.LastPrice || item.Ask,
-          change: item.DailyChangePercentage || item.PercentChange || item.Change || 0,
+          symbol: item.symbol || item.Symbol || item.symbolFull || item.SymbolFull || item.instrumentDisplayName || item.InstrumentDisplayName || item.name || item.Name,
+          name: item.instrumentDisplayName || item.InstrumentDisplayName || item.name || item.Name || item.symbol || item.Symbol,
+          price: item.price || item.Price || item.lastPrice || item.LastPrice || item.ask || item.Ask,
+          change: item.dailyChangePercentage || item.DailyChangePercentage || item.percentChange || item.PercentChange || item.change || item.Change || 0,
         }));
 
       // Sort by change percentage
