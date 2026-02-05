@@ -132,6 +132,9 @@ export default function WidgetsPage({ user, settings }) {
   const [riskFilter, setRiskFilter] = useState('all'); // all, low, medium, high
   const [sortBy, setSortBy] = useState('gain'); // gain, copiers, risk
   const [selectedCategory, setSelectedCategory] = useState('stocks');
+  const [marketPrices, setMarketPrices] = useState({});
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Period options for CopyTraders filter - grouped for better UX
   const periodGroups = {
@@ -163,11 +166,69 @@ export default function WidgetsPage({ user, settings }) {
 
   useEffect(() => {
     if (activeTab === 'etoro') {
-      setLoading(false); // No API fetch needed for static asset categories
+      fetchMarketPrices();
     } else if (activeTab === 'copytraders') {
       fetchCopytraders(selectedPeriod);
     }
   }, [activeTab]);
+
+  // Fetch REAL market prices from eToro
+  const fetchMarketPrices = async (query = '') => {
+    setPricesLoading(true);
+    setLoading(true);
+    try {
+      const url = query
+        ? `/api/journal/market-data?query=${encodeURIComponent(query)}`
+        : '/api/journal/market-data';
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('eToro prices received:', Object.keys(data.prices || {}).length);
+        console.log('Sample symbols:', Object.keys(data.prices || {}).slice(0, 10));
+        setMarketPrices(data.prices || {});
+      }
+    } catch (err) {
+      console.error('Error fetching market prices:', err);
+    } finally {
+      setPricesLoading(false);
+      setLoading(false);
+    }
+  };
+
+  // Handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      fetchMarketPrices(searchQuery.trim());
+    }
+  };
+
+  // Format price based on asset type
+  const formatPrice = (price, symbol) => {
+    if (!price && price !== 0) return '---';
+
+    // Forex pairs need more decimals
+    if (['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF'].includes(symbol)) {
+      return price.toFixed(4);
+    }
+    // Crypto can have varying decimals
+    if (['BTC', 'ETH'].includes(symbol)) {
+      return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (['XRP', 'ADA', 'DOGE', 'DOT', 'LINK', 'SOL'].includes(symbol)) {
+      return '$' + price.toFixed(4);
+    }
+    // Commodities
+    if (['GOLD', 'SILVER', 'OIL', 'NATGAS', 'COPPER', 'PLATINUM'].includes(symbol)) {
+      return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    // Indices (no dollar sign)
+    if (['SPX500', 'NSDQ100', 'DJ30', 'UK100', 'GER40', 'JPN225'].includes(symbol)) {
+      return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    // Default for stocks/ETFs
+    return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
 
   const fetchCopytraders = async (period) => {
@@ -580,9 +641,61 @@ export default function WidgetsPage({ user, settings }) {
           {/* Asset Categories */}
           <div className="section">
             <h2 className="section-title">
-              Quick Trade
-              <span className="section-subtitle">Popular instruments by category</span>
+              Live Markets
+              <span className="section-subtitle">Real-time prices • Click to trade on eToro</span>
             </h2>
+
+            {/* Search Box */}
+            <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search instruments (e.g., Apple, Bitcoin, Gold)"
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Search
+                </button>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); fetchMarketPrices(); }}
+                    style={{
+                      padding: '12px 16px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </form>
 
             {/* Category Tabs */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
@@ -633,25 +746,67 @@ export default function WidgetsPage({ user, settings }) {
                 </p>
               </div>
 
-              <div className="card-grid">
-                {assetCategories[selectedCategory].items.map((item) => (
-                  <div
-                    key={item.symbol}
-                    className="asset-card"
-                    onClick={() => handleTradeClick(item.symbol)}
-                  >
-                    <div className="asset-header">
-                      <div>
-                        <div className="asset-symbol">{item.symbol}</div>
-                        <div className="asset-name">{item.name}</div>
+              {pricesLoading ? (
+                <div className="loading">
+                  <div className="loading-spinner" />
+                  <p>Loading live prices from eToro...</p>
+                </div>
+              ) : Object.keys(marketPrices).length > 0 ? (
+                <div className="card-grid">
+                  {Object.entries(marketPrices).slice(0, 24).map(([symbol, data]) => {
+                    const price = data?.price;
+                    const change = data?.change;
+                    const isPositive = change >= 0;
+                    const name = data?.name || symbol;
+
+                    return (
+                      <div
+                        key={symbol}
+                        className="asset-card"
+                        onClick={() => handleTradeClick(symbol)}
+                      >
+                        <div className="asset-header">
+                          <div>
+                            <div className="asset-symbol">{symbol}</div>
+                            <div className="asset-name">{name}</div>
+                          </div>
+                          {change !== undefined && change !== 0 && (
+                            <div className={`asset-change ${isPositive ? 'positive' : 'negative'}`}>
+                              {isPositive ? '+' : ''}{change.toFixed(2)}%
+                            </div>
+                          )}
+                        </div>
+                        {price !== undefined && price > 0 && (
+                          <div className="asset-price">{formatPrice(price, symbol)}</div>
+                        )}
+                        <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(symbol); }}>
+                          Trade on eToro
+                        </button>
                       </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="card-grid">
+                  {assetCategories[selectedCategory].items.map((item) => (
+                    <div
+                      key={item.symbol}
+                      className="asset-card"
+                      onClick={() => handleTradeClick(item.symbol)}
+                    >
+                      <div className="asset-header">
+                        <div>
+                          <div className="asset-symbol">{item.symbol}</div>
+                          <div className="asset-name">{item.name}</div>
+                        </div>
+                      </div>
+                      <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
+                        Trade on eToro
+                      </button>
                     </div>
-                    <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
-                      Trade on eToro
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
 
               <div style={{ marginTop: '20px', textAlign: 'center' }}>
                 <button
