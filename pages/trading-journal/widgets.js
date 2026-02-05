@@ -39,8 +39,6 @@ export async function getServerSideProps({ req, res }) {
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
   const [curatedLists, setCuratedLists] = useState([]);
-  const [gainers, setGainers] = useState([]);
-  const [losers, setLosers] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copytradersLoading, setCopytradersLoading] = useState(false);
@@ -90,11 +88,9 @@ export default function WidgetsPage({ user, settings }) {
     setError(null);
 
     try {
-      // Fetch eToro data in parallel (removed trending - endpoint returns empty)
-      const [listsRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
+      // Fetch eToro data in parallel
+      const [listsRes, copyRes] = await Promise.allSettled([
         fetch('/api/journal/etoro/curated-lists'),
-        fetch('/api/journal/etoro/market-movers?type=gainers'),
-        fetch('/api/journal/etoro/market-movers?type=losers'),
         fetch('/api/journal/etoro/copytraders'),
       ]);
 
@@ -102,16 +98,6 @@ export default function WidgetsPage({ user, settings }) {
       if (listsRes.status === 'fulfilled' && listsRes.value.ok) {
         const data = await listsRes.value.json();
         setCuratedLists(data.lists || data || []);
-      }
-
-      if (gainersRes.status === 'fulfilled' && gainersRes.value.ok) {
-        const data = await gainersRes.value.json();
-        setGainers(data.assets || data || []);
-      }
-
-      if (losersRes.status === 'fulfilled' && losersRes.value.ok) {
-        const data = await losersRes.value.json();
-        setLosers(data.assets || data || []);
       }
 
       if (copyRes.status === 'fulfilled' && copyRes.value.ok) {
@@ -547,72 +533,84 @@ export default function WidgetsPage({ user, settings }) {
             </div>
           ) : (
             <>
-              {/* Top Gainers & Losers */}
-              <div className="two-columns">
-                <div className="section">
-                  <h2 className="section-title" style={{ color: '#4ade80' }}>
-                    Top Gainers
-                  </h2>
-                  {gainers.length > 0 ? (
-                    <div className="card-grid" style={{ gridTemplateColumns: '1fr' }}>
-                      {gainers.slice(0, 5).map((asset, i) => (
-                        <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                          <div className="asset-header">
-                            <div>
-                              <div className="asset-symbol">{asset.symbol}</div>
-                              <div className="asset-name">{asset.name}</div>
-                            </div>
-                            <div className="asset-change positive">
-                              +{asset.change?.toFixed(2)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">No data available</div>
-                  )}
-                </div>
-
-                <div className="section">
-                  <h2 className="section-title" style={{ color: '#f87171' }}>
-                    Top Losers
-                  </h2>
-                  {losers.length > 0 ? (
-                    <div className="card-grid" style={{ gridTemplateColumns: '1fr' }}>
-                      {losers.slice(0, 5).map((asset, i) => (
-                        <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                          <div className="asset-header">
-                            <div>
-                              <div className="asset-symbol">{asset.symbol}</div>
-                              <div className="asset-name">{asset.name}</div>
-                            </div>
-                            <div className="asset-change negative">
-                              {asset.change?.toFixed(2)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">No data available</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Curated Lists */}
+              {/* Curated Watchlists */}
               {curatedLists.length > 0 && (
                 <div className="section">
                   <h2 className="section-title">
                     Curated Watchlists
                     <span className="section-subtitle">Expert-picked collections</span>
                   </h2>
-                  <div className="card-grid">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {curatedLists.map((list, i) => (
-                      <div key={list.id || i} className="list-card">
-                        <div className="list-name">{list.name}</div>
-                        <div className="list-desc">{list.description}</div>
-                        {list.count && <div className="list-count">{list.count} assets</div>}
+                      <div
+                        key={list.id || i}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '16px',
+                          padding: '20px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                          <div>
+                            <div className="list-name" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{list.name}</div>
+                            <div className="list-desc">{list.description}</div>
+                          </div>
+                          <button
+                            onClick={() => window.open('/go/etoro', '_blank', 'noopener,noreferrer')}
+                            style={{
+                              padding: '8px 16px',
+                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: 'white',
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Trade on eToro
+                          </button>
+                        </div>
+                        {/* Show items/instruments in this list */}
+                        {list.items && list.items.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {list.items.slice(0, 10).map((item, j) => (
+                              <div
+                                key={item.symbol || j}
+                                onClick={() => window.open(`/go/etoro-${item.symbol}`, '_blank', 'noopener,noreferrer')}
+                                style={{
+                                  padding: '8px 12px',
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                }}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.15)';
+                                  e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                }}
+                              >
+                                <span style={{ color: 'white', fontWeight: '600', fontSize: '0.85rem' }}>{item.symbol}</span>
+                                {item.name && <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginLeft: '6px' }}>{item.name}</span>}
+                              </div>
+                            ))}
+                            {list.items.length > 10 && (
+                              <div style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                                +{list.items.length - 10} more
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                            {list.count} assets in this collection
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
