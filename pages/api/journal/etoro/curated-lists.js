@@ -43,24 +43,48 @@ export default async function handler(req, res) {
       },
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      // Transform eToro response format to our format
-      const lists = (data.CuratedLists || []).map(list => ({
-        id: list.Uuid,
-        name: list.Name,
-        description: list.Description,
-        imageUrl: list.ListImageUrl,
-        count: list.Items?.length || 0,
+    const responseText = await response.text();
+    console.log('eToro curated-lists response status:', response.status);
+    console.log('eToro curated-lists response:', responseText.substring(0, 500));
+
+    if (!response.ok) {
+      console.error('eToro curated-lists API error:', response.status, responseText);
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+      return res.status(200).json({ lists: sampleLists, source: 'sample' });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('eToro curated-lists JSON parse error:', parseError);
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+      return res.status(200).json({ lists: sampleLists, source: 'sample' });
+    }
+
+    console.log('eToro curated-lists data keys:', Object.keys(data || {}));
+
+    // Handle various response formats
+    let rawLists = [];
+    if (Array.isArray(data)) {
+      rawLists = data;
+    } else if (data && typeof data === 'object') {
+      rawLists = data.CuratedLists || data.Lists || data.Items || data.Results || [];
+    }
+
+    if (Array.isArray(rawLists) && rawLists.length > 0) {
+      const lists = rawLists.map(list => ({
+        id: list.Uuid || list.Id || list.id,
+        name: list.Name || list.name,
+        description: list.Description || list.description,
+        imageUrl: list.ListImageUrl || list.ImageUrl || list.imageUrl,
+        count: list.Items?.length || list.Count || list.count || 0,
       }));
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
       return res.status(200).json({ lists, source: 'etoro' });
     }
 
-    // Log error for debugging
-    const errorText = await response.text();
-    console.error('eToro curated-lists API error:', response.status, errorText);
-
+    // No valid data found, return sample
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ lists: sampleLists, source: 'sample' });
   } catch (error) {

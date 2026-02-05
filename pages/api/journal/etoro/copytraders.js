@@ -4,10 +4,6 @@
  *
  * Endpoint: https://public-api.etoro.com/api/v1/user-info/people/search
  * Required headers: x-api-key, x-user-key, x-request-id
- *
- * Query params:
- *   - period: CurrMonth, CurrQuarter, CurrYear, LastYear, LastTwoYears,
- *             OneMonthAgo, TwoMonthsAgo, ThreeMonthsAgo, SixMonthsAgo, OneYearAgo
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -41,25 +37,18 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ETORO_API_KEY;
   const userKey = process.env.ETORO_USER_KEY;
-
-  // Get filter parameters from query
   const { period = 'CurrYear' } = req.query;
-
-  // Validate period
   const validPeriod = VALID_PERIODS.includes(period) ? period : 'CurrYear';
 
-  // If API keys are not configured, return sample data
   if (!apiKey || !userKey) {
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
     return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
   }
 
   try {
-    // Build URL with query parameters
-    const url = new URL('https://public-api.etoro.com/api/v1/user-info/people/search');
-    url.searchParams.append('period', validPeriod);
+    const url = `https://public-api.etoro.com/api/v1/user-info/people/search?period=${validPeriod}`;
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
@@ -69,30 +58,56 @@ export default async function handler(req, res) {
       },
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    const responseText = await response.text();
+    console.log('eToro copytraders response status:', response.status);
+    console.log('eToro copytraders response:', responseText.substring(0, 500));
 
-      // Transform eToro response format
-      const rawTraders = data.Users || data.People || data.Results || data || [];
-      const traders = rawTraders.map(trader => ({
-        username: trader.UserName || trader.Username || trader.userName,
-        name: trader.DisplayName || trader.FullName || trader.Name || trader.displayName,
-        gain: trader.Gain || trader.YearlyGain || trader.TwelveMonthReturn || trader.Performance || 0,
-        copiers: trader.Copiers || trader.CopierCount || trader.NumOfCopiers || 0,
-        riskScore: trader.RiskScore || trader.Risk || trader.riskScore || 0,
-        avatarUrl: trader.AvatarUrl || trader.Avatar || null,
-      }));
-
-      if (traders.length > 0) {
-        res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-        return res.status(200).json({ traders, source: 'etoro', period: validPeriod });
-      }
+    if (!response.ok) {
+      console.error('eToro copytraders API error:', response.status, responseText);
+      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
+      return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
     }
 
-    // Log error for debugging
-    const errorText = await response.text();
-    console.error('eToro copytraders API error:', response.status, errorText);
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('eToro copytraders JSON parse error:', parseError);
+      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
+      return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
+    }
 
+    // Log the structure to understand the format
+    console.log('eToro copytraders data keys:', Object.keys(data));
+
+    // Try to find the array in various possible locations
+    let rawTraders = [];
+    if (Array.isArray(data)) {
+      rawTraders = data;
+    } else if (data.Users && Array.isArray(data.Users)) {
+      rawTraders = data.Users;
+    } else if (data.People && Array.isArray(data.People)) {
+      rawTraders = data.People;
+    } else if (data.Results && Array.isArray(data.Results)) {
+      rawTraders = data.Results;
+    } else if (data.Items && Array.isArray(data.Items)) {
+      rawTraders = data.Items;
+    }
+
+    if (rawTraders.length > 0) {
+      const traders = rawTraders.map(trader => ({
+        username: trader.UserName || trader.Username || trader.userName || trader.username,
+        name: trader.DisplayName || trader.FullName || trader.Name || trader.displayName || trader.name,
+        gain: trader.Gain || trader.YearlyGain || trader.TwelveMonthReturn || trader.Performance || trader.gain || 0,
+        copiers: trader.Copiers || trader.CopierCount || trader.NumOfCopiers || trader.copiers || 0,
+        riskScore: trader.RiskScore || trader.Risk || trader.riskScore || 0,
+      }));
+
+      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
+      return res.status(200).json({ traders, source: 'etoro', period: validPeriod });
+    }
+
+    // No data found, return sample
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
     return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
   } catch (error) {
