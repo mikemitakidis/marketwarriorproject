@@ -39,7 +39,6 @@ export async function getServerSideProps({ req, res }) {
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
   const [curatedLists, setCuratedLists] = useState([]);
-  const [trending, setTrending] = useState([]);
   const [gainers, setGainers] = useState([]);
   const [losers, setLosers] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
@@ -47,18 +46,35 @@ export default function WidgetsPage({ user, settings }) {
   const [copytradersLoading, setCopytradersLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('CurrYear');
+  const [riskFilter, setRiskFilter] = useState('all'); // all, low, medium, high
+  const [sortBy, setSortBy] = useState('gain'); // gain, copiers, risk
 
-  // Period options for CopyTraders filter
-  const periodOptions = [
-    { value: 'CurrMonth', label: 'This Month' },
-    { value: 'CurrQuarter', label: 'This Quarter' },
-    { value: 'CurrYear', label: 'This Year' },
-    { value: 'LastYear', label: 'Last Year' },
-    { value: 'LastTwoYears', label: 'Last 2 Years' },
-    { value: 'OneMonthAgo', label: '1 Month Ago' },
-    { value: 'ThreeMonthsAgo', label: '3 Months Ago' },
-    { value: 'SixMonthsAgo', label: '6 Months Ago' },
-    { value: 'OneYearAgo', label: '1 Year Ago' },
+  // Period options for CopyTraders filter - grouped for better UX
+  const periodGroups = {
+    current: [
+      { value: 'CurrMonth', label: 'This Month' },
+      { value: 'CurrQuarter', label: 'This Quarter' },
+      { value: 'CurrYear', label: 'This Year' },
+    ],
+    historical: [
+      { value: 'LastYear', label: 'Last Year' },
+      { value: 'LastTwoYears', label: '2 Years' },
+    ],
+  };
+
+  // Risk filter options
+  const riskOptions = [
+    { value: 'all', label: 'All Risk Levels' },
+    { value: 'low', label: 'Low (1-3)', min: 1, max: 3 },
+    { value: 'medium', label: 'Medium (4-6)', min: 4, max: 6 },
+    { value: 'high', label: 'High (7-10)', min: 7, max: 10 },
+  ];
+
+  // Sort options
+  const sortOptions = [
+    { value: 'gain', label: 'Highest Gain' },
+    { value: 'copiers', label: 'Most Copiers' },
+    { value: 'risk', label: 'Lowest Risk' },
   ];
 
   useEffect(() => {
@@ -74,10 +90,9 @@ export default function WidgetsPage({ user, settings }) {
     setError(null);
 
     try {
-      // Fetch all eToro data in parallel
-      const [listsRes, trendingRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
+      // Fetch eToro data in parallel (removed trending - endpoint returns empty)
+      const [listsRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
         fetch('/api/journal/etoro/curated-lists'),
-        fetch('/api/journal/etoro/trending'),
         fetch('/api/journal/etoro/market-movers?type=gainers'),
         fetch('/api/journal/etoro/market-movers?type=losers'),
         fetch('/api/journal/etoro/copytraders'),
@@ -87,11 +102,6 @@ export default function WidgetsPage({ user, settings }) {
       if (listsRes.status === 'fulfilled' && listsRes.value.ok) {
         const data = await listsRes.value.json();
         setCuratedLists(data.lists || data || []);
-      }
-
-      if (trendingRes.status === 'fulfilled' && trendingRes.value.ok) {
-        const data = await trendingRes.value.json();
-        setTrending(data.assets || data || []);
       }
 
       if (gainersRes.status === 'fulfilled' && gainersRes.value.ok) {
@@ -134,6 +144,37 @@ export default function WidgetsPage({ user, settings }) {
   const handlePeriodChange = (newPeriod) => {
     setSelectedPeriod(newPeriod);
     fetchCopytraders(newPeriod);
+  };
+
+  // Filter and sort copytraders based on current filters
+  const getFilteredTraders = () => {
+    let filtered = [...copytraders];
+
+    // Apply risk filter
+    if (riskFilter !== 'all') {
+      const riskOption = riskOptions.find(r => r.value === riskFilter);
+      if (riskOption && riskOption.min !== undefined) {
+        filtered = filtered.filter(t =>
+          t.riskScore >= riskOption.min && t.riskScore <= riskOption.max
+        );
+      }
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'gain':
+          return (b.gain || 0) - (a.gain || 0);
+        case 'copiers':
+          return (b.copiers || 0) - (a.copiers || 0);
+        case 'risk':
+          return (a.riskScore || 0) - (b.riskScore || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
   };
 
   const handleTradeClick = (symbol) => {
@@ -506,37 +547,6 @@ export default function WidgetsPage({ user, settings }) {
             </div>
           ) : (
             <>
-              {/* Trending Assets */}
-              <div className="section">
-                <h2 className="section-title">
-                  Trending Assets
-                  <span className="section-subtitle">Popular right now</span>
-                </h2>
-                {trending.length > 0 ? (
-                  <div className="card-grid">
-                    {trending.slice(0, 8).map((asset, i) => (
-                      <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                        <div className="asset-header">
-                          <div>
-                            <div className="asset-symbol">{asset.symbol}</div>
-                            <div className="asset-name">{asset.name}</div>
-                          </div>
-                          {asset.change !== undefined && (
-                            <div className={`asset-change ${asset.change >= 0 ? 'positive' : 'negative'}`}>
-                              {asset.change >= 0 ? '+' : ''}{asset.change?.toFixed(2)}%
-                            </div>
-                          )}
-                        </div>
-                        {asset.price && <div className="asset-price">${asset.price?.toFixed(2)}</div>}
-                        <button className="trade-btn">Trade on eToro</button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">No trending data available</div>
-                )}
-              </div>
-
               {/* Top Gainers & Losers */}
               <div className="two-columns">
                 <div className="section">
@@ -617,42 +627,151 @@ export default function WidgetsPage({ user, settings }) {
         <>
           <div className="etoro-banner">
             <div className="banner-content">
-              <h2>Copy Top Traders</h2>
-              <p>Automatically copy the trades of successful investors</p>
+              <h2>Investor Discovery</h2>
+              <p>Find and copy top traders based on your own filters</p>
             </div>
             <button className="banner-btn" onClick={() => window.open('/go/etoro-copytrader', '_blank', 'noopener,noreferrer')}>
               Explore CopyTrader
             </button>
           </div>
 
-          {/* Period Filter */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>Performance Period:</span>
-              <select
-                value={selectedPeriod}
-                onChange={(e) => handlePeriodChange(e.target.value)}
-                style={{
-                  padding: '10px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  outline: 'none',
-                }}
-              >
-                {periodOptions.map(opt => (
-                  <option key={opt.value} value={opt.value} style={{ background: '#1e293b' }}>
+          {/* Enhanced Filter System */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            {/* Time Period Filter */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Performance Period
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {periodGroups.current.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handlePeriodChange(opt.value)}
+                    style={{
+                      padding: '10px 20px',
+                      background: selectedPeriod === opt.value
+                        ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: selectedPeriod === opt.value
+                        ? 'none'
+                        : '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: selectedPeriod === opt.value ? '600' : '400',
+                    }}
+                  >
                     {opt.label}
-                  </option>
+                  </button>
                 ))}
-              </select>
-              {copytradersLoading && (
-                <span style={{ color: '#667eea', fontSize: '0.85rem' }}>Loading...</span>
-              )}
+                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }} />
+                {periodGroups.historical.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handlePeriodChange(opt.value)}
+                    style={{
+                      padding: '10px 20px',
+                      background: selectedPeriod === opt.value
+                        ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: selectedPeriod === opt.value
+                        ? 'none'
+                        : '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: selectedPeriod === opt.value ? '600' : '400',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Risk Level & Sort Filters */}
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+              {/* Risk Filter */}
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Risk Level
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {riskOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setRiskFilter(opt.value)}
+                      style={{
+                        padding: '8px 16px',
+                        background: riskFilter === opt.value
+                          ? opt.value === 'low' ? 'rgba(74, 222, 128, 0.2)'
+                            : opt.value === 'medium' ? 'rgba(251, 191, 36, 0.2)'
+                            : opt.value === 'high' ? 'rgba(248, 113, 113, 0.2)'
+                            : 'rgba(102, 126, 234, 0.2)'
+                          : 'rgba(255, 255, 255, 0.05)',
+                        border: riskFilter === opt.value
+                          ? `1px solid ${opt.value === 'low' ? '#4ade80' : opt.value === 'medium' ? '#fbbf24' : opt.value === 'high' ? '#f87171' : '#667eea'}`
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px',
+                        color: riskFilter === opt.value
+                          ? opt.value === 'low' ? '#4ade80' : opt.value === 'medium' ? '#fbbf24' : opt.value === 'high' ? '#f87171' : 'white'
+                          : 'rgba(255,255,255,0.7)',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Sort By
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {sortOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSortBy(opt.value)}
+                      style={{
+                        padding: '8px 16px',
+                        background: sortBy === opt.value ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: sortBy === opt.value ? '1px solid #667eea' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px',
+                        color: sortBy === opt.value ? '#667eea' : 'rgba(255,255,255,0.7)',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Loading indicator */}
+            {copytradersLoading && (
+              <div style={{ marginTop: '16px', color: '#667eea', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', border: '2px solid rgba(102, 126, 234, 0.3)', borderTopColor: '#667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                Updating results...
+              </div>
+            )}
           </div>
 
           {(loading || copytradersLoading) && copytraders.length === 0 ? (
@@ -664,11 +783,14 @@ export default function WidgetsPage({ user, settings }) {
             <div className="section">
               <h2 className="section-title">
                 Top CopyTraders
-                <span className="section-subtitle">Leaderboard - {periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
+                <span className="section-subtitle">
+                  {getFilteredTraders().length} traders found
+                  {riskFilter !== 'all' && ` • ${riskOptions.find(r => r.value === riskFilter)?.label}`}
+                </span>
               </h2>
-              {copytraders.length > 0 ? (
+              {getFilteredTraders().length > 0 ? (
                 <div className="card-grid">
-                  {copytraders.slice(0, 12).map((trader, i) => (
+                  {getFilteredTraders().slice(0, 12).map((trader, i) => (
                     <div key={trader.username || i} className="trader-card" onClick={() => handleCopyTraderClick(trader.username)}>
                       <div className="trader-header">
                         <div className="trader-avatar">
