@@ -165,28 +165,23 @@ export default function WidgetsPage({ user, settings }) {
 
   useEffect(() => {
     if (activeTab === 'etoro') {
-      fetchMarketPrices(selectedCategory);
+      fetchMarketPrices();
     } else if (activeTab === 'copytraders') {
       fetchCopytraders(selectedPeriod);
     }
   }, [activeTab]);
 
-  // Fetch prices when category changes
-  useEffect(() => {
-    if (activeTab === 'etoro') {
-      fetchMarketPrices(selectedCategory);
-    }
-  }, [selectedCategory]);
-
-  // Fetch REAL market prices
-  const fetchMarketPrices = async (category) => {
+  // Fetch REAL market prices from eToro
+  const fetchMarketPrices = async () => {
     setPricesLoading(true);
     setLoading(true);
     try {
-      const res = await fetch(`/api/journal/market-data?category=${category}`);
+      const res = await fetch('/api/journal/market-data');
       if (res.ok) {
         const data = await res.json();
-        setMarketPrices(prev => ({ ...prev, ...data.prices }));
+        console.log('eToro prices received:', Object.keys(data.prices || {}).length);
+        console.log('Sample symbols:', Object.keys(data.prices || {}).slice(0, 10));
+        setMarketPrices(data.prices || {});
       }
     } catch (err) {
       console.error('Error fetching market prices:', err);
