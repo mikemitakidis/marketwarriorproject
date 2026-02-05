@@ -2,9 +2,12 @@
  * eToro Market Data API Proxy
  * GET /api/journal/market-data
  *
- * Uses BOTH endpoints:
- * 1. /api/v1/market-data/search - Get instruments
- * 2. /api/v1/market-data/instruments/rates - Get live prices
+ * Uses the search endpoint with support for:
+ * - q (query string) - search for specific instruments
+ * - assetType - filter by asset type (stocks, crypto, etfs, indices, commodities, forex)
+ * - exchange - filter by stock exchange (NASDAQ, NYSE, etc.)
+ *
+ * Also fetches live rates from instruments/rates endpoint
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -29,7 +32,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const { query, popular } = req.query;
+    const { query, popular, assetType, exchange } = req.query;
 
     // Main/popular instruments to show by default
     const POPULAR_INSTRUMENTS = [
@@ -40,10 +43,15 @@ export default async function handler(req, res) {
       'EURUSD', 'GBPUSD'
     ];
 
-    // Build search URL with query if provided
+    // Build search URL with query parameters
     let searchUrl = 'https://public-api.etoro.com/api/v1/market-data/search';
-    if (query) {
-      searchUrl += `?query=${encodeURIComponent(query)}`;
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (assetType) params.set('assetType', assetType);
+    if (exchange) params.set('exchange', exchange);
+    const paramString = params.toString();
+    if (paramString) {
+      searchUrl += `?${paramString}`;
     }
 
     // Call BOTH endpoints in parallel
@@ -97,11 +105,16 @@ export default async function handler(req, res) {
         const price = (bid && ask) ? (bid + ask) / 2 : (inst.lastPrice || inst.LastPrice || inst.price || inst.Price || 0);
         const change = inst.changePercent || inst.ChangePercent || inst.dailyChangePercent || inst.DailyChangePercent || 0;
 
+        const typeRaw = (inst.assetType || inst.AssetType || inst.instrumentType || inst.InstrumentType || '').toLowerCase();
+        const instExchange = inst.exchange || inst.Exchange || inst.exchangeName || inst.ExchangeName || '';
+
         if (price > 0) {
           prices[symbol] = {
             price, change, bid, ask,
             name: inst.displayName || inst.DisplayName || inst.name || inst.Name || symbol,
             instrumentId: inst.instrumentId || inst.InstrumentId,
+            assetType: typeRaw,
+            exchange: instExchange,
           };
         }
       }
@@ -145,9 +158,9 @@ export default async function handler(req, res) {
     console.log('Total prices:', Object.keys(prices).length);
     console.log('Sample symbols:', Object.keys(prices).slice(0, 20));
 
-    // Filter to popular instruments if requested or if no search query
+    // Filter to popular instruments if requested or if no search query and no filters
     let finalPrices = prices;
-    if (popular === 'true' || (!query && Object.keys(prices).length > 30)) {
+    if (popular === 'true' || (!query && !assetType && !exchange && Object.keys(prices).length > 30)) {
       const filtered = {};
       for (const symbol of POPULAR_INSTRUMENTS) {
         // Try exact match first

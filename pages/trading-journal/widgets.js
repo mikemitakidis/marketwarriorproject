@@ -1,92 +1,58 @@
 import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../lib/journalAuth';
 import JournalLayout from '../../components/journal/JournalLayout';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Popular instruments by asset category - curated list of tradable assets on eToro
-const assetCategories = {
-  stocks: {
-    name: 'Stocks',
-    description: 'Trade shares of top global companies',
-    icon: '📈',
-    items: [
-      { symbol: 'AAPL', name: 'Apple Inc.' },
-      { symbol: 'TSLA', name: 'Tesla Inc.' },
-      { symbol: 'MSFT', name: 'Microsoft Corp.' },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.' },
-      { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-      { symbol: 'NVDA', name: 'NVIDIA Corp.' },
-      { symbol: 'META', name: 'Meta Platforms' },
-      { symbol: 'NFLX', name: 'Netflix Inc.' },
-    ],
-  },
-  crypto: {
-    name: 'Crypto',
-    description: 'Trade leading cryptocurrencies',
-    icon: '₿',
-    items: [
-      { symbol: 'BTC', name: 'Bitcoin' },
-      { symbol: 'ETH', name: 'Ethereum' },
-      { symbol: 'XRP', name: 'Ripple' },
-      { symbol: 'SOL', name: 'Solana' },
-      { symbol: 'ADA', name: 'Cardano' },
-      { symbol: 'DOGE', name: 'Dogecoin' },
-      { symbol: 'DOT', name: 'Polkadot' },
-      { symbol: 'LINK', name: 'Chainlink' },
-    ],
-  },
-  indices: {
-    name: 'Indices',
-    description: 'Trade major market indices',
-    icon: '📊',
-    items: [
-      { symbol: 'SPX500', name: 'S&P 500' },
-      { symbol: 'NSDQ100', name: 'Nasdaq 100' },
-      { symbol: 'DJ30', name: 'Dow Jones 30' },
-      { symbol: 'UK100', name: 'FTSE 100' },
-      { symbol: 'GER40', name: 'DAX 40' },
-      { symbol: 'JPN225', name: 'Nikkei 225' },
-    ],
-  },
-  commodities: {
-    name: 'Commodities',
-    description: 'Trade gold, oil, and more',
-    icon: '🛢️',
-    items: [
-      { symbol: 'GOLD', name: 'Gold' },
-      { symbol: 'SILVER', name: 'Silver' },
-      { symbol: 'OIL', name: 'Crude Oil' },
-      { symbol: 'NATGAS', name: 'Natural Gas' },
-      { symbol: 'COPPER', name: 'Copper' },
-      { symbol: 'PLATINUM', name: 'Platinum' },
-    ],
-  },
-  etfs: {
-    name: 'ETFs',
-    description: 'Trade exchange-traded funds',
-    icon: '📦',
-    items: [
-      { symbol: 'SPY', name: 'SPDR S&P 500 ETF' },
-      { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
-      { symbol: 'IWM', name: 'iShares Russell 2000' },
-      { symbol: 'VTI', name: 'Vanguard Total Stock' },
-      { symbol: 'GLD', name: 'SPDR Gold Shares' },
-      { symbol: 'ARKK', name: 'ARK Innovation ETF' },
-    ],
-  },
-  forex: {
-    name: 'Forex',
-    description: 'Trade major currency pairs',
-    icon: '💱',
-    items: [
-      { symbol: 'EURUSD', name: 'EUR/USD' },
-      { symbol: 'GBPUSD', name: 'GBP/USD' },
-      { symbol: 'USDJPY', name: 'USD/JPY' },
-      { symbol: 'AUDUSD', name: 'AUD/USD' },
-      { symbol: 'USDCAD', name: 'USD/CAD' },
-      { symbol: 'USDCHF', name: 'USD/CHF' },
-    ],
-  },
+// Exchange options for the instrument search filter
+const exchangeOptions = [
+  { value: '', label: 'All Exchanges' },
+  { value: 'NASDAQ', label: 'NASDAQ' },
+  { value: 'NYSE', label: 'NYSE' },
+  { value: 'LSE', label: 'London (LSE)' },
+  { value: 'XETRA', label: 'Frankfurt (XETRA)' },
+  { value: 'TSE', label: 'Tokyo (TSE)' },
+  { value: 'HKEX', label: 'Hong Kong (HKEX)' },
+];
+
+// Asset type tabs for the instrument search
+const assetTypeTabs = [
+  { value: '', label: 'All', icon: '' },
+  { value: 'stocks', label: 'Stocks', icon: '' },
+  { value: 'crypto', label: 'Crypto', icon: '' },
+  { value: 'indices', label: 'Indices', icon: '' },
+  { value: 'commodities', label: 'Commodities', icon: '' },
+  { value: 'etfs', label: 'ETFs', icon: '' },
+  { value: 'forex', label: 'Forex', icon: '' },
+];
+
+// Sort options for search results
+const searchSortOptions = [
+  { value: 'default', label: 'Default' },
+  { value: 'changeDesc', label: 'Daily Gain % (High to Low)' },
+  { value: 'changeAsc', label: 'Daily Loss % (Low to High)' },
+  { value: 'symbolAz', label: 'Symbol A-Z' },
+  { value: 'symbolZa', label: 'Symbol Z-A' },
+];
+
+// Trending count options
+const trendingCountOptions = [5, 10, 15, 20];
+
+// Category colors for watchlist cards
+const categoryColors = {
+  Technology: { bg: 'rgba(102, 126, 234, 0.15)', border: 'rgba(102, 126, 234, 0.4)', text: '#8b9cf7' },
+  Energy: { bg: 'rgba(74, 222, 128, 0.15)', border: 'rgba(74, 222, 128, 0.4)', text: '#4ade80' },
+  Crypto: { bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.4)', text: '#fbbf24' },
+  Healthcare: { bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)', text: '#f87171' },
+  Consumer: { bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.4)', text: '#a855f7' },
+  Income: { bg: 'rgba(34, 211, 238, 0.15)', border: 'rgba(34, 211, 238, 0.4)', text: '#22d3ee' },
+  Entertainment: { bg: 'rgba(244, 114, 182, 0.15)', border: 'rgba(244, 114, 182, 0.4)', text: '#f472b6' },
+  Finance: { bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)', text: '#34d399' },
+  Automotive: { bg: 'rgba(96, 165, 250, 0.15)', border: 'rgba(96, 165, 250, 0.4)', text: '#60a5fa' },
+  Commodities: { bg: 'rgba(217, 119, 6, 0.15)', border: 'rgba(217, 119, 6, 0.4)', text: '#d97706' },
+  Global: { bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)', text: '#8b5cf6' },
+  Aerospace: { bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)', text: '#6366f1' },
 };
+
+const defaultCatColor = { bg: 'rgba(255, 255, 255, 0.08)', border: 'rgba(255, 255, 255, 0.2)', text: '#a0a0a0' };
 
 export async function getServerSideProps({ req, res }) {
   try {
@@ -124,19 +90,39 @@ export async function getServerSideProps({ req, res }) {
 
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
+
+  // CopyTraders state
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copytradersLoading, setCopytradersLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('CurrYear');
-  const [riskFilter, setRiskFilter] = useState('all'); // all, low, medium, high
-  const [sortBy, setSortBy] = useState('gain'); // gain, copiers, risk
-  const [selectedCategory, setSelectedCategory] = useState('stocks');
-  const [marketPrices, setMarketPrices] = useState({});
-  const [pricesLoading, setPricesLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [riskFilter, setRiskFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('gain');
 
-  // Period options for CopyTraders filter - grouped for better UX
+  // eToro Markets - Trending Recommendations state
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [trendingCount, setTrendingCount] = useState(10);
+  const [trendingFilter, setTrendingFilter] = useState('');
+
+  // eToro Markets - Curated Watchlists state
+  const [curatedLists, setCuratedLists] = useState([]);
+  const [curatedListsLoading, setCuratedListsLoading] = useState(false);
+  const [watchlistSearch, setWatchlistSearch] = useState('');
+  const [watchlistSort, setWatchlistSort] = useState('default');
+  const [expandedList, setExpandedList] = useState(null);
+
+  // eToro Markets - Search Instruments state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({});
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedAssetType, setSelectedAssetType] = useState('');
+  const [selectedExchange, setSelectedExchange] = useState('');
+  const [searchSortBy, setSearchSortBy] = useState('default');
+  const searchDebounceRef = useRef(null);
+
+  // Period options for CopyTraders filter
   const periodGroups = {
     current: [
       { value: 'CurrMonth', label: 'This Month' },
@@ -149,7 +135,6 @@ export default function WidgetsPage({ user, settings }) {
     ],
   };
 
-  // Risk filter options
   const riskOptions = [
     { value: 'all', label: 'All Risk Levels' },
     { value: 'low', label: 'Low (1-3)', min: 1, max: 3 },
@@ -157,80 +142,176 @@ export default function WidgetsPage({ user, settings }) {
     { value: 'high', label: 'High (7-10)', min: 7, max: 10 },
   ];
 
-  // Sort options
   const sortOptions = [
     { value: 'gain', label: 'Highest Gain' },
     { value: 'copiers', label: 'Most Copiers' },
     { value: 'risk', label: 'Lowest Risk' },
   ];
 
+  // Load data when tabs change
   useEffect(() => {
     if (activeTab === 'etoro') {
-      fetchMarketPrices();
+      fetchRecommendations(trendingCount);
+      fetchCuratedLists();
+      fetchSearchResults();
     } else if (activeTab === 'copytraders') {
       fetchCopytraders(selectedPeriod);
     }
   }, [activeTab]);
 
-  // Fetch REAL market prices from eToro
-  const fetchMarketPrices = async (query = '') => {
-    setPricesLoading(true);
-    setLoading(true);
+  // Re-fetch trending when count changes
+  useEffect(() => {
+    if (activeTab === 'etoro') {
+      fetchRecommendations(trendingCount);
+    }
+  }, [trendingCount]);
+
+  // Re-fetch search when asset type or exchange changes
+  useEffect(() => {
+    if (activeTab === 'etoro') {
+      fetchSearchResults();
+    }
+  }, [selectedAssetType, selectedExchange]);
+
+  // === TRENDING RECOMMENDATIONS ===
+  const fetchRecommendations = async (count) => {
+    setRecommendationsLoading(true);
     try {
-      const url = query
-        ? `/api/journal/market-data?query=${encodeURIComponent(query)}`
-        : '/api/journal/market-data';
+      const res = await fetch(`/api/journal/etoro/market-recommendations?count=${count}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRecommendations(data.recommendations || []);
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  };
+
+  const getFilteredRecommendations = () => {
+    let items = [...recommendations];
+    if (trendingFilter) {
+      items = items.filter(r => r.assetType === trendingFilter);
+    }
+    return items;
+  };
+
+  // === CURATED WATCHLISTS ===
+  const fetchCuratedLists = async () => {
+    setCuratedListsLoading(true);
+    try {
+      const res = await fetch('/api/journal/etoro/curated-lists');
+      if (res.ok) {
+        const data = await res.json();
+        setCuratedLists(data.lists || []);
+      }
+    } catch (err) {
+      console.error('Error fetching curated lists:', err);
+    } finally {
+      setCuratedListsLoading(false);
+    }
+  };
+
+  const getFilteredWatchlists = () => {
+    let items = [...curatedLists];
+    if (watchlistSearch.trim()) {
+      const q = watchlistSearch.toLowerCase();
+      items = items.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        l.description.toLowerCase().includes(q) ||
+        (l.category && l.category.toLowerCase().includes(q))
+      );
+    }
+    if (watchlistSort === 'az') {
+      items.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (watchlistSort === 'za') {
+      items.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (watchlistSort === 'instruments') {
+      items.sort((a, b) => (b.instrumentCount || 0) - (a.instrumentCount || 0));
+    }
+    return items;
+  };
+
+  // === SEARCH INSTRUMENTS ===
+  const fetchSearchResults = async (query = '') => {
+    setSearchLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query) params.set('query', query);
+      if (selectedAssetType) params.set('assetType', selectedAssetType);
+      if (selectedExchange) params.set('exchange', selectedExchange);
+      const paramString = params.toString();
+      const url = paramString ? `/api/journal/market-data?${paramString}` : '/api/journal/market-data';
+
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        console.log('eToro prices received:', Object.keys(data.prices || {}).length);
-        console.log('Sample symbols:', Object.keys(data.prices || {}).slice(0, 10));
-        setMarketPrices(data.prices || {});
+        setSearchResults(data.prices || {});
       }
     } catch (err) {
-      console.error('Error fetching market prices:', err);
+      console.error('Error fetching search results:', err);
     } finally {
-      setPricesLoading(false);
+      setSearchLoading(false);
       setLoading(false);
     }
   };
 
-  // Handle search
-  const handleSearch = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      fetchMarketPrices(searchQuery.trim());
+    fetchSearchResults(searchQuery.trim());
+  };
+
+  const handleSearchInputChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    // Debounced live search
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (val.trim().length >= 2) {
+      searchDebounceRef.current = setTimeout(() => {
+        fetchSearchResults(val.trim());
+      }, 500);
+    }
+  };
+
+  const getSortedSearchResults = () => {
+    const entries = Object.entries(searchResults);
+    switch (searchSortBy) {
+      case 'changeDesc':
+        return entries.sort((a, b) => (b[1]?.change || 0) - (a[1]?.change || 0));
+      case 'changeAsc':
+        return entries.sort((a, b) => (a[1]?.change || 0) - (b[1]?.change || 0));
+      case 'symbolAz':
+        return entries.sort((a, b) => a[0].localeCompare(b[0]));
+      case 'symbolZa':
+        return entries.sort((a, b) => b[0].localeCompare(a[0]));
+      default:
+        return entries;
     }
   };
 
   // Format price based on asset type
   const formatPrice = (price, symbol) => {
     if (!price && price !== 0) return '---';
-
-    // Forex pairs need more decimals
     if (['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF'].includes(symbol)) {
       return price.toFixed(4);
     }
-    // Crypto can have varying decimals
     if (['BTC', 'ETH'].includes(symbol)) {
       return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     if (['XRP', 'ADA', 'DOGE', 'DOT', 'LINK', 'SOL'].includes(symbol)) {
       return '$' + price.toFixed(4);
     }
-    // Commodities
     if (['GOLD', 'SILVER', 'OIL', 'NATGAS', 'COPPER', 'PLATINUM'].includes(symbol)) {
       return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-    // Indices (no dollar sign)
     if (['SPX500', 'NSDQ100', 'DJ30', 'UK100', 'GER40', 'JPN225'].includes(symbol)) {
       return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-    // Default for stocks/ETFs
     return '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-
+  // === COPYTRADERS ===
   const fetchCopytraders = async (period) => {
     setCopytradersLoading(true);
     try {
@@ -251,11 +332,8 @@ export default function WidgetsPage({ user, settings }) {
     fetchCopytraders(newPeriod);
   };
 
-  // Filter and sort copytraders based on current filters
   const getFilteredTraders = () => {
     let filtered = [...copytraders];
-
-    // Apply risk filter
     if (riskFilter !== 'all') {
       const riskOption = riskOptions.find(r => r.value === riskFilter);
       if (riskOption && riskOption.min !== undefined) {
@@ -264,8 +342,6 @@ export default function WidgetsPage({ user, settings }) {
         );
       }
     }
-
-    // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'gain':
@@ -278,7 +354,6 @@ export default function WidgetsPage({ user, settings }) {
           return 0;
       }
     });
-
     return filtered;
   };
 
@@ -594,13 +669,204 @@ export default function WidgetsPage({ user, settings }) {
           border-radius: 12px;
           border: 1px dashed rgba(255, 255, 255, 0.1);
         }
-        .two-columns {
+        .section-box {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 24px;
+          margin-bottom: 32px;
+        }
+        .filter-row {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+        .filter-btn {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 6px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .filter-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .filter-btn.active {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+          border-color: rgba(102, 126, 234, 0.5);
+          color: #667eea;
+          font-weight: 600;
+        }
+        .select-input {
+          padding: 8px 12px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          color: white;
+          font-size: 0.85rem;
+          outline: none;
+          cursor: pointer;
+        }
+        .select-input option {
+          background: #1a1a2e;
+          color: white;
+        }
+        .search-input {
+          padding: 10px 14px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          color: white;
+          font-size: 0.9rem;
+          outline: none;
+          flex: 1;
+          min-width: 200px;
+        }
+        .search-input::placeholder {
+          color: rgba(255, 255, 255, 0.35);
+        }
+        .search-input:focus {
+          border-color: rgba(102, 126, 234, 0.5);
+        }
+        .search-btn {
+          padding: 10px 20px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border: none;
+          border-radius: 8px;
+          color: white;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .search-btn:hover {
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .clear-btn {
+          padding: 10px 16px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          color: white;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .clear-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+        }
+        .slider-track {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .slider-input {
+          -webkit-appearance: none;
+          width: 200px;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          outline: none;
+        }
+        .slider-input::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 18px;
+          height: 18px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border-radius: 50%;
+          cursor: pointer;
+        }
+        .slider-input::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border-radius: 50%;
+          cursor: pointer;
+          border: none;
+        }
+        .slider-value {
+          color: #667eea;
+          font-weight: 600;
+          font-size: 0.95rem;
+          min-width: 40px;
+          text-align: center;
+        }
+        .watchlist-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 16px;
+        }
+        .watchlist-card {
+          border-radius: 12px;
+          padding: 20px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .watchlist-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        .watchlist-category-badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+        .watchlist-name {
+          color: white;
+          font-weight: 600;
+          font-size: 1.05rem;
+          margin-bottom: 6px;
+        }
+        .watchlist-desc {
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.85rem;
+          line-height: 1.5;
+          margin-bottom: 12px;
+        }
+        .watchlist-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .watchlist-count {
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.8rem;
+        }
+        .watchlist-explore {
+          color: #667eea;
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+        .inline-loading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #667eea;
+          font-size: 0.85rem;
+          margin-top: 12px;
+        }
+        .mini-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(102, 126, 234, 0.3);
+          border-top-color: #667eea;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
         }
         @media (max-width: 768px) {
-          .two-columns {
+          .slider-track {
+            flex-wrap: wrap;
+          }
+          .slider-input {
+            width: 100%;
+          }
+          .watchlist-grid {
             grid-template-columns: 1fr;
           }
         }
@@ -638,58 +904,242 @@ export default function WidgetsPage({ user, settings }) {
             </button>
           </div>
 
-          {/* Asset Categories */}
-          <div className="section">
-            <h2 className="section-title">
-              Live Markets
-              <span className="section-subtitle">Real-time prices • Click to trade on eToro</span>
-            </h2>
+          {/* ========================================= */}
+          {/* SECTION 1: TRENDING MARKET RECOMMENDATIONS */}
+          {/* ========================================= */}
+          <div className="section-box">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+              <div>
+                <h2 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Trending Now
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '400' }}>
+                    Hot assets on eToro
+                  </span>
+                </h2>
+              </div>
+              <div className="slider-track">
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Show:</span>
+                {trendingCountOptions.map(count => (
+                  <button
+                    key={count}
+                    className={`filter-btn ${trendingCount === count ? 'active' : ''}`}
+                    onClick={() => setTrendingCount(count)}
+                    style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                  >
+                    Top {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Trending asset type filter */}
+            <div className="filter-row">
+              <button
+                className={`filter-btn ${trendingFilter === '' ? 'active' : ''}`}
+                onClick={() => setTrendingFilter('')}
+              >
+                All
+              </button>
+              <button
+                className={`filter-btn ${trendingFilter === 'stocks' ? 'active' : ''}`}
+                onClick={() => setTrendingFilter('stocks')}
+              >
+                Stocks
+              </button>
+              <button
+                className={`filter-btn ${trendingFilter === 'crypto' ? 'active' : ''}`}
+                onClick={() => setTrendingFilter('crypto')}
+              >
+                Crypto
+              </button>
+              <button
+                className={`filter-btn ${trendingFilter === 'etfs' ? 'active' : ''}`}
+                onClick={() => setTrendingFilter('etfs')}
+              >
+                ETFs
+              </button>
+              <button
+                className={`filter-btn ${trendingFilter === 'commodities' ? 'active' : ''}`}
+                onClick={() => setTrendingFilter('commodities')}
+              >
+                Commodities
+              </button>
+            </div>
+
+            {recommendationsLoading ? (
+              <div className="loading">
+                <div className="loading-spinner" />
+                <p>Loading trending assets...</p>
+              </div>
+            ) : getFilteredRecommendations().length > 0 ? (
+              <div className="card-grid">
+                {getFilteredRecommendations().map((item, i) => {
+                  const isPositive = (item.change || 0) >= 0;
+                  return (
+                    <div
+                      key={item.symbol + '-' + i}
+                      className="asset-card"
+                      onClick={() => handleTradeClick(item.symbol)}
+                    >
+                      <div className="asset-header">
+                        <div>
+                          <div className="asset-symbol">
+                            {item.symbol}
+                            <span style={{
+                              marginLeft: '8px',
+                              fontSize: '0.7rem',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: 'rgba(251, 191, 36, 0.15)',
+                              color: '#fbbf24',
+                              fontWeight: '500',
+                            }}>
+                              TRENDING
+                            </span>
+                          </div>
+                          <div className="asset-name">{item.name}</div>
+                        </div>
+                        {item.change !== undefined && item.change !== 0 && (
+                          <div className={`asset-change ${isPositive ? 'positive' : 'negative'}`}>
+                            {isPositive ? '+' : ''}{item.change.toFixed(2)}%
+                          </div>
+                        )}
+                      </div>
+                      {item.price !== undefined && item.price > 0 && (
+                        <div className="asset-price">{formatPrice(item.price, item.symbol)}</div>
+                      )}
+                      <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
+                        Trade on eToro
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No trending assets found for this filter.</p>
+                <p style={{ marginTop: 8, fontSize: '0.85rem' }}>Try selecting a different category or adjusting the count.</p>
+              </div>
+            )}
+          </div>
+
+          {/* ========================================= */}
+          {/* SECTION 2: CURATED WATCHLISTS             */}
+          {/* ========================================= */}
+          <div className="section-box">
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Curated Watchlists
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '400' }}>
+                  Expert-selected thematic collections
+                </span>
+              </h2>
+            </div>
+
+            {/* Watchlist search and sort */}
+            <div className="filter-row">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search watchlists (e.g., Green, Tech, AI)..."
+                value={watchlistSearch}
+                onChange={(e) => setWatchlistSearch(e.target.value)}
+                style={{ maxWidth: '320px' }}
+              />
+              <select
+                className="select-input"
+                value={watchlistSort}
+                onChange={(e) => setWatchlistSort(e.target.value)}
+              >
+                <option value="default">Sort: Default</option>
+                <option value="az">Alphabetical A-Z</option>
+                <option value="za">Alphabetical Z-A</option>
+                <option value="instruments">Most Instruments</option>
+              </select>
+            </div>
+
+            {curatedListsLoading ? (
+              <div className="loading">
+                <div className="loading-spinner" />
+                <p>Loading curated watchlists...</p>
+              </div>
+            ) : getFilteredWatchlists().length > 0 ? (
+              <div className="watchlist-grid">
+                {getFilteredWatchlists().map((list) => {
+                  const colors = categoryColors[list.category] || defaultCatColor;
+                  return (
+                    <div
+                      key={list.id || list.name}
+                      className="watchlist-card"
+                      style={{
+                        background: colors.bg,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                      onClick={() => handleEtoroClick()}
+                    >
+                      <span
+                        className="watchlist-category-badge"
+                        style={{
+                          background: colors.border,
+                          color: '#fff',
+                        }}
+                      >
+                        {list.category || 'General'}
+                      </span>
+                      <div className="watchlist-name">{list.name}</div>
+                      <div className="watchlist-desc">{list.description}</div>
+                      <div className="watchlist-footer">
+                        <span className="watchlist-count">
+                          {list.instrumentCount} instruments
+                        </span>
+                        <span className="watchlist-explore">
+                          Explore on eToro &rarr;
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No watchlists match your search.</p>
+                <p style={{ marginTop: 8, fontSize: '0.85rem' }}>Try a different keyword.</p>
+              </div>
+            )}
+          </div>
+
+          {/* ========================================= */}
+          {/* SECTION 3: SEARCH INSTRUMENTS             */}
+          {/* ========================================= */}
+          <div className="section-box">
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Search Instruments
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '400' }}>
+                  Real-time prices from eToro
+                </span>
+              </h2>
+            </div>
 
             {/* Search Box */}
-            <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
+            <form onSubmit={handleSearchSubmit} style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input
                   type="text"
+                  className="search-input"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search instruments (e.g., Apple, Bitcoin, Gold)"
-                  style={{
-                    flex: 1,
-                    padding: '12px 16px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                  }}
+                  onChange={handleSearchInputChange}
+                  placeholder="Search instruments (e.g., Apple, Bitcoin, Gold)..."
+                  style={{ maxWidth: '400px' }}
                 />
-                <button
-                  type="submit"
-                  style={{
-                    padding: '12px 20px',
-                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
+                <button type="submit" className="search-btn">
                   Search
                 </button>
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => { setSearchQuery(''); fetchMarketPrices(); }}
-                    style={{
-                      padding: '12px 16px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      cursor: 'pointer',
-                    }}
+                    className="clear-btn"
+                    onClick={() => { setSearchQuery(''); fetchSearchResults(); }}
                   >
                     Clear
                   </button>
@@ -697,66 +1147,68 @@ export default function WidgetsPage({ user, settings }) {
               </div>
             </form>
 
-            {/* Category Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-              {Object.entries(assetCategories).map(([key, cat]) => (
+            {/* Asset Type Tabs */}
+            <div className="filter-row">
+              {assetTypeTabs.map(tab => (
                 <button
-                  key={key}
-                  onClick={() => setSelectedCategory(key)}
-                  style={{
-                    padding: '10px 18px',
-                    background: selectedCategory === key
-                      ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                      : 'rgba(255, 255, 255, 0.05)',
-                    border: selectedCategory === key
-                      ? 'none'
-                      : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    fontWeight: selectedCategory === key ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
+                  key={tab.value}
+                  className={`filter-btn ${selectedAssetType === tab.value ? 'active' : ''}`}
+                  onClick={() => setSelectedAssetType(tab.value)}
                 >
-                  <span style={{ fontSize: '1rem' }}>{cat.icon}</span>
-                  {cat.name}
+                  {tab.icon && <span style={{ marginRight: '4px' }}>{tab.icon}</span>}
+                  {tab.label}
                 </button>
               ))}
             </div>
 
-            {/* Selected Category Content */}
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                padding: '24px',
-              }}
-            >
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
-                  {assetCategories[selectedCategory].icon} {assetCategories[selectedCategory].name}
-                </h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem' }}>
-                  {assetCategories[selectedCategory].description}
-                </p>
-              </div>
+            {/* Exchange + Sort Filters */}
+            <div className="filter-row">
+              <select
+                className="select-input"
+                value={selectedExchange}
+                onChange={(e) => setSelectedExchange(e.target.value)}
+              >
+                {exchangeOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
 
-              {pricesLoading ? (
-                <div className="loading">
-                  <div className="loading-spinner" />
-                  <p>Loading live prices from eToro...</p>
+              <select
+                className="select-input"
+                value={searchSortBy}
+                onChange={(e) => setSearchSortBy(e.target.value)}
+              >
+                {searchSortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+
+              {searchLoading && (
+                <div className="inline-loading">
+                  <div className="mini-spinner" />
+                  Updating...
                 </div>
-              ) : Object.keys(marketPrices).length > 0 ? (
+              )}
+            </div>
+
+            {/* Results */}
+            {searchLoading && Object.keys(searchResults).length === 0 ? (
+              <div className="loading">
+                <div className="loading-spinner" />
+                <p>Loading live prices from eToro...</p>
+              </div>
+            ) : getSortedSearchResults().length > 0 ? (
+              <>
+                <div style={{ marginBottom: '12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                  Showing {Math.min(getSortedSearchResults().length, 24)} of {getSortedSearchResults().length} instruments
+                  {selectedAssetType && ` in ${assetTypeTabs.find(t => t.value === selectedAssetType)?.label || selectedAssetType}`}
+                  {selectedExchange && ` on ${selectedExchange}`}
+                </div>
                 <div className="card-grid">
-                  {Object.entries(marketPrices).slice(0, 24).map(([symbol, data]) => {
+                  {getSortedSearchResults().slice(0, 24).map(([symbol, data]) => {
                     const price = data?.price;
                     const change = data?.change;
-                    const isPositive = change >= 0;
+                    const isPositive = (change || 0) >= 0;
                     const name = data?.name || symbol;
 
                     return (
@@ -768,7 +1220,14 @@ export default function WidgetsPage({ user, settings }) {
                         <div className="asset-header">
                           <div>
                             <div className="asset-symbol">{symbol}</div>
-                            <div className="asset-name">{name}</div>
+                            <div className="asset-name">
+                              {name}
+                              {data?.exchange && (
+                                <span style={{ marginLeft: '6px', color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>
+                                  {data.exchange}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {change !== undefined && change !== 0 && (
                             <div className={`asset-change ${isPositive ? 'positive' : 'negative'}`}>
@@ -786,53 +1245,40 @@ export default function WidgetsPage({ user, settings }) {
                     );
                   })}
                 </div>
-              ) : (
-                <div className="card-grid">
-                  {assetCategories[selectedCategory].items.map((item) => (
-                    <div
-                      key={item.symbol}
-                      className="asset-card"
-                      onClick={() => handleTradeClick(item.symbol)}
-                    >
-                      <div className="asset-header">
-                        <div>
-                          <div className="asset-symbol">{item.symbol}</div>
-                          <div className="asset-name">{item.name}</div>
-                        </div>
-                      </div>
-                      <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
-                        Trade on eToro
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                <button
-                  onClick={handleEtoroClick}
-                  style={{
-                    padding: '12px 24px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '8px',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  }}
-                >
-                  View All {assetCategories[selectedCategory].name} on eToro →
-                </button>
+              </>
+            ) : (
+              <div className="empty-state">
+                <p>No instruments found.</p>
+                <p style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                  Try a different search term, asset type, or exchange filter.
+                </p>
               </div>
+            )}
+
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <button
+                onClick={handleEtoroClick}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                View All Markets on eToro &rarr;
+              </button>
             </div>
           </div>
         </>
