@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       const { data, error } = await query;
 
       if (error) {
-        logger.error('Error fetching announcements:', error.message, error.code, error.details);
+        console.error('Supabase announcements error:', JSON.stringify(error, null, 2));
         // Return empty array instead of 500 error to prevent page breaking
         return res.status(200).json({ announcements: [], error: error.message });
       }
