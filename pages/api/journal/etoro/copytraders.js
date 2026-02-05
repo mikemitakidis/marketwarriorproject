@@ -1,9 +1,13 @@
 /**
- * eToro CopyTrader Leaderboard API Proxy
+ * eToro CopyTraders (People Search) API Proxy
  * GET /api/journal/etoro/copytraders
  *
- * Endpoint: https://public-api.etoro.com/api/v1/pi-data/copytraders
+ * Endpoint: https://public-api.etoro.com/api/v1/user-info/people/search
  * Required headers: x-api-key, x-user-key, x-request-id
+ *
+ * Query params:
+ *   - period: CurrMonth, CurrQuarter, CurrYear, LastYear, LastTwoYears,
+ *             OneMonthAgo, TwoMonthsAgo, ThreeMonthsAgo, SixMonthsAgo, OneYearAgo
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +28,12 @@ const sampleCopyTraders = [
   { username: 'swingtrader', name: 'Jennifer White', gain: 24.8, copiers: 1876, riskScore: 4 },
 ];
 
+// Valid period options
+const VALID_PERIODS = [
+  'CurrMonth', 'CurrQuarter', 'CurrYear', 'LastYear', 'LastTwoYears',
+  'OneMonthAgo', 'TwoMonthsAgo', 'ThreeMonthsAgo', 'SixMonthsAgo', 'OneYearAgo'
+];
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -32,14 +42,24 @@ export default async function handler(req, res) {
   const apiKey = process.env.ETORO_API_KEY;
   const userKey = process.env.ETORO_USER_KEY;
 
+  // Get filter parameters from query
+  const { period = 'CurrYear' } = req.query;
+
+  // Validate period
+  const validPeriod = VALID_PERIODS.includes(period) ? period : 'CurrYear';
+
   // If API keys are not configured, return sample data
   if (!apiKey || !userKey) {
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample' });
+    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
   }
 
   try {
-    const response = await fetch('https://public-api.etoro.com/api/v1/pi-data/copytraders', {
+    // Build URL with query parameters
+    const url = new URL('https://public-api.etoro.com/api/v1/user-info/people/search');
+    url.searchParams.append('period', validPeriod);
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
@@ -51,16 +71,22 @@ export default async function handler(req, res) {
 
     if (response.ok) {
       const data = await response.json();
-      // Transform eToro response format - adjust based on actual response structure
-      const traders = (data.CopyTraders || data.Traders || data || []).map(trader => ({
-        username: trader.UserName || trader.Username,
-        name: trader.DisplayName || trader.FullName || trader.Name,
-        gain: trader.Gain || trader.YearlyGain || trader.TwelveMonthReturn,
-        copiers: trader.Copiers || trader.CopierCount,
-        riskScore: trader.RiskScore || trader.Risk,
+
+      // Transform eToro response format
+      const rawTraders = data.Users || data.People || data.Results || data || [];
+      const traders = rawTraders.map(trader => ({
+        username: trader.UserName || trader.Username || trader.userName,
+        name: trader.DisplayName || trader.FullName || trader.Name || trader.displayName,
+        gain: trader.Gain || trader.YearlyGain || trader.TwelveMonthReturn || trader.Performance || 0,
+        copiers: trader.Copiers || trader.CopierCount || trader.NumOfCopiers || 0,
+        riskScore: trader.RiskScore || trader.Risk || trader.riskScore || 0,
+        avatarUrl: trader.AvatarUrl || trader.Avatar || null,
       }));
-      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-      return res.status(200).json({ traders, source: 'etoro' });
+
+      if (traders.length > 0) {
+        res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
+        return res.status(200).json({ traders, source: 'etoro', period: validPeriod });
+      }
     }
 
     // Log error for debugging
@@ -68,10 +94,10 @@ export default async function handler(req, res) {
     console.error('eToro copytraders API error:', response.status, errorText);
 
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample' });
+    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
   } catch (error) {
     console.error('eToro copytraders error:', error);
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample' });
+    return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
   }
 }
