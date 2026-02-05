@@ -279,6 +279,7 @@ export default function AdminPanel() {
         setJournalSettings({
           aiChatEnabled: data.aiChatEnabled !== false,
           paidEnabled: data.paidEnabled === true,
+          etoroAffiliateUrl: data.etoroAffiliateUrl || '',
         });
       }
     } catch (err) {
