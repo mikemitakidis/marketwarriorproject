@@ -89,6 +89,37 @@ export default function JournalDashboard({ user, settings }) {
 
   return (
     <JournalLayout user={user} title="Dashboard" settings={settings}>
+      <style jsx global>{`
+        /* Header tabs - global to style Link components */
+        .dashboard-header-tabs {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 24px;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px;
+          border-radius: 10px;
+          width: fit-content;
+        }
+        .dashboard-header-tabs a {
+          padding: 10px 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff !important;
+          text-decoration: none !important;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          transition: all 0.15s;
+        }
+        .dashboard-header-tabs a:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .dashboard-header-tabs a.active {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+      `}</style>
       <style jsx>{`
         .page-header {
           display: flex;
@@ -298,35 +329,6 @@ export default function JournalDashboard({ user, settings }) {
           min-height: 200px;
           color: rgba(255, 255, 255, 0.5);
         }
-        .header-tabs {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 24px;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 4px;
-          border-radius: 10px;
-          width: fit-content;
-        }
-        .header-tab {
-          padding: 10px 20px;
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: none;
-          border-radius: 8px;
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .header-tab:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.05);
-        }
-        .header-tab.active {
-          background: rgba(255, 255, 255, 0.15);
-          color: white;
-        }
         @media (max-width: 768px) {
           .two-col {
             grid-template-columns: 1fr;
@@ -338,14 +340,14 @@ export default function JournalDashboard({ user, settings }) {
       `}</style>
 
       {/* Header Tabs */}
-      <div className="header-tabs">
-        <Link href="/trading-journal" className={`header-tab ${getActiveTab() === 'dashboard' ? 'active' : ''}`}>
+      <div className="dashboard-header-tabs">
+        <Link href="/trading-journal" className={getActiveTab() === 'dashboard' ? 'active' : ''}>
           Overview
         </Link>
-        <Link href="/trading-journal/trades" className={`header-tab ${getActiveTab() === 'trades' ? 'active' : ''}`}>
+        <Link href="/trading-journal/trades" className={getActiveTab() === 'trades' ? 'active' : ''}>
           Trade Log
         </Link>
-        <Link href="/trading-journal/add-trade" className={`header-tab ${getActiveTab() === 'add' ? 'active' : ''}`}>
+        <Link href="/trading-journal/add-trade" className={getActiveTab() === 'add' ? 'active' : ''}>
           Add Trade
         </Link>
       </div>

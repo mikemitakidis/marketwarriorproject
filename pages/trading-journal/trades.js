@@ -114,6 +114,36 @@ export default function TradesPage({ user, settings }) {
 
   return (
     <JournalLayout user={user} title="Trade Log" settings={settings}>
+      <style jsx global>{`
+        .dashboard-header-tabs {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 24px;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px;
+          border-radius: 10px;
+          width: fit-content;
+        }
+        .dashboard-header-tabs a {
+          padding: 10px 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff !important;
+          text-decoration: none !important;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          transition: all 0.15s;
+        }
+        .dashboard-header-tabs a:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .dashboard-header-tabs a.active {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+      `}</style>
       <style jsx>{`
         .page-header {
           display: flex;
@@ -334,48 +364,13 @@ export default function TradesPage({ user, settings }) {
           padding: 40px;
           color: rgba(255, 255, 255, 0.5);
         }
-        .header-tabs {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 24px;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 4px;
-          border-radius: 10px;
-          width: fit-content;
-        }
-        .header-tab {
-          padding: 10px 20px;
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: none;
-          border-radius: 8px;
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .header-tab:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.05);
-        }
-        .header-tab.active {
-          background: rgba(255, 255, 255, 0.15);
-          color: white;
-        }
       `}</style>
 
       {/* Header Tabs */}
-      <div className="header-tabs">
-        <Link href="/trading-journal" className="header-tab">
-          Overview
-        </Link>
-        <Link href="/trading-journal/trades" className="header-tab active">
-          Trade Log
-        </Link>
-        <Link href="/trading-journal/add-trade" className="header-tab">
-          Add Trade
-        </Link>
+      <div className="dashboard-header-tabs">
+        <Link href="/trading-journal">Overview</Link>
+        <Link href="/trading-journal/trades" className="active">Trade Log</Link>
+        <Link href="/trading-journal/add-trade">Add Trade</Link>
       </div>
 
       <div className="page-header">

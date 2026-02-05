@@ -63,6 +63,7 @@ export default function AdminPanel() {
   const [journalSettings, setJournalSettings] = useState({
     aiChatEnabled: true,
     paidEnabled: false,
+    etoroAffiliateUrl: '',
   });
   const [journalSaving, setJournalSaving] = useState(false);
   const [journalUsers, setJournalUsers] = useState([]);
@@ -1371,6 +1372,37 @@ export default function AdminPanel() {
                             Currently FREE - All registered users can access the Trading Journal
                           </div>
                         )}
+                      </div>
+
+                      {/* eToro Affiliate URL */}
+                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                          <div>
+                            <h3 style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              eToro Affiliate URL
+                            </h3>
+                            <p style={{ color: '#64748b', fontSize: '0.9em', margin: 0 }}>
+                              Your eToro affiliate link for the Widgets page. Users will be redirected through /go/etoro.
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={journalSettings.etoroAffiliateUrl || ''}
+                          onChange={(e) => setJournalSettings({ ...journalSettings, etoroAffiliateUrl: e.target.value })}
+                          placeholder="https://www.etoro.com/?ref=YOUR_ID"
+                          style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            marginTop: '10px',
+                          }}
+                        />
+                        <p style={{ color: '#94a3b8', fontSize: '0.8em', marginTop: '8px' }}>
+                          Leave empty to use default eToro URL without affiliate tracking.
+                        </p>
                       </div>
 
                       {/* Journal Stats */}
