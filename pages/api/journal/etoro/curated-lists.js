@@ -45,7 +45,15 @@ export default async function handler(req, res) {
 
     const responseText = await response.text();
     console.log('eToro curated-lists response status:', response.status);
-    console.log('eToro curated-lists response:', responseText.substring(0, 500));
+    console.log('eToro curated-lists response length:', responseText.length);
+    console.log('eToro curated-lists response:', responseText ? responseText.substring(0, 500) : '(empty)');
+
+    // Handle empty response
+    if (!responseText || responseText.trim() === '') {
+      console.error('eToro curated-lists returned empty response');
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+      return res.status(200).json({ lists: sampleLists, source: 'sample' });
+    }
 
     if (!response.ok) {
       console.error('eToro curated-lists API error:', response.status, responseText);

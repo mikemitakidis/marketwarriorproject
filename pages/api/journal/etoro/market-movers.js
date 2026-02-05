@@ -66,7 +66,15 @@ export default async function handler(req, res) {
 
     const responseText = await response.text();
     console.log('eToro market-movers response status:', response.status);
-    console.log('eToro market-movers response:', responseText.substring(0, 500));
+    console.log('eToro market-movers response length:', responseText.length);
+    console.log('eToro market-movers response:', responseText ? responseText.substring(0, 500) : '(empty)');
+
+    // Handle empty response
+    if (!responseText || responseText.trim() === '') {
+      console.error('eToro market-movers returned empty response');
+      res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
+      return res.status(200).json({ assets: sampleData, source: 'sample' });
+    }
 
     if (!response.ok) {
       console.error('eToro market-movers API error:', response.status, responseText);

@@ -48,7 +48,15 @@ export default async function handler(req, res) {
 
     const responseText = await response.text();
     console.log('eToro trending response status:', response.status);
-    console.log('eToro trending response:', responseText.substring(0, 500));
+    console.log('eToro trending response length:', responseText.length);
+    console.log('eToro trending response:', responseText ? responseText.substring(0, 500) : '(empty)');
+
+    // Handle empty response
+    if (!responseText || responseText.trim() === '') {
+      console.error('eToro trending returned empty response');
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+      return res.status(200).json({ assets: sampleTrending, source: 'sample' });
+    }
 
     if (!response.ok) {
       console.error('eToro trending API error:', response.status, responseText);

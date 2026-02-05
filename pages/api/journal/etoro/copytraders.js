@@ -60,7 +60,15 @@ export default async function handler(req, res) {
 
     const responseText = await response.text();
     console.log('eToro copytraders response status:', response.status);
-    console.log('eToro copytraders response:', responseText.substring(0, 500));
+    console.log('eToro copytraders response length:', responseText.length);
+    console.log('eToro copytraders response:', responseText ? responseText.substring(0, 500) : '(empty)');
+
+    // Handle empty response
+    if (!responseText || responseText.trim() === '') {
+      console.error('eToro copytraders returned empty response');
+      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
+      return res.status(200).json({ traders: sampleCopyTraders, source: 'sample', period: validPeriod });
+    }
 
     if (!response.ok) {
       console.error('eToro copytraders API error:', response.status, responseText);
