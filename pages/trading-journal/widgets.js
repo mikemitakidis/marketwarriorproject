@@ -685,42 +685,62 @@ export default function WidgetsPage({ user, settings }) {
               {pricesLoading ? (
                 <div className="loading">
                   <div className="loading-spinner" />
-                  <p>Loading live prices...</p>
+                  <p>Loading live prices from eToro...</p>
                 </div>
-              ) : (
+              ) : Object.keys(marketPrices).length > 0 ? (
                 <div className="card-grid">
-                  {assetCategories[selectedCategory].items.map((item) => {
-                    const priceData = marketPrices[item.symbol];
-                    const price = priceData?.price;
-                    const change = priceData?.change;
+                  {Object.entries(marketPrices).slice(0, 24).map(([symbol, data]) => {
+                    const price = data?.price;
+                    const change = data?.change;
                     const isPositive = change >= 0;
+                    const name = data?.name || symbol;
 
                     return (
                       <div
-                        key={item.symbol}
+                        key={symbol}
                         className="asset-card"
-                        onClick={() => handleTradeClick(item.symbol)}
+                        onClick={() => handleTradeClick(symbol)}
                       >
                         <div className="asset-header">
                           <div>
-                            <div className="asset-symbol">{item.symbol}</div>
-                            <div className="asset-name">{item.name}</div>
+                            <div className="asset-symbol">{symbol}</div>
+                            <div className="asset-name">{name}</div>
                           </div>
-                          {change !== undefined && (
+                          {change !== undefined && change !== 0 && (
                             <div className={`asset-change ${isPositive ? 'positive' : 'negative'}`}>
                               {isPositive ? '+' : ''}{change.toFixed(2)}%
                             </div>
                           )}
                         </div>
-                        {price !== undefined && (
-                          <div className="asset-price">{formatPrice(price, item.symbol)}</div>
+                        {price !== undefined && price > 0 && (
+                          <div className="asset-price">{formatPrice(price, symbol)}</div>
                         )}
-                        <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
+                        <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(symbol); }}>
                           Trade on eToro
                         </button>
                       </div>
                     );
                   })}
+                </div>
+              ) : (
+                <div className="card-grid">
+                  {assetCategories[selectedCategory].items.map((item) => (
+                    <div
+                      key={item.symbol}
+                      className="asset-card"
+                      onClick={() => handleTradeClick(item.symbol)}
+                    >
+                      <div className="asset-header">
+                        <div>
+                          <div className="asset-symbol">{item.symbol}</div>
+                          <div className="asset-name">{item.name}</div>
+                        </div>
+                      </div>
+                      <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
+                        Trade on eToro
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
