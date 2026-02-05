@@ -64,11 +64,36 @@ export default async function handler(req, res) {
       },
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    const responseText = await response.text();
+    console.log('eToro market-movers response status:', response.status);
+    console.log('eToro market-movers response:', responseText.substring(0, 500));
 
-      // Extract instruments with price data
-      const instruments = data.Rates || data.Instruments || data || [];
+    if (!response.ok) {
+      console.error('eToro market-movers API error:', response.status, responseText);
+      res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
+      return res.status(200).json({ assets: sampleData, source: 'sample' });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('eToro market-movers JSON parse error:', parseError);
+      res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
+      return res.status(200).json({ assets: sampleData, source: 'sample' });
+    }
+
+    console.log('eToro market-movers data keys:', Object.keys(data || {}));
+
+    // Extract instruments with price data - handle various response formats
+    let instruments = [];
+    if (Array.isArray(data)) {
+      instruments = data;
+    } else if (data && typeof data === 'object') {
+      instruments = data.Rates || data.Instruments || data.Items || data.Results || [];
+    }
+
+    if (Array.isArray(instruments) && instruments.length > 0) {
 
       // Map to our format and filter out items without change data
       const mappedInstruments = instruments
@@ -98,10 +123,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Log error for debugging
-    const errorText = await response.text();
-    console.error('eToro market-movers API error:', response.status, errorText);
-
+    // No valid data found, return sample
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
     return res.status(200).json({ assets: sampleData, source: 'sample' });
   } catch (error) {
