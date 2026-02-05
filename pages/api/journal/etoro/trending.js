@@ -2,10 +2,15 @@
  * eToro Trending Assets API Proxy
  * GET /api/journal/etoro/trending
  *
- * Returns trending assets - tries eToro API first, falls back to sample data
+ * Endpoint: https://public-api.etoro.com/api/v1/market-recommendations/{itemsCount}
+ * Required headers: x-api-key, x-user-key, x-request-id
+ *
+ * Note: eToro returns instrument IDs only, not full details
  */
 
-// Sample trending data as fallback
+import { v4 as uuidv4 } from 'uuid';
+
+// Sample trending data as fallback (with full details for display)
 const sampleTrending = [
   { symbol: 'BTC', name: 'Bitcoin', price: 67234.50, change: 2.45 },
   { symbol: 'ETH', name: 'Ethereum', price: 3456.78, change: 1.23 },
@@ -24,6 +29,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ETORO_API_KEY;
   const userKey = process.env.ETORO_USER_KEY;
+  const itemsCount = 10; // Number of recommendations to fetch
 
   // If API keys are not configured, return sample data
   if (!apiKey || !userKey) {
@@ -32,29 +38,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try to fetch from eToro API
-    const response = await fetch('https://api.etoro.com/api/v1/watchlists/market-recommendations', {
+    const response = await fetch(`https://public-api.etoro.com/api/v1/market-recommendations/${itemsCount}`, {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
         'x-user-key': userKey,
+        'x-request-id': uuidv4(),
         'Content-Type': 'application/json',
       },
     });
 
     if (response.ok) {
       const data = await response.json();
-      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
-      return res.status(200).json({ assets: data.assets || data || [], source: 'etoro' });
+      // eToro returns instrument IDs in Recommendations array
+      // We return them as-is - frontend would need instrument details API for full info
+      const instrumentIds = data.Recommendations || [];
+
+      // For now, return sample data with source indicator since we only get IDs
+      // To get full details, would need to call instrument details API for each ID
+      if (instrumentIds.length > 0) {
+        res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+        return res.status(200).json({
+          instrumentIds,
+          assets: sampleTrending, // Use sample for display until instrument API is integrated
+          source: 'etoro-partial'
+        });
+      }
     }
 
-    // API call failed, return sample data
-    console.log('eToro API returned non-OK status, using sample data');
+    // Log error for debugging
+    const errorText = await response.text();
+    console.error('eToro trending API error:', response.status, errorText);
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ assets: sampleTrending, source: 'sample' });
   } catch (error) {
     console.error('eToro trending error:', error);
-    // Return sample data on error
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ assets: sampleTrending, source: 'sample' });
   }

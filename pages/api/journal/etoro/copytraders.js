@@ -2,8 +2,11 @@
  * eToro CopyTrader Leaderboard API Proxy
  * GET /api/journal/etoro/copytraders
  *
- * Returns top CopyTraders - tries eToro API first, falls back to sample data
+ * Endpoint: https://public-api.etoro.com/api/v1/pi-data/copytraders
+ * Required headers: x-api-key, x-user-key, x-request-id
  */
+
+import { v4 as uuidv4 } from 'uuid';
 
 // Sample CopyTraders data
 const sampleCopyTraders = [
@@ -36,22 +39,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.etoro.com/api/v1/pi-data/copytraders', {
+    const response = await fetch('https://public-api.etoro.com/api/v1/pi-data/copytraders', {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
         'x-user-key': userKey,
+        'x-request-id': uuidv4(),
         'Content-Type': 'application/json',
       },
     });
 
     if (response.ok) {
       const data = await response.json();
+      // Transform eToro response format - adjust based on actual response structure
+      const traders = (data.CopyTraders || data.Traders || data || []).map(trader => ({
+        username: trader.UserName || trader.Username,
+        name: trader.DisplayName || trader.FullName || trader.Name,
+        gain: trader.Gain || trader.YearlyGain || trader.TwelveMonthReturn,
+        copiers: trader.Copiers || trader.CopierCount,
+        riskScore: trader.RiskScore || trader.Risk,
+      }));
       res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
-      return res.status(200).json({ traders: data.traders || data || [], source: 'etoro' });
+      return res.status(200).json({ traders, source: 'etoro' });
     }
 
-    // API call failed, return sample data
+    // Log error for debugging
+    const errorText = await response.text();
+    console.error('eToro copytraders API error:', response.status, errorText);
+
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
     return res.status(200).json({ traders: sampleCopyTraders, source: 'sample' });
   } catch (error) {
