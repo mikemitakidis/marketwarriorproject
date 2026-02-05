@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const { data: settings, error } = await supabase
         .from('app_settings')
         .select('key, value')
-        .in('key', ['journal_ai_chat_enabled', 'journal_paid_enabled']);
+        .in('key', ['journal_ai_chat_enabled', 'journal_paid_enabled', 'etoro_affiliate_url']);
 
       if (error) {
         console.error('Error fetching journal settings:', error);
@@ -47,6 +47,7 @@ export default async function handler(req, res) {
       const result = {
         aiChatEnabled: true,
         paidEnabled: false,
+        etoroAffiliateUrl: '',
       };
 
       if (settings) {
@@ -55,6 +56,8 @@ export default async function handler(req, res) {
             result.aiChatEnabled = isTruthy(s.value);
           } else if (s.key === 'journal_paid_enabled') {
             result.paidEnabled = isTruthy(s.value);
+          } else if (s.key === 'etoro_affiliate_url') {
+            result.etoroAffiliateUrl = s.value || '';
           }
         });
       }
@@ -63,12 +66,13 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { aiChatEnabled, paidEnabled } = req.body;
+      const { aiChatEnabled, paidEnabled, etoroAffiliateUrl } = req.body;
 
       // Upsert each setting
       const settingsToUpsert = [
         { key: 'journal_ai_chat_enabled', value: String(aiChatEnabled === true) },
         { key: 'journal_paid_enabled', value: String(paidEnabled === true) },
+        { key: 'etoro_affiliate_url', value: etoroAffiliateUrl || '' },
       ];
 
       for (const setting of settingsToUpsert) {

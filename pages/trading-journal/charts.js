@@ -6,7 +6,7 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
   const [symbol, setSymbol] = useState('BTCUSD');
   const [interval, setInterval] = useState('D');
   const [showWatchlist, setShowWatchlist] = useState(true);
-  const [activeTab, setActiveTab] = useState('chart'); // chart, calendar, screener
+  const [activeTab, setActiveTab] = useState('chart'); // chart, calendar, screener (simplified)
   const chartContainerRef = useRef(null);
   const tickerContainerRef = useRef(null);
   const symbolInfoRef = useRef(null);
@@ -375,43 +375,19 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
           className={`tab ${activeTab === 'screener' ? 'active' : ''}`}
           onClick={() => setActiveTab('screener')}
         >
-          Market Screener
-        </button>
-        <button
-          className={`tab ${activeTab === 'heatmap' ? 'active' : ''}`}
-          onClick={() => setActiveTab('heatmap')}
-        >
-          Heatmap
+          Screener
         </button>
       </div>
 
-      {/* TradingView Ticker Tape */}
+      {/* TradingView Ticker Tape - using iframe */}
       <div className="ticker-tape">
-        <div
-          dangerouslySetInnerHTML={{
-            __html: `
-              <div class="tradingview-widget-container">
-                <div class="tradingview-widget-container__widget"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-                  {
-                    "symbols": [
-                      {"proName": "BITSTAMP:BTCUSD", "title": "BTC/USD"},
-                      {"proName": "BITSTAMP:ETHUSD", "title": "ETH/USD"},
-                      {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"},
-                      {"proName": "FOREXCOM:NSXUSD", "title": "Nasdaq"},
-                      {"proName": "FX:EURUSD", "title": "EUR/USD"},
-                      {"proName": "OANDA:XAUUSD", "title": "Gold"}
-                    ],
-                    "showSymbolLogo": true,
-                    "colorTheme": "dark",
-                    "isTransparent": true,
-                    "displayMode": "adaptive",
-                    "locale": "en"
-                  }
-                </script>
-              </div>
-            `,
-          }}
+        <iframe
+          scrolling="no"
+          allowTransparency="true"
+          frameBorder="0"
+          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22BTC%2FUSD%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3AETHUSD%22%2C%22title%22%3A%22ETH%2FUSD%22%7D%2C%7B%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%2C%22title%22%3A%22S%26P%20500%22%7D%2C%7B%22proName%22%3A%22FOREXCOM%3ANSXUSD%22%2C%22title%22%3A%22Nasdaq%22%7D%2C%7B%22proName%22%3A%22FX%3AEURUSD%22%2C%22title%22%3A%22EUR%2FUSD%22%7D%2C%7B%22proName%22%3A%22OANDA%3AXAUUSD%22%2C%22title%22%3A%22Gold%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A44%7D"
+          style={{ width: '100%', height: '44px', border: 'none' }}
+          title="Ticker Tape"
         />
       </div>
 
@@ -421,21 +397,14 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
           {/* Symbol Info Widget */}
           <div className="widget-container" style={{ marginBottom: '24px' }}>
             <div className="widget-content symbol-info-widget">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <div class="tradingview-widget-container">
-                      <iframe
-                        scrolling="no"
-                        allowtransparency="true"
-                        frameborder="0"
-                        src="https://s.tradingview.com/embed-widget/symbol-info/?locale=en#%7B%22symbol%22%3A%22${symbol}%22%2C%22width%22%3A%22100%25%22%2C%22isTransparent%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%7D"
-                        style="width: 100%; height: 150px;"
-                      ></iframe>
-                    </div>
-                  `,
-                }}
+              <iframe
                 key={symbol}
+                scrolling="no"
+                allowTransparency="true"
+                frameBorder="0"
+                src={`https://s.tradingview.com/embed-widget/symbol-info/?locale=en#%7B%22symbol%22%3A%22${encodeURIComponent(symbol)}%22%2C%22width%22%3A%22100%25%22%2C%22isTransparent%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%7D`}
+                style={{ width: '100%', height: '150px', border: 'none' }}
+                title="Symbol Info"
               />
             </div>
           </div>
@@ -483,20 +452,13 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
                 {/* Mini Hotlist Widget */}
                 <div style={{ marginTop: '20px' }}>
                   <div className="watchlist-section-title">Top Movers</div>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: `
-                        <div class="tradingview-widget-container">
-                          <iframe
-                            scrolling="no"
-                            allowtransparency="true"
-                            frameborder="0"
-                            src="https://s.tradingview.com/embed-widget/hotlists/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22exchange%22%3A%22US%22%2C%22showChart%22%3Afalse%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22showFloatingTooltip%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22250%22%7D"
-                            style="width: 100%; height: 250px;"
-                          ></iframe>
-                        </div>
-                      `,
-                    }}
+                  <iframe
+                    scrolling="no"
+                    allowTransparency="true"
+                    frameBorder="0"
+                    src="https://s.tradingview.com/embed-widget/hotlists/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22exchange%22%3A%22US%22%2C%22showChart%22%3Afalse%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22showFloatingTooltip%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A250%7D"
+                    style={{ width: '100%', height: '250px', border: 'none' }}
+                    title="Top Movers"
                   />
                 </div>
 
@@ -522,113 +484,31 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
         <div className="widget-container">
           <div className="widget-header">Economic Calendar</div>
           <div className="widget-content calendar-widget">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: `
-                  <div class="tradingview-widget-container" style="height:100%;width:100%">
-                    <iframe
-                      scrolling="no"
-                      allowtransparency="true"
-                      frameborder="0"
-                      src="https://s.tradingview.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CCAD%2CAUD%2CNZD%2CCHF%22%7D"
-                      style="width: 100%; height: 500px;"
-                    ></iframe>
-                  </div>
-                `,
-              }}
+            <iframe
+              scrolling="no"
+              allowTransparency="true"
+              frameBorder="0"
+              src="https://s.tradingview.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CCAD%2CAUD%2CNZD%2CCHF%22%7D"
+              style={{ width: '100%', height: '500px', border: 'none' }}
+              title="Economic Calendar"
             />
           </div>
         </div>
       )}
 
-      {/* Screener Tab */}
+      {/* Screener Tab - Forex only */}
       {activeTab === 'screener' && (
-        <div className="widgets-grid">
-          <div className="widget-container">
-            <div className="widget-header">Forex Screener</div>
-            <div className="widget-content screener-widget">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <div class="tradingview-widget-container" style="height:100%;width:100%">
-                      <iframe
-                        scrolling="no"
-                        allowtransparency="true"
-                        frameborder="0"
-                        src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22defaultColumn%22%3A%22overview%22%2C%22defaultScreen%22%3A%22general%22%2C%22market%22%3A%22forex%22%2C%22showToolbar%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
-                        style="width: 100%; height: 450px;"
-                      ></iframe>
-                    </div>
-                  `,
-                }}
-              />
-            </div>
-          </div>
-          <div className="widget-container">
-            <div className="widget-header">Crypto Screener</div>
-            <div className="widget-content screener-widget">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <div class="tradingview-widget-container" style="height:100%;width:100%">
-                      <iframe
-                        scrolling="no"
-                        allowtransparency="true"
-                        frameborder="0"
-                        src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22defaultColumn%22%3A%22overview%22%2C%22defaultScreen%22%3A%22general%22%2C%22market%22%3A%22crypto%22%2C%22showToolbar%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
-                        style="width: 100%; height: 450px;"
-                      ></iframe>
-                    </div>
-                  `,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Heatmap Tab */}
-      {activeTab === 'heatmap' && (
-        <div className="widgets-grid">
-          <div className="widget-container">
-            <div className="widget-header">Stock Market Heatmap</div>
-            <div className="widget-content" style={{ minHeight: '500px' }}>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <div class="tradingview-widget-container" style="height:100%;width:100%">
-                      <iframe
-                        scrolling="no"
-                        allowtransparency="true"
-                        frameborder="0"
-                        src="https://s.tradingview.com/embed-widget/stock-heatmap/?locale=en#%7B%22exchanges%22%3A%5B%5D%2C%22dataSource%22%3A%22SPX500%22%2C%22grouping%22%3A%22sector%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22blockColor%22%3A%22change%22%2C%22hasTopBar%22%3Atrue%2C%22isDataSetEnabled%22%3Atrue%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
-                        style="width: 100%; height: 500px;"
-                      ></iframe>
-                    </div>
-                  `,
-                }}
-              />
-            </div>
-          </div>
-          <div className="widget-container">
-            <div className="widget-header">Crypto Heatmap</div>
-            <div className="widget-content" style={{ minHeight: '500px' }}>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <div class="tradingview-widget-container" style="height:100%;width:100%">
-                      <iframe
-                        scrolling="no"
-                        allowtransparency="true"
-                        frameborder="0"
-                        src="https://s.tradingview.com/embed-widget/crypto-coins-heatmap/?locale=en#%7B%22dataSource%22%3A%22Crypto%22%2C%22blockSize%22%3A%22market_cap_calc%22%2C%22blockColor%22%3A%22change%22%2C%22hasTopBar%22%3Atrue%2C%22isDataSetEnabled%22%3Atrue%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
-                        style="width: 100%; height: 500px;"
-                      ></iframe>
-                    </div>
-                  `,
-                }}
-              />
-            </div>
+        <div className="widget-container">
+          <div className="widget-header">Forex Screener</div>
+          <div className="widget-content screener-widget">
+            <iframe
+              scrolling="no"
+              allowTransparency="true"
+              frameBorder="0"
+              src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22defaultColumn%22%3A%22overview%22%2C%22defaultScreen%22%3A%22general%22%2C%22market%22%3A%22forex%22%2C%22showToolbar%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
+              style={{ width: '100%', height: '500px', border: 'none' }}
+              title="Forex Screener"
+            />
           </div>
         </div>
       )}
