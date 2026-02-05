@@ -2,10 +2,13 @@
  * eToro Curated Lists API Proxy
  * GET /api/journal/etoro/curated-lists
  *
- * Returns curated watchlists - tries eToro API first, falls back to sample data
+ * Endpoint: https://public-api.etoro.com/api/v1/curated-lists
+ * Required headers: x-api-key, x-user-key, x-request-id
  */
 
-// Sample curated lists data
+import { v4 as uuidv4 } from 'uuid';
+
+// Sample curated lists data as fallback
 const sampleLists = [
   { id: 1, name: 'Big Tech', description: 'Major technology companies driving innovation', count: 10 },
   { id: 2, name: 'Crypto Portfolio', description: 'Top cryptocurrencies by market cap', count: 15 },
@@ -30,22 +33,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.etoro.com/api/v1/curated-lists', {
+    const response = await fetch('https://public-api.etoro.com/api/v1/curated-lists', {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
         'x-user-key': userKey,
+        'x-request-id': uuidv4(),
         'Content-Type': 'application/json',
       },
     });
 
     if (response.ok) {
       const data = await response.json();
+      // Transform eToro response format to our format
+      const lists = (data.CuratedLists || []).map(list => ({
+        id: list.Uuid,
+        name: list.Name,
+        description: list.Description,
+        imageUrl: list.ListImageUrl,
+        count: list.Items?.length || 0,
+      }));
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
-      return res.status(200).json({ lists: data.lists || data || [], source: 'etoro' });
+      return res.status(200).json({ lists, source: 'etoro' });
     }
 
-    // API call failed, return sample data
+    // Log error for debugging
+    const errorText = await response.text();
+    console.error('eToro curated-lists API error:', response.status, errorText);
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ lists: sampleLists, source: 'sample' });
   } catch (error) {

@@ -2,8 +2,11 @@
  * eToro Market Movers API Proxy
  * GET /api/journal/etoro/market-movers
  *
- * Returns top gainers and losers - tries eToro API first, falls back to sample data
+ * Endpoint: https://public-api.etoro.com/api/v1/market-data/movers
+ * Required headers: x-api-key, x-user-key, x-request-id
  */
+
+import { v4 as uuidv4 } from 'uuid';
 
 // Sample gainers data
 const sampleGainers = [
@@ -41,22 +44,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://api.etoro.com/api/v1/market-data/movers?type=${type}`, {
+    const response = await fetch(`https://public-api.etoro.com/api/v1/market-data/movers?type=${type}`, {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
         'x-user-key': userKey,
+        'x-request-id': uuidv4(),
         'Content-Type': 'application/json',
       },
     });
 
     if (response.ok) {
       const data = await response.json();
+      // Transform eToro response format - adjust based on actual response structure
+      const assets = (data.Movers || data.Assets || data || []).map(item => ({
+        symbol: item.Symbol || item.SymbolFull || item.InstrumentDisplayName,
+        name: item.Name || item.InstrumentDisplayName,
+        change: item.Change || item.DailyChange || item.PercentChange,
+      }));
       res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
-      return res.status(200).json({ assets: data.assets || data || [], source: 'etoro' });
+      return res.status(200).json({ assets, source: 'etoro' });
     }
 
-    // API call failed, return sample data
+    // Log error for debugging
+    const errorText = await response.text();
+    console.error('eToro market-movers API error:', response.status, errorText);
+
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate');
     return res.status(200).json({ assets: sampleData, source: 'sample' });
   } catch (error) {

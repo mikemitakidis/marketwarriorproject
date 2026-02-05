@@ -2,8 +2,11 @@
  * eToro Trending Assets API Proxy
  * GET /api/journal/etoro/trending
  *
- * Returns trending assets - tries eToro API first, falls back to sample data
+ * Endpoint: https://public-api.etoro.com/api/v1/watchlists/market-recommendations
+ * Required headers: x-api-key, x-user-key, x-request-id
  */
+
+import { v4 as uuidv4 } from 'uuid';
 
 // Sample trending data as fallback
 const sampleTrending = [
@@ -32,29 +35,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try to fetch from eToro API
-    const response = await fetch('https://api.etoro.com/api/v1/watchlists/market-recommendations', {
+    const response = await fetch('https://public-api.etoro.com/api/v1/watchlists/market-recommendations', {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
         'x-user-key': userKey,
+        'x-request-id': uuidv4(),
         'Content-Type': 'application/json',
       },
     });
 
     if (response.ok) {
       const data = await response.json();
+      // Transform eToro response format - adjust based on actual response structure
+      const assets = (data.Recommendations || data.Assets || data || []).map(item => ({
+        symbol: item.Symbol || item.SymbolFull || item.InstrumentDisplayName,
+        name: item.Name || item.InstrumentDisplayName,
+        price: item.Price || item.LastPrice,
+        change: item.Change || item.DailyChange || item.PercentChange,
+      }));
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
-      return res.status(200).json({ assets: data.assets || data || [], source: 'etoro' });
+      return res.status(200).json({ assets, source: 'etoro' });
     }
 
-    // API call failed, return sample data
-    console.log('eToro API returned non-OK status, using sample data');
+    // Log error for debugging
+    const errorText = await response.text();
+    console.error('eToro trending API error:', response.status, errorText);
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ assets: sampleTrending, source: 'sample' });
   } catch (error) {
     console.error('eToro trending error:', error);
-    // Return sample data on error
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ assets: sampleTrending, source: 'sample' });
   }
