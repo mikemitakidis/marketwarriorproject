@@ -2,13 +2,15 @@
  * eToro Trending Assets API Proxy
  * GET /api/journal/etoro/trending
  *
- * Endpoint: https://public-api.etoro.com/api/v1/watchlists/market-recommendations
+ * Endpoint: https://public-api.etoro.com/api/v1/market-recommendations/{itemsCount}
  * Required headers: x-api-key, x-user-key, x-request-id
+ *
+ * Note: eToro returns instrument IDs only, not full details
  */
 
 import { v4 as uuidv4 } from 'uuid';
 
-// Sample trending data as fallback
+// Sample trending data as fallback (with full details for display)
 const sampleTrending = [
   { symbol: 'BTC', name: 'Bitcoin', price: 67234.50, change: 2.45 },
   { symbol: 'ETH', name: 'Ethereum', price: 3456.78, change: 1.23 },
@@ -27,6 +29,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ETORO_API_KEY;
   const userKey = process.env.ETORO_USER_KEY;
+  const itemsCount = 10; // Number of recommendations to fetch
 
   // If API keys are not configured, return sample data
   if (!apiKey || !userKey) {
@@ -35,7 +38,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://public-api.etoro.com/api/v1/watchlists/market-recommendations', {
+    const response = await fetch(`https://public-api.etoro.com/api/v1/market-recommendations/${itemsCount}`, {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
@@ -47,15 +50,20 @@ export default async function handler(req, res) {
 
     if (response.ok) {
       const data = await response.json();
-      // Transform eToro response format - adjust based on actual response structure
-      const assets = (data.Recommendations || data.Assets || data || []).map(item => ({
-        symbol: item.Symbol || item.SymbolFull || item.InstrumentDisplayName,
-        name: item.Name || item.InstrumentDisplayName,
-        price: item.Price || item.LastPrice,
-        change: item.Change || item.DailyChange || item.PercentChange,
-      }));
-      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
-      return res.status(200).json({ assets, source: 'etoro' });
+      // eToro returns instrument IDs in Recommendations array
+      // We return them as-is - frontend would need instrument details API for full info
+      const instrumentIds = data.Recommendations || [];
+
+      // For now, return sample data with source indicator since we only get IDs
+      // To get full details, would need to call instrument details API for each ID
+      if (instrumentIds.length > 0) {
+        res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+        return res.status(200).json({
+          instrumentIds,
+          assets: sampleTrending, // Use sample for display until instrument API is integrated
+          source: 'etoro-partial'
+        });
+      }
     }
 
     // Log error for debugging
