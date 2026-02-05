@@ -88,18 +88,12 @@ export default async function handler(req, res) {
     // Log the structure to understand the format
     console.log('eToro copytraders data keys:', Object.keys(data));
 
-    // Try to find the array in various possible locations
+    // Try to find the array in various possible locations (camelCase and PascalCase)
     let rawTraders = [];
     if (Array.isArray(data)) {
       rawTraders = data;
-    } else if (data.Users && Array.isArray(data.Users)) {
-      rawTraders = data.Users;
-    } else if (data.People && Array.isArray(data.People)) {
-      rawTraders = data.People;
-    } else if (data.Results && Array.isArray(data.Results)) {
-      rawTraders = data.Results;
-    } else if (data.Items && Array.isArray(data.Items)) {
-      rawTraders = data.Items;
+    } else if (data && typeof data === 'object') {
+      rawTraders = data.users || data.Users || data.people || data.People || data.results || data.Results || data.items || data.Items || data.traders || data.Traders || [];
     }
 
     if (rawTraders.length > 0) {
