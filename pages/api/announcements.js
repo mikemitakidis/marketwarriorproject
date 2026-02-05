@@ -60,8 +60,9 @@ export default async function handler(req, res) {
       const { data, error } = await query;
 
       if (error) {
-        logger.error('Error fetching announcements:', error);
-        return res.status(500).json({ error: 'Failed to fetch announcements' });
+        logger.error('Error fetching announcements:', error.message, error.code, error.details);
+        // Return empty array instead of 500 error to prevent page breaking
+        return res.status(200).json({ announcements: [], error: error.message });
       }
 
       return res.status(200).json({ announcements: data || [] });
