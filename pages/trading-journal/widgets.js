@@ -39,8 +39,6 @@ export async function getServerSideProps({ req, res }) {
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
   const [curatedLists, setCuratedLists] = useState([]);
-  const [gainers, setGainers] = useState([]);
-  const [losers, setLosers] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copytradersLoading, setCopytradersLoading] = useState(false);
@@ -90,11 +88,9 @@ export default function WidgetsPage({ user, settings }) {
     setError(null);
 
     try {
-      // Fetch eToro data in parallel (removed trending - endpoint returns empty)
-      const [listsRes, gainersRes, losersRes, copyRes] = await Promise.allSettled([
+      // Fetch eToro data in parallel
+      const [listsRes, copyRes] = await Promise.allSettled([
         fetch('/api/journal/etoro/curated-lists'),
-        fetch('/api/journal/etoro/market-movers?type=gainers'),
-        fetch('/api/journal/etoro/market-movers?type=losers'),
         fetch('/api/journal/etoro/copytraders'),
       ]);
 
@@ -102,16 +98,6 @@ export default function WidgetsPage({ user, settings }) {
       if (listsRes.status === 'fulfilled' && listsRes.value.ok) {
         const data = await listsRes.value.json();
         setCuratedLists(data.lists || data || []);
-      }
-
-      if (gainersRes.status === 'fulfilled' && gainersRes.value.ok) {
-        const data = await gainersRes.value.json();
-        setGainers(data.assets || data || []);
-      }
-
-      if (losersRes.status === 'fulfilled' && losersRes.value.ok) {
-        const data = await losersRes.value.json();
-        setLosers(data.assets || data || []);
       }
 
       if (copyRes.status === 'fulfilled' && copyRes.value.ok) {
@@ -547,72 +533,27 @@ export default function WidgetsPage({ user, settings }) {
             </div>
           ) : (
             <>
-              {/* Top Gainers & Losers */}
-              <div className="two-columns">
-                <div className="section">
-                  <h2 className="section-title" style={{ color: '#4ade80' }}>
-                    Top Gainers
-                  </h2>
-                  {gainers.length > 0 ? (
-                    <div className="card-grid" style={{ gridTemplateColumns: '1fr' }}>
-                      {gainers.slice(0, 5).map((asset, i) => (
-                        <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                          <div className="asset-header">
-                            <div>
-                              <div className="asset-symbol">{asset.symbol}</div>
-                              <div className="asset-name">{asset.name}</div>
-                            </div>
-                            <div className="asset-change positive">
-                              +{asset.change?.toFixed(2)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">No data available</div>
-                  )}
-                </div>
-
-                <div className="section">
-                  <h2 className="section-title" style={{ color: '#f87171' }}>
-                    Top Losers
-                  </h2>
-                  {losers.length > 0 ? (
-                    <div className="card-grid" style={{ gridTemplateColumns: '1fr' }}>
-                      {losers.slice(0, 5).map((asset, i) => (
-                        <div key={asset.symbol || i} className="asset-card" onClick={() => handleTradeClick(asset.symbol)}>
-                          <div className="asset-header">
-                            <div>
-                              <div className="asset-symbol">{asset.symbol}</div>
-                              <div className="asset-name">{asset.name}</div>
-                            </div>
-                            <div className="asset-change negative">
-                              {asset.change?.toFixed(2)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">No data available</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Curated Lists */}
+              {/* Curated Watchlists */}
               {curatedLists.length > 0 && (
                 <div className="section">
                   <h2 className="section-title">
                     Curated Watchlists
-                    <span className="section-subtitle">Expert-picked collections</span>
+                    <span className="section-subtitle">Expert-picked collections - Click to view on eToro</span>
                   </h2>
                   <div className="card-grid">
                     {curatedLists.map((list, i) => (
-                      <div key={list.id || i} className="list-card">
+                      <div
+                        key={list.id || i}
+                        className="list-card"
+                        onClick={() => window.open('/go/etoro', '_blank', 'noopener,noreferrer')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <div className="list-name">{list.name}</div>
                         <div className="list-desc">{list.description}</div>
-                        {list.count && <div className="list-count">{list.count} assets</div>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                          {list.count && <div className="list-count">{list.count} assets</div>}
+                          <span style={{ color: '#667eea', fontSize: '0.85rem' }}>View on eToro →</span>
+                        </div>
                       </div>
                     ))}
                   </div>
