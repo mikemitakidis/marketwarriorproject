@@ -2,6 +2,92 @@ import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../li
 import JournalLayout from '../../components/journal/JournalLayout';
 import { useState, useEffect } from 'react';
 
+// Popular instruments by asset category - curated list of tradable assets on eToro
+const assetCategories = {
+  stocks: {
+    name: 'Stocks',
+    description: 'Trade shares of top global companies',
+    icon: '📈',
+    items: [
+      { symbol: 'AAPL', name: 'Apple Inc.' },
+      { symbol: 'TSLA', name: 'Tesla Inc.' },
+      { symbol: 'MSFT', name: 'Microsoft Corp.' },
+      { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+      { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+      { symbol: 'NVDA', name: 'NVIDIA Corp.' },
+      { symbol: 'META', name: 'Meta Platforms' },
+      { symbol: 'NFLX', name: 'Netflix Inc.' },
+    ],
+  },
+  crypto: {
+    name: 'Crypto',
+    description: 'Trade leading cryptocurrencies',
+    icon: '₿',
+    items: [
+      { symbol: 'BTC', name: 'Bitcoin' },
+      { symbol: 'ETH', name: 'Ethereum' },
+      { symbol: 'XRP', name: 'Ripple' },
+      { symbol: 'SOL', name: 'Solana' },
+      { symbol: 'ADA', name: 'Cardano' },
+      { symbol: 'DOGE', name: 'Dogecoin' },
+      { symbol: 'DOT', name: 'Polkadot' },
+      { symbol: 'LINK', name: 'Chainlink' },
+    ],
+  },
+  indices: {
+    name: 'Indices',
+    description: 'Trade major market indices',
+    icon: '📊',
+    items: [
+      { symbol: 'SPX500', name: 'S&P 500' },
+      { symbol: 'NSDQ100', name: 'Nasdaq 100' },
+      { symbol: 'DJ30', name: 'Dow Jones 30' },
+      { symbol: 'UK100', name: 'FTSE 100' },
+      { symbol: 'GER40', name: 'DAX 40' },
+      { symbol: 'JPN225', name: 'Nikkei 225' },
+    ],
+  },
+  commodities: {
+    name: 'Commodities',
+    description: 'Trade gold, oil, and more',
+    icon: '🛢️',
+    items: [
+      { symbol: 'GOLD', name: 'Gold' },
+      { symbol: 'SILVER', name: 'Silver' },
+      { symbol: 'OIL', name: 'Crude Oil' },
+      { symbol: 'NATGAS', name: 'Natural Gas' },
+      { symbol: 'COPPER', name: 'Copper' },
+      { symbol: 'PLATINUM', name: 'Platinum' },
+    ],
+  },
+  etfs: {
+    name: 'ETFs',
+    description: 'Trade exchange-traded funds',
+    icon: '📦',
+    items: [
+      { symbol: 'SPY', name: 'SPDR S&P 500 ETF' },
+      { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
+      { symbol: 'IWM', name: 'iShares Russell 2000' },
+      { symbol: 'VTI', name: 'Vanguard Total Stock' },
+      { symbol: 'GLD', name: 'SPDR Gold Shares' },
+      { symbol: 'ARKK', name: 'ARK Innovation ETF' },
+    ],
+  },
+  forex: {
+    name: 'Forex',
+    description: 'Trade major currency pairs',
+    icon: '💱',
+    items: [
+      { symbol: 'EURUSD', name: 'EUR/USD' },
+      { symbol: 'GBPUSD', name: 'GBP/USD' },
+      { symbol: 'USDJPY', name: 'USD/JPY' },
+      { symbol: 'AUDUSD', name: 'AUD/USD' },
+      { symbol: 'USDCAD', name: 'USD/CAD' },
+      { symbol: 'USDCHF', name: 'USD/CHF' },
+    ],
+  },
+};
+
 export async function getServerSideProps({ req, res }) {
   try {
     const user = await getJournalUser(req, res);
@@ -38,7 +124,6 @@ export async function getServerSideProps({ req, res }) {
 
 export default function WidgetsPage({ user, settings }) {
   const [activeTab, setActiveTab] = useState('etoro');
-  const [curatedLists, setCuratedLists] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copytradersLoading, setCopytradersLoading] = useState(false);
@@ -46,6 +131,7 @@ export default function WidgetsPage({ user, settings }) {
   const [selectedPeriod, setSelectedPeriod] = useState('CurrYear');
   const [riskFilter, setRiskFilter] = useState('all'); // all, low, medium, high
   const [sortBy, setSortBy] = useState('gain'); // gain, copiers, risk
+  const [selectedCategory, setSelectedCategory] = useState('stocks');
 
   // Period options for CopyTraders filter - grouped for better UX
   const periodGroups = {
@@ -77,40 +163,12 @@ export default function WidgetsPage({ user, settings }) {
 
   useEffect(() => {
     if (activeTab === 'etoro') {
-      fetchEtoroData();
+      setLoading(false); // No API fetch needed for static asset categories
     } else if (activeTab === 'copytraders') {
       fetchCopytraders(selectedPeriod);
     }
   }, [activeTab]);
 
-  const fetchEtoroData = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch eToro data in parallel
-      const [listsRes, copyRes] = await Promise.allSettled([
-        fetch('/api/journal/etoro/curated-lists'),
-        fetch('/api/journal/etoro/copytraders'),
-      ]);
-
-      // Process results - handle partial failures gracefully
-      if (listsRes.status === 'fulfilled' && listsRes.value.ok) {
-        const data = await listsRes.value.json();
-        setCuratedLists(data.lists || data || []);
-      }
-
-      if (copyRes.status === 'fulfilled' && copyRes.value.ok) {
-        const data = await copyRes.value.json();
-        setCopytraders(data.traders || data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching eToro data:', err);
-      setError('Failed to load eToro data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchCopytraders = async (period) => {
     setCopytradersLoading(true);
@@ -519,105 +577,109 @@ export default function WidgetsPage({ user, settings }) {
             </button>
           </div>
 
-          {loading ? (
-            <div className="loading">
-              <div className="loading-spinner" />
-              <p>Loading market data...</p>
+          {/* Asset Categories */}
+          <div className="section">
+            <h2 className="section-title">
+              Quick Trade
+              <span className="section-subtitle">Popular instruments by category</span>
+            </h2>
+
+            {/* Category Tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {Object.entries(assetCategories).map(([key, cat]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedCategory(key)}
+                  style={{
+                    padding: '10px 18px',
+                    background: selectedCategory === key
+                      ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    border: selectedCategory === key
+                      ? 'none'
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontWeight: selectedCategory === key ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span style={{ fontSize: '1rem' }}>{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
             </div>
-          ) : error ? (
-            <div className="error-box">
-              <p>{error}</p>
-              <button onClick={fetchEtoroData} style={{ marginTop: 12, padding: '8px 16px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: 'white', cursor: 'pointer' }}>
-                Retry
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Curated Watchlists */}
-              {curatedLists.length > 0 && (
-                <div className="section">
-                  <h2 className="section-title">
-                    Curated Watchlists
-                    <span className="section-subtitle">Expert-picked collections</span>
-                  </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {curatedLists.map((list, i) => (
-                      <div
-                        key={list.id || i}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '16px',
-                          padding: '20px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                          <div>
-                            <div className="list-name" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{list.name}</div>
-                            <div className="list-desc">{list.description}</div>
-                          </div>
-                          <button
-                            onClick={() => window.open('/go/etoro', '_blank', 'noopener,noreferrer')}
-                            style={{
-                              padding: '8px 16px',
-                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                              border: 'none',
-                              borderRadius: '6px',
-                              color: 'white',
-                              fontSize: '0.85rem',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            Trade on eToro
-                          </button>
-                        </div>
-                        {/* Show items/instruments in this list */}
-                        {list.items && list.items.length > 0 ? (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {list.items.slice(0, 10).map((item, j) => (
-                              <div
-                                key={item.symbol || j}
-                                onClick={() => window.open(`/go/etoro-${item.symbol}`, '_blank', 'noopener,noreferrer')}
-                                style={{
-                                  padding: '8px 12px',
-                                  background: 'rgba(255, 255, 255, 0.05)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s',
-                                }}
-                                onMouseOver={(e) => {
-                                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.15)';
-                                  e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.3)';
-                                }}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                }}
-                              >
-                                <span style={{ color: 'white', fontWeight: '600', fontSize: '0.85rem' }}>{item.symbol}</span>
-                                {item.name && <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginLeft: '6px' }}>{item.name}</span>}
-                              </div>
-                            ))}
-                            {list.items.length > 10 && (
-                              <div style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
-                                +{list.items.length - 10} more
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                            {list.count} assets in this collection
-                          </div>
-                        )}
+
+            {/* Selected Category Content */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                padding: '24px',
+              }}
+            >
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
+                  {assetCategories[selectedCategory].icon} {assetCategories[selectedCategory].name}
+                </h3>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem' }}>
+                  {assetCategories[selectedCategory].description}
+                </p>
+              </div>
+
+              <div className="card-grid">
+                {assetCategories[selectedCategory].items.map((item) => (
+                  <div
+                    key={item.symbol}
+                    className="asset-card"
+                    onClick={() => handleTradeClick(item.symbol)}
+                  >
+                    <div className="asset-header">
+                      <div>
+                        <div className="asset-symbol">{item.symbol}</div>
+                        <div className="asset-name">{item.name}</div>
                       </div>
-                    ))}
+                    </div>
+                    <button className="trade-btn" onClick={(e) => { e.stopPropagation(); handleTradeClick(item.symbol); }}>
+                      Trade on eToro
+                    </button>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                ))}
+              </div>
+
+              <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                <button
+                  onClick={handleEtoroClick}
+                  style={{
+                    padding: '12px 24px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  }}
+                >
+                  View All {assetCategories[selectedCategory].name} on eToro →
+                </button>
+              </div>
+            </div>
+          </div>
         </>
       )}
 
