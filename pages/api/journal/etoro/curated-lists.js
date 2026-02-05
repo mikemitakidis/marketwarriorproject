@@ -81,13 +81,33 @@ export default async function handler(req, res) {
     }
 
     if (Array.isArray(rawLists) && rawLists.length > 0) {
-      const lists = rawLists.map(list => ({
-        id: list.uuid || list.Uuid || list.id || list.Id,
-        name: list.name || list.Name,
-        description: list.description || list.Description,
-        imageUrl: list.listImageUrl || list.ListImageUrl || list.imageUrl || list.ImageUrl,
-        count: list.items?.length || list.Items?.length || list.count || list.Count || 0,
-      }));
+      // Log first list structure to see what's available
+      console.log('eToro curated-lists first item keys:', Object.keys(rawLists[0]));
+      if (rawLists[0].items || rawLists[0].Items) {
+        const itemsArray = rawLists[0].items || rawLists[0].Items;
+        if (Array.isArray(itemsArray) && itemsArray.length > 0) {
+          console.log('eToro curated-lists first item.items[0] keys:', Object.keys(itemsArray[0]));
+        }
+      }
+
+      const lists = rawLists.map(list => {
+        // Get the items/instruments in this list
+        const rawItems = list.items || list.Items || [];
+        const items = rawItems.map(item => ({
+          symbol: item.symbol || item.Symbol || item.ticker || item.Ticker || item.symbolFull || item.SymbolFull,
+          name: item.instrumentDisplayName || item.InstrumentDisplayName || item.displayName || item.DisplayName || item.name || item.Name,
+          instrumentId: item.instrumentId || item.InstrumentId || item.id || item.Id,
+        }));
+
+        return {
+          id: list.uuid || list.Uuid || list.id || list.Id,
+          name: list.name || list.Name,
+          description: list.description || list.Description,
+          imageUrl: list.listImageUrl || list.ListImageUrl || list.imageUrl || list.ImageUrl,
+          count: items.length || list.count || list.Count || 0,
+          items: items, // Include the actual items
+        };
+      });
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
       return res.status(200).json({ lists, source: 'etoro' });
     }

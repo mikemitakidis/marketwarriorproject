@@ -538,22 +538,79 @@ export default function WidgetsPage({ user, settings }) {
                 <div className="section">
                   <h2 className="section-title">
                     Curated Watchlists
-                    <span className="section-subtitle">Expert-picked collections - Click to view on eToro</span>
+                    <span className="section-subtitle">Expert-picked collections</span>
                   </h2>
-                  <div className="card-grid">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {curatedLists.map((list, i) => (
                       <div
                         key={list.id || i}
-                        className="list-card"
-                        onClick={() => window.open('/go/etoro', '_blank', 'noopener,noreferrer')}
-                        style={{ cursor: 'pointer' }}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '16px',
+                          padding: '20px',
+                        }}
                       >
-                        <div className="list-name">{list.name}</div>
-                        <div className="list-desc">{list.description}</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                          {list.count && <div className="list-count">{list.count} assets</div>}
-                          <span style={{ color: '#667eea', fontSize: '0.85rem' }}>View on eToro →</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                          <div>
+                            <div className="list-name" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{list.name}</div>
+                            <div className="list-desc">{list.description}</div>
+                          </div>
+                          <button
+                            onClick={() => window.open('/go/etoro', '_blank', 'noopener,noreferrer')}
+                            style={{
+                              padding: '8px 16px',
+                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: 'white',
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Trade on eToro
+                          </button>
                         </div>
+                        {/* Show items/instruments in this list */}
+                        {list.items && list.items.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {list.items.slice(0, 10).map((item, j) => (
+                              <div
+                                key={item.symbol || j}
+                                onClick={() => window.open(`/go/etoro-${item.symbol}`, '_blank', 'noopener,noreferrer')}
+                                style={{
+                                  padding: '8px 12px',
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                }}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.15)';
+                                  e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                }}
+                              >
+                                <span style={{ color: 'white', fontWeight: '600', fontSize: '0.85rem' }}>{item.symbol}</span>
+                                {item.name && <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginLeft: '6px' }}>{item.name}</span>}
+                              </div>
+                            ))}
+                            {list.items.length > 10 && (
+                              <div style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                                +{list.items.length - 10} more
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                            {list.count} assets in this collection
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
