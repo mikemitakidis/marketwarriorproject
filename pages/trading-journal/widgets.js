@@ -44,11 +44,28 @@ export default function WidgetsPage({ user, settings }) {
   const [losers, setLosers] = useState([]);
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [copytradersLoading, setCopytradersLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('CurrYear');
+
+  // Period options for CopyTraders filter
+  const periodOptions = [
+    { value: 'CurrMonth', label: 'This Month' },
+    { value: 'CurrQuarter', label: 'This Quarter' },
+    { value: 'CurrYear', label: 'This Year' },
+    { value: 'LastYear', label: 'Last Year' },
+    { value: 'LastTwoYears', label: 'Last 2 Years' },
+    { value: 'OneMonthAgo', label: '1 Month Ago' },
+    { value: 'ThreeMonthsAgo', label: '3 Months Ago' },
+    { value: 'SixMonthsAgo', label: '6 Months Ago' },
+    { value: 'OneYearAgo', label: '1 Year Ago' },
+  ];
 
   useEffect(() => {
     if (activeTab === 'etoro') {
       fetchEtoroData();
+    } else if (activeTab === 'copytraders') {
+      fetchCopytraders(selectedPeriod);
     }
   }, [activeTab]);
 
@@ -97,6 +114,26 @@ export default function WidgetsPage({ user, settings }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchCopytraders = async (period) => {
+    setCopytradersLoading(true);
+    try {
+      const res = await fetch(`/api/journal/etoro/copytraders?period=${period}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCopytraders(data.traders || []);
+      }
+    } catch (err) {
+      console.error('Error fetching copytraders:', err);
+    } finally {
+      setCopytradersLoading(false);
+    }
+  };
+
+  const handlePeriodChange = (newPeriod) => {
+    setSelectedPeriod(newPeriod);
+    fetchCopytraders(newPeriod);
   };
 
   const handleTradeClick = (symbol) => {
@@ -588,7 +625,37 @@ export default function WidgetsPage({ user, settings }) {
             </button>
           </div>
 
-          {loading ? (
+          {/* Period Filter */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>Performance Period:</span>
+              <select
+                value={selectedPeriod}
+                onChange={(e) => handlePeriodChange(e.target.value)}
+                style={{
+                  padding: '10px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                {periodOptions.map(opt => (
+                  <option key={opt.value} value={opt.value} style={{ background: '#1e293b' }}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {copytradersLoading && (
+                <span style={{ color: '#667eea', fontSize: '0.85rem' }}>Loading...</span>
+              )}
+            </div>
+          </div>
+
+          {(loading || copytradersLoading) && copytraders.length === 0 ? (
             <div className="loading">
               <div className="loading-spinner" />
               <p>Loading CopyTraders...</p>
@@ -597,7 +664,7 @@ export default function WidgetsPage({ user, settings }) {
             <div className="section">
               <h2 className="section-title">
                 Top CopyTraders
-                <span className="section-subtitle">Leaderboard</span>
+                <span className="section-subtitle">Leaderboard - {periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
               </h2>
               {copytraders.length > 0 ? (
                 <div className="card-grid">
