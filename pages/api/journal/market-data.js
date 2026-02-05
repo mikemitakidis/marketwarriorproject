@@ -2,18 +2,12 @@
  * eToro Market Data API Proxy
  * GET /api/journal/market-data
  *
- * First searches for instruments, then gets their rates
+ * Uses BOTH endpoints:
+ * 1. /api/v1/market-data/search - Get instruments
+ * 2. /api/v1/market-data/instruments/rates - Get live prices
  */
 
 import { v4 as uuidv4 } from 'uuid';
-
-// Instruments to fetch - popular tradable assets on eToro
-const INSTRUMENTS_TO_FETCH = [
-  'AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'NFLX',
-  'BTC', 'ETH', 'XRP', 'SOL', 'ADA', 'DOGE', 'DOT', 'LINK',
-  'SPY', 'QQQ', 'GOLD', 'SILVER', 'OIL',
-  'EURUSD', 'GBPUSD', 'USDJPY'
-];
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -27,93 +21,157 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'eToro API keys not configured', prices: {} });
   }
 
+  const headers = {
+    'x-api-key': apiKey,
+    'x-user-key': userKey,
+    'x-request-id': uuidv4(),
+    'Content-Type': 'application/json',
+  };
+
   try {
-    // Step 1: Search for instruments to get their IDs
-    const searchUrl = 'https://public-api.etoro.com/api/v1/market-data/search';
+    const { query, popular } = req.query;
 
-    const searchResponse = await fetch(searchUrl, {
-      method: 'GET',
-      headers: {
-        'x-api-key': apiKey,
-        'x-user-key': userKey,
-        'x-request-id': uuidv4(),
-        'Content-Type': 'application/json',
-      },
-    });
+    // Main/popular instruments to show by default
+    const POPULAR_INSTRUMENTS = [
+      'AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'NFLX',
+      'BTC', 'ETH', 'XRP', 'SOL', 'ADA', 'DOGE',
+      'GOLD', 'SILVER', 'OIL',
+      'SPY', 'QQQ',
+      'EURUSD', 'GBPUSD'
+    ];
 
-    const searchText = await searchResponse.text();
-    console.log('eToro search status:', searchResponse.status);
-    console.log('eToro search response:', searchText ? searchText.substring(0, 2000) : '(empty)');
-
-    if (!searchResponse.ok || !searchText) {
-      return res.status(searchResponse.status || 500).json({
-        error: `eToro search error: ${searchResponse.status}`,
-        prices: {}
-      });
+    // Build search URL with query if provided
+    let searchUrl = 'https://public-api.etoro.com/api/v1/market-data/search';
+    if (query) {
+      searchUrl += `?query=${encodeURIComponent(query)}`;
     }
 
-    let searchData;
-    try {
-      searchData = JSON.parse(searchText);
-    } catch (e) {
-      return res.status(500).json({ error: 'Invalid JSON from search', prices: {} });
-    }
+    // Call BOTH endpoints in parallel
+    const [searchRes, ratesRes] = await Promise.all([
+      fetch(searchUrl, { method: 'GET', headers }),
+      fetch('https://public-api.etoro.com/api/v1/market-data/instruments/rates', { method: 'GET', headers }),
+    ]);
 
-    console.log('eToro search data keys:', Object.keys(searchData || {}));
+    const searchText = await searchRes.text();
+    const ratesText = await ratesRes.text();
 
-    // Find instruments array
-    let instruments = [];
-    if (Array.isArray(searchData)) {
-      instruments = searchData;
-    } else if (searchData && typeof searchData === 'object') {
-      instruments = searchData.instruments || searchData.Instruments ||
-                    searchData.items || searchData.Items ||
-                    searchData.results || searchData.Results || [];
-    }
+    console.log('eToro search status:', searchRes.status);
+    console.log('eToro search response:', searchText ? searchText.substring(0, 1000) : '(empty)');
+    console.log('eToro rates status:', ratesRes.status);
+    console.log('eToro rates response:', ratesText ? ratesText.substring(0, 1000) : '(empty)');
 
-    if (instruments.length > 0) {
-      console.log('First instrument keys:', Object.keys(instruments[0]));
-      console.log('First instrument:', JSON.stringify(instruments[0]).substring(0, 500));
-      console.log('Total instruments:', instruments.length);
-    }
+    let searchData = null;
+    let ratesData = null;
 
-    // Build prices from search results (which may include price data)
+    try { searchData = JSON.parse(searchText); } catch (e) { console.log('Search parse error'); }
+    try { ratesData = JSON.parse(ratesText); } catch (e) { console.log('Rates parse error'); }
+
+    console.log('Search data keys:', Object.keys(searchData || {}));
+    console.log('Rates data keys:', Object.keys(ratesData || {}));
+
+    // Build prices from both sources
     const prices = {};
 
-    for (const inst of instruments) {
-      const symbol = inst.symbolFull || inst.SymbolFull || inst.symbol || inst.Symbol ||
-                     inst.ticker || inst.Ticker || inst.displayName || inst.DisplayName ||
-                     inst.instrumentDisplayName || inst.InstrumentDisplayName;
+    // Process SEARCH results
+    if (searchData) {
+      let instruments = [];
+      if (Array.isArray(searchData)) {
+        instruments = searchData;
+      } else {
+        instruments = searchData.instruments || searchData.Instruments ||
+                      searchData.items || searchData.Items ||
+                      searchData.results || searchData.Results || [];
+      }
 
-      if (!symbol) continue;
+      if (instruments.length > 0) {
+        console.log('Search first item:', JSON.stringify(instruments[0]).substring(0, 500));
+      }
 
-      // Get price data if available
-      const bid = inst.bid || inst.Bid || inst.lastBid || inst.LastBid || 0;
-      const ask = inst.ask || inst.Ask || inst.lastAsk || inst.LastAsk || 0;
-      const price = (bid && ask) ? (bid + ask) / 2 :
-                    (inst.lastPrice || inst.LastPrice || inst.price || inst.Price ||
-                     inst.closingPrice || inst.ClosingPrice || 0);
-      const change = inst.changePercent || inst.ChangePercent ||
-                     inst.dailyChangePercent || inst.DailyChangePercent ||
-                     inst.priceChangePercent || inst.PriceChangePercent || 0;
+      for (const inst of instruments) {
+        const symbol = inst.symbolFull || inst.SymbolFull || inst.symbol || inst.Symbol ||
+                       inst.ticker || inst.Ticker || inst.displayName || inst.DisplayName;
+        if (!symbol) continue;
 
-      if (price > 0) {
-        prices[symbol] = {
-          price,
-          change,
-          bid,
-          ask,
-          name: inst.displayName || inst.DisplayName || inst.name || inst.Name || symbol,
-          instrumentId: inst.instrumentId || inst.InstrumentId,
-        };
+        const bid = inst.bid || inst.Bid || 0;
+        const ask = inst.ask || inst.Ask || 0;
+        const price = (bid && ask) ? (bid + ask) / 2 : (inst.lastPrice || inst.LastPrice || inst.price || inst.Price || 0);
+        const change = inst.changePercent || inst.ChangePercent || inst.dailyChangePercent || inst.DailyChangePercent || 0;
+
+        if (price > 0) {
+          prices[symbol] = {
+            price, change, bid, ask,
+            name: inst.displayName || inst.DisplayName || inst.name || inst.Name || symbol,
+            instrumentId: inst.instrumentId || inst.InstrumentId,
+          };
+        }
       }
     }
 
-    console.log('Total prices with data:', Object.keys(prices).length);
+    // Process RATES results (may have more up-to-date prices)
+    if (ratesData) {
+      let rates = [];
+      if (Array.isArray(ratesData)) {
+        rates = ratesData;
+      } else {
+        rates = ratesData.rates || ratesData.Rates ||
+                ratesData.items || ratesData.Items || [];
+      }
+
+      if (rates.length > 0) {
+        console.log('Rates first item:', JSON.stringify(rates[0]).substring(0, 500));
+      }
+
+      for (const rate of rates) {
+        const symbol = rate.symbolFull || rate.SymbolFull || rate.symbol || rate.Symbol ||
+                       rate.ticker || rate.Ticker || rate.displayName || rate.DisplayName;
+        if (!symbol) continue;
+
+        const bid = rate.bid || rate.Bid || 0;
+        const ask = rate.ask || rate.Ask || 0;
+        const price = (bid && ask) ? (bid + ask) / 2 : (rate.lastPrice || rate.LastPrice || rate.price || rate.Price || 0);
+        const change = rate.changePercent || rate.ChangePercent || rate.dailyChangePercent || rate.DailyChangePercent || 0;
+
+        if (price > 0) {
+          // Update or add price data
+          prices[symbol] = {
+            ...prices[symbol],
+            price, change, bid, ask,
+            name: prices[symbol]?.name || rate.displayName || rate.DisplayName || symbol,
+          };
+        }
+      }
+    }
+
+    console.log('Total prices:', Object.keys(prices).length);
     console.log('Sample symbols:', Object.keys(prices).slice(0, 20));
 
+    // Filter to popular instruments if requested or if no search query
+    let finalPrices = prices;
+    if (popular === 'true' || (!query && Object.keys(prices).length > 30)) {
+      const filtered = {};
+      for (const symbol of POPULAR_INSTRUMENTS) {
+        // Try exact match first
+        if (prices[symbol]) {
+          filtered[symbol] = prices[symbol];
+        } else {
+          // Try case-insensitive match
+          const found = Object.entries(prices).find(([k]) =>
+            k.toUpperCase() === symbol.toUpperCase() ||
+            k.toUpperCase().includes(symbol.toUpperCase())
+          );
+          if (found) {
+            filtered[found[0]] = found[1];
+          }
+        }
+      }
+      // If we found popular instruments, use them; otherwise show all
+      if (Object.keys(filtered).length > 0) {
+        finalPrices = filtered;
+      }
+    }
+
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-    return res.status(200).json({ prices, count: Object.keys(prices).length });
+    return res.status(200).json({ prices: finalPrices, count: Object.keys(finalPrices).length, total: Object.keys(prices).length });
 
   } catch (err) {
     console.error('Market data error:', err);

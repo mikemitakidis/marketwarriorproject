@@ -134,6 +134,7 @@ export default function WidgetsPage({ user, settings }) {
   const [selectedCategory, setSelectedCategory] = useState('stocks');
   const [marketPrices, setMarketPrices] = useState({});
   const [pricesLoading, setPricesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Period options for CopyTraders filter - grouped for better UX
   const periodGroups = {
@@ -172,11 +173,14 @@ export default function WidgetsPage({ user, settings }) {
   }, [activeTab]);
 
   // Fetch REAL market prices from eToro
-  const fetchMarketPrices = async () => {
+  const fetchMarketPrices = async (query = '') => {
     setPricesLoading(true);
     setLoading(true);
     try {
-      const res = await fetch('/api/journal/market-data');
+      const url = query
+        ? `/api/journal/market-data?query=${encodeURIComponent(query)}`
+        : '/api/journal/market-data';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         console.log('eToro prices received:', Object.keys(data.prices || {}).length);
@@ -188,6 +192,14 @@ export default function WidgetsPage({ user, settings }) {
     } finally {
       setPricesLoading(false);
       setLoading(false);
+    }
+  };
+
+  // Handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      fetchMarketPrices(searchQuery.trim());
     }
   };
 
@@ -632,6 +644,58 @@ export default function WidgetsPage({ user, settings }) {
               Live Markets
               <span className="section-subtitle">Real-time prices • Click to trade on eToro</span>
             </h2>
+
+            {/* Search Box */}
+            <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search instruments (e.g., Apple, Bitcoin, Gold)"
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Search
+                </button>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); fetchMarketPrices(); }}
+                    style={{
+                      padding: '12px 16px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </form>
 
             {/* Category Tabs */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
