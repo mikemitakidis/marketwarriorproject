@@ -36,24 +36,6 @@ const searchSortOptions = [
 // Trending count options
 const trendingCountOptions = [5, 10, 15, 20];
 
-// Category colors for watchlist cards
-const categoryColors = {
-  Technology: { bg: 'rgba(102, 126, 234, 0.15)', border: 'rgba(102, 126, 234, 0.4)', text: '#8b9cf7' },
-  Energy: { bg: 'rgba(74, 222, 128, 0.15)', border: 'rgba(74, 222, 128, 0.4)', text: '#4ade80' },
-  Crypto: { bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.4)', text: '#fbbf24' },
-  Healthcare: { bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)', text: '#f87171' },
-  Consumer: { bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.4)', text: '#a855f7' },
-  Income: { bg: 'rgba(34, 211, 238, 0.15)', border: 'rgba(34, 211, 238, 0.4)', text: '#22d3ee' },
-  Entertainment: { bg: 'rgba(244, 114, 182, 0.15)', border: 'rgba(244, 114, 182, 0.4)', text: '#f472b6' },
-  Finance: { bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)', text: '#34d399' },
-  Automotive: { bg: 'rgba(96, 165, 250, 0.15)', border: 'rgba(96, 165, 250, 0.4)', text: '#60a5fa' },
-  Commodities: { bg: 'rgba(217, 119, 6, 0.15)', border: 'rgba(217, 119, 6, 0.4)', text: '#d97706' },
-  Global: { bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)', text: '#8b5cf6' },
-  Aerospace: { bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)', text: '#6366f1' },
-};
-
-const defaultCatColor = { bg: 'rgba(255, 255, 255, 0.08)', border: 'rgba(255, 255, 255, 0.2)', text: '#a0a0a0' };
-
 export async function getServerSideProps({ req, res }) {
   try {
     const user = await getJournalUser(req, res);
@@ -106,13 +88,6 @@ export default function WidgetsPage({ user, settings }) {
   const [trendingCount, setTrendingCount] = useState(10);
   const [trendingFilter, setTrendingFilter] = useState('');
 
-  // eToro Markets - Curated Watchlists state
-  const [curatedLists, setCuratedLists] = useState([]);
-  const [curatedListsLoading, setCuratedListsLoading] = useState(false);
-  const [watchlistSearch, setWatchlistSearch] = useState('');
-  const [watchlistSort, setWatchlistSort] = useState('default');
-  const [expandedList, setExpandedList] = useState(null);
-
   // eToro Markets - Search Instruments state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState({});
@@ -152,7 +127,6 @@ export default function WidgetsPage({ user, settings }) {
   useEffect(() => {
     if (activeTab === 'etoro') {
       fetchRecommendations(trendingCount);
-      fetchCuratedLists();
       fetchSearchResults();
     } else if (activeTab === 'copytraders') {
       fetchCopytraders(selectedPeriod);
@@ -193,42 +167,6 @@ export default function WidgetsPage({ user, settings }) {
     let items = [...recommendations];
     if (trendingFilter) {
       items = items.filter(r => r.assetType === trendingFilter);
-    }
-    return items;
-  };
-
-  // === CURATED WATCHLISTS ===
-  const fetchCuratedLists = async () => {
-    setCuratedListsLoading(true);
-    try {
-      const res = await fetch('/api/journal/etoro/curated-lists');
-      if (res.ok) {
-        const data = await res.json();
-        setCuratedLists(data.lists || []);
-      }
-    } catch (err) {
-      console.error('Error fetching curated lists:', err);
-    } finally {
-      setCuratedListsLoading(false);
-    }
-  };
-
-  const getFilteredWatchlists = () => {
-    let items = [...curatedLists];
-    if (watchlistSearch.trim()) {
-      const q = watchlistSearch.toLowerCase();
-      items = items.filter(l =>
-        l.name.toLowerCase().includes(q) ||
-        l.description.toLowerCase().includes(q) ||
-        (l.category && l.category.toLowerCase().includes(q))
-      );
-    }
-    if (watchlistSort === 'az') {
-      items.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (watchlistSort === 'za') {
-      items.sort((a, b) => b.name.localeCompare(a.name));
-    } else if (watchlistSort === 'instruments') {
-      items.sort((a, b) => (b.instrumentCount || 0) - (a.instrumentCount || 0));
     }
     return items;
   };
@@ -493,32 +431,6 @@ export default function WidgetsPage({ user, settings }) {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
-        .list-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          padding: 20px;
-          transition: all 0.2s;
-        }
-        .list-card:hover {
-          background: rgba(255, 255, 255, 0.08);
-        }
-        .list-name {
-          color: white;
-          font-weight: 600;
-          font-size: 1rem;
-          margin-bottom: 8px;
-        }
-        .list-desc {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.85rem;
-          line-height: 1.5;
-        }
-        .list-count {
-          color: #667eea;
-          font-size: 0.8rem;
-          margin-top: 12px;
-        }
         .trader-card {
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
@@ -763,86 +675,6 @@ export default function WidgetsPage({ user, settings }) {
           align-items: center;
           gap: 12px;
         }
-        .slider-input {
-          -webkit-appearance: none;
-          width: 200px;
-          height: 6px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-          outline: none;
-        }
-        .slider-input::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 18px;
-          height: 18px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 50%;
-          cursor: pointer;
-        }
-        .slider-input::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 50%;
-          cursor: pointer;
-          border: none;
-        }
-        .slider-value {
-          color: #667eea;
-          font-weight: 600;
-          font-size: 0.95rem;
-          min-width: 40px;
-          text-align: center;
-        }
-        .watchlist-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 16px;
-        }
-        .watchlist-card {
-          border-radius: 12px;
-          padding: 20px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .watchlist-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-        }
-        .watchlist-category-badge {
-          display: inline-block;
-          padding: 3px 10px;
-          border-radius: 12px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          margin-bottom: 10px;
-        }
-        .watchlist-name {
-          color: white;
-          font-weight: 600;
-          font-size: 1.05rem;
-          margin-bottom: 6px;
-        }
-        .watchlist-desc {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.85rem;
-          line-height: 1.5;
-          margin-bottom: 12px;
-        }
-        .watchlist-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .watchlist-count {
-          color: rgba(255, 255, 255, 0.4);
-          font-size: 0.8rem;
-        }
-        .watchlist-explore {
-          color: #667eea;
-          font-size: 0.85rem;
-          font-weight: 500;
-        }
         .inline-loading {
           display: flex;
           align-items: center;
@@ -865,9 +697,6 @@ export default function WidgetsPage({ user, settings }) {
           }
           .slider-input {
             width: 100%;
-          }
-          .watchlist-grid {
-            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -1024,92 +853,7 @@ export default function WidgetsPage({ user, settings }) {
           </div>
 
           {/* ========================================= */}
-          {/* SECTION 2: CURATED WATCHLISTS             */}
-          {/* ========================================= */}
-          <div className="section-box">
-            <div style={{ marginBottom: '20px' }}>
-              <h2 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Curated Watchlists
-                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '400' }}>
-                  Expert-selected thematic collections
-                </span>
-              </h2>
-            </div>
-
-            {/* Watchlist search and sort */}
-            <div className="filter-row">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search watchlists (e.g., Green, Tech, AI)..."
-                value={watchlistSearch}
-                onChange={(e) => setWatchlistSearch(e.target.value)}
-                style={{ maxWidth: '320px' }}
-              />
-              <select
-                className="select-input"
-                value={watchlistSort}
-                onChange={(e) => setWatchlistSort(e.target.value)}
-              >
-                <option value="default">Sort: Default</option>
-                <option value="az">Alphabetical A-Z</option>
-                <option value="za">Alphabetical Z-A</option>
-                <option value="instruments">Most Instruments</option>
-              </select>
-            </div>
-
-            {curatedListsLoading ? (
-              <div className="loading">
-                <div className="loading-spinner" />
-                <p>Loading curated watchlists...</p>
-              </div>
-            ) : getFilteredWatchlists().length > 0 ? (
-              <div className="watchlist-grid">
-                {getFilteredWatchlists().map((list) => {
-                  const colors = categoryColors[list.category] || defaultCatColor;
-                  return (
-                    <div
-                      key={list.id || list.name}
-                      className="watchlist-card"
-                      style={{
-                        background: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                      }}
-                      onClick={() => handleEtoroClick()}
-                    >
-                      <span
-                        className="watchlist-category-badge"
-                        style={{
-                          background: colors.border,
-                          color: '#fff',
-                        }}
-                      >
-                        {list.category || 'General'}
-                      </span>
-                      <div className="watchlist-name">{list.name}</div>
-                      <div className="watchlist-desc">{list.description}</div>
-                      <div className="watchlist-footer">
-                        <span className="watchlist-count">
-                          {list.instrumentCount} instruments
-                        </span>
-                        <span className="watchlist-explore">
-                          Explore on eToro &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <p>No watchlists match your search.</p>
-                <p style={{ marginTop: 8, fontSize: '0.85rem' }}>Try a different keyword.</p>
-              </div>
-            )}
-          </div>
-
-          {/* ========================================= */}
-          {/* SECTION 3: SEARCH INSTRUMENTS             */}
+          {/* SECTION 2: SEARCH INSTRUMENTS             */}
           {/* ========================================= */}
           <div className="section-box">
             <div style={{ marginBottom: '20px' }}>
