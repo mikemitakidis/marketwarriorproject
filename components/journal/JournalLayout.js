@@ -20,7 +20,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     { href: '/trading-journal/playbook', label: 'Playbook' },
     { href: '/trading-journal/ai-coach', label: 'AI Coach' },
     { href: '/trading-journal/calculators', label: 'Calculators' },
-    { href: '/trading-journal/widgets', label: 'Widgets' },
+    { href: '/trading-journal/popular-investors', label: 'Popular Investors' },
     { href: '/trading-journal/charts', label: 'Charts' },
     { href: '/trading-journal/share', label: 'Share' },
     { href: '/trading-journal/challenge', label: 'Challenge' },
