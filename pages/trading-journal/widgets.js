@@ -108,7 +108,7 @@ export default function WidgetsPage({ user, settings }) {
   };
 
   const handleCopyTraderClick = (username) => {
-    window.open(`/go/etoro-copytrader`, '_blank', 'noopener,noreferrer');
+    window.open(`/go/etoro-trader-${username}`, '_blank', 'noopener,noreferrer');
   };
 
   return (

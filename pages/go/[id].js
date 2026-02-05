@@ -24,23 +24,26 @@ export async function getServerSideProps({ params }) {
 
   let destination = null;
 
+  const baseUrl = etoroAffiliateUrl || defaultEtoroUrl;
+
   // Handle different redirect types
   if (id === 'etoro') {
     // Main eToro redirect
-    destination = etoroAffiliateUrl || defaultEtoroUrl;
+    destination = baseUrl;
+  } else if (id === 'etoro-signup') {
+    // Signup redirect
+    destination = `${baseUrl}/register`;
+  } else if (id === 'etoro-copytrader') {
+    // CopyTrader main page redirect
+    destination = `${baseUrl}/copytrader`;
+  } else if (id.startsWith('etoro-trader-')) {
+    // Specific trader profile: etoro-trader-username
+    const username = id.replace('etoro-trader-', '');
+    destination = `${baseUrl}/people/${username}`;
   } else if (id.startsWith('etoro-')) {
     // Asset-specific redirect: etoro-BTC, etoro-AAPL, etc.
     const symbol = id.replace('etoro-', '').toUpperCase();
-    const baseUrl = etoroAffiliateUrl || defaultEtoroUrl;
     destination = `${baseUrl}/markets/${symbol.toLowerCase()}`;
-  } else if (id === 'etoro-signup') {
-    // Signup redirect
-    const baseUrl = etoroAffiliateUrl || defaultEtoroUrl;
-    destination = `${baseUrl}/register`;
-  } else if (id === 'etoro-copytrader') {
-    // CopyTrader redirect
-    const baseUrl = etoroAffiliateUrl || defaultEtoroUrl;
-    destination = `${baseUrl}/copytrader`;
   }
 
   if (destination) {
