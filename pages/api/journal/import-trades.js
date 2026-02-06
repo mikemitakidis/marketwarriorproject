@@ -33,6 +33,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No trade data provided' });
     }
 
+    const MAX_BATCH_SIZE = 500;
+    if (rows.length > MAX_BATCH_SIZE) {
+      return res.status(400).json({
+        error: `Too many trades. Maximum ${MAX_BATCH_SIZE} per import. You sent ${rows.length}.`,
+      });
+    }
+
     // Parse trades based on format
     let parsedTrades;
     try {
@@ -66,7 +73,13 @@ export default async function handler(req, res) {
 
     // Insert trades into database
     const supabase = getServiceSupabase();
-    const tradesToInsert = parsedTrades.map((trade) => ({
+    // Filter out trades with no entry_date (invalid date parsing)
+    const validTrades = parsedTrades.filter(t => t.entry_date);
+    if (validTrades.length === 0) {
+      return res.status(400).json({ error: 'No valid trades found. Check date formats in your data.' });
+    }
+
+    const tradesToInsert = validTrades.map((trade) => ({
       journal_user_id: user.id,
       ...trade,
       status: trade.exit_date ? 'closed' : 'open',
@@ -274,7 +287,7 @@ function parseDirection(direction) {
 }
 
 function parseDate(dateStr) {
-  if (!dateStr) return new Date().toISOString();
+  if (!dateStr) return null;
 
   // Try parsing various date formats
   const parsed = new Date(dateStr);
@@ -287,15 +300,20 @@ function parseDate(dateStr) {
   if (parts.length === 3) {
     // Assume MM/DD/YYYY for US format
     const [a, b, c] = parts.map(p => parseInt(p, 10));
+    let result;
     if (a > 12) {
       // DD/MM/YYYY
-      return new Date(c, b - 1, a).toISOString();
+      result = new Date(c, b - 1, a);
+    } else {
+      // MM/DD/YYYY
+      result = new Date(c, a - 1, b);
     }
-    // MM/DD/YYYY
-    return new Date(c, a - 1, b).toISOString();
+    if (!isNaN(result.getTime())) {
+      return result.toISOString();
+    }
   }
 
-  return new Date().toISOString();
+  return null;
 }
 
 function detectAssetClass(symbol) {

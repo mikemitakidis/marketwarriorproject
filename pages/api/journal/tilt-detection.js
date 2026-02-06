@@ -114,7 +114,10 @@ function analyzeTiltPatterns(trades, rules) {
       consecutiveLosses++;
       lastLoss = trade;
 
-      if (consecutiveLosses >= 3) {
+      // Only record streak when it ends (next trade is a win or last trade)
+      const isLastTrade = i === sortedTrades.length - 1;
+      const nextIsWin = !isLastTrade && ((sortedTrades[i + 1].pnl_amount || 0) >= 0);
+      if (consecutiveLosses >= 3 && (isLastTrade || nextIsWin)) {
         patterns.lossStreaks.push({
           count: consecutiveLosses,
           trades: sortedTrades.slice(i - consecutiveLosses + 1, i + 1).map(t => t.id),

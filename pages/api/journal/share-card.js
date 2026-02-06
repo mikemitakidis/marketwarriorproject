@@ -78,7 +78,7 @@ async function generateDailyCard(supabase, userId, displayName) {
     .from('journal_trades')
     .select('pnl_amount, r_multiple, symbol')
     .eq('journal_user_id', userId)
-    .gte('entry_date', today)
+    .gte('exit_date', today)
     .eq('status', 'closed');
 
   if (!trades || trades.length === 0) {

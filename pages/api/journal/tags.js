@@ -24,6 +24,12 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { category } = req.query;
 
+      // Validate user.id is a valid UUID before using in filter
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(user.id)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
+
       let query = supabase
         .from('journal_tags')
         .select('*')

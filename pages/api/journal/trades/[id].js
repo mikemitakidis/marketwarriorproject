@@ -26,10 +26,10 @@ export default async function handler(req, res) {
 
     const supabase = getServiceSupabase();
 
-    // Verify ownership
+    // Verify ownership (only fetch needed fields)
     const { data: existingTrade, error: fetchError } = await supabase
       .from('journal_trades')
-      .select('*')
+      .select('id, entry_price, exit_price, quantity, direction, stop_loss, commission, swap_fees, entry_date, exit_date, initial_risk_amount, status')
       .eq('id', id)
       .eq('journal_user_id', user.id)
       .maybeSingle();
@@ -107,9 +107,21 @@ export default async function handler(req, res) {
         updates.direction = direction;
       }
       if (asset_class !== undefined) updates.asset_class = asset_class;
-      if (entry_price !== undefined) updates.entry_price = parseFloat(entry_price);
+      if (entry_price !== undefined) {
+        const parsed = parseFloat(entry_price);
+        if (isNaN(parsed) || parsed <= 0) {
+          return res.status(400).json({ error: 'Entry price must be greater than 0' });
+        }
+        updates.entry_price = parsed;
+      }
       if (entry_date !== undefined) updates.entry_date = entry_date;
-      if (quantity !== undefined) updates.quantity = parseFloat(quantity);
+      if (quantity !== undefined) {
+        const parsed = parseFloat(quantity);
+        if (isNaN(parsed) || parsed <= 0) {
+          return res.status(400).json({ error: 'Quantity must be greater than 0' });
+        }
+        updates.quantity = parsed;
+      }
       if (exit_price !== undefined) updates.exit_price = exit_price ? parseFloat(exit_price) : null;
       if (exit_date !== undefined) updates.exit_date = exit_date || null;
       if (stop_loss !== undefined) updates.stop_loss = stop_loss ? parseFloat(stop_loss) : null;
@@ -160,7 +172,7 @@ export default async function handler(req, res) {
           : finalEntry - finalExit;
 
         updates.pnl_amount = (priceChange * finalQuantity) - finalCommission - finalSwapFees;
-        updates.pnl_percent = (priceChange / finalEntry) * 100;
+        updates.pnl_percent = finalEntry > 0 ? (priceChange / finalEntry) * 100 : 0;
 
         // Calculate R-multiple
         const initialRisk = updates.initial_risk_amount ?? existingTrade.initial_risk_amount;

@@ -44,10 +44,10 @@ export default async function handler(req, res) {
         break;
     }
 
-    // Build query
+    // Build query - select only needed columns for stats calculation
     let query = supabase
       .from('journal_trades')
-      .select('*')
+      .select('pnl_amount, pnl_percent, r_multiple, exit_date, holding_time_minutes')
       .eq('journal_user_id', user.id)
       .eq('status', 'closed');
 
@@ -65,35 +65,70 @@ export default async function handler(req, res) {
     // Calculate statistics
     const stats = calculateStats(trades);
 
+    // Track warnings for partial failures
+    const warnings = [];
+
     // Get open trades count
-    const { count: openTradesCount } = await supabase
+    const { count: openTradesCount, error: openError } = await supabase
       .from('journal_trades')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('journal_user_id', user.id)
       .eq('status', 'open');
 
-    // Get today's stats
+    if (openError) {
+      logger.error('Error fetching open trades count:', openError);
+      warnings.push('open_trades_unavailable');
+    }
+
+    // Get today's stats - separate closed and open for clarity
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const { data: todayTrades } = await supabase
+    const todayIso = today.toISOString();
+
+    // Today's closed trades (for P&L)
+    const { data: todayClosedTrades, error: todayClosedError } = await supabase
       .from('journal_trades')
-      .select('*')
+      .select('pnl_amount')
       .eq('journal_user_id', user.id)
-      .gte('entry_date', today.toISOString());
+      .eq('status', 'closed')
+      .gte('exit_date', todayIso);
+
+    if (todayClosedError) {
+      logger.error('Error fetching today closed trades:', todayClosedError);
+      warnings.push('today_closed_unavailable');
+    }
+
+    // Today's new trades entered (for count)
+    const { count: todayEnteredCount, error: todayEnteredError } = await supabase
+      .from('journal_trades')
+      .select('id', { count: 'exact', head: true })
+      .eq('journal_user_id', user.id)
+      .gte('entry_date', todayIso);
+
+    if (todayEnteredError) {
+      logger.error('Error fetching today entered count:', todayEnteredError);
+      warnings.push('today_entered_unavailable');
+    }
 
     const todayStats = {
-      trades: todayTrades?.length || 0,
-      pnl: todayTrades?.reduce((sum, t) => sum + (t.pnl_amount || 0), 0) || 0,
+      tradesEntered: todayEnteredError ? null : (todayEnteredCount || 0),
+      tradesClosed: todayClosedError ? null : (todayClosedTrades?.length || 0),
+      pnl: todayClosedError ? null : (todayClosedTrades?.reduce((sum, t) => sum + (t.pnl_amount || 0), 0) || 0),
     };
 
     // Get recent trades for chart
-    const { data: recentTrades } = await supabase
+    const { data: recentTrades, error: recentError } = await supabase
       .from('journal_trades')
       .select('exit_date, pnl_amount, r_multiple')
       .eq('journal_user_id', user.id)
       .eq('status', 'closed')
       .order('exit_date', { ascending: true })
       .limit(100);
+
+    if (recentError) {
+      logger.error('Error fetching recent trades:', recentError);
+      warnings.push('equity_curve_unavailable');
+    }
 
     // Calculate equity curve (cumulative P&L)
     let cumulative = 0;
@@ -108,19 +143,25 @@ export default async function handler(req, res) {
     });
 
     // Get rule violations count
-    const { count: violationsCount } = await supabase
+    const { count: violationsCount, error: violationsError } = await supabase
       .from('journal_rule_violations')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('journal_user_id', user.id)
       .eq('acknowledged', false);
+
+    if (violationsError) {
+      logger.error('Error fetching violations count:', violationsError);
+      warnings.push('violations_unavailable');
+    }
 
     return res.status(200).json({
       period,
       stats,
-      openTrades: openTradesCount || 0,
+      openTrades: openError ? null : (openTradesCount || 0),
       todayStats,
       equityCurve,
-      unacknowledgedViolations: violationsCount || 0,
+      unacknowledgedViolations: violationsError ? null : (violationsCount || 0),
+      warnings: warnings.length > 0 ? warnings : undefined,
     });
 
   } catch (err) {
@@ -260,7 +301,8 @@ function calculateStats(trades) {
     avgRMultiple: trades.length > 0 ? Math.round((totalRMultiple / trades.length) * 100) / 100 : 0,
     largestWin: Math.round(largestWin * 100) / 100,
     largestLoss: Math.round(largestLoss * 100) / 100,
-    profitFactor: profitFactor === Infinity ? 999 : Math.round(profitFactor * 100) / 100,
+    profitFactor: profitFactor === Infinity ? null : Math.round(profitFactor * 100) / 100,
+    profitFactorInfinite: profitFactor === Infinity,
     expectancy: Math.round(expectancy * 100) / 100,
     maxDrawdown: Math.round(maxDrawdown * 100) / 100,
     avgHoldingTimeMinutes: Math.round(avgHoldingTimeMinutes),
