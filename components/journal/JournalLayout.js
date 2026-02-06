@@ -85,6 +85,48 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           color: #ffffff !important;
           background: none;
         }
+        .sidebar-cta-section {
+          padding: 0 10px;
+          margin-top: auto;
+          margin-bottom: 8px;
+        }
+        .sidebar-cta-card {
+          display: block;
+          padding: 12px 14px;
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          border-radius: 10px;
+          text-decoration: none !important;
+          transition: all 0.2s;
+          margin-bottom: 8px;
+        }
+        .sidebar-cta-card:hover {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
+          border-color: rgba(102, 126, 234, 0.5);
+          transform: translateY(-1px);
+        }
+        .sidebar-cta-title {
+          color: #a5b4fc !important;
+          font-size: 0.78rem;
+          font-weight: 600;
+          line-height: 1.3;
+        }
+        .sidebar-cta-subtitle {
+          color: rgba(255, 255, 255, 0.45) !important;
+          font-size: 0.65rem;
+          margin-top: 3px;
+        }
+        .sidebar-affiliate-link {
+          display: block;
+          padding: 8px 14px;
+          color: rgba(255, 255, 255, 0.4) !important;
+          text-decoration: none !important;
+          font-size: 0.72rem;
+          transition: color 0.2s;
+        }
+        .sidebar-affiliate-link:hover {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
       `}</style>
 
       <style jsx>{`
@@ -239,15 +281,27 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
                 {item.label}
               </Link>
             ))}
-
-            <div className="nav-divider" />
-
-            {user.isStudent && (
-              <Link href="/dashboard" className="course-link-item">
-                Back to 30-Day Challenge
-              </Link>
-            )}
           </nav>
+
+          <div className="sidebar-cta-section">
+            <a
+              href="https://www.marketwarrior.club"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sidebar-cta-card"
+            >
+              <div className="sidebar-cta-title">Join the Market Warrior Trading Challenge</div>
+              <div className="sidebar-cta-subtitle">Learn to trade in 30 days &rarr;</div>
+            </a>
+            <a
+              href="https://www.marketwarrior.club/affiliate"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sidebar-affiliate-link"
+            >
+              Become an Affiliate
+            </a>
+          </div>
 
           <div className="sidebar-footer">
             <div className="user-info">
