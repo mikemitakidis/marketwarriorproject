@@ -1,6 +1,7 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
+import { checkAndFirePhaseEvent, sendLoopsEvent, LOOPS_EVENTS } from '../../../lib/loops';
 
 /**
  * API route: /api/task/submit
@@ -120,6 +121,24 @@ export default async function handler(req, res) {
             day: nextDay,
             unlocked: true,
           }, { onConflict: 'user_id,day' });
+      }
+    }
+
+    // Fire Loops events (non-blocking)
+    const userEmail = user.email;
+    if (userEmail) {
+      // Check if unlocking next day triggers a phase-start event
+      if (nextDay <= 30) {
+        checkAndFirePhaseEvent(userEmail, nextDay, { userId }).catch(err =>
+          logger.error('[LOOPS] phase event fire-and-forget error:', err)
+        );
+      }
+
+      // If day 30 was just completed, fire challenge_complete
+      if (Number(day) === 30) {
+        sendLoopsEvent(userEmail, LOOPS_EVENTS.CHALLENGE_COMPLETE, { userId }).catch(err =>
+          logger.error('[LOOPS] challenge_complete fire-and-forget error:', err)
+        );
       }
     }
 
