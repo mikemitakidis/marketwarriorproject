@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getServiceSupabase } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
+import { sendLoopsEvent, LOOPS_EVENTS } from '../../../lib/loops';
 
 export const config = {
   api: {
@@ -207,6 +208,14 @@ export default async function handler(req, res) {
       }
 
       logger.log(`SUCCESS: Payment processed for user ${userId}, has_paid=true`);
+
+      // 4. Fire Loops "challenge_welcome" event (non-blocking)
+      const customerEmail = checkout.customer_details?.email || checkout.customer_email;
+      if (customerEmail) {
+        sendLoopsEvent(customerEmail, LOOPS_EVENTS.CHALLENGE_WELCOME, {
+          userId,
+        }).catch(err => logger.error('[LOOPS] challenge_welcome fire-and-forget error:', err));
+      }
 
     } catch (err) {
       logger.error('Error processing checkout:', err);

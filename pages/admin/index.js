@@ -97,6 +97,14 @@ export default function AdminPanel() {
   // Certificates state
   const [certificates, setCertificates] = useState([]);
 
+  // Broadcast email state
+  const [broadcastAudience, setBroadcastAudience] = useState('all');
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastBody, setBroadcastBody] = useState('');
+  const [broadcastTransactionalId, setBroadcastTransactionalId] = useState('');
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState(null);
+
   // Seeding state
   const [seedingContent, setSeedingContent] = useState(false);
 
@@ -396,6 +404,52 @@ export default function AdminPanel() {
     if (file) {
       await uploadFile(file, 'favicon');
     }
+  }
+
+  async function handleSendBroadcast() {
+    if (!broadcastTransactionalId) {
+      alert('Please enter your Loops Transactional Template ID');
+      return;
+    }
+    if (!broadcastSubject || !broadcastBody) {
+      alert('Subject and body are required');
+      return;
+    }
+
+    setBroadcastSending(true);
+    setBroadcastResult(null);
+
+    try {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const resp = await fetch('/api/admin/broadcast-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          transactionalId: broadcastTransactionalId,
+          subject: broadcastSubject,
+          body: broadcastBody,
+          audience: broadcastAudience,
+        }),
+      });
+
+      const data = await resp.json();
+      if (resp.ok) {
+        setBroadcastResult({ type: 'success', message: `Sent to ${data.sent} recipients. ${data.failed ? data.failed + ' failed.' : ''}` });
+        setBroadcastSubject('');
+        setBroadcastBody('');
+      } else {
+        setBroadcastResult({ type: 'error', message: data.error || 'Failed to send' });
+      }
+    } catch (err) {
+      setBroadcastResult({ type: 'error', message: err.message });
+    }
+
+    setBroadcastSending(false);
   }
 
   async function loadCommunity() {
@@ -2286,29 +2340,78 @@ export default function AdminPanel() {
                       <h3 style={{ marginBottom: '20px' }}>📧 Send Custom Broadcast</h3>
 
                       <div style={styles.formGroup}>
+                        <label style={styles.label}>Loops Template ID</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. cltq1234abcd5678"
+                          value={broadcastTransactionalId}
+                          onChange={e => setBroadcastTransactionalId(e.target.value)}
+                          style={styles.input}
+                        />
+                        <small style={{ color: '#64748b' }}>
+                          Find this in Loops &gt; Transactional &gt; your template
+                        </small>
+                      </div>
+
+                      <div style={styles.formGroup}>
                         <label style={styles.label}>Send To</label>
-                        <select style={styles.select}>
-                          <option>All Users</option>
-                          <option>Active Users Only</option>
-                          <option>Completed Users</option>
-                          <option>Users on Day 1-10</option>
-                          <option>Users on Day 11-20</option>
-                          <option>Users on Day 21-30</option>
-                          <option>Inactive Users (&gt;7 days)</option>
+                        <select
+                          value={broadcastAudience}
+                          onChange={e => setBroadcastAudience(e.target.value)}
+                          style={styles.select}
+                        >
+                          <option value="all">All Users</option>
+                          <option value="active">Active Users Only</option>
+                          <option value="completed">Completed Users</option>
+                          <option value="day_1_10">Users on Day 1-10</option>
+                          <option value="day_11_20">Users on Day 11-20</option>
+                          <option value="day_21_30">Users on Day 21-30</option>
+                          <option value="inactive_7d">Inactive Users (&gt;7 days)</option>
                         </select>
                       </div>
 
                       <div style={styles.formGroup}>
                         <label style={styles.label}>Subject Line</label>
-                        <input type="text" placeholder="Email subject" style={styles.input} />
+                        <input
+                          type="text"
+                          placeholder="Email subject"
+                          value={broadcastSubject}
+                          onChange={e => setBroadcastSubject(e.target.value)}
+                          style={styles.input}
+                        />
                       </div>
 
                       <div style={styles.formGroup}>
                         <label style={styles.label}>Email Content</label>
-                        <textarea rows={10} placeholder="Email body (HTML supported)" style={styles.textarea}></textarea>
+                        <textarea
+                          rows={10}
+                          placeholder="Email body (HTML supported)"
+                          value={broadcastBody}
+                          onChange={e => setBroadcastBody(e.target.value)}
+                          style={styles.textarea}
+                        ></textarea>
                       </div>
 
-                      <button style={styles.btnSuccess}>📤 Send Broadcast Email</button>
+                      {broadcastResult && (
+                        <div style={{
+                          padding: '12px 16px',
+                          marginBottom: '15px',
+                          borderRadius: '8px',
+                          background: broadcastResult.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                          color: broadcastResult.type === 'success' ? '#065f46' : '#991b1b',
+                          border: `1px solid ${broadcastResult.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+                        }}>
+                          {broadcastResult.message}
+                        </div>
+                      )}
+
+                      <button
+                        style={{ ...styles.btnSuccess, opacity: broadcastSending ? 0.6 : 1 }}
+                        onClick={handleSendBroadcast}
+                        disabled={broadcastSending}
+                      >
+                        {broadcastSending ? 'Sending...' : '📤 Send Broadcast Email'}
+                      </button>
                     </div>
                   </div>
                 </div>
