@@ -60,13 +60,29 @@ async function handleGet(req, res, supabase, user) {
     return res.status(500).json({ error: 'Failed to fetch goals' });
   }
 
-  // Calculate progress for each goal
-  const goalsWithProgress = await Promise.all(
-    data.map(async (goal) => {
-      const progress = await calculateGoalProgress(supabase, user.id, goal);
-      return { ...goal, ...progress };
-    })
-  );
+  // Pre-fetch all trades and reports for progress calculation (avoids N+1 queries)
+  const [tradesResult, reportsResult] = await Promise.all([
+    supabase
+      .from('journal_trades')
+      .select('pnl_amount, r_multiple, exit_date, status')
+      .eq('journal_user_id', user.id)
+      .eq('status', 'closed'),
+    supabase
+      .from('journal_daily_reports')
+      .select('report_date, followed_plan, stayed_within_risk')
+      .eq('journal_user_id', user.id)
+      .order('report_date', { ascending: false })
+      .limit(60),
+  ]);
+
+  const allTrades = tradesResult.data || [];
+  const allReports = reportsResult.data || [];
+
+  // Calculate progress for each goal using pre-fetched data
+  const goalsWithProgress = data.map((goal) => {
+    const progress = calculateGoalProgressFromData(allTrades, allReports, goal);
+    return { ...goal, ...progress };
+  });
 
   return res.status(200).json({ goals: goalsWithProgress });
 }
@@ -197,21 +213,19 @@ function getDefaultUnit(goalType) {
   }
 }
 
-async function calculateGoalProgress(supabase, userId, goal) {
+function calculateGoalProgressFromData(allTrades, allReports, goal) {
   let currentValue = 0;
   let percentComplete = 0;
 
   try {
+    // Filter trades by goal start_date where applicable
+    const tradesFromStart = goal.start_date
+      ? allTrades.filter(t => t.exit_date && t.exit_date >= goal.start_date)
+      : allTrades;
+
     switch (goal.goal_type) {
       case 'total_pnl': {
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('pnl_amount')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', goal.start_date);
-
-        currentValue = (trades || []).reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+        currentValue = tradesFromStart.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
         break;
       }
 
@@ -219,62 +233,36 @@ async function calculateGoalProgress(supabase, userId, goal) {
         const monthStart = new Date();
         monthStart.setDate(1);
         monthStart.setHours(0, 0, 0, 0);
+        const monthIso = monthStart.toISOString();
 
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('pnl_amount')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', monthStart.toISOString());
-
-        currentValue = (trades || []).reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
+        const monthTrades = allTrades.filter(t => t.exit_date && t.exit_date >= monthIso);
+        currentValue = monthTrades.reduce((sum, t) => sum + (t.pnl_amount || 0), 0);
         break;
       }
 
       case 'win_rate': {
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('pnl_amount')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', goal.start_date);
-
-        if (trades && trades.length > 0) {
-          const wins = trades.filter(t => (t.pnl_amount || 0) > 0).length;
-          currentValue = Math.round((wins / trades.length) * 100);
+        if (tradesFromStart.length > 0) {
+          const wins = tradesFromStart.filter(t => (t.pnl_amount || 0) > 0).length;
+          currentValue = Math.round((wins / tradesFromStart.length) * 100);
         }
         break;
       }
 
       case 'avg_r_multiple': {
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('r_multiple')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', goal.start_date);
-
-        if (trades && trades.length > 0) {
-          currentValue = trades.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / trades.length;
+        if (tradesFromStart.length > 0) {
+          currentValue = tradesFromStart.reduce((sum, t) => sum + (t.r_multiple || 0), 0) / tradesFromStart.length;
           currentValue = Math.round(currentValue * 100) / 100;
         }
         break;
       }
 
       case 'profit_factor': {
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('pnl_amount')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', goal.start_date);
-
-        if (trades && trades.length > 0) {
-          const grossProfit = trades
+        if (tradesFromStart.length > 0) {
+          const grossProfit = tradesFromStart
             .filter(t => (t.pnl_amount || 0) > 0)
             .reduce((sum, t) => sum + t.pnl_amount, 0);
           const grossLoss = Math.abs(
-            trades
+            tradesFromStart
               .filter(t => (t.pnl_amount || 0) < 0)
               .reduce((sum, t) => sum + t.pnl_amount, 0)
           );
@@ -284,33 +272,21 @@ async function calculateGoalProgress(supabase, userId, goal) {
       }
 
       case 'trades_count': {
-        const { count } = await supabase
-          .from('journal_trades')
-          .select('id', { count: 'exact', head: true })
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .gte('exit_date', goal.start_date);
-
-        currentValue = count || 0;
+        currentValue = tradesFromStart.length;
         break;
       }
 
       case 'max_drawdown': {
-        // For max drawdown, currentValue is the current drawdown %
-        // Lower is better, so we calculate differently
-        const { data: trades } = await supabase
-          .from('journal_trades')
-          .select('pnl_amount, exit_date')
-          .eq('journal_user_id', userId)
-          .eq('status', 'closed')
-          .order('exit_date', { ascending: true });
+        const sorted = [...allTrades].sort((a, b) =>
+          new Date(a.exit_date) - new Date(b.exit_date)
+        );
 
-        if (trades && trades.length > 0) {
+        if (sorted.length > 0) {
           let peak = 0;
           let cumulative = 0;
           let maxDD = 0;
 
-          trades.forEach(t => {
+          sorted.forEach(t => {
             cumulative += t.pnl_amount || 0;
             if (cumulative > peak) peak = cumulative;
             const dd = peak > 0 ? ((peak - cumulative) / peak) * 100 : 0;
@@ -323,17 +299,9 @@ async function calculateGoalProgress(supabase, userId, goal) {
       }
 
       case 'consistency_streak': {
-        // Count consecutive days with trades following rules
-        const { data: reports } = await supabase
-          .from('journal_daily_reports')
-          .select('report_date, followed_plan, stayed_within_risk')
-          .eq('journal_user_id', userId)
-          .order('report_date', { ascending: false })
-          .limit(60);
-
-        if (reports && reports.length > 0) {
+        if (allReports.length > 0) {
           let streak = 0;
-          for (const report of reports) {
+          for (const report of allReports) {
             if (report.followed_plan && report.stayed_within_risk) {
               streak++;
             } else {
@@ -351,7 +319,6 @@ async function calculateGoalProgress(supabase, userId, goal) {
 
     // Calculate percent complete
     if (goal.goal_type === 'max_drawdown') {
-      // For drawdown, we're trying to stay BELOW target
       percentComplete = currentValue <= goal.target_value ? 100 : Math.max(0, 100 - (currentValue - goal.target_value));
     } else {
       percentComplete = goal.target_value > 0

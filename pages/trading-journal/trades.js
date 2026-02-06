@@ -488,8 +488,8 @@ export default function TradesPage({ user, settings }) {
                     <td className={trade.pnl_amount >= 0 ? 'positive' : 'negative'}>
                       {trade.pnl_amount !== null ? formatCurrency(trade.pnl_amount) : '-'}
                     </td>
-                    <td className={trade.r_multiple >= 0 ? 'positive' : 'negative'}>
-                      {trade.r_multiple !== null ? `${trade.r_multiple >= 0 ? '+' : ''}${trade.r_multiple.toFixed(2)}R` : '-'}
+                    <td className={trade.r_multiple != null && trade.r_multiple >= 0 ? 'positive' : trade.r_multiple != null ? 'negative' : ''}>
+                      {trade.r_multiple != null ? `${trade.r_multiple >= 0 ? '+' : ''}${trade.r_multiple.toFixed(2)}R` : '-'}
                     </td>
                     <td>
                       <span className={`status-badge status-${trade.status}`}>

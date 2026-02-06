@@ -150,13 +150,17 @@ export default async function handler(req, res) {
       const aiResponse = result.response.text();
 
       // 6. INCREMENT DAILY COUNTER (in journal_users table)
-      await supabase
+      const { error: counterError } = await supabase
         .from('journal_users')
         .update({
           ai_requests_today: requestsToday + 1,
           ai_requests_date: today,
         })
         .eq('id', user.id);
+
+      if (counterError) {
+        logger.error('Failed to update AI request counter:', counterError);
+      }
 
       return res.status(200).json({
         response: aiResponse,
@@ -181,33 +185,37 @@ export default async function handler(req, res) {
 }
 
 async function fetchTradingContext(supabase, userId) {
-  // Fetch recent trades
-  const { data: trades } = await supabase
-    .from('journal_trades')
-    .select('*')
-    .eq('journal_user_id', userId)
-    .eq('status', 'closed')
-    .order('exit_date', { ascending: false })
-    .limit(50);
+  // Fetch all context data in parallel
+  const [tradesResult, settingsResult, rulesResult, violationsResult] = await Promise.all([
+    supabase
+      .from('journal_trades')
+      .select('symbol, direction, entry_price, exit_price, entry_date, exit_date, quantity, pnl_amount, r_multiple, stop_loss, status')
+      .eq('journal_user_id', userId)
+      .eq('status', 'closed')
+      .order('exit_date', { ascending: false })
+      .limit(50),
+    supabase
+      .from('journal_settings')
+      .select('account_size, default_risk_percent')
+      .eq('journal_user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('journal_challenge_rules')
+      .select('rule_type, rule_value')
+      .eq('journal_user_id', userId)
+      .eq('is_active', true),
+    supabase
+      .from('journal_rule_violations')
+      .select('rule_type, created_at')
+      .eq('journal_user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ]);
 
-  const { data: settings } = await supabase
-    .from('journal_settings')
-    .select('*')
-    .eq('journal_user_id', userId)
-    .maybeSingle();
-
-  const { data: rules } = await supabase
-    .from('journal_challenge_rules')
-    .select('*')
-    .eq('journal_user_id', userId)
-    .eq('is_active', true);
-
-  const { data: violations } = await supabase
-    .from('journal_rule_violations')
-    .select('*')
-    .eq('journal_user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(10);
+  const trades = tradesResult.data;
+  const settings = settingsResult.data;
+  const rules = rulesResult.data;
+  const violations = violationsResult.data;
 
   const stats = calculateTradingStats(trades || []);
 
