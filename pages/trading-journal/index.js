@@ -370,22 +370,49 @@ export default function JournalDashboard({ user, settings }) {
       {/* Today's Summary */}
       <div className="today-card">
         <div className="today-title">Today&apos;s Activity</div>
-        <div className="today-stats">
-          <div>
-            <div className="today-stat-value">{stats?.todayStats?.trades || 0}</div>
-            <div className="today-stat-label">Trades</div>
-          </div>
-          <div>
-            <div className={`today-stat-value ${(stats?.todayStats?.pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
-              {formatCurrency(stats?.todayStats?.pnl)}
+        {loading ? (
+          <div className="today-stats">
+            <div>
+              <div className="today-stat-value" style={{ color: 'rgba(255,255,255,0.3)' }}>--</div>
+              <div className="today-stat-label">Trades Entered</div>
             </div>
-            <div className="today-stat-label">P&L</div>
+            <div>
+              <div className="today-stat-value" style={{ color: 'rgba(255,255,255,0.3)' }}>--</div>
+              <div className="today-stat-label">Closed P&L</div>
+            </div>
+            <div>
+              <div className="today-stat-value" style={{ color: 'rgba(255,255,255,0.3)' }}>--</div>
+              <div className="today-stat-label">Open Positions</div>
+            </div>
           </div>
-          <div>
-            <div className="today-stat-value">{stats?.openTrades || 0}</div>
-            <div className="today-stat-label">Open Positions</div>
+        ) : (
+          <div className="today-stats">
+            <div>
+              <div className="today-stat-value">
+                {stats?.todayStats?.tradesEntered !== null ? stats?.todayStats?.tradesEntered : '--'}
+              </div>
+              <div className="today-stat-label">Trades Entered</div>
+            </div>
+            <div>
+              <div className="today-stat-value">
+                {stats?.todayStats?.tradesClosed !== null ? stats?.todayStats?.tradesClosed : '--'}
+              </div>
+              <div className="today-stat-label">Closed Today</div>
+            </div>
+            <div>
+              <div className={`today-stat-value ${(stats?.todayStats?.pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                {stats?.todayStats?.pnl !== null ? formatCurrency(stats?.todayStats?.pnl) : '--'}
+              </div>
+              <div className="today-stat-label">Closed P&L</div>
+            </div>
+            <div>
+              <div className="today-stat-value">
+                {stats?.openTrades !== null ? stats?.openTrades : '--'}
+              </div>
+              <div className="today-stat-label">Open Positions</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {loading ? (
@@ -406,8 +433,8 @@ export default function JournalDashboard({ user, settings }) {
             </div>
             <div className="metric-card">
               <div className="metric-label">Profit Factor</div>
-              <div className={`metric-value ${(stats?.stats?.profitFactor || 0) >= 1 ? 'positive' : 'negative'}`}>
-                {stats?.stats?.profitFactor || 0}
+              <div className={`metric-value ${stats?.stats?.profitFactorInfinite || (stats?.stats?.profitFactor || 0) >= 1 ? 'positive' : 'negative'}`}>
+                {stats?.stats?.profitFactorInfinite ? '\u221E' : (stats?.stats?.profitFactor || 0)}
               </div>
             </div>
             <div className="metric-card">
