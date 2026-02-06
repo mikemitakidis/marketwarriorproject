@@ -26,24 +26,40 @@ export async function getServerSideProps({ params }) {
 
   const baseUrl = etoroAffiliateUrl || defaultEtoroUrl;
 
+  /**
+   * Properly append a path to the affiliate base URL.
+   * Handles URLs with query params (e.g., https://etoro.com/?ref=ABC)
+   * by inserting the path before the query string.
+   */
+  const buildUrl = (path) => {
+    if (!path) return baseUrl;
+    try {
+      const url = new URL(baseUrl);
+      url.pathname = url.pathname.replace(/\/$/, '') + '/' + path;
+      return url.toString();
+    } catch {
+      return baseUrl.replace(/\/$/, '') + '/' + path;
+    }
+  };
+
   // Handle different redirect types
   if (id === 'etoro') {
     // Main eToro redirect
     destination = baseUrl;
   } else if (id === 'etoro-signup') {
     // Signup redirect
-    destination = `${baseUrl}/register`;
+    destination = buildUrl('register');
   } else if (id === 'etoro-copytrader') {
     // CopyTrader main page redirect
-    destination = `${baseUrl}/copytrader`;
+    destination = buildUrl('copytrader');
   } else if (id.startsWith('etoro-trader-')) {
     // Specific trader profile: etoro-trader-username
     const username = id.replace('etoro-trader-', '');
-    destination = `${baseUrl}/people/${username}`;
+    destination = buildUrl(`people/${username}`);
   } else if (id.startsWith('etoro-')) {
     // Asset-specific redirect: etoro-BTC, etoro-AAPL, etc.
     const symbol = id.replace('etoro-', '').toUpperCase();
-    destination = `${baseUrl}/markets/${symbol.toLowerCase()}`;
+    destination = buildUrl(`markets/${symbol.toLowerCase()}`);
   }
 
   if (destination) {

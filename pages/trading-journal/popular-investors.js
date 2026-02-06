@@ -15,11 +15,22 @@ export async function getServerSideProps({ req, res }) {
     }
 
     const supabase = getServiceSupabase();
-    const { data: settings } = await supabase
-      .from('journal_settings')
-      .select('*')
-      .eq('journal_user_id', user.id)
-      .maybeSingle();
+
+    // Fetch user settings and affiliate URL in parallel
+    const [settingsResult, affiliateResult] = await Promise.all([
+      supabase
+        .from('journal_settings')
+        .select('*')
+        .eq('journal_user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('app_settings')
+        .select('key, value')
+        .eq('key', 'etoro_affiliate_url')
+        .maybeSingle(),
+    ]);
+
+    const etoroAffiliateUrl = affiliateResult.data?.value || '';
 
     return {
       props: {
@@ -28,7 +39,8 @@ export async function getServerSideProps({ req, res }) {
           email: user.email,
           fullName: user.fullName || null,
         },
-        settings: settings || null,
+        settings: settingsResult.data || null,
+        etoroAffiliateUrl,
       },
     };
   } catch (err) {
@@ -36,7 +48,25 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-export default function PopularInvestorsPage({ user, settings }) {
+/**
+ * Build an affiliate URL by properly appending a path to a base URL.
+ * Handles base URLs with query params (e.g., https://etoro.com/?ref=ABC)
+ * Formula: [Admin_Panel_Base_URL] + [/] + [path]
+ */
+function buildAffiliateUrl(baseUrl, path) {
+  if (!baseUrl) return null;
+  try {
+    const url = new URL(baseUrl);
+    // Append path to pathname, preserving any query params
+    url.pathname = url.pathname.replace(/\/$/, '') + '/' + path;
+    return url.toString();
+  } catch {
+    // If URL parsing fails, simple concatenation
+    return baseUrl.replace(/\/$/, '') + '/' + path;
+  }
+}
+
+export default function PopularInvestorsPage({ user, settings, etoroAffiliateUrl }) {
   const [copytraders, setCopytraders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copytradersLoading, setCopytradersLoading] = useState(false);
@@ -44,6 +74,9 @@ export default function PopularInvestorsPage({ user, settings }) {
   const [riskFilter, setRiskFilter] = useState('all');
   const [sortBy, setSortBy] = useState('gain');
   const [dataSource, setDataSource] = useState('');
+
+  // Build affiliate base URL (from admin panel or default)
+  const affiliateBase = etoroAffiliateUrl || 'https://www.etoro.com';
 
   const periodGroups = {
     current: [
@@ -121,8 +154,17 @@ export default function PopularInvestorsPage({ user, settings }) {
     return filtered;
   };
 
+  // Dynamic affiliate link: [Admin_Panel_Base_URL] + [/] + [investor_username]
+  const getTraderUrl = (username) => {
+    return buildAffiliateUrl(affiliateBase, `people/${username}`);
+  };
+
+  const getExploreUrl = () => {
+    return buildAffiliateUrl(affiliateBase, 'copytrader');
+  };
+
   const handleCopyTraderClick = (username) => {
-    window.open(`/go/etoro-trader-${username}`, '_blank', 'noopener,noreferrer');
+    window.open(getTraderUrl(username), '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -332,7 +374,7 @@ export default function PopularInvestorsPage({ user, settings }) {
           <h2>Investor Discovery</h2>
           <p>Find and copy top traders based on your own filters</p>
         </div>
-        <button className="banner-btn" onClick={() => window.open('/go/etoro-copytrader', '_blank', 'noopener,noreferrer')}>
+        <button className="banner-btn" onClick={() => window.open(getExploreUrl(), '_blank', 'noopener,noreferrer')}>
           Explore CopyTrader
         </button>
       </div>
@@ -561,7 +603,7 @@ export default function PopularInvestorsPage({ user, settings }) {
           <p style={{ marginTop: 8 }}>
             This content contains affiliate links. We may receive a commission for purchases made
             through these links at no additional cost to you.
-            <a href="/go/etoro" target="_blank" rel="noopener noreferrer"> Learn more about eToro</a>.
+            <a href={affiliateBase} target="_blank" rel="noopener noreferrer"> Learn more about eToro</a>.
           </p>
         </div>
       </div>
