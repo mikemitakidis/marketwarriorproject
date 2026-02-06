@@ -9,7 +9,6 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
   const [activeTab, setActiveTab] = useState('chart'); // chart, calendar, screener (simplified)
   const chartContainerRef = useRef(null);
   const tickerContainerRef = useRef(null);
-  const symbolInfoRef = useRef(null);
 
   const intervals = [
     { value: '1', label: '1m' },

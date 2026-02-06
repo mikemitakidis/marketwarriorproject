@@ -37,7 +37,7 @@ export default function ImportPage({ user, settings }) {
   const parseCSV = async (file) => {
     try {
       const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim());
 
       if (lines.length < 2) {
         setError('CSV file must have at least a header row and one data row');
@@ -99,7 +99,13 @@ export default function ImportPage({ user, settings }) {
       const char = line[i];
 
       if (char === '"') {
-        inQuotes = !inQuotes;
+        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+          // Escaped quote ("") inside quoted field
+          current += '"';
+          i++; // skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
       } else if (char === delimiter && !inQuotes) {
         result.push(current);
         current = '';
