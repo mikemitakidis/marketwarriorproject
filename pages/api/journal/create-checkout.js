@@ -5,7 +5,7 @@
  * The metadata is used by the webhook to identify the journal user.
  */
 import Stripe from 'stripe';
-import { getJournalUser, getServiceSupabase } from '../../../lib/journalAuth';
+import { getJournalUser, getServiceSupabase, getJournalSettings } from '../../../lib/journalAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -25,6 +25,14 @@ export default async function handler(req, res) {
     const identifier = getIdentifier(req);
     const rateLimitResult = await applyRateLimit(req, res, rateLimiters.api, identifier);
     if (rateLimitResult) return rateLimitResult;
+
+    // Check if paid mode is enabled — if not, block checkout creation
+    const journalSettings = await getJournalSettings();
+    if (!journalSettings.paidEnabled) {
+      return res.status(400).json({
+        error: 'Paid mode is not enabled. The Trading Journal is currently free.',
+      });
+    }
 
     // Check if user already paid
     if (user.hasPaid) {

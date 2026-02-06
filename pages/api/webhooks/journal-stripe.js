@@ -148,24 +148,40 @@ export default async function handler(req, res) {
       // Find the payment by payment_intent_id
       const { data: payment } = await supabase
         .from('journal_payments')
-        .select('id, journal_user_id')
+        .select('id, journal_user_id, stripe_checkout_session_id, amount_cents')
         .eq('stripe_payment_intent_id', charge.payment_intent)
         .maybeSingle();
 
       if (payment) {
-        // Update payment status
-        await supabase
+        // Update payment status to refunded
+        const { error: paymentUpdateError } = await supabase
           .from('journal_payments')
-          .update({ status: 'refunded' })
+          .update({
+            status: 'refunded',
+          })
           .eq('id', payment.id);
 
+        if (paymentUpdateError) {
+          logger.error('Error updating payment status to refunded:', paymentUpdateError);
+        }
+
         // Revoke access
-        await supabase
+        const { error: userUpdateError } = await supabase
           .from('journal_users')
           .update({ has_paid: false })
           .eq('id', payment.journal_user_id);
 
-        logger.log(`Journal payment refunded for user ${payment.journal_user_id}`);
+        if (userUpdateError) {
+          logger.error('CRITICAL: Failed to revoke has_paid on refund:', userUpdateError);
+        }
+
+        logger.log(
+          `REFUND: Journal payment refunded for user ${payment.journal_user_id}. ` +
+          `Payment ID: ${payment.id}, Amount: ${payment.amount_cents} cents, ` +
+          `Stripe charge: ${charge.id}, Stripe PI: ${charge.payment_intent}`
+        );
+      } else {
+        logger.log(`Refund received for charge ${charge.id} but no matching journal payment found (PI: ${charge.payment_intent})`);
       }
     } catch (err) {
       logger.error('Error processing journal refund:', err);
