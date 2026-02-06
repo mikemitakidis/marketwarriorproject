@@ -9,7 +9,6 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
   const [activeTab, setActiveTab] = useState('chart'); // chart, calendar, screener (simplified)
   const chartContainerRef = useRef(null);
   const tickerContainerRef = useRef(null);
-  const symbolInfoRef = useRef(null);
 
   const intervals = [
     { value: '1', label: '1m' },
@@ -314,9 +313,6 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
         .widget-content {
           min-height: 400px;
         }
-        .symbol-info-widget {
-          min-height: 150px;
-        }
         .calendar-widget {
           min-height: 500px;
         }
@@ -394,21 +390,6 @@ export default function ChartsPage({ user, settings, recentSymbols }) {
       {/* Chart Tab Content */}
       {activeTab === 'chart' && (
         <>
-          {/* Symbol Info Widget */}
-          <div className="widget-container" style={{ marginBottom: '24px' }}>
-            <div className="widget-content symbol-info-widget">
-              <iframe
-                key={symbol}
-                scrolling="no"
-                allowTransparency="true"
-                frameBorder="0"
-                src={`https://s.tradingview.com/embed-widget/symbol-info/?locale=en#%7B%22symbol%22%3A%22${encodeURIComponent(symbol)}%22%2C%22width%22%3A%22100%25%22%2C%22isTransparent%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%7D`}
-                style={{ width: '100%', height: '150px', border: 'none' }}
-                title="Symbol Info"
-              />
-            </div>
-          </div>
-
           <div className="content">
             {showWatchlist && (
               <div className="watchlist">

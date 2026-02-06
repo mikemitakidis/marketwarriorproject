@@ -118,7 +118,7 @@ async function generateWeeklyCard(supabase, userId, displayName) {
     .from('journal_trades')
     .select('pnl_amount, r_multiple, symbol')
     .eq('journal_user_id', userId)
-    .gte('entry_date', weekAgo.toISOString())
+    .gte('exit_date', weekAgo.toISOString())
     .eq('status', 'closed');
 
   if (!trades || trades.length === 0) {
@@ -165,7 +165,7 @@ async function generateMonthlyCard(supabase, userId, displayName) {
     .from('journal_trades')
     .select('pnl_amount, r_multiple')
     .eq('journal_user_id', userId)
-    .gte('entry_date', monthAgo.toISOString())
+    .gte('exit_date', monthAgo.toISOString())
     .eq('status', 'closed');
 
   if (!trades || trades.length === 0) {
