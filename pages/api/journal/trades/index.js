@@ -212,20 +212,35 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to create trade' });
       }
 
-      // Add tags if provided
+      // Add tags if provided (validate ownership first)
       if (tag_ids.length > 0) {
-        const tagInserts = tag_ids.map(tagId => ({
-          trade_id: trade.id,
-          tag_id: tagId,
-        }));
+        // Verify all tags belong to this user or are system tags
+        const { data: validTags, error: tagCheckError } = await supabase
+          .from('journal_tags')
+          .select('id')
+          .in('id', tag_ids)
+          .or(`is_system.eq.true,journal_user_id.eq.${user.id}`);
 
-        const { error: tagError } = await supabase
-          .from('journal_trade_tags')
-          .insert(tagInserts);
+        if (tagCheckError) {
+          logger.error('Error validating tags:', tagCheckError);
+        } else {
+          const validTagIds = new Set((validTags || []).map(t => t.id));
+          const filteredTagIds = tag_ids.filter(id => validTagIds.has(id));
 
-        if (tagError) {
-          logger.error('Error adding trade tags:', tagError);
-          // Don't fail the whole request, trade was created
+          if (filteredTagIds.length > 0) {
+            const tagInserts = filteredTagIds.map(tagId => ({
+              trade_id: trade.id,
+              tag_id: tagId,
+            }));
+
+            const { error: tagError } = await supabase
+              .from('journal_trade_tags')
+              .insert(tagInserts);
+
+            if (tagError) {
+              logger.error('Error adding trade tags:', tagError);
+            }
+          }
         }
       }
 
