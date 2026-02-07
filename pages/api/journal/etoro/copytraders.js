@@ -7,6 +7,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { rateLimiters, applyRateLimit, getIdentifier } from '../../../../lib/ratelimit';
 
 // Sample CopyTraders data
 const sampleCopyTraders = [
@@ -34,6 +35,11 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Rate limit to prevent abuse (public endpoint, but throttle requests)
+  const identifier = getIdentifier(req);
+  const rateLimitResult = await applyRateLimit(req, res, rateLimiters.general, identifier);
+  if (rateLimitResult) return rateLimitResult;
 
   const apiKey = process.env.ETORO_API_KEY;
   const userKey = process.env.ETORO_USER_KEY;

@@ -165,21 +165,44 @@ export default async function handler(req, res) {
           logger.error('Error updating payment status to refunded:', paymentUpdateError);
         }
 
-        // Revoke access
-        const { error: userUpdateError } = await supabase
-          .from('journal_users')
-          .update({ has_paid: false })
-          .eq('id', payment.journal_user_id);
+        // Check if user has any other completed (non-refunded) payments
+        const { data: remainingPayments, error: remainingError } = await supabase
+          .from('journal_payments')
+          .select('id')
+          .eq('journal_user_id', payment.journal_user_id)
+          .eq('status', 'completed')
+          .neq('id', payment.id)
+          .limit(1);
 
-        if (userUpdateError) {
-          logger.error('CRITICAL: Failed to revoke has_paid on refund:', userUpdateError);
+        if (remainingError) {
+          logger.error('Error checking remaining payments:', remainingError);
         }
 
-        logger.log(
-          `REFUND: Journal payment refunded for user ${payment.journal_user_id}. ` +
-          `Payment ID: ${payment.id}, Amount: ${payment.amount_cents} cents, ` +
-          `Stripe charge: ${charge.id}, Stripe PI: ${charge.payment_intent}`
-        );
+        const hasOtherPayments = remainingPayments && remainingPayments.length > 0;
+
+        if (hasOtherPayments) {
+          logger.log(
+            `REFUND: Payment ${payment.id} refunded for user ${payment.journal_user_id}, ` +
+            `but user has other completed payments — keeping has_paid=true. ` +
+            `Amount: ${payment.amount_cents} cents, Stripe charge: ${charge.id}`
+          );
+        } else {
+          // Revoke access — no remaining payments
+          const { error: userUpdateError } = await supabase
+            .from('journal_users')
+            .update({ has_paid: false })
+            .eq('id', payment.journal_user_id);
+
+          if (userUpdateError) {
+            logger.error('CRITICAL: Failed to revoke has_paid on refund:', userUpdateError);
+          }
+
+          logger.log(
+            `REFUND: Journal access revoked for user ${payment.journal_user_id}. ` +
+            `Payment ID: ${payment.id}, Amount: ${payment.amount_cents} cents, ` +
+            `Stripe charge: ${charge.id}, Stripe PI: ${charge.payment_intent}`
+          );
+        }
       } else {
         logger.log(`Refund received for charge ${charge.id} but no matching journal payment found (PI: ${charge.payment_intent})`);
       }

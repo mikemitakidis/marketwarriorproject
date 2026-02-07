@@ -124,6 +124,16 @@ export default async function handler(req, res) {
       }
       if (exit_price !== undefined) updates.exit_price = exit_price ? parseFloat(exit_price) : null;
       if (exit_date !== undefined) updates.exit_date = exit_date || null;
+
+      // Validate exit fields as a pair: both or neither
+      const finalExitPrice = updates.exit_price ?? existingTrade.exit_price;
+      const finalExitDateCheck = updates.exit_date ?? existingTrade.exit_date;
+      if ((finalExitPrice && !finalExitDateCheck) || (!finalExitPrice && finalExitDateCheck)) {
+        return res.status(400).json({
+          error: 'Exit price and exit date must be provided together (both or neither)',
+        });
+      }
+
       if (stop_loss !== undefined) updates.stop_loss = stop_loss ? parseFloat(stop_loss) : null;
       if (take_profit !== undefined) updates.take_profit = take_profit ? parseFloat(take_profit) : null;
       if (max_adverse_excursion !== undefined) updates.max_adverse_excursion = max_adverse_excursion ? parseFloat(max_adverse_excursion) : null;
@@ -207,7 +217,7 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to update trade' });
       }
 
-      // Update tags if provided
+      // Update tags if provided (validate ownership first)
       if (tag_ids !== undefined) {
         // Delete existing tags
         await supabase
@@ -215,19 +225,30 @@ export default async function handler(req, res) {
           .delete()
           .eq('trade_id', id);
 
-        // Insert new tags
+        // Insert new tags after validating ownership
         if (tag_ids.length > 0) {
-          const tagInserts = tag_ids.map(tagId => ({
-            trade_id: id,
-            tag_id: tagId,
-          }));
+          const { data: validTags } = await supabase
+            .from('journal_tags')
+            .select('id')
+            .in('id', tag_ids)
+            .or(`is_system.eq.true,journal_user_id.eq.${user.id}`);
 
-          const { error: tagError } = await supabase
-            .from('journal_trade_tags')
-            .insert(tagInserts);
+          const validTagIds = new Set((validTags || []).map(t => t.id));
+          const filteredTagIds = tag_ids.filter(tagId => validTagIds.has(tagId));
 
-          if (tagError) {
-            logger.error('Error updating trade tags:', tagError);
+          if (filteredTagIds.length > 0) {
+            const tagInserts = filteredTagIds.map(tagId => ({
+              trade_id: id,
+              tag_id: tagId,
+            }));
+
+            const { error: tagError } = await supabase
+              .from('journal_trade_tags')
+              .insert(tagInserts);
+
+            if (tagError) {
+              logger.error('Error updating trade tags:', tagError);
+            }
           }
         }
       }
