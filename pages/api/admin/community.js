@@ -64,7 +64,7 @@ async function handleGet(req, res, supabase) {
   // Build query — admin sees ALL statuses
   let query = supabase
     .from('forum_posts')
-    .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, status, is_pinned, is_locked, created_at, updated_at', { count: 'exact' });
+    .select('id, user_id, category_id, author_name, title, content, day_number, image_url, likes_count, comments_count, views_count, status, is_pinned, is_locked, created_at, updated_at', { count: 'exact' });
 
   // Filter by status
   if (status && status !== 'all') {
