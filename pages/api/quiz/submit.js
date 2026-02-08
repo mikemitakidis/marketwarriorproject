@@ -28,9 +28,13 @@ export default async function handler(req, res) {
   if (rateLimitResult) return rateLimitResult;
 
   try {
-    const { day, answers } = req.body;
+    const { day: rawDay, answers } = req.body;
+    const day = Number(rawDay);
     if (!day) {
       return res.status(400).json({ error: 'Missing day' });
+    }
+    if (!Number.isInteger(day) || day < 1 || day > 30) {
+      return res.status(400).json({ error: 'Day must be a number between 1 and 30' });
     }
 
     if (!answers) {

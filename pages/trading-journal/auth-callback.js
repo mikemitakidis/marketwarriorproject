@@ -38,7 +38,6 @@ export default function JournalAuthCallback() {
         const refresh_token = hashParams.get('refresh_token');
 
         if (access_token && refresh_token) {
-          console.log('Found tokens in hash, setting journal session...');
           const res = await fetch('/api/journal/auth/set-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -65,7 +64,6 @@ export default function JournalAuthCallback() {
         // Method 2: Check for code in query
         const code = queryParams.get('code');
         if (code) {
-          console.log('Found code in query, exchanging for session...');
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           if (error) {
@@ -104,16 +102,13 @@ export default function JournalAuthCallback() {
         }
 
         // Method 3: Try to get session from Supabase
-        console.log('Checking for existing session...');
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          console.log('Found existing session, redirecting...');
           window.location.replace('/trading-journal');
           return;
         }
 
         // No auth data found
-        console.log('No auth data found in callback URL');
         setError('No authentication data received. Please try again.');
         setTimeout(() => window.location.replace('/trading-journal/login'), 3000);
 

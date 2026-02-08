@@ -31,6 +31,18 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Stripe is not configured' });
     }
 
+    // SECURITY: Prevent double payment — check if user already has active course access
+    const supabaseCheck = getServiceSupabase();
+    const { data: profile } = await supabaseCheck
+      .from('user_profiles')
+      .select('has_paid, access_revoked_at')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.has_paid && !profile?.access_revoked_at) {
+      return res.status(400).json({ error: 'You already have active access to the course.' });
+    }
+
     // Get user's preferred currency and PromoteKit referral from request body
     const { currency = 'usd', promotekit_referral } = req.body;
     const currencyLower = currency.toLowerCase();
@@ -127,6 +139,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     logger.error('Stripe checkout error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Payment initialization failed. Please try again.' });
   }
 }

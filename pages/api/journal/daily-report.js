@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
-      const { date, range } = req.query;
+      const { date, range, timezone } = req.query;
 
       if (range) {
         // Fetch range of reports (e.g., last 30 days)
@@ -44,8 +44,19 @@ export default async function handler(req, res) {
         return res.status(200).json({ reports });
       }
 
-      // Single date
-      const reportDate = date || new Date().toISOString().split('T')[0];
+      // Single date — use client timezone if provided to get correct "today"
+      let reportDate = date;
+      if (!reportDate) {
+        if (timezone) {
+          try {
+            reportDate = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+          } catch {
+            reportDate = new Date().toISOString().split('T')[0];
+          }
+        } else {
+          reportDate = new Date().toISOString().split('T')[0];
+        }
+      }
 
       const { data: report, error } = await supabase
         .from('journal_daily_reports')
@@ -89,6 +100,7 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const {
         report_date,
+        timezone: bodyTimezone,
         discipline_score,
         execution_score,
         risk_management_score,
@@ -104,7 +116,18 @@ export default async function handler(req, res) {
         improvement_focus,
       } = req.body;
 
-      const date = report_date || new Date().toISOString().split('T')[0];
+      let date = report_date;
+      if (!date) {
+        if (bodyTimezone) {
+          try {
+            date = new Date().toLocaleDateString('en-CA', { timeZone: bodyTimezone });
+          } catch {
+            date = new Date().toISOString().split('T')[0];
+          }
+        } else {
+          date = new Date().toISOString().split('T')[0];
+        }
+      }
 
       // Calculate stats from trades
       const dayStart = new Date(date);

@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     const supabase = getAnonSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data?.session || !data?.user) {
-      return res.status(401).json({ error: error?.message || 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     setAuthCookies(res, data.session);
@@ -47,6 +47,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, next });
   } catch (e) {
     logger.error('login error:', e);
-    return res.status(500).json({ error: e?.message || 'Server error' });
+    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 }

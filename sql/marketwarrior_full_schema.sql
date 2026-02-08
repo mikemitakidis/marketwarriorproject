@@ -341,6 +341,14 @@ create table public.stripe_events (
   processed_at timestamptz
 );
 
+-- =====================================================================
+-- OLD CUSTOM AFFILIATE SYSTEM — NOT ACTIVELY USED
+-- We now use PromoteKit (3rd party) for all affiliate tracking.
+-- These tables (affiliate_settings, affiliate_referrals, affiliate_commissions)
+-- and related user_profiles columns (affiliate_role, affiliate_code, referred_by_*)
+-- are kept for reference but are not used by any active code.
+-- =====================================================================
+
 -- Affiliate settings (singleton row)
 create table public.affiliate_settings (
   singleton boolean primary key default true,

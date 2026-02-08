@@ -3,6 +3,12 @@ import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/rateli
 import logger from '../../../lib/logger';
 
 /**
+ * DEPRECATED — OLD CUSTOM AFFILIATE SYSTEM
+ * This endpoint is from the original custom-built affiliate system.
+ * We now use PromoteKit (3rd party) for all affiliate tracking.
+ * PromoteKit handles: referral codes, commission tracking, self-referral prevention.
+ * This file is kept for reference but is NOT actively used.
+ *
  * API route: /api/admin/affiliates
  *
  * GET: List all affiliates with their stats

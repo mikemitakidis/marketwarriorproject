@@ -12,19 +12,13 @@ import { getUserFromRequest, getGateStatus, getServiceSupabase } from '../lib/se
 export async function getServerSideProps({ req }) {
   try {
     const user = await getUserFromRequest(req);
-    console.log('[PAY] User from request:', user?.id, user?.email);
-
     if (!user) {
-      console.log('[PAY] No user found, redirecting to login');
       return { redirect: { destination: '/login', permanent: false } };
     }
 
     const gate = await getGateStatus(user.id, user.email);
-    console.log('[PAY] Gate status:', JSON.stringify(gate));
-
     // If already paid, redirect to next step
     if (gate.hasPaid) {
-      console.log('[PAY] User has paid, redirecting...');
       if (!gate.welcomeCompleted) {
         return { redirect: { destination: '/welcome', permanent: false } };
       }
@@ -48,7 +42,6 @@ export async function getServerSideProps({ req }) {
       console.error('[PAY] Error fetching price:', e);
     }
 
-    console.log('[PAY] User has NOT paid, showing payment page');
     return { props: { userEmail: user.email, displayPrice } };
   } catch (err) {
     console.error('Pay page SSR error:', err);
@@ -132,7 +125,6 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
 
         if (timezoneMap[timezone]) {
           currency = timezoneMap[timezone];
-          console.log(`Detected currency: ${currency} from timezone: ${timezone}`);
         } else {
           // Method 2: Fallback to browser locale
           const locale = navigator.language || 'en-US';
@@ -156,7 +148,6 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
           };
 
           currency = currencyMap[region] || 'usd';
-          console.log(`Detected currency: ${currency} from locale: ${locale}`);
         }
       } catch (e) {
         console.warn('Could not detect currency, using USD');

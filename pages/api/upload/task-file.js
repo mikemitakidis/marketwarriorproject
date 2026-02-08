@@ -110,9 +110,15 @@ export default async function handler(req, res) {
     // Read file content
     const fileBuffer = fs.readFileSync(file.filepath);
 
+    // SECURITY: Sanitize filename to prevent XSS and path issues
+    const sanitizedFileName = fileName
+      .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+      .replace(/\.{2,}/g, '.') // Prevent directory traversal via ..
+      .substring(0, 100); // Limit length
+
     // Generate unique file path
     const timestamp = Date.now();
-    const storagePath = `task-submissions/${user.id}/day-${day}/${timestamp}-${fileName}`;
+    const storagePath = `task-submissions/${user.id}/day-${day}/${timestamp}-${sanitizedFileName}`;
 
     const supabase = getServiceSupabase();
 

@@ -17,9 +17,6 @@ export default function LoginPage() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    console.log('Supabase URL:', url ? 'SET' : 'MISSING');
-    console.log('Supabase Key:', key ? 'SET' : 'MISSING');
-
     if (url && key) {
       setSupabase(createClient(url, key));
       setReady(true);
@@ -94,8 +91,6 @@ export default function LoginPage() {
       // Use canonical domain from env var, fallback to window.location.origin for local dev
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const redirectUrl = `${appUrl}/auth/callback?next=/pay`;
-      console.log('Redirect URL:', redirectUrl);
-
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
