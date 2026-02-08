@@ -2417,62 +2417,22 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              {/* Community Tab */}
+              {/* Community Tab - redirects to dedicated forum moderation page */}
               {activeTab === 'community' && (
                 <div>
                   <div style={styles.card}>
-                    <div style={styles.cardHeader}>
-                      <h2 style={styles.cardTitle}>Community Management</h2>
-                      <button style={styles.btnPrimary}>+ Create Thread</button>
+                    <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                      <h2 style={styles.cardTitle}>Community Forum Moderation</h2>
+                      <p style={{ color: '#64748b', margin: '12px 0 24px' }}>
+                        Full forum moderation with post & comment management, user bans, reports, and more.
+                      </p>
+                      <a
+                        href="/admin/forum"
+                        style={{ ...styles.btnPrimary, textDecoration: 'none', padding: '12px 32px', fontSize: '1rem' }}
+                      >
+                        Open Forum Moderation Panel
+                      </a>
                     </div>
-
-                    <div style={styles.formGroup}>
-                      <input
-                        type="text"
-                        placeholder="Search posts..."
-                        style={styles.input}
-                      />
-                    </div>
-
-                    <table style={styles.dataTable}>
-                      <thead>
-                        <tr>
-                          <th style={{ width: '40%' }}>Post</th>
-                          <th>Author</th>
-                          <th>Replies</th>
-                          <th>Date</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {threads.length > 0 ? threads.map(thread => (
-                          <tr key={thread.id}>
-                            <td>
-                              <div style={{ fontWeight: 700, marginBottom: '5px' }}>{thread.title}</div>
-                              <div style={{ fontSize: '0.85em', color: '#64748b' }}>
-                                {thread.body?.substring(0, 100)}...
-                              </div>
-                            </td>
-                            <td>{thread.authorName}</td>
-                            <td>{thread.reply_count || 0}</td>
-                            <td>{new Date(thread.created_at).toLocaleDateString()}</td>
-                            <td>
-                              <button style={styles.btnSmPrimary}>View</button>
-                              <button style={{ ...styles.btnSmWarning, marginLeft: '5px' }}>
-                                {thread.is_pinned ? 'Unpin' : 'Pin'}
-                              </button>
-                              <button style={{ ...styles.btnSmDanger, marginLeft: '5px' }}>Hide</button>
-                            </td>
-                          </tr>
-                        )) : (
-                          <tr>
-                            <td colSpan={5} style={{ textAlign: 'center', color: '#64748b' }}>
-                              No forum threads yet
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               )}
