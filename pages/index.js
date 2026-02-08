@@ -32,16 +32,16 @@ export async function getServerSideProps() {
   const siteName = settings.site_name || 'Market Warrior';
   const faviconUrl = settings.favicon_url || logoUrl || '/logo.png';
 
-  // Replace dynamic values in HTML
-  // Replace all price occurrences
-  html = html.replace(/\$39\.99/g, `$${safePrice}`);
-  html = html.replace(/Start Your Journey - \$[\d.]+/g, `Start Your Journey - $${safePrice}`);
-
   // SECURITY: Sanitize values from database before injecting into HTML
   const safePrice = String(price).replace(/[^0-9.]/g, '');
   const safeLogo = String(logoUrl).replace(/[<>"']/g, '');
   const safeFavicon = String(faviconUrl).replace(/[<>"']/g, '');
   const safeSiteName = String(siteName).replace(/[<>"'&]/g, '');
+
+  // Replace dynamic values in HTML
+  // Replace all price occurrences
+  html = html.replace(/\$39\.99/g, `$${safePrice}`);
+  html = html.replace(/Start Your Journey - \$[\d.]+/g, `Start Your Journey - $${safePrice}`);
 
   // Replace logo URL
   html = html.replace(/src="\/logo\.png"/g, `src="${safeLogo}"`);
