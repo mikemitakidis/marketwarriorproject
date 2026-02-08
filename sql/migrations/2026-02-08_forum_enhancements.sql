@@ -13,20 +13,20 @@ ALTER TABLE public.user_profiles
 -- 2. Create forum_reports table
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.forum_reports (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   reporter_id uuid NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
   target_type text NOT NULL, -- 'post' or 'comment'
   post_id uuid REFERENCES public.forum_posts (id) ON DELETE CASCADE,
   comment_id uuid REFERENCES public.forum_comments (id) ON DELETE CASCADE,
   reason text NOT NULL,
-  status text NOT NULL DEFAULT 'pending', -- pending, reviewed, dismissed
+  status text NOT NULL DEFAULT 'pending', -- pending, dismissed
   created_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT forum_reports_target_check CHECK (
     (target_type = 'post' AND post_id IS NOT NULL) OR
     (target_type = 'comment' AND comment_id IS NOT NULL)
   ),
   CONSTRAINT forum_reports_status_check CHECK (
-    status IN ('pending', 'reviewed', 'dismissed')
+    status IN ('pending', 'dismissed')
   )
 );
 
