@@ -1,4 +1,4 @@
-import { getAnonSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
+import { getAnonSupabase, getServiceSupabase, setAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
@@ -18,6 +18,16 @@ export default async function handler(req, res) {
     if (error || !data?.user) return res.status(401).json({ error: 'Invalid token' });
 
     setAuthCookies(res, { access_token, refresh_token });
+
+    // Update last_login timestamp (non-blocking)
+    getServiceSupabase()
+      .from('user_profiles')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', data.user.id)
+      .then(({ error: updateErr }) => {
+        if (updateErr) logger.error('Failed to update last_login:', updateErr.message);
+      });
+
     const gate = await getGateStatus(data.user.id, data.user.email);
     return res.status(200).json({ ok: true, next: determineNextRoute(gate, next) });
   } catch (e) {
