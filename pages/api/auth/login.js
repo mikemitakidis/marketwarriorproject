@@ -1,4 +1,4 @@
-import { getAnonSupabase, setAuthCookies, clearAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
+import { getAnonSupabase, getServiceSupabase, setAuthCookies, clearAuthCookies, getGateStatus, determineNextRoute } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 import logger from '../../../lib/logger';
 
@@ -21,6 +21,15 @@ export default async function handler(req, res) {
     }
 
     setAuthCookies(res, data.session);
+
+    // Update last_login timestamp (non-blocking)
+    getServiceSupabase()
+      .from('user_profiles')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', data.user.id)
+      .then(({ error: updateErr }) => {
+        if (updateErr) logger.error('Failed to update last_login:', updateErr.message);
+      });
 
     const gate = await getGateStatus(data.user.id, email);
 
