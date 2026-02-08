@@ -3,74 +3,151 @@ import logger from '../../../lib/logger';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
- * API endpoint for creating comments on forum threads.
+ * API route: /api/community/comments
  *
- * POST: Creates a new comment. Requires authentication and payment.
- * Body: { thread_id: uuid, body: string }
+ * GET: Fetch comments for a post
+ *   Query: ?post_id=uuid
+ *
+ * POST: Create a new comment
+ *   Body: { post_id, content, author_name, name_type }
  */
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Apply rate limiting for comment submissions
+  const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
   const identifier = getIdentifier(req);
-  const limited = await applyRateLimit(req, res, rateLimiters.submission, identifier);
+  const limited = await applyRateLimit(req, res, limiter, identifier);
   if (limited) return;
 
-  try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const gate = await getGateStatus(user.id);
+  if (!gate.hasPaid) {
+    return res.status(403).json({ error: 'Payment required' });
+  }
+
+  const supabase = getServiceSupabase();
+
+  if (req.method === 'GET') {
+    try {
+      const { post_id } = req.query;
+      if (!post_id) {
+        return res.status(400).json({ error: 'post_id is required' });
+      }
+
+      const { data: comments, error } = await supabase
+        .from('forum_comments')
+        .select('id, user_id, author_name, content, likes_count, status, created_at')
+        .eq('post_id', post_id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        logger.error('Error fetching comments:', error);
+        return res.status(500).json({ error: 'Failed to fetch comments' });
+      }
+
+      // Check which comments user has liked
+      const commentIds = (comments || []).map(c => c.id);
+      let userLikes = {};
+      if (commentIds.length > 0) {
+        const { data: likes } = await supabase
+          .from('forum_comment_likes')
+          .select('comment_id')
+          .eq('user_id', user.id)
+          .in('comment_id', commentIds);
+        (likes || []).forEach(l => { userLikes[l.comment_id] = true; });
+      }
+
+      return res.status(200).json({
+        comments: (comments || []).map(c => ({
+          ...c,
+          user_has_liked: !!userLikes[c.id],
+          is_own: c.user_id === user.id,
+        })),
+      });
+    } catch (err) {
+      logger.error('comments GET error:', err);
+      return res.status(500).json({ error: 'Server error' });
     }
 
-    // Check if user has paid
-    const gate = await getGateStatus(user.id);
-    if (!gate.hasPaid) {
-      return res.status(403).json({ error: 'Payment required to comment' });
+  } else if (req.method === 'POST') {
+    try {
+      const { post_id, content, author_name, name_type } = req.body;
+
+      if (!post_id || !content?.trim()) {
+        return res.status(400).json({ error: 'Post ID and content are required' });
+      }
+      if (content.trim().length > 5000) {
+        return res.status(400).json({ error: 'Comment must be under 5,000 characters' });
+      }
+
+      // Check post exists and is not locked
+      const { data: post, error: postError } = await supabase
+        .from('forum_posts')
+        .select('id, is_locked, status')
+        .eq('id', post_id)
+        .single();
+
+      if (postError || !post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      if (post.is_locked) {
+        return res.status(403).json({ error: 'This post is locked' });
+      }
+      if (post.status !== 'published') {
+        return res.status(403).json({ error: 'Cannot comment on this post' });
+      }
+
+      // Determine author name
+      let displayName;
+      if (name_type === 'nickname' && author_name?.trim()) {
+        displayName = author_name.trim().substring(0, 50);
+      } else {
+        displayName = gate.fullName || 'Anonymous';
+      }
+
+      const { data: comment, error } = await supabase
+        .from('forum_comments')
+        .insert({
+          post_id,
+          user_id: user.id,
+          author_name: displayName,
+          content: content.trim(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error creating comment:', error);
+        return res.status(500).json({ error: 'Failed to create comment' });
+      }
+
+      // Increment comments_count on the post
+      const { data: currentPost } = await supabase
+        .from('forum_posts')
+        .select('comments_count')
+        .eq('id', post_id)
+        .single();
+
+      if (currentPost) {
+        await supabase
+          .from('forum_posts')
+          .update({ comments_count: (currentPost.comments_count || 0) + 1 })
+          .eq('id', post_id);
+      }
+
+      return res.status(201).json({
+        ...comment,
+        user_has_liked: false,
+        is_own: true,
+      });
+    } catch (err) {
+      logger.error('comments POST error:', err);
+      return res.status(500).json({ error: 'Server error' });
     }
-
-    const { thread_id, body } = req.body;
-    if (!thread_id || !body) {
-      return res.status(400).json({ error: 'Thread ID and body are required' });
-    }
-
-    const supabase = getServiceSupabase();
-
-    // Check if thread exists and is not locked
-    const { data: thread, error: threadError } = await supabase
-      .from('forum_threads')
-      .select('id, is_locked')
-      .eq('id', thread_id)
-      .single();
-
-    if (threadError || !thread) {
-      return res.status(404).json({ error: 'Thread not found' });
-    }
-
-    if (thread.is_locked) {
-      return res.status(403).json({ error: 'Thread is locked' });
-    }
-
-    // Create the comment
-    const { data: comment, error } = await supabase
-      .from('forum_comments')
-      .insert({
-        thread_id,
-        author_id: user.id,
-        body: body.trim(),
-      })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('Error creating comment:', error);
-      return res.status(500).json({ error: 'Failed to create comment' });
-    }
-
-    return res.status(201).json(comment);
-  } catch (err) {
-    logger.error('comments POST error:', err);
-    return res.status(500).json({ error: err.message });
+  } else {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
