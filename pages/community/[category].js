@@ -43,7 +43,7 @@ export async function getServerSideProps({ req, params }) {
     // Fetch posts for this category
     const { data: posts } = await supabase
       .from('forum_posts')
-      .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, is_pinned, is_locked, created_at')
+      .select('id, user_id, category_id, author_name, title, content, day_number, image_url, likes_count, comments_count, views_count, is_pinned, is_locked, created_at')
       .eq('status', 'published')
       .eq('category_id', currentCategory.id)
       .order('is_pinned', { ascending: false })
@@ -122,6 +122,30 @@ export default function CategoryPage({ currentCategory, categories, posts, userN
   const router = useRouter();
   const [dayFilter, setDayFilter] = useState('');
   const [localPosts, setLocalPosts] = useState(posts);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setLocalPosts(posts);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/community/posts?category=${currentCategory.slug}&search=${encodeURIComponent(searchQuery.trim())}`, { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        setLocalPosts(data.posts || []);
+      }
+    } catch (err) { /* ignore */ }
+    setSearching(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setLocalPosts(posts);
+  };
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -250,6 +274,25 @@ export default function CategoryPage({ currentCategory, categories, posts, userN
         .like-btn.liked { color: #ef4444; }
         .like-btn:hover { color: #ef4444; }
         .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .search-bar {
+          display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        .search-bar input {
+          flex: 1; padding: 10px 14px; border: 2px solid #334155; border-radius: 8px;
+          background: #1e293b; color: white; font-size: 0.9rem;
+        }
+        .search-bar input:focus { outline: none; border-color: #667eea; }
+        .search-bar button {
+          padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer;
+          font-size: 0.85rem; font-weight: 600;
+        }
+        .search-bar .search-submit { background: #667eea; color: white; }
+        .search-bar .search-clear { background: #334155; color: #94a3b8; }
+        .search-info { color: #64748b; font-size: 0.85rem; margin-bottom: 12px; }
+        .post-image {
+          margin-top: 8px; max-width: 100%; max-height: 120px; border-radius: 6px;
+          object-fit: cover; border: 1px solid #334155;
+        }
         .empty-state h2 { margin-bottom: 8px; color: #94a3b8; }
         @media (max-width: 768px) {
           .layout { grid-template-columns: 1fr; }
@@ -303,6 +346,22 @@ export default function CategoryPage({ currentCategory, categories, posts, userN
             <p className="category-desc">{currentCategory.description}</p>
           )}
 
+          <form className="search-bar" onSubmit={handleSearch}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search posts..."
+            />
+            <button type="submit" className="search-submit" disabled={searching}>
+              {searching ? 'Searching...' : 'Search'}
+            </button>
+            {searchQuery && (
+              <button type="button" className="search-clear" onClick={handleClearSearch}>Clear</button>
+            )}
+          </form>
+          {searchQuery && <div className="search-info">Showing results for &quot;{searchQuery}&quot;</div>}
+
           {currentCategory.slug === 'days-1-30' && (
             <div className="day-filter">
               <label>Filter by day:</label>
@@ -337,6 +396,7 @@ export default function CategoryPage({ currentCategory, categories, posts, userN
                     <span>{timeAgo(post.created_at)}</span>
                   </div>
                   <div className="post-preview">{post.preview}</div>
+                  {post.image_url && <img className="post-image" src={post.image_url} alt="" />}
                   <div className="post-stats">
                     <button
                       className={`like-btn ${post.user_has_liked ? 'liked' : ''}`}

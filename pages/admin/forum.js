@@ -73,6 +73,38 @@ export default function AdminForumPage() {
     } catch (err) { /* ignore */ }
   };
 
+  const handleBanUser = async (userId, action) => {
+    const msg = action === 'ban'
+      ? 'Ban this user from the forum? They will not be able to post or comment.'
+      : 'Unban this user from the forum?';
+    if (!confirm(msg)) return;
+    setActionLoading(userId + action);
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action, user_id: userId }),
+      });
+      if (res.ok) fetchPosts();
+    } catch (err) { /* ignore */ }
+    setActionLoading(null);
+  };
+
+  const handleDismissReports = async (postId) => {
+    setActionLoading(postId + 'dismiss');
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ type: 'post', id: postId, action: 'dismiss_reports' }),
+      });
+      if (res.ok) fetchPosts();
+    } catch (err) { /* ignore */ }
+    setActionLoading(null);
+  };
+
   const handleAction = async (postId, action) => {
     setActionLoading(postId + action);
     try {
@@ -303,6 +335,10 @@ export default function AdminForumPage() {
             <div className="stat-value" style={{ color: '#8b5cf6' }}>{stats.totalComments || 0}</div>
             <div className="stat-label">Comments</div>
           </div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.pendingReports || 0}</div>
+            <div className="stat-label">Pending Reports</div>
+          </div>
         </div>
 
         {/* Filters */}
@@ -349,6 +385,7 @@ export default function AdminForumPage() {
                 <tr>
                   <th>Title</th>
                   <th>Author</th>
+                  <th>Email</th>
                   <th>Category</th>
                   <th>Status</th>
                   <th>Stats</th>
@@ -366,13 +403,24 @@ export default function AdminForumPage() {
                         {post.title}
                       </a>
                     </td>
-                    <td>{post.author_name}</td>
+                    <td>
+                      {post.author_name}
+                      {post.is_user_banned && <span className="badge" style={{ background: '#ef444422', color: '#ef4444', marginLeft: '4px' }}>Banned</span>}
+                    </td>
+                    <td style={{ fontSize: '0.75rem', color: '#94a3b8', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {post.user_email || '-'}
+                    </td>
                     <td>
                       <span className="badge badge-category">{post.category_name}</span>
                       {post.day_number && <span style={{ color: '#64748b', marginLeft: '4px' }}>D{post.day_number}</span>}
                     </td>
                     <td>
                       <span className={`badge badge-${post.status}`}>{post.status}</span>
+                      {post.report_count > 0 && (
+                        <span className="badge" style={{ background: '#f59e0b22', color: '#f59e0b', marginLeft: '4px' }}>
+                          {post.report_count} {post.report_count === 1 ? 'report' : 'reports'}
+                        </span>
+                      )}
                     </td>
                     <td style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
                       {post.likes_count}L {post.comments_count}C {post.views_count}V
@@ -428,6 +476,34 @@ export default function AdminForumPage() {
                         >
                           Purge
                         </button>
+                        {post.report_count > 0 && (
+                          <button
+                            className="action-btn"
+                            disabled={!!actionLoading}
+                            onClick={() => handleDismissReports(post.id)}
+                            style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+                          >
+                            Dismiss Reports
+                          </button>
+                        )}
+                        {!post.is_user_banned ? (
+                          <button
+                            className="action-btn danger"
+                            disabled={!!actionLoading}
+                            onClick={() => handleBanUser(post.user_id, 'ban')}
+                          >
+                            Ban User
+                          </button>
+                        ) : (
+                          <button
+                            className="action-btn"
+                            disabled={!!actionLoading}
+                            onClick={() => handleBanUser(post.user_id, 'unban')}
+                            style={{ borderColor: '#10b981', color: '#10b981' }}
+                          >
+                            Unban User
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,6 +1,7 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import { checkSpam, checkForumBan } from '../../../lib/forumSpamCheck';
 
 /**
  * API route: /api/community/comments
@@ -76,11 +77,23 @@ export default async function handler(req, res) {
     try {
       const { post_id, content, author_name, name_type } = req.body;
 
+      // Check if user is banned
+      const banStatus = await checkForumBan(supabase, user.id);
+      if (banStatus.banned) {
+        return res.status(403).json({ error: banStatus.reason });
+      }
+
       if (!post_id || !content?.trim()) {
         return res.status(400).json({ error: 'Post ID and content are required' });
       }
       if (content.trim().length > 5000) {
         return res.status(400).json({ error: 'Comment must be under 5,000 characters' });
+      }
+
+      // Spam check: link limits
+      const spamResult = checkSpam(content);
+      if (!spamResult.ok) {
+        return res.status(400).json({ error: spamResult.reason });
       }
 
       // Check post exists and is not locked

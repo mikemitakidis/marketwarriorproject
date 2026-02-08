@@ -100,10 +100,38 @@ async function handleGet(req, res, supabase) {
   const categoryMap = {};
   (categories || []).forEach(c => { categoryMap[c.id] = c; });
 
+  // Get user emails and ban status for all post authors
+  const userIds = [...new Set((posts || []).map(p => p.user_id))];
+  let userMap = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, email, is_forum_banned')
+      .in('id', userIds);
+    (profiles || []).forEach(p => { userMap[p.id] = p; });
+  }
+
+  // Get report counts per post
+  const postIds = (posts || []).map(p => p.id);
+  let reportCounts = {};
+  if (postIds.length > 0) {
+    const { data: reports } = await supabase
+      .from('forum_reports')
+      .select('post_id')
+      .in('post_id', postIds)
+      .eq('status', 'pending');
+    (reports || []).forEach(r => {
+      if (r.post_id) reportCounts[r.post_id] = (reportCounts[r.post_id] || 0) + 1;
+    });
+  }
+
   const postsWithCategory = (posts || []).map(p => ({
     ...p,
     category_slug: categoryMap[p.category_id]?.slug || 'unknown',
     category_name: categoryMap[p.category_id]?.name || 'Unknown',
+    user_email: userMap[p.user_id]?.email || null,
+    is_user_banned: userMap[p.user_id]?.is_forum_banned || false,
+    report_count: reportCounts[p.id] || 0,
   }));
 
   // Get forum stats
@@ -135,6 +163,11 @@ async function handleGet(req, res, supabase) {
     .from('forum_comments')
     .select('id', { count: 'exact', head: true });
 
+  const { count: pendingReports } = await supabase
+    .from('forum_reports')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+
   return res.status(200).json({
     posts: postsWithCategory,
     categories: categories || [],
@@ -148,15 +181,55 @@ async function handleGet(req, res, supabase) {
       flaggedPosts: flaggedPosts || 0,
       deletedPosts: deletedPosts || 0,
       totalComments: totalComments || 0,
+      pendingReports: pendingReports || 0,
     },
   });
 }
 
 async function handlePut(req, res, supabase) {
-  const { type = 'post', id, action, title, content } = req.body;
+  const { type = 'post', id, action, title, content, user_id, ban_reason } = req.body;
 
-  if (!id || !action) {
-    return res.status(400).json({ error: 'ID and action are required' });
+  if (!action) {
+    return res.status(400).json({ error: 'Action is required' });
+  }
+
+  // Handle ban/unban (operates on user, not post)
+  if (action === 'ban' || action === 'unban') {
+    if (!user_id) {
+      return res.status(400).json({ error: 'user_id is required for ban/unban' });
+    }
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        is_forum_banned: action === 'ban',
+        forum_ban_reason: action === 'ban' ? (ban_reason || 'Banned by admin') : null,
+      })
+      .eq('id', user_id);
+
+    if (error) {
+      logger.error(`Admin ${action} error:`, error);
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(200).json({ success: true, action });
+  }
+
+  // Handle dismiss reports
+  if (action === 'dismiss_reports') {
+    if (!id) {
+      return res.status(400).json({ error: 'ID is required' });
+    }
+    const column = type === 'comment' ? 'comment_id' : 'post_id';
+    await supabase
+      .from('forum_reports')
+      .update({ status: 'dismissed' })
+      .eq(column, id)
+      .eq('status', 'pending');
+
+    return res.status(200).json({ success: true, action });
+  }
+
+  if (!id) {
+    return res.status(400).json({ error: 'ID is required' });
   }
 
   const table = type === 'comment' ? 'forum_comments' : 'forum_posts';
@@ -227,7 +300,7 @@ async function handleDelete(req, res, supabase) {
     return res.status(400).json({ error: 'post_id is required' });
   }
 
-  // Delete in order: comment likes, post likes, comments, views, then the post
+  // Delete in order: reports, comment likes, post likes, comments, views, then the post
   // Get comment IDs first
   const { data: comments } = await supabase
     .from('forum_comments')
@@ -236,13 +309,14 @@ async function handleDelete(req, res, supabase) {
 
   const commentIds = (comments || []).map(c => c.id);
 
+  // Delete comment reports
   if (commentIds.length > 0) {
-    await supabase
-      .from('forum_comment_likes')
-      .delete()
-      .in('comment_id', commentIds);
+    await supabase.from('forum_reports').delete().in('comment_id', commentIds);
+    await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
   }
 
+  // Delete post reports
+  await supabase.from('forum_reports').delete().eq('post_id', post_id);
   await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
   await supabase.from('forum_post_views').delete().eq('post_id', post_id);
   await supabase.from('forum_comments').delete().eq('post_id', post_id);
