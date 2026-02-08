@@ -26,7 +26,7 @@ export async function getServerSideProps({ req, params }) {
     // Fetch post
     const { data: post, error } = await supabase
       .from('forum_posts')
-      .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, status, is_pinned, is_locked, created_at')
+      .select('id, user_id, category_id, author_name, title, content, day_number, image_url, likes_count, comments_count, views_count, status, is_pinned, is_locked, created_at')
       .eq('id', id)
       .eq('status', 'published')
       .single();
@@ -117,6 +117,10 @@ export default function PostPage({ post, comments, userName, userId }) {
   const [postLiked, setPostLiked] = useState(post.user_has_liked);
   const [postLikes, setPostLikes] = useState(post.likes_count);
   const [viewsCount, setViewsCount] = useState(post.views_count);
+  const [reportTarget, setReportTarget] = useState(null); // { type: 'post'|'comment', id }
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState('');
 
   // Record view on mount
   useEffect(() => {
@@ -169,6 +173,34 @@ export default function PostPage({ post, comments, userName, userId }) {
         ));
       }
     } catch (err) { /* ignore */ }
+  };
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!reportTarget || !reportReason.trim()) return;
+    setReportSubmitting(true);
+    setReportSuccess('');
+    try {
+      const res = await fetch('/api/community/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          target_type: reportTarget.type,
+          target_id: reportTarget.id,
+          reason: reportReason.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit report');
+      setReportSuccess('Report submitted. Thank you.');
+      setReportReason('');
+      setTimeout(() => { setReportTarget(null); setReportSuccess(''); }, 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   const handleSubmitComment = async (e) => {
@@ -305,6 +337,48 @@ export default function PostPage({ post, comments, userName, userId }) {
           background: #334155; padding: 16px; border-radius: 8px;
           text-align: center; color: #94a3b8; margin-top: 20px;
         }
+        .report-btn {
+          background: none; border: 1px solid #334155; cursor: pointer;
+          display: flex; align-items: center; gap: 4px; font-size: 0.8rem;
+          color: #64748b; padding: 6px 12px; border-radius: 6px;
+        }
+        .report-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+        .comment-report-btn {
+          background: none; border: none; cursor: pointer; font-size: 0.75rem;
+          color: #64748b; padding: 4px 0; margin-left: 12px;
+        }
+        .comment-report-btn:hover { color: #f59e0b; }
+        .report-overlay {
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center;
+          justify-content: center; z-index: 100;
+        }
+        .report-modal {
+          background: #1e293b; padding: 28px; border-radius: 16px;
+          width: 90%; max-width: 450px; border: 1px solid #334155;
+        }
+        .report-modal h3 { margin-bottom: 16px; }
+        .report-modal textarea {
+          width: 100%; min-height: 80px; padding: 10px; border: 2px solid #334155;
+          border-radius: 8px; background: #0f172a; color: white; font-size: 0.9rem;
+          resize: vertical; margin-bottom: 12px; font-family: inherit;
+        }
+        .report-modal textarea:focus { outline: none; border-color: #667eea; }
+        .report-actions { display: flex; gap: 10px; }
+        .report-submit {
+          padding: 10px 20px; background: #f59e0b; color: #78350f; border: none;
+          border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;
+        }
+        .report-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .report-cancel {
+          padding: 10px 20px; background: #334155; color: white; border: none;
+          border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+        }
+        .report-success { color: #10b981; font-size: 0.85rem; margin-top: 8px; }
+        .post-image {
+          margin-top: 16px; max-width: 100%; max-height: 400px; border-radius: 10px;
+          object-fit: contain; border: 1px solid #334155;
+        }
       `}</style>
 
       <header className="header">
@@ -334,6 +408,7 @@ export default function PostPage({ post, comments, userName, userId }) {
           </div>
 
           <div className="post-content">{post.content}</div>
+          {post.image_url && <img className="post-image" src={post.image_url} alt="" />}
 
           <div className="post-actions">
             <button className={`like-btn ${postLiked ? 'liked' : ''}`} onClick={handlePostLike}>
@@ -341,6 +416,11 @@ export default function PostPage({ post, comments, userName, userId }) {
             </button>
             <span className="stat-text">{post.comments_count} comments</span>
             <span className="stat-text">{viewsCount} views</span>
+            {post.user_id !== userId && (
+              <button className="report-btn" onClick={() => setReportTarget({ type: 'post', id: post.id })}>
+                Report
+              </button>
+            )}
           </div>
         </div>
 
@@ -364,6 +444,11 @@ export default function PostPage({ post, comments, userName, userId }) {
                   >
                     {comment.user_has_liked ? '\u2764' : '\u2661'} {comment.likes_count}
                   </button>
+                  {!comment.is_own && (
+                    <button className="comment-report-btn" onClick={() => setReportTarget({ type: 'comment', id: comment.id })}>
+                      Report
+                    </button>
+                  )}
                 </div>
               </div>
             ))
@@ -416,6 +501,36 @@ export default function PostPage({ post, comments, userName, userId }) {
           )}
         </div>
       </div>
+
+      {reportTarget && (
+        <div className="report-overlay" onClick={() => { setReportTarget(null); setReportReason(''); setReportSuccess(''); }}>
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Report {reportTarget.type === 'post' ? 'Post' : 'Comment'}</h3>
+            {reportSuccess ? (
+              <p className="report-success">{reportSuccess}</p>
+            ) : (
+              <form onSubmit={handleReport}>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Why are you reporting this? (required)"
+                  maxLength={500}
+                  required
+                />
+                <div className="report-actions">
+                  <button type="submit" className="report-submit" disabled={reportSubmitting || !reportReason.trim()}>
+                    {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                  <button type="button" className="report-cancel" onClick={() => { setReportTarget(null); setReportReason(''); }}>
+                    Cancel
+                  </button>
+                </div>
+                {error && <p className="error">{error}</p>}
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

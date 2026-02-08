@@ -36,7 +36,7 @@ export async function getServerSideProps({ req }) {
     // Fetch recent posts (all categories)
     const { data: posts } = await supabase
       .from('forum_posts')
-      .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, is_pinned, is_locked, created_at')
+      .select('id, user_id, category_id, author_name, title, content, day_number, image_url, likes_count, comments_count, views_count, is_pinned, is_locked, created_at')
       .eq('status', 'published')
       .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
@@ -127,10 +127,53 @@ export default function CommunityPage({ categories, posts, userName, userId, day
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [localPosts, setLocalPosts] = useState(posts);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setLocalPosts(posts);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/community/posts?search=${encodeURIComponent(searchQuery.trim())}`, { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        setLocalPosts(data.posts || []);
+      }
+    } catch (err) { /* ignore */ }
+    setSearching(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setLocalPosts(posts);
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be under 5MB');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      setError('Only JPG, PNG, GIF, WebP images allowed');
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError('');
   };
 
   const handleLike = async (postId) => {
@@ -158,6 +201,23 @@ export default function CommunityPage({ categories, posts, userName, userId, day
     setError('');
 
     try {
+      // Upload image first if selected
+      let imageUrl = null;
+      if (imageFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const uploadRes = await fetch('/api/community/upload', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        setUploading(false);
+        if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
+        imageUrl = uploadData.url;
+      }
+
       const res = await fetch('/api/community/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -169,6 +229,7 @@ export default function CommunityPage({ categories, posts, userName, userId, day
           day_number: categorySlug === 'days-1-30' ? dayNumber : null,
           author_name: nameType === 'nickname' ? nickname : userName,
           name_type: nameType,
+          image_url: imageUrl,
         }),
       });
 
@@ -181,6 +242,8 @@ export default function CommunityPage({ categories, posts, userName, userId, day
       setDayNumber('');
       setNameType('fullname');
       setNickname('');
+      setImageFile(null);
+      setImagePreview(null);
       setShowCreatePost(false);
       router.reload();
     } catch (err) {
@@ -410,6 +473,43 @@ export default function CommunityPage({ categories, posts, userName, userId, day
           padding: 60px 20px;
           color: #64748b;
         }
+        .search-bar {
+          display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        .search-bar input {
+          flex: 1; padding: 10px 14px; border: 2px solid #334155; border-radius: 8px;
+          background: #1e293b; color: white; font-size: 0.9rem;
+        }
+        .search-bar input:focus { outline: none; border-color: #667eea; }
+        .search-bar button {
+          padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer;
+          font-size: 0.85rem; font-weight: 600;
+        }
+        .search-bar .search-submit { background: #667eea; color: white; }
+        .search-bar .search-clear { background: #334155; color: #94a3b8; }
+        .search-info { color: #64748b; font-size: 0.85rem; margin-bottom: 12px; }
+        .image-upload-area {
+          border: 2px dashed #334155; border-radius: 8px; padding: 16px;
+          text-align: center; cursor: pointer; transition: border-color 0.15s;
+        }
+        .image-upload-area:hover { border-color: #667eea; }
+        .image-upload-area input { display: none; }
+        .image-upload-label { color: #64748b; font-size: 0.85rem; cursor: pointer; }
+        .image-preview-container {
+          position: relative; display: inline-block; margin-top: 8px;
+        }
+        .image-preview-container img {
+          max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #334155;
+        }
+        .image-remove-btn {
+          position: absolute; top: -8px; right: -8px; background: #ef4444; color: white;
+          border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer;
+          font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
+        }
+        .post-image {
+          margin-top: 8px; max-width: 100%; max-height: 120px; border-radius: 6px;
+          object-fit: cover; border: 1px solid #334155;
+        }
         .empty-state h2 { margin-bottom: 8px; color: #94a3b8; }
         @media (max-width: 768px) {
           .layout {
@@ -464,6 +564,22 @@ export default function CommunityPage({ categories, posts, userName, userId, day
               {showCreatePost ? 'Cancel' : '+ New Post'}
             </button>
           </div>
+
+          <form className="search-bar" onSubmit={handleSearch}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search posts by title, content, or author..."
+            />
+            <button type="submit" className="search-submit" disabled={searching}>
+              {searching ? 'Searching...' : 'Search'}
+            </button>
+            {searchQuery && (
+              <button type="button" className="search-clear" onClick={handleClearSearch}>Clear</button>
+            )}
+          </form>
+          {searchQuery && <div className="search-info">Showing results for &quot;{searchQuery}&quot;</div>}
 
           {showCreatePost && (
             <form className="create-form" onSubmit={handleCreatePost}>
@@ -537,9 +653,29 @@ export default function CommunityPage({ categories, posts, userName, userId, day
                 />
               </div>
 
+              <div className="form-row">
+                <label>Image (optional)</label>
+                <div className="image-upload-area" onClick={() => document.getElementById('image-input').click()}>
+                  <input
+                    id="image-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleImageSelect}
+                  />
+                  {imagePreview ? (
+                    <div className="image-preview-container">
+                      <img src={imagePreview} alt="Preview" />
+                      <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}>x</button>
+                    </div>
+                  ) : (
+                    <span className="image-upload-label">Click to attach an image (JPG, PNG, GIF, WebP - max 5MB)</span>
+                  )}
+                </div>
+              </div>
+
               <div className="form-actions">
-                <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? 'Posting...' : 'Post'}
+                <button type="submit" className="btn-primary" disabled={submitting || uploading}>
+                  {uploading ? 'Uploading image...' : submitting ? 'Posting...' : 'Post'}
                 </button>
                 <button type="button" className="btn-secondary" onClick={() => setShowCreatePost(false)}>
                   Cancel
@@ -572,6 +708,7 @@ export default function CommunityPage({ categories, posts, userName, userId, day
                     {post.day_number && <span className="badge badge-day">Day {post.day_number}</span>}
                   </div>
                   <div className="post-preview">{post.preview}</div>
+                  {post.image_url && <img className="post-image" src={post.image_url} alt="" />}
                   <div className="post-stats">
                     <button
                       className={`like-btn ${post.user_has_liked ? 'liked' : ''}`}

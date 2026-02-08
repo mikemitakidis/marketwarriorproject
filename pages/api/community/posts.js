@@ -1,15 +1,16 @@
 import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
 import logger from '../../../lib/logger';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
+import { checkSpam, checkForumBan } from '../../../lib/forumSpamCheck';
 
 /**
  * API route: /api/community/posts
  *
- * GET: List posts with optional filters (category, day, page, sort)
+ * GET: List posts with optional filters (category, day, page, sort, search)
  *   Returns { posts, categories, totalCount, page, pageSize }
  *
  * POST: Create a new post
- *   Body: { title, content, category_slug, day_number?, author_name, name_type }
+ *   Body: { title, content, category_slug, day_number?, author_name, name_type, image_url? }
  */
 export default async function handler(req, res) {
   const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { category, day, page = '1', sort = 'recent' } = req.query;
+      const { category, day, page = '1', sort = 'recent', search } = req.query;
       const pageNum = Math.max(1, parseInt(page) || 1);
       const pageSize = 20;
       const offset = (pageNum - 1) * pageSize;
@@ -45,7 +46,7 @@ export default async function handler(req, res) {
       // Build query for posts
       let query = supabase
         .from('forum_posts')
-        .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, status, is_pinned, is_locked, created_at', { count: 'exact' })
+        .select('id, user_id, category_id, author_name, title, content, day_number, likes_count, comments_count, views_count, status, is_pinned, is_locked, image_url, created_at', { count: 'exact' })
         .eq('status', 'published');
 
       // Filter by category
@@ -62,6 +63,11 @@ export default async function handler(req, res) {
         if (dayNum >= 1 && dayNum <= 30) {
           query = query.eq('day_number', dayNum);
         }
+      }
+
+      // Search by title or content
+      if (search?.trim()) {
+        query = query.or(`title.ilike.%${search.trim()}%,content.ilike.%${search.trim()}%`);
       }
 
       // Sort: pinned first, then by sort type
@@ -131,7 +137,13 @@ export default async function handler(req, res) {
 
   } else if (req.method === 'POST') {
     try {
-      const { title, content, category_slug, day_number, author_name, name_type } = req.body;
+      const { title, content, category_slug, day_number, author_name, name_type, image_url } = req.body;
+
+      // Check if user is banned
+      const banStatus = await checkForumBan(supabase, user.id);
+      if (banStatus.banned) {
+        return res.status(403).json({ error: banStatus.reason });
+      }
 
       if (!title?.trim() || !content?.trim()) {
         return res.status(400).json({ error: 'Title and content are required' });
@@ -144,6 +156,12 @@ export default async function handler(req, res) {
       }
       if (content.trim().length > 10000) {
         return res.status(400).json({ error: 'Content must be under 10,000 characters' });
+      }
+
+      // Spam check: link limits
+      const spamResult = checkSpam(content + ' ' + title);
+      if (!spamResult.ok) {
+        return res.status(400).json({ error: spamResult.reason });
       }
 
       // Resolve category
@@ -174,16 +192,21 @@ export default async function handler(req, res) {
         displayName = gate.fullName || 'Anonymous';
       }
 
+      const insertData = {
+        user_id: user.id,
+        category_id: cat.id,
+        author_name: displayName,
+        title: title.trim(),
+        content: content.trim(),
+        day_number: dayNum,
+      };
+      if (image_url) {
+        insertData.image_url = image_url;
+      }
+
       const { data: post, error } = await supabase
         .from('forum_posts')
-        .insert({
-          user_id: user.id,
-          category_id: cat.id,
-          author_name: displayName,
-          title: title.trim(),
-          content: content.trim(),
-          day_number: dayNum,
-        })
+        .insert(insertData)
         .select()
         .single();
 
