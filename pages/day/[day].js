@@ -45,8 +45,6 @@ export async function getServerSideProps({ req, params }) {
       .eq('day', dayNum)
       .single();
 
-    console.log(`[Day ${dayNum}] User: ${user.id}, Progress:`, progress, 'Error:', progressError);
-
     // Also check task_submissions as fallback (in case challenge_progress wasn't updated)
     let taskSubmitted = progress?.task_submitted || false;
     if (!taskSubmitted) {
@@ -57,7 +55,6 @@ export async function getServerSideProps({ req, params }) {
         .eq('day', dayNum)
         .limit(1)
         .maybeSingle();
-      console.log(`[Day ${dayNum}] TaskSub check:`, taskSub, 'Error:', taskError);
       taskSubmitted = !!taskSub;
     }
 
@@ -72,11 +69,8 @@ export async function getServerSideProps({ req, params }) {
         .eq('passed', true)
         .limit(1)
         .maybeSingle();
-      console.log(`[Day ${dayNum}] QuizAttempt check:`, quizAttempt, 'Error:', quizError);
       quizPassed = !!quizAttempt;
     }
-
-    console.log(`[Day ${dayNum}] Final values - taskSubmitted: ${taskSubmitted}, quizPassed: ${quizPassed}`);
 
     return {
       props: {
@@ -117,7 +111,6 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
   // Reset ALL local state when day changes (client-side navigation)
   useEffect(() => {
     if (prevDayRef.current !== day) {
-      console.log(`[DayTemplate] Day changed: ${prevDayRef.current} → ${day}, resetting state`);
       setTemplateLoaded(false);
       setError('');
       setStatusMessage('');
@@ -148,7 +141,7 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
               quizPassed,
               taskSubmitted,
               isCompleted,
-            }, '*');
+            }, window.location.origin);
           }
           break;
 

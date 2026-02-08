@@ -26,8 +26,6 @@ export async function getServerSideProps({ req, query }) {
     // If not paid, check if we have a session_id from Stripe redirect
     // This handles the race condition where redirect happens before webhook
     if (!gate.hasPaid && query.session_id) {
-      console.log('[WELCOME] User not marked as paid, but has session_id. Verifying with Stripe...');
-
       try {
         const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
         if (stripeSecretKey) {
@@ -36,8 +34,6 @@ export async function getServerSideProps({ req, query }) {
 
           // Verify this session belongs to this user and payment was successful
           if (session.metadata?.userId === user.id && session.payment_status === 'paid') {
-            console.log('[WELCOME] Stripe session verified as paid. Updating user profile...');
-
             const supabase = getServiceSupabase();
             const now = new Date().toISOString();
 
@@ -70,7 +66,6 @@ export async function getServerSideProps({ req, query }) {
 
             // Re-check gate status
             gate = await getGateStatus(user.id, user.email);
-            console.log('[WELCOME] User profile updated, hasPaid:', gate.hasPaid);
           }
         }
       } catch (stripeErr) {

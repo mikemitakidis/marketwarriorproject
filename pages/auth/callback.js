@@ -40,7 +40,6 @@ export default function AuthCallback() {
         const refresh_token = hashParams.get('refresh_token');
 
         if (access_token && refresh_token) {
-          console.log('Found tokens in hash, setting session...');
           const res = await fetch('/api/auth/set-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -65,7 +64,6 @@ export default function AuthCallback() {
         // Method 2: Check for code in query (authorization code flow)
         const code = queryParams.get('code');
         if (code) {
-          console.log('Found code in query, exchanging for session...');
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           if (error) {
@@ -104,16 +102,13 @@ export default function AuthCallback() {
         }
 
         // Method 3: Try to get session from Supabase (might already be set)
-        console.log('Checking for existing session...');
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          console.log('Found existing session, redirecting...');
           window.location.replace(next || '/dashboard');
           return;
         }
 
         // No auth data found
-        console.log('No auth data found in callback URL');
         setError('No authentication data received. Please try again.');
         setTimeout(() => window.location.replace('/login'), 3000);
 

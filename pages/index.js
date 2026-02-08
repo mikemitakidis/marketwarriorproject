@@ -34,16 +34,22 @@ export async function getServerSideProps() {
 
   // Replace dynamic values in HTML
   // Replace all price occurrences
-  html = html.replace(/\$39\.99/g, `$${price}`);
-  html = html.replace(/Start Your Journey - \$[\d.]+/g, `Start Your Journey - $${price}`);
+  html = html.replace(/\$39\.99/g, `$${safePrice}`);
+  html = html.replace(/Start Your Journey - \$[\d.]+/g, `Start Your Journey - $${safePrice}`);
+
+  // SECURITY: Sanitize values from database before injecting into HTML
+  const safePrice = String(price).replace(/[^0-9.]/g, '');
+  const safeLogo = String(logoUrl).replace(/[<>"']/g, '');
+  const safeFavicon = String(faviconUrl).replace(/[<>"']/g, '');
+  const safeSiteName = String(siteName).replace(/[<>"'&]/g, '');
 
   // Replace logo URL
-  html = html.replace(/src="\/logo\.png"/g, `src="${logoUrl}"`);
-  html = html.replace(/href="\/logo\.png"/g, `href="${faviconUrl}"`);
+  html = html.replace(/src="\/logo\.png"/g, `src="${safeLogo}"`);
+  html = html.replace(/href="\/logo\.png"/g, `href="${safeFavicon}"`);
 
   // Replace site name in title and headers
-  html = html.replace(/Market Warrior - 30-Day Trading Challenge/g, `${siteName} - 30-Day Trading Challenge`);
-  html = html.replace(/<div class="logo-text">Market Warrior<\/div>/g, `<div class="logo-text">${siteName}</div>`);
+  html = html.replace(/Market Warrior - 30-Day Trading Challenge/g, `${safeSiteName} - 30-Day Trading Challenge`);
+  html = html.replace(/<div class="logo-text">Market Warrior<\/div>/g, `<div class="logo-text">${safeSiteName}</div>`);
 
   return { props: { html } };
 }

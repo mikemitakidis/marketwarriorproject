@@ -143,7 +143,7 @@ export default async function handler(req, res) {
   // Helper to send messages to parent
   function sendToParent(type, data) {
     if (window.parent !== window) {
-      window.parent.postMessage({ type, day: DAY, ...data }, '*');
+      window.parent.postMessage({ type, day: DAY, ...data }, window.location.origin);
     }
   }
 

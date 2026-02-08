@@ -148,7 +148,7 @@ export default function ResetPasswordPage({ userEmail }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              placeholder="At least 6 characters"
+              placeholder="At least 8 characters"
             />
           </div>
           <div className="form-group">

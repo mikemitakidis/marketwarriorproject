@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import { useEffect } from 'react';
+import ErrorBoundary from '../components/ErrorBoundary';
 import '../styles/template-content.css';
 
 /**
@@ -22,7 +23,6 @@ export default function App({ Component, pageProps }) {
         // Store in cookie manually as fallback (domain-wide)
         document.cookie = `promotekit_referral=${refParam}; domain=.marketwarrior.club; path=/; max-age=31536000; SameSite=Lax`;
         window.promotekit_referral = refParam;
-        console.log('[PromoteKit Fallback] Captured referral:', refParam);
       }
     };
 
@@ -39,11 +39,11 @@ export default function App({ Component, pageProps }) {
         data-promotekit="146b8488-69a9-452f-8258-e4a6c06c9ada"
         data-domain=".marketwarrior.club"
         strategy="afterInteractive"
-        onLoad={() => {
-          console.log('[PromoteKit] Script loaded, referral:', window.promotekit_referral);
-        }}
+        onLoad={() => {}}
       />
-      <Component {...pageProps} />
+      <ErrorBoundary>
+        <Component {...pageProps} />
+      </ErrorBoundary>
     </>
   );
 }
