@@ -79,9 +79,6 @@ export default function AdminPanel() {
   const [affiliates, setAffiliates] = useState([]);
   const [baseCommission, setBaseCommission] = useState(25);
 
-  // Community state
-  const [threads, setThreads] = useState([]);
-
   // Live feed / Announcements state
   const [announcements, setAnnouncements] = useState([]);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
@@ -93,9 +90,6 @@ export default function AdminPanel() {
     background_color: '#3b82f6',
     text_color: '#ffffff',
   });
-
-  // Certificates state
-  const [certificates, setCertificates] = useState([]);
 
   // Broadcast email state
   const [broadcastAudience, setBroadcastAudience] = useState('all');
@@ -165,9 +159,6 @@ export default function AdminPanel() {
         case 'journal':
           await loadJournalSettings();
           await loadJournalUsers();
-          break;
-        case 'community':
-          await loadCommunity();
           break;
         case 'affiliates':
           await loadAffiliates();
@@ -450,14 +441,6 @@ export default function AdminPanel() {
     }
 
     setBroadcastSending(false);
-  }
-
-  async function loadCommunity() {
-    const res = await fetch('/api/admin/community', { credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      setThreads(data.threads || []);
-    }
   }
 
   async function loadAffiliates() {
