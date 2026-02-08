@@ -35,6 +35,10 @@ export default async function handler(req, res) {
     const supabase = getServiceSupabase();
 
     if (req.method === 'GET') {
+      // If requesting comments for a specific post
+      if (req.query.comments_for) {
+        return handleGetComments(req, res, supabase);
+      }
       return handleGet(req, res, supabase);
     } else if (req.method === 'PUT') {
       return handlePut(req, res, supabase);
@@ -47,6 +51,45 @@ export default async function handler(req, res) {
     logger.error('Admin community error:', err);
     return res.status(500).json({ error: 'Server error' });
   }
+}
+
+async function handleGetComments(req, res, supabase) {
+  const postId = req.query.comments_for;
+  if (!postId) {
+    return res.status(400).json({ error: 'comments_for is required' });
+  }
+
+  const { data: comments, error } = await supabase
+    .from('forum_comments')
+    .select('id, post_id, user_id, author_name, content, status, created_at')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    logger.error('Admin get comments error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  // Get report counts per comment
+  const commentIds = (comments || []).map(c => c.id);
+  let reportCounts = {};
+  if (commentIds.length > 0) {
+    const { data: reports } = await supabase
+      .from('forum_reports')
+      .select('comment_id')
+      .in('comment_id', commentIds)
+      .eq('status', 'pending');
+    (reports || []).forEach(r => {
+      if (r.comment_id) reportCounts[r.comment_id] = (reportCounts[r.comment_id] || 0) + 1;
+    });
+  }
+
+  const commentsWithReports = (comments || []).map(c => ({
+    ...c,
+    report_count: reportCounts[c.id] || 0,
+  }));
+
+  return res.status(200).json({ comments: commentsWithReports });
 }
 
 async function handleGet(req, res, supabase) {
@@ -294,10 +337,39 @@ async function handlePut(req, res, supabase) {
 }
 
 async function handleDelete(req, res, supabase) {
-  const { post_id } = req.body;
+  const { post_id, comment_id } = req.body;
+
+  // Hard delete individual comment
+  if (comment_id) {
+    await supabase.from('forum_reports').delete().eq('comment_id', comment_id);
+    await supabase.from('forum_comment_likes').delete().eq('comment_id', comment_id);
+    const { data: comment } = await supabase
+      .from('forum_comments')
+      .select('post_id')
+      .eq('id', comment_id)
+      .maybeSingle();
+    const { error } = await supabase.from('forum_comments').delete().eq('id', comment_id);
+    if (error) {
+      logger.error('Admin comment DELETE error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    // Update comments_count on the parent post
+    if (comment?.post_id) {
+      const { count } = await supabase
+        .from('forum_comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('post_id', comment.post_id)
+        .eq('status', 'published');
+      await supabase
+        .from('forum_posts')
+        .update({ comments_count: count || 0 })
+        .eq('id', comment.post_id);
+    }
+    return res.status(200).json({ success: true });
+  }
 
   if (!post_id) {
-    return res.status(400).json({ error: 'post_id is required' });
+    return res.status(400).json({ error: 'post_id or comment_id is required' });
   }
 
   // Delete in order: reports, comment likes, post likes, comments, views, then the post

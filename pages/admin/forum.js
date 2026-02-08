@@ -9,7 +9,8 @@ import { useRouter } from 'next/router';
  * - Stats summary (total posts, published, hidden, flagged, deleted, comments)
  * - Status filters, category filters, search
  * - Post list with actions: pin/unpin, lock/unlock, hide, flag, delete, edit
- * - Hard delete option
+ * - Expandable comment rows with hide, delete, edit, purge actions
+ * - Hard delete option for posts and comments
  */
 export default function AdminForumPage() {
   const router = useRouter();
@@ -29,6 +30,13 @@ export default function AdminForumPage() {
   const [editingPost, setEditingPost] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+
+  // Comment state
+  const [expandedPost, setExpandedPost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [editingComment, setEditingComment] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
 
   useEffect(() => {
     checkAdmin();
@@ -73,6 +81,28 @@ export default function AdminForumPage() {
     } catch (err) { /* ignore */ }
   };
 
+  const fetchComments = async (postId) => {
+    setCommentsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/community?comments_for=${postId}`, { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        setComments(data.comments || []);
+      }
+    } catch (err) { /* ignore */ }
+    setCommentsLoading(false);
+  };
+
+  const toggleComments = async (postId) => {
+    if (expandedPost === postId) {
+      setExpandedPost(null);
+      setComments([]);
+    } else {
+      setExpandedPost(postId);
+      await fetchComments(postId);
+    }
+  };
+
   const handleBanUser = async (userId, action) => {
     const msg = action === 'ban'
       ? 'Ban this user from the forum? They will not be able to post or comment.'
@@ -91,16 +121,19 @@ export default function AdminForumPage() {
     setActionLoading(null);
   };
 
-  const handleDismissReports = async (postId) => {
-    setActionLoading(postId + 'dismiss');
+  const handleDismissReports = async (type, id) => {
+    setActionLoading(id + 'dismiss');
     try {
       const res = await fetch('/api/admin/community', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ type: 'post', id: postId, action: 'dismiss_reports' }),
+        body: JSON.stringify({ type, id, action: 'dismiss_reports' }),
       });
-      if (res.ok) fetchPosts();
+      if (res.ok) {
+        fetchPosts();
+        if (expandedPost) fetchComments(expandedPost);
+      }
     } catch (err) { /* ignore */ }
     setActionLoading(null);
   };
@@ -121,6 +154,23 @@ export default function AdminForumPage() {
     setActionLoading(null);
   };
 
+  const handleCommentAction = async (commentId, action) => {
+    setActionLoading(commentId + action);
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ type: 'comment', id: commentId, action }),
+      });
+      if (res.ok) {
+        fetchPosts();
+        if (expandedPost) fetchComments(expandedPost);
+      }
+    } catch (err) { /* ignore */ }
+    setActionLoading(null);
+  };
+
   const handleHardDelete = async (postId) => {
     if (!confirm('Permanently delete this post and all its comments? This cannot be undone.')) return;
     setActionLoading(postId + 'harddelete');
@@ -132,7 +182,29 @@ export default function AdminForumPage() {
         body: JSON.stringify({ post_id: postId }),
       });
       if (res.ok) {
+        if (expandedPost === postId) {
+          setExpandedPost(null);
+          setComments([]);
+        }
         fetchPosts();
+      }
+    } catch (err) { /* ignore */ }
+    setActionLoading(null);
+  };
+
+  const handleHardDeleteComment = async (commentId) => {
+    if (!confirm('Permanently delete this comment? This cannot be undone.')) return;
+    setActionLoading(commentId + 'harddelete');
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ comment_id: commentId }),
+      });
+      if (res.ok) {
+        fetchPosts();
+        if (expandedPost) fetchComments(expandedPost);
       }
     } catch (err) { /* ignore */ }
     setActionLoading(null);
@@ -155,6 +227,28 @@ export default function AdminForumPage() {
       if (res.ok) {
         setEditingPost(null);
         fetchPosts();
+      }
+    } catch (err) { /* ignore */ }
+    setActionLoading(null);
+  };
+
+  const handleEditComment = async (commentId) => {
+    setActionLoading(commentId + 'edit');
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'comment',
+          id: commentId,
+          action: 'edit',
+          content: editCommentContent,
+        }),
+      });
+      if (res.ok) {
+        setEditingComment(null);
+        if (expandedPost) fetchComments(expandedPost);
       }
     } catch (err) { /* ignore */ }
     setActionLoading(null);
@@ -266,6 +360,40 @@ export default function AdminForumPage() {
         .action-btn.danger { border-color: #ef4444; color: #ef4444; }
         .action-btn.danger:hover { background: #ef4444; color: white; }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .comments-toggle {
+          padding: 4px 8px; border: 1px solid #8b5cf6; border-radius: 4px;
+          background: transparent; color: #8b5cf6; cursor: pointer; font-size: 0.7rem;
+          white-space: nowrap;
+        }
+        .comments-toggle:hover { background: #8b5cf622; }
+        .comments-toggle.active { background: #8b5cf6; color: white; }
+        .comments-row td { padding: 0 !important; border-bottom: 2px solid #334155 !important; }
+        .comments-panel {
+          background: #1a2236; padding: 16px 20px; border-left: 3px solid #8b5cf6;
+        }
+        .comments-panel-header {
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155;
+        }
+        .comments-panel-title { font-size: 0.85rem; font-weight: 600; color: #8b5cf6; }
+        .comment-item {
+          background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+          padding: 12px; margin-bottom: 8px;
+        }
+        .comment-item.status-hidden { border-color: #f59e0b44; opacity: 0.7; }
+        .comment-item.status-deleted { border-color: #64748b44; opacity: 0.5; }
+        .comment-header {
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 6px;
+        }
+        .comment-author { font-weight: 600; font-size: 0.8rem; color: #e2e8f0; }
+        .comment-meta { font-size: 0.7rem; color: #64748b; display: flex; gap: 8px; align-items: center; }
+        .comment-content {
+          font-size: 0.8rem; color: #94a3b8; line-height: 1.5;
+          max-height: 80px; overflow: hidden; word-break: break-word;
+        }
+        .comment-actions { display: flex; gap: 4px; margin-top: 8px; }
+        .no-comments { color: #64748b; font-size: 0.8rem; text-align: center; padding: 12px; }
         .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
         .page-btn {
           padding: 8px 16px; background: #1e293b; color: white; border: 1px solid #334155;
@@ -305,7 +433,7 @@ export default function AdminForumPage() {
 
       <div className="container">
         <div className="top-bar">
-          <a href="/admin" className="back-link">← Admin Dashboard</a>
+          <a href="/admin" className="back-link">&larr; Admin Dashboard</a>
           <h1>Forum Moderation</h1>
         </div>
 
@@ -395,118 +523,208 @@ export default function AdminForumPage() {
               </thead>
               <tbody>
                 {posts.map(post => (
-                  <tr key={post.id}>
-                    <td className="post-title-cell">
-                      {post.is_pinned && <span className="badge badge-pinned">Pin</span>}
-                      {post.is_locked && <span className="badge badge-locked">Lock</span>}
-                      <a href={`/community/post/${post.id}`} className="post-link" target="_blank" rel="noopener">
-                        {post.title}
-                      </a>
-                    </td>
-                    <td>
-                      {post.author_name}
-                      {post.is_user_banned && <span className="badge" style={{ background: '#ef444422', color: '#ef4444', marginLeft: '4px' }}>Banned</span>}
-                    </td>
-                    <td style={{ fontSize: '0.75rem', color: '#94a3b8', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {post.user_email || '-'}
-                    </td>
-                    <td>
-                      <span className="badge badge-category">{post.category_name}</span>
-                      {post.day_number && <span style={{ color: '#64748b', marginLeft: '4px' }}>D{post.day_number}</span>}
-                    </td>
-                    <td>
-                      <span className={`badge badge-${post.status}`}>{post.status}</span>
-                      {post.report_count > 0 && (
-                        <span className="badge" style={{ background: '#f59e0b22', color: '#f59e0b', marginLeft: '4px' }}>
-                          {post.report_count} {post.report_count === 1 ? 'report' : 'reports'}
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-                      {post.likes_count}L {post.comments_count}C {post.views_count}V
-                    </td>
-                    <td style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </td>
-                    <td>
-                      <div className="action-btns">
-                        <button
-                          className="action-btn"
-                          disabled={!!actionLoading}
-                          onClick={() => handleAction(post.id, post.is_pinned ? 'unpin' : 'pin')}
-                        >
-                          {post.is_pinned ? 'Unpin' : 'Pin'}
-                        </button>
-                        <button
-                          className="action-btn"
-                          disabled={!!actionLoading}
-                          onClick={() => handleAction(post.id, post.is_locked ? 'unlock' : 'lock')}
-                        >
-                          {post.is_locked ? 'Unlock' : 'Lock'}
-                        </button>
-                        {post.status === 'published' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'hide')}>Hide</button>
-                        )}
-                        {post.status === 'hidden' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'unhide')}>Unhide</button>
-                        )}
-                        {post.status !== 'flagged' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'flag')}>Flag</button>
-                        )}
-                        {post.status === 'flagged' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'unflag')}>Unflag</button>
-                        )}
-                        {post.status === 'deleted' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'restore')}>Restore</button>
-                        )}
-                        {post.status !== 'deleted' && (
-                          <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'delete')}>Del</button>
-                        )}
-                        <button
-                          className="action-btn"
-                          disabled={!!actionLoading}
-                          onClick={() => { setEditingPost(post); setEditTitle(post.title); setEditContent(post.content); }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="action-btn danger"
-                          disabled={!!actionLoading}
-                          onClick={() => handleHardDelete(post.id)}
-                        >
-                          Purge
-                        </button>
+                  <>
+                    <tr key={post.id}>
+                      <td className="post-title-cell">
+                        {post.is_pinned && <span className="badge badge-pinned">Pin</span>}
+                        {post.is_locked && <span className="badge badge-locked">Lock</span>}
+                        <a href={`/community/post/${post.id}`} className="post-link" target="_blank" rel="noopener">
+                          {post.title}
+                        </a>
+                      </td>
+                      <td>
+                        {post.author_name}
+                        {post.is_user_banned && <span className="badge" style={{ background: '#ef444422', color: '#ef4444', marginLeft: '4px' }}>Banned</span>}
+                      </td>
+                      <td style={{ fontSize: '0.75rem', color: '#94a3b8', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {post.user_email || '-'}
+                      </td>
+                      <td>
+                        <span className="badge badge-category">{post.category_name}</span>
+                        {post.day_number && <span style={{ color: '#64748b', marginLeft: '4px' }}>D{post.day_number}</span>}
+                      </td>
+                      <td>
+                        <span className={`badge badge-${post.status}`}>{post.status}</span>
                         {post.report_count > 0 && (
+                          <span className="badge" style={{ background: '#f59e0b22', color: '#f59e0b', marginLeft: '4px' }}>
+                            {post.report_count} {post.report_count === 1 ? 'report' : 'reports'}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                        {post.likes_count}L {post.comments_count}C {post.views_count}V
+                      </td>
+                      <td style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <div className="action-btns">
+                          {post.comments_count > 0 && (
+                            <button
+                              className={`comments-toggle ${expandedPost === post.id ? 'active' : ''}`}
+                              onClick={() => toggleComments(post.id)}
+                            >
+                              {expandedPost === post.id ? 'Hide Comments' : `${post.comments_count} Comments`}
+                            </button>
+                          )}
                           <button
                             className="action-btn"
                             disabled={!!actionLoading}
-                            onClick={() => handleDismissReports(post.id)}
-                            style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+                            onClick={() => handleAction(post.id, post.is_pinned ? 'unpin' : 'pin')}
                           >
-                            Dismiss Reports
+                            {post.is_pinned ? 'Unpin' : 'Pin'}
                           </button>
-                        )}
-                        {!post.is_user_banned ? (
+                          <button
+                            className="action-btn"
+                            disabled={!!actionLoading}
+                            onClick={() => handleAction(post.id, post.is_locked ? 'unlock' : 'lock')}
+                          >
+                            {post.is_locked ? 'Unlock' : 'Lock'}
+                          </button>
+                          {post.status === 'published' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'hide')}>Hide</button>
+                          )}
+                          {post.status === 'hidden' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'unhide')}>Unhide</button>
+                          )}
+                          {post.status !== 'flagged' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'flag')}>Flag</button>
+                          )}
+                          {post.status === 'flagged' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'unflag')}>Unflag</button>
+                          )}
+                          {post.status === 'deleted' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'restore')}>Restore</button>
+                          )}
+                          {post.status !== 'deleted' && (
+                            <button className="action-btn" disabled={!!actionLoading} onClick={() => handleAction(post.id, 'delete')}>Del</button>
+                          )}
+                          <button
+                            className="action-btn"
+                            disabled={!!actionLoading}
+                            onClick={() => { setEditingPost(post); setEditTitle(post.title); setEditContent(post.content); }}
+                          >
+                            Edit
+                          </button>
                           <button
                             className="action-btn danger"
                             disabled={!!actionLoading}
-                            onClick={() => handleBanUser(post.user_id, 'ban')}
+                            onClick={() => handleHardDelete(post.id)}
                           >
-                            Ban User
+                            Purge
                           </button>
-                        ) : (
-                          <button
-                            className="action-btn"
-                            disabled={!!actionLoading}
-                            onClick={() => handleBanUser(post.user_id, 'unban')}
-                            style={{ borderColor: '#10b981', color: '#10b981' }}
-                          >
-                            Unban User
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                          {post.report_count > 0 && (
+                            <button
+                              className="action-btn"
+                              disabled={!!actionLoading}
+                              onClick={() => handleDismissReports('post', post.id)}
+                              style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+                            >
+                              Dismiss Reports
+                            </button>
+                          )}
+                          {!post.is_user_banned ? (
+                            <button
+                              className="action-btn danger"
+                              disabled={!!actionLoading}
+                              onClick={() => handleBanUser(post.user_id, 'ban')}
+                            >
+                              Ban User
+                            </button>
+                          ) : (
+                            <button
+                              className="action-btn"
+                              disabled={!!actionLoading}
+                              onClick={() => handleBanUser(post.user_id, 'unban')}
+                              style={{ borderColor: '#10b981', color: '#10b981' }}
+                            >
+                              Unban User
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Expanded comments row */}
+                    {expandedPost === post.id && (
+                      <tr key={post.id + '-comments'} className="comments-row">
+                        <td colSpan="8">
+                          <div className="comments-panel">
+                            <div className="comments-panel-header">
+                              <span className="comments-panel-title">
+                                Comments on: {post.title}
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                {comments.length} comment{comments.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+
+                            {commentsLoading ? (
+                              <div className="no-comments">Loading comments...</div>
+                            ) : comments.length === 0 ? (
+                              <div className="no-comments">No comments found</div>
+                            ) : (
+                              comments.map(comment => (
+                                <div key={comment.id} className={`comment-item status-${comment.status}`}>
+                                  <div className="comment-header">
+                                    <span className="comment-author">{comment.author_name}</span>
+                                    <div className="comment-meta">
+                                      <span className={`badge badge-${comment.status}`}>{comment.status}</span>
+                                      {comment.report_count > 0 && (
+                                        <span className="badge" style={{ background: '#f59e0b22', color: '#f59e0b' }}>
+                                          {comment.report_count} {comment.report_count === 1 ? 'report' : 'reports'}
+                                        </span>
+                                      )}
+                                      <span>{new Date(comment.created_at).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                  <div className="comment-content">{comment.content}</div>
+                                  <div className="comment-actions">
+                                    {comment.status === 'published' && (
+                                      <button className="action-btn" disabled={!!actionLoading} onClick={() => handleCommentAction(comment.id, 'hide')}>Hide</button>
+                                    )}
+                                    {comment.status === 'hidden' && (
+                                      <button className="action-btn" disabled={!!actionLoading} onClick={() => handleCommentAction(comment.id, 'unhide')}>Unhide</button>
+                                    )}
+                                    {comment.status !== 'deleted' && (
+                                      <button className="action-btn" disabled={!!actionLoading} onClick={() => handleCommentAction(comment.id, 'delete')}>Delete</button>
+                                    )}
+                                    {comment.status === 'deleted' && (
+                                      <button className="action-btn" disabled={!!actionLoading} onClick={() => handleCommentAction(comment.id, 'restore')}>Restore</button>
+                                    )}
+                                    <button
+                                      className="action-btn"
+                                      disabled={!!actionLoading}
+                                      onClick={() => { setEditingComment(comment); setEditCommentContent(comment.content); }}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="action-btn danger"
+                                      disabled={!!actionLoading}
+                                      onClick={() => handleHardDeleteComment(comment.id)}
+                                    >
+                                      Purge
+                                    </button>
+                                    {comment.report_count > 0 && (
+                                      <button
+                                        className="action-btn"
+                                        disabled={!!actionLoading}
+                                        onClick={() => handleDismissReports('comment', comment.id)}
+                                        style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+                                      >
+                                        Dismiss Reports
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
@@ -523,7 +741,7 @@ export default function AdminForumPage() {
         )}
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit Post Modal */}
       {editingPost && (
         <div className="edit-overlay" onClick={() => setEditingPost(null)}>
           <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
@@ -541,6 +759,28 @@ export default function AdminForumPage() {
                 {actionLoading ? 'Saving...' : 'Save Changes'}
               </button>
               <button className="edit-cancel" onClick={() => setEditingPost(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Comment Modal */}
+      {editingComment && (
+        <div className="edit-overlay" onClick={() => setEditingComment(null)}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Comment</h2>
+            <p style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '16px' }}>
+              By {editingComment.author_name} on {new Date(editingComment.created_at).toLocaleString()}
+            </p>
+            <div className="edit-field">
+              <label>Content</label>
+              <textarea value={editCommentContent} onChange={(e) => setEditCommentContent(e.target.value)} />
+            </div>
+            <div className="edit-actions">
+              <button className="edit-save" disabled={!!actionLoading} onClick={() => handleEditComment(editingComment.id)}>
+                {actionLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button className="edit-cancel" onClick={() => setEditingComment(null)}>Cancel</button>
             </div>
           </div>
         </div>
