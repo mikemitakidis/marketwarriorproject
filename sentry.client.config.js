@@ -9,18 +9,18 @@ const SENTRY_ENVIRONMENT = process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process
 Sentry.init({
   dsn: SENTRY_DSN,
 
-  // Sample 10% of transactions in production to stay within Sentry free tier limits
-  // (100% = every page load sends data = burns through quota fast + slows site)
-  tracesSampleRate: SENTRY_ENVIRONMENT === 'production' ? 0.1 : 1.0,
+  // Adjust this value in production, or use tracesSampler for greater control
+  tracesSampleRate: 1.0,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
-  // Capture 50% of error replay sessions (enough to diagnose issues without excessive cost)
-  replaysOnErrorSampleRate: 0.5,
+  // You can remove this option if you're not planning to use the Sentry Session Replay feature:
+  replaysOnErrorSampleRate: 1.0,
 
-  // Sample 1% of normal sessions for general monitoring
-  replaysSessionSampleRate: 0.01,
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
 
   environment: SENTRY_ENVIRONMENT,
 
