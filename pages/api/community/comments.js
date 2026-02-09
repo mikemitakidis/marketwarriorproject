@@ -11,6 +11,12 @@ import { checkSpam, checkForumBan } from '../../../lib/forumSpamCheck';
  *
  * POST: Create a new comment
  *   Body: { post_id, content, author_name, name_type }
+ *
+ * PUT: Edit own comment
+ *   Body: { comment_id, content }
+ *
+ * DELETE: Delete own comment
+ *   Body: { comment_id }
  */
 export default async function handler(req, res) {
   const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
@@ -158,6 +164,99 @@ export default async function handler(req, res) {
       });
     } catch (err) {
       logger.error('comments POST error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  } else if (req.method === 'PUT') {
+    try {
+      const { comment_id, content } = req.body;
+      if (!comment_id || !content?.trim()) {
+        return res.status(400).json({ error: 'comment_id and content are required' });
+      }
+      if (content.trim().length > 5000) {
+        return res.status(400).json({ error: 'Comment must be under 5,000 characters' });
+      }
+
+      // Verify the comment belongs to this user
+      const { data: comment, error: fetchErr } = await supabase
+        .from('forum_comments')
+        .select('id, user_id')
+        .eq('id', comment_id)
+        .single();
+
+      if (fetchErr || !comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+      if (comment.user_id !== user.id) {
+        return res.status(403).json({ error: 'You can only edit your own comments' });
+      }
+
+      const spamResult = checkSpam(content);
+      if (!spamResult.ok) {
+        return res.status(400).json({ error: spamResult.reason });
+      }
+
+      const { error } = await supabase
+        .from('forum_comments')
+        .update({ content: content.trim() })
+        .eq('id', comment_id);
+
+      if (error) {
+        logger.error('Error editing comment:', error);
+        return res.status(500).json({ error: 'Failed to edit comment' });
+      }
+
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      logger.error('comments PUT error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+  } else if (req.method === 'DELETE') {
+    try {
+      const { comment_id } = req.body;
+      if (!comment_id) {
+        return res.status(400).json({ error: 'comment_id is required' });
+      }
+
+      // Verify the comment belongs to this user
+      const { data: comment, error: fetchErr } = await supabase
+        .from('forum_comments')
+        .select('id, post_id, user_id')
+        .eq('id', comment_id)
+        .single();
+
+      if (fetchErr || !comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+      if (comment.user_id !== user.id) {
+        return res.status(403).json({ error: 'You can only delete your own comments' });
+      }
+
+      // Delete related data then the comment
+      await supabase.from('forum_reports').delete().eq('comment_id', comment_id);
+      await supabase.from('forum_comment_likes').delete().eq('comment_id', comment_id);
+      const { error } = await supabase.from('forum_comments').delete().eq('id', comment_id);
+
+      if (error) {
+        logger.error('Error deleting comment:', error);
+        return res.status(500).json({ error: 'Failed to delete comment' });
+      }
+
+      // Update comments_count on the parent post
+      const { count } = await supabase
+        .from('forum_comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('post_id', comment.post_id)
+        .eq('status', 'published');
+
+      await supabase
+        .from('forum_posts')
+        .update({ comments_count: count || 0 })
+        .eq('id', comment.post_id);
+
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      logger.error('comments DELETE error:', err);
       return res.status(500).json({ error: 'Server error' });
     }
   } else {
