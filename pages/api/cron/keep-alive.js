@@ -24,7 +24,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Cron endpoint not configured' });
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  // Use constant-time comparison to prevent timing attacks
+  const expected = `Bearer ${cronSecret}`;
+  const provided = authHeader || '';
+  const isValid = expected.length === provided.length &&
+    require('crypto').timingSafeEqual(Buffer.from(expected), Buffer.from(provided.padEnd(expected.length).slice(0, expected.length)));
+  if (!isValid) {
     logger.warn('Unauthorized cron access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }

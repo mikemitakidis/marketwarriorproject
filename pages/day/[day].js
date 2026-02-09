@@ -146,6 +146,11 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
           break;
 
         case 'QUIZ_COMPLETE':
+          // Don't re-submit if quiz already passed (server also enforces this)
+          if (quizPassed) {
+            setStatusMessage('Quiz already passed!');
+            break;
+          }
           setStatusMessage(`Quiz completed: ${data.score}/${data.total}`);
           // Call quiz submit API
           try {
@@ -269,6 +274,7 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
           className={`template-iframe ${templateLoaded ? 'loaded' : ''}`}
           title={`Day ${day} Content`}
           sandbox="allow-scripts allow-same-origin allow-forms"
+          referrerPolicy="no-referrer"
         />
       </div>
 
