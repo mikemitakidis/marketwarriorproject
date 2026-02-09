@@ -121,6 +121,10 @@ export default function PostPage({ post, comments, userName, userId }) {
   const [reportReason, setReportReason] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState('');
+  const [editingComment, setEditingComment] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Record view on mount
   useEffect(() => {
@@ -233,6 +237,58 @@ export default function PostPage({ post, comments, userName, userId }) {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm('Delete this comment?')) return;
+    setDeletingId(commentId);
+    try {
+      const res = await fetch('/api/community/comments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ comment_id: commentId }),
+      });
+      if (res.ok) {
+        setLocalComments(prev => prev.filter(c => c.id !== commentId));
+      }
+    } catch (err) { /* ignore */ }
+    setDeletingId(null);
+  };
+
+  const handleEditComment = async () => {
+    if (!editingComment || !editCommentContent.trim()) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch('/api/community/comments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ comment_id: editingComment.id, content: editCommentContent.trim() }),
+      });
+      if (res.ok) {
+        setLocalComments(prev => prev.map(c =>
+          c.id === editingComment.id ? { ...c, content: editCommentContent.trim() } : c
+        ));
+        setEditingComment(null);
+      }
+    } catch (err) { /* ignore */ }
+    setEditSaving(false);
+  };
+
+  const handleDeletePost = async () => {
+    if (!confirm('Delete this post and all its comments? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/community/posts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ post_id: post.id }),
+      });
+      if (res.ok) {
+        router.push(`/community/${post.category_slug}`);
+      }
+    } catch (err) { /* ignore */ }
   };
 
   return (
@@ -379,6 +435,46 @@ export default function PostPage({ post, comments, userName, userId }) {
           margin-top: 16px; max-width: 100%; max-height: 400px; border-radius: 10px;
           object-fit: contain; border: 1px solid #334155;
         }
+        .own-action-btn {
+          background: none; border: none; cursor: pointer; font-size: 0.75rem;
+          color: #64748b; padding: 4px 0; margin-left: 12px;
+        }
+        .own-action-btn:hover { color: #667eea; }
+        .own-action-btn.delete:hover { color: #ef4444; }
+        .own-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .post-delete-btn {
+          background: none; border: 1px solid #334155; cursor: pointer;
+          display: flex; align-items: center; gap: 4px; font-size: 0.8rem;
+          color: #64748b; padding: 6px 12px; border-radius: 6px;
+        }
+        .post-delete-btn:hover { border-color: #ef4444; color: #ef4444; }
+        .edit-overlay {
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center;
+          justify-content: center; z-index: 100;
+        }
+        .edit-modal {
+          background: #1e293b; padding: 28px; border-radius: 16px;
+          width: 90%; max-width: 500px; border: 1px solid #334155;
+        }
+        .edit-modal h3 { margin-bottom: 16px; }
+        .edit-modal textarea {
+          width: 100%; min-height: 100px; padding: 10px; border: 2px solid #334155;
+          border-radius: 8px; background: #0f172a; color: white; font-size: 0.9rem;
+          resize: vertical; margin-bottom: 12px; font-family: inherit;
+        }
+        .edit-modal textarea:focus { outline: none; border-color: #667eea; }
+        .edit-actions { display: flex; gap: 10px; }
+        .edit-save {
+          padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white; border: none; border-radius: 8px; font-weight: 600;
+          cursor: pointer; font-size: 0.85rem;
+        }
+        .edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .edit-cancel {
+          padding: 10px 20px; background: #334155; color: white; border: none;
+          border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+        }
       `}</style>
 
       <header className="header">
@@ -421,6 +517,11 @@ export default function PostPage({ post, comments, userName, userId }) {
                 Report
               </button>
             )}
+            {post.user_id === userId && (
+              <button className="post-delete-btn" onClick={handleDeletePost}>
+                Delete Post
+              </button>
+            )}
           </div>
         </div>
 
@@ -444,6 +545,23 @@ export default function PostPage({ post, comments, userName, userId }) {
                   >
                     {comment.user_has_liked ? '\u2764' : '\u2661'} {comment.likes_count}
                   </button>
+                  {comment.is_own && (
+                    <button
+                      className="own-action-btn"
+                      onClick={() => { setEditingComment(comment); setEditCommentContent(comment.content); }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {comment.is_own && (
+                    <button
+                      className="own-action-btn delete"
+                      disabled={deletingId === comment.id}
+                      onClick={() => handleDeleteComment(comment.id)}
+                    >
+                      {deletingId === comment.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
                   {!comment.is_own && (
                     <button className="comment-report-btn" onClick={() => setReportTarget({ type: 'comment', id: comment.id })}>
                       Report
@@ -528,6 +646,25 @@ export default function PostPage({ post, comments, userName, userId }) {
                 {error && <p className="error">{error}</p>}
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {editingComment && (
+        <div className="edit-overlay" onClick={() => setEditingComment(null)}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit Comment</h3>
+            <textarea
+              value={editCommentContent}
+              onChange={(e) => setEditCommentContent(e.target.value)}
+              maxLength={5000}
+            />
+            <div className="edit-actions">
+              <button className="edit-save" disabled={editSaving || !editCommentContent.trim()} onClick={handleEditComment}>
+                {editSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button className="edit-cancel" onClick={() => setEditingComment(null)}>Cancel</button>
+            </div>
           </div>
         </div>
       )}

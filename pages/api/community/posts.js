@@ -11,6 +11,9 @@ import { checkSpam, checkForumBan } from '../../../lib/forumSpamCheck';
  *
  * POST: Create a new post
  *   Body: { title, content, category_slug, day_number?, author_name, name_type, image_url? }
+ *
+ * DELETE: Delete own post (and all its comments/likes)
+ *   Body: { post_id }
  */
 export default async function handler(req, res) {
   const limiter = req.method === 'POST' ? rateLimiters.submission : rateLimiters.general;
@@ -218,6 +221,58 @@ export default async function handler(req, res) {
       return res.status(201).json(post);
     } catch (err) {
       logger.error('community/posts POST error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  } else if (req.method === 'DELETE') {
+    try {
+      const { post_id } = req.body;
+      if (!post_id) {
+        return res.status(400).json({ error: 'post_id is required' });
+      }
+
+      // Verify the post belongs to this user
+      const { data: post, error: fetchErr } = await supabase
+        .from('forum_posts')
+        .select('id, user_id')
+        .eq('id', post_id)
+        .single();
+
+      if (fetchErr || !post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      if (post.user_id !== user.id) {
+        return res.status(403).json({ error: 'You can only delete your own posts' });
+      }
+
+      // Delete related data in order
+      const { data: comments } = await supabase
+        .from('forum_comments')
+        .select('id')
+        .eq('post_id', post_id);
+      const commentIds = (comments || []).map(c => c.id);
+
+      if (commentIds.length > 0) {
+        await supabase.from('forum_reports').delete().in('comment_id', commentIds);
+        await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
+      }
+      await supabase.from('forum_reports').delete().eq('post_id', post_id);
+      await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
+      await supabase.from('forum_post_views').delete().eq('post_id', post_id);
+      await supabase.from('forum_comments').delete().eq('post_id', post_id);
+
+      const { error } = await supabase
+        .from('forum_posts')
+        .delete()
+        .eq('id', post_id);
+
+      if (error) {
+        logger.error('Error deleting post:', error);
+        return res.status(500).json({ error: 'Failed to delete post' });
+      }
+
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      logger.error('community/posts DELETE error:', err);
       return res.status(500).json({ error: 'Server error' });
     }
   } else {
