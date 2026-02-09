@@ -31,7 +31,7 @@ export async function getServerSideProps({ req }) {
 
     // Get time-based unlock status
     const challengeStatus = await getUserChallengeStatus(user.id);
-    const { unlockedDays, completedDays } = challengeStatus;
+    const { unlockedDays, completedDays, welcomeCompletedAt } = challengeStatus;
 
     // Get quiz attempts for average calculation
     const { data: quizAttempts } = await supabase
@@ -68,6 +68,7 @@ export async function getServerSideProps({ req }) {
         },
         unlockedDays,
         completedDays,
+        welcomeCompletedAt: welcomeCompletedAt || null,
       },
     };
   } catch (err) {
@@ -76,7 +77,7 @@ export async function getServerSideProps({ req }) {
   }
 }
 
-export default function Dashboard({ user, stats, unlockedDays, completedDays }) {
+export default function Dashboard({ user, stats, unlockedDays, completedDays, welcomeCompletedAt }) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -92,15 +93,14 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays }) 
     { name: 'Final Challenge', days: [29, 30], icon: '🏆' },
   ];
 
-  // Calculate time until next day unlocks (based on 24h cycle from registration)
+  // Calculate time until next day unlocks (24h from welcome_completed_at per day)
   const getNextUnlockTime = (currentUnlockedCount) => {
     if (currentUnlockedCount >= 30) return 'All days unlocked!';
-    // This is a simple countdown - in reality, we'd need the actual registration time
-    // For now, show a generic message
-    const now = new Date();
-    const nextUnlock = new Date(now);
-    nextUnlock.setHours(24, 0, 0, 0); // Approximate - next midnight
-    const diff = nextUnlock - now;
+    if (!welcomeCompletedAt) return 'Soon';
+    const startTime = new Date(welcomeCompletedAt).getTime();
+    const nextUnlockMs = startTime + currentUnlockedCount * 24 * 60 * 60 * 1000;
+    const diff = nextUnlockMs - Date.now();
+    if (diff <= 0) return 'Refreshing...';
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
