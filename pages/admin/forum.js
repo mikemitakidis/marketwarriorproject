@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
+import { getUserFromRequest, verifyAdminAccess } from '../../lib/serverAuth';
+
+export async function getServerSideProps({ req }) {
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return { redirect: { destination: '/login?redirect=/admin/forum', permanent: false } };
+  }
+  const isAdmin = await verifyAdminAccess(user);
+  if (!isAdmin) {
+    return { redirect: { destination: '/dashboard', permanent: false } };
+  }
+  return { props: {} };
+}
 
 /**
  * Admin Forum Moderation Page.
@@ -13,9 +25,7 @@ import { useRouter } from 'next/router';
  * - Hard delete option for posts and comments
  */
 export default function AdminForumPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({});
@@ -39,29 +49,8 @@ export default function AdminForumPage() {
   const [editCommentContent, setEditCommentContent] = useState('');
 
   useEffect(() => {
-    checkAdmin();
-  }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchPosts();
-    }
-  }, [isAdmin, page, statusFilter, categoryFilter, search]);
-
-  const checkAdmin = async () => {
-    try {
-      const res = await fetch('/api/admin/community', { credentials: 'include' });
-      if (res.ok) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch {
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchPosts();
+  }, [page, statusFilter, categoryFilter, search]);
 
   const fetchPosts = async () => {
     try {
@@ -261,24 +250,6 @@ export default function AdminForumPage() {
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
-
-  if (loading) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center', background: '#0f172a', color: 'white', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }}>
-        Loading...
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center', background: '#0f172a', color: 'white', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }}>
-        <h1>Access Denied</h1>
-        <p style={{ color: '#94a3b8', marginTop: '12px' }}>You do not have permission to access this page.</p>
-        <a href="/dashboard" style={{ color: '#667eea', marginTop: '16px', display: 'inline-block' }}>Return to Dashboard</a>
-      </div>
-    );
-  }
 
   return (
     <>
