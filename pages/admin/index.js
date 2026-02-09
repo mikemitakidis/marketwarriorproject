@@ -99,6 +99,10 @@ export default function AdminPanel() {
   const [broadcastSending, setBroadcastSending] = useState(false);
   const [broadcastResult, setBroadcastResult] = useState(null);
 
+  // Analytics state
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsView, setAnalyticsView] = useState('daily'); // 'daily' or 'monthly'
+
   // Seeding state
   const [seedingContent, setSeedingContent] = useState(false);
 
@@ -169,6 +173,9 @@ export default function AdminPanel() {
         case 'livefeed':
           await loadAnnouncements();
           break;
+        case 'analytics':
+          await loadAnalyticsData();
+          break;
       }
     } catch (err) {
       console.error('Load data error:', err);
@@ -190,6 +197,14 @@ export default function AdminPanel() {
     if (activityRes.ok) {
       const activity = await activityRes.json();
       setRecentActivity(activity.activities || []);
+    }
+  }
+
+  async function loadAnalyticsData() {
+    const res = await fetch('/api/admin/analytics', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setAnalyticsData(data);
     }
   }
 
@@ -2255,35 +2270,374 @@ export default function AdminPanel() {
               {/* Analytics Tab */}
               {activeTab === 'analytics' && (
                 <div>
-                  <div style={styles.card}>
-                    <div style={styles.cardHeader}>
-                      <h2 style={styles.cardTitle}>Analytics Dashboard</h2>
+                  {!analyticsData ? (
+                    <div style={styles.card}>
+                      <p style={{ textAlign: 'center', color: '#64748b', padding: '40px' }}>Loading analytics...</p>
                     </div>
+                  ) : (
+                    <>
+                      {/* Income Summary Cards */}
+                      <div style={styles.card}>
+                        <div style={styles.cardHeader}>
+                          <h2 style={styles.cardTitle}>Income Summary (Last 12 Months)</h2>
+                        </div>
+                        <div style={styles.statsGrid}>
+                          <div style={{ ...styles.statCard, borderLeft: '4px solid #10b981' }}>
+                            <div style={styles.statTitle}>Gross Revenue</div>
+                            <div style={{ ...styles.statValue, color: '#10b981' }}>
+                              ${analyticsData.summary.totalGross12Months.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                          <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
+                            <div style={styles.statTitle}>Stripe Fees</div>
+                            <div style={{ ...styles.statValue, color: '#f59e0b' }}>
+                              -${analyticsData.summary.totalFees12Months.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                          <div style={{ ...styles.statCard, borderLeft: '4px solid #8b5cf6' }}>
+                            <div style={styles.statTitle}>Affiliate Commissions</div>
+                            <div style={{ ...styles.statValue, color: '#8b5cf6' }}>
+                              -${analyticsData.summary.totalAffiliateCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                          <div style={{ ...styles.statCard, borderLeft: '4px solid #3b82f6' }}>
+                            <div style={styles.statTitle}>Net Income</div>
+                            <div style={{ ...styles.statValue, color: '#3b82f6' }}>
+                              ${analyticsData.summary.netAfterAll.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                    <div style={styles.statsGrid}>
-                      <div style={styles.statCard}>
-                        <div style={styles.statTitle}>Total Revenue (All Time)</div>
-                        <div style={styles.statValue}>${dashboardStats.totalRevenue.toLocaleString()}</div>
-                      </div>
-                      <div style={styles.statCard}>
-                        <div style={styles.statTitle}>This Month</div>
-                        <div style={styles.statValue}>${dashboardStats.monthlyRevenue.toLocaleString()}</div>
-                      </div>
-                      <div style={styles.statCard}>
-                        <div style={styles.statTitle}>Avg. Daily Revenue</div>
-                        <div style={styles.statValue}>${dashboardStats.dailyRevenue.toLocaleString()}</div>
-                      </div>
-                      <div style={styles.statCard}>
-                        <div style={styles.statTitle}>Conversion Rate</div>
-                        <div style={styles.statValue}>{dashboardStats.conversionRate}%</div>
-                      </div>
-                    </div>
+                      {/* Revenue Chart */}
+                      <div style={{ ...styles.card, marginTop: '20px' }}>
+                        <div style={{ ...styles.cardHeader, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h2 style={styles.cardTitle}>Revenue</h2>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => setAnalyticsView('daily')}
+                              style={{
+                                padding: '6px 16px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '0.85em',
+                                fontWeight: 600,
+                                background: analyticsView === 'daily' ? '#3b82f6' : '#e2e8f0',
+                                color: analyticsView === 'daily' ? '#fff' : '#64748b',
+                              }}
+                            >
+                              Daily (30d)
+                            </button>
+                            <button
+                              onClick={() => setAnalyticsView('monthly')}
+                              style={{
+                                padding: '6px 16px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '0.85em',
+                                fontWeight: 600,
+                                background: analyticsView === 'monthly' ? '#3b82f6' : '#e2e8f0',
+                                color: analyticsView === 'monthly' ? '#fff' : '#64748b',
+                              }}
+                            >
+                              Monthly (12m)
+                            </button>
+                          </div>
+                        </div>
 
-                    <div style={{ marginTop: '30px' }}>
-                      <h3>Revenue Chart</h3>
-                      <p style={{ color: '#64748b' }}>Revenue chart will be displayed here (integrated with Chart.js)</p>
-                    </div>
-                  </div>
+                        {/* Chart Legend */}
+                        <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85em', color: '#64748b' }}>
+                            <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#10b981', display: 'inline-block' }}></span>
+                            Net Revenue
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85em', color: '#64748b' }}>
+                            <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#f59e0b', display: 'inline-block' }}></span>
+                            Stripe Fees
+                          </span>
+                        </div>
+
+                        {/* Bar Chart */}
+                        {(() => {
+                          const chartData = analyticsView === 'daily'
+                            ? analyticsData.dailyRevenue
+                            : analyticsData.monthlyRevenue;
+                          const maxGross = Math.max(...chartData.map(d => d.gross), 1);
+
+                          return (
+                            <div style={{ overflowX: 'auto' }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'flex-end',
+                                gap: analyticsView === 'daily' ? '2px' : '6px',
+                                height: '220px',
+                                padding: '0 0 30px 0',
+                                position: 'relative',
+                                minWidth: analyticsView === 'daily' ? '600px' : '400px',
+                              }}>
+                                {/* Y-axis guide lines */}
+                                {[0.25, 0.5, 0.75, 1].map(pct => (
+                                  <div key={pct} style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    right: 0,
+                                    bottom: `${30 + pct * 190}px`,
+                                    borderBottom: '1px dashed #e2e8f0',
+                                    zIndex: 0,
+                                  }}>
+                                    <span style={{ position: 'absolute', left: '-5px', top: '-8px', fontSize: '0.7em', color: '#94a3b8' }}>
+                                      ${Math.round(maxGross * pct)}
+                                    </span>
+                                  </div>
+                                ))}
+
+                                {chartData.map((d, i) => {
+                                  const netHeight = maxGross > 0 ? (d.net / maxGross) * 190 : 0;
+                                  const feesHeight = maxGross > 0 ? (d.fees / maxGross) * 190 : 0;
+                                  const label = analyticsView === 'daily'
+                                    ? (d.date || '').slice(5) // MM-DD
+                                    : (() => {
+                                        const parts = (d.month || '').split('-');
+                                        const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                        return monthNames[parseInt(parts[1])] || parts[1];
+                                      })();
+
+                                  return (
+                                    <div key={i} style={{
+                                      flex: 1,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      position: 'relative',
+                                      zIndex: 1,
+                                    }} title={`${analyticsView === 'daily' ? d.date : d.month}: Gross $${d.gross.toFixed(2)} | Net $${d.net.toFixed(2)} | Fees $${d.fees.toFixed(2)} | ${d.count} sale${d.count !== 1 ? 's' : ''}`}>
+                                      {/* Stacked bar: net + fees = gross */}
+                                      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: analyticsView === 'daily' ? '16px' : '40px' }}>
+                                        <div style={{
+                                          height: `${feesHeight}px`,
+                                          background: '#f59e0b',
+                                          borderRadius: feesHeight > 0 ? '2px 2px 0 0' : '0',
+                                          minHeight: d.fees > 0 ? '1px' : '0',
+                                        }} />
+                                        <div style={{
+                                          height: `${netHeight}px`,
+                                          background: '#10b981',
+                                          borderRadius: netHeight > 0 && feesHeight === 0 ? '2px 2px 0 0' : '0',
+                                          minHeight: d.net > 0 ? '1px' : '0',
+                                        }} />
+                                      </div>
+                                      {/* X-axis label */}
+                                      <div style={{
+                                        position: 'absolute',
+                                        bottom: '-28px',
+                                        fontSize: analyticsView === 'daily' ? '0.6em' : '0.75em',
+                                        color: '#94a3b8',
+                                        whiteSpace: 'nowrap',
+                                        transform: analyticsView === 'daily' ? 'rotate(-45deg)' : 'none',
+                                        transformOrigin: 'top center',
+                                      }}>
+                                        {analyticsView === 'daily'
+                                          ? (i % 3 === 0 ? label : '')
+                                          : label
+                                        }
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* User Growth Chart */}
+                      <div style={{ ...styles.card, marginTop: '20px' }}>
+                        <div style={styles.cardHeader}>
+                          <h2 style={styles.cardTitle}>User Signups (Last 30 Days)</h2>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85em', color: '#64748b' }}>
+                            <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#3b82f6', display: 'inline-block' }}></span>
+                            Total Signups
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85em', color: '#64748b' }}>
+                            <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#10b981', display: 'inline-block' }}></span>
+                            Paid Users
+                          </span>
+                        </div>
+
+                        {(() => {
+                          const maxUsers = Math.max(...analyticsData.dailyUsers.map(d => d.total), 1);
+                          return (
+                            <div style={{ overflowX: 'auto' }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'flex-end',
+                                gap: '2px',
+                                height: '180px',
+                                padding: '0 0 30px 0',
+                                position: 'relative',
+                                minWidth: '600px',
+                              }}>
+                                {[0.5, 1].map(pct => (
+                                  <div key={pct} style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    right: 0,
+                                    bottom: `${30 + pct * 150}px`,
+                                    borderBottom: '1px dashed #e2e8f0',
+                                    zIndex: 0,
+                                  }}>
+                                    <span style={{ position: 'absolute', left: '-5px', top: '-8px', fontSize: '0.7em', color: '#94a3b8' }}>
+                                      {Math.round(maxUsers * pct)}
+                                    </span>
+                                  </div>
+                                ))}
+
+                                {analyticsData.dailyUsers.map((d, i) => {
+                                  const totalHeight = maxUsers > 0 ? (d.total / maxUsers) * 150 : 0;
+                                  const paidHeight = maxUsers > 0 ? (d.paid / maxUsers) * 150 : 0;
+                                  const label = (d.date || '').slice(5);
+
+                                  return (
+                                    <div key={i} style={{
+                                      flex: 1,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      position: 'relative',
+                                      zIndex: 1,
+                                      gap: '1px',
+                                    }} title={`${d.date}: ${d.total} signup${d.total !== 1 ? 's' : ''}, ${d.paid} paid`}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '16px', gap: '1px' }}>
+                                        {/* Total signups bar (minus paid portion) */}
+                                        <div style={{
+                                          height: `${Math.max(totalHeight - paidHeight, 0)}px`,
+                                          background: '#3b82f6',
+                                          borderRadius: '2px 2px 0 0',
+                                          minHeight: d.total > d.paid ? '1px' : '0',
+                                        }} />
+                                        {/* Paid portion */}
+                                        <div style={{
+                                          height: `${paidHeight}px`,
+                                          background: '#10b981',
+                                          borderRadius: totalHeight <= paidHeight ? '2px 2px 0 0' : '0',
+                                          minHeight: d.paid > 0 ? '1px' : '0',
+                                        }} />
+                                      </div>
+                                      <div style={{
+                                        position: 'absolute',
+                                        bottom: '-28px',
+                                        fontSize: '0.6em',
+                                        color: '#94a3b8',
+                                        whiteSpace: 'nowrap',
+                                        transform: 'rotate(-45deg)',
+                                        transformOrigin: 'top center',
+                                      }}>
+                                        {i % 3 === 0 ? label : ''}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* User summary row */}
+                        <div style={{ display: 'flex', gap: '30px', marginTop: '25px', flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b', marginBottom: '4px' }}>Total Users</div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 700, color: '#1e293b' }}>{analyticsData.summary.totalUsers}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b', marginBottom: '4px' }}>Paid Users</div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 700, color: '#10b981' }}>{analyticsData.summary.paidUsers}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b', marginBottom: '4px' }}>Conversion Rate</div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 700, color: '#3b82f6' }}>{analyticsData.summary.conversionRate}%</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85em', color: '#64748b', marginBottom: '4px' }}>Signups (30d)</div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 700, color: '#1e293b' }}>
+                              {analyticsData.dailyUsers.reduce((s, d) => s + d.total, 0)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Revenue Breakdown Table */}
+                      <div style={{ ...styles.card, marginTop: '20px' }}>
+                        <div style={styles.cardHeader}>
+                          <h2 style={styles.cardTitle}>
+                            {analyticsView === 'daily' ? 'Daily Breakdown (Last 30 Days)' : 'Monthly Breakdown (Last 12 Months)'}
+                          </h2>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={styles.table}>
+                            <thead>
+                              <tr>
+                                <th style={styles.th}>{analyticsView === 'daily' ? 'Date' : 'Month'}</th>
+                                <th style={{ ...styles.th, textAlign: 'right' }}>Sales</th>
+                                <th style={{ ...styles.th, textAlign: 'right' }}>Gross</th>
+                                <th style={{ ...styles.th, textAlign: 'right' }}>Stripe Fees</th>
+                                <th style={{ ...styles.th, textAlign: 'right' }}>Net Revenue</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(analyticsView === 'daily'
+                                ? [...analyticsData.dailyRevenue].reverse()
+                                : [...analyticsData.monthlyRevenue].reverse()
+                              ).map((d, i) => (
+                                <tr key={i} style={{ background: i % 2 === 0 ? '#f8fafc' : '#fff' }}>
+                                  <td style={styles.td}>
+                                    {analyticsView === 'daily' ? d.date : d.month}
+                                  </td>
+                                  <td style={{ ...styles.td, textAlign: 'right' }}>{d.count}</td>
+                                  <td style={{ ...styles.td, textAlign: 'right' }}>
+                                    ${d.gross.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td style={{ ...styles.td, textAlign: 'right', color: '#f59e0b' }}>
+                                    {d.fees > 0 ? `-$${d.fees.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '$0.00'}
+                                  </td>
+                                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600, color: '#10b981' }}>
+                                    ${d.net.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </td>
+                                </tr>
+                              ))}
+                              {/* Totals row */}
+                              <tr style={{ background: '#f1f5f9', fontWeight: 700 }}>
+                                <td style={styles.td}>Total</td>
+                                <td style={{ ...styles.td, textAlign: 'right' }}>
+                                  {(analyticsView === 'daily' ? analyticsData.dailyRevenue : analyticsData.monthlyRevenue)
+                                    .reduce((s, d) => s + d.count, 0)}
+                                </td>
+                                <td style={{ ...styles.td, textAlign: 'right' }}>
+                                  ${(analyticsView === 'daily' ? analyticsData.dailyRevenue : analyticsData.monthlyRevenue)
+                                    .reduce((s, d) => s + d.gross, 0)
+                                    .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </td>
+                                <td style={{ ...styles.td, textAlign: 'right', color: '#f59e0b' }}>
+                                  -${(analyticsView === 'daily' ? analyticsData.dailyRevenue : analyticsData.monthlyRevenue)
+                                    .reduce((s, d) => s + d.fees, 0)
+                                    .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </td>
+                                <td style={{ ...styles.td, textAlign: 'right', color: '#10b981' }}>
+                                  ${(analyticsView === 'daily' ? analyticsData.dailyRevenue : analyticsData.monthlyRevenue)
+                                    .reduce((s, d) => s + d.net, 0)
+                                    .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
