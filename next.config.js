@@ -76,8 +76,9 @@ const moduleExports = {
               "frame-src 'self' https://js.stripe.com https://accounts.google.com https://s.tradingview.com https://s3.tradingview.com https://*.tradingview.com",
               "object-src 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://checkout.stripe.com",
               "frame-ancestors 'self'",
+              "upgrade-insecure-requests",
             ].join('; ')
           },
         ],

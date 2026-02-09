@@ -44,6 +44,19 @@ export default async function handler(req, res) {
     const userId = user.id;
     const supabase = getServiceSupabase();
 
+    // SECURITY: If quiz already passed, reject re-submission to prevent overwriting passing score
+    const { data: existingAttempt } = await supabase
+      .from('quiz_attempts')
+      .select('passed')
+      .eq('user_id', userId)
+      .eq('day', day)
+      .eq('passed', true)
+      .maybeSingle();
+
+    if (existingAttempt) {
+      return res.status(400).json({ error: 'Quiz already passed. You cannot retake a passed quiz.' });
+    }
+
     // SECURITY: Verify payment status
     const gate = await getGateStatus(userId);
     if (!gate.hasPaid) {

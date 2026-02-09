@@ -157,6 +157,16 @@ export async function getServerSideProps(ctx) {
     if (session) {
       setAuthCookies(ctx.res, session);
 
+      // Update last_login timestamp (non-blocking) - covers server-side OAuth path
+      const { getServiceSupabase: getSvcSupabase } = require('../../lib/serverAuth');
+      getSvcSupabase()
+        .from('user_profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', session.user.id)
+        .then(({ error: updateErr }) => {
+          if (updateErr) console.error('Failed to update last_login (callback SSR):', updateErr.message);
+        });
+
       // If this is a password recovery, redirect to reset password page
       if (type === 'recovery') {
         return { redirect: { destination: '/reset-password', permanent: false } };

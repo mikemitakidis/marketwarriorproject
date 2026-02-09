@@ -17,7 +17,7 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-// Run middleware on all routes
+// Run middleware only on page routes (skip static assets, images, API routes for performance)
 export const config = {
-  matcher: '/:path*',
+  matcher: '/((?!_next/static|_next/image|favicon\\.ico|logo\\.png|api/).*)',
 };

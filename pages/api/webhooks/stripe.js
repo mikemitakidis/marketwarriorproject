@@ -209,7 +209,25 @@ export default async function handler(req, res) {
 
       logger.log(`SUCCESS: Payment processed for user ${userId}, has_paid=true`);
 
-      // 4. Fire Loops "challenge_welcome" event (non-blocking)
+      // 4. Store PromoteKit referral ID for affiliate tracking (if present)
+      // PromoteKit tracks conversions client-side, but storing the referral ID
+      // server-side provides a reliable backup for attribution reconciliation
+      const promotekitReferral = checkout.metadata?.promotekit_referral;
+      if (promotekitReferral) {
+        const { error: refError } = await supabase
+          .from('user_profiles')
+          .update({ promotekit_referral_id: promotekitReferral })
+          .eq('id', userId);
+
+        if (refError) {
+          // Non-critical: log but don't fail the webhook
+          logger.error('Error storing PromoteKit referral ID:', refError.message);
+        } else {
+          logger.log(`PromoteKit referral ${promotekitReferral} stored for user ${userId}`);
+        }
+      }
+
+      // 5. Fire Loops "challenge_welcome" event (non-blocking)
       const customerEmail = checkout.customer_details?.email || checkout.customer_email;
       if (customerEmail) {
         sendLoopsEvent(customerEmail, LOOPS_EVENTS.CHALLENGE_WELCOME, {

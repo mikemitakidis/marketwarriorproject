@@ -36,9 +36,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Day must be a number between 1 and 30' });
     }
 
-    // VALIDATION: Day 2+ requires file upload
-    if (day >= 2 && !attachmentUrl) {
+    // VALIDATION: Days 2-29 require file upload. Day 1 is optional, Day 30 has no task.
+    if (day === 30) {
+      return res.status(400).json({ error: 'Day 30 does not have a task submission. Complete the quiz to finish the challenge.' });
+    }
+    if (day >= 2 && day <= 29 && !attachmentUrl) {
       return res.status(400).json({ error: 'File upload is required for Day 2 and beyond' });
+    }
+
+    // SECURITY: Validate attachment URL if provided (must be HTTPS and from trusted source)
+    if (attachmentUrl) {
+      const urls = attachmentUrl.split(',');
+      for (const url of urls) {
+        const trimmed = url.trim();
+        if (!trimmed.startsWith('https://')) {
+          return res.status(400).json({ error: 'Attachment URL must use HTTPS' });
+        }
+        // Block javascript:, data:, and other dangerous protocols
+        if (/^(javascript|data|vbscript|file):/i.test(trimmed)) {
+          return res.status(400).json({ error: 'Invalid attachment URL' });
+        }
+      }
     }
 
     const userId = user.id;
@@ -56,24 +74,43 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: `Day ${day} is not unlocked yet` });
     }
 
-    // Ensure quiz is passed before accepting task
-    // Check quiz_attempts table (correct table from schema!)
-    const { data: quizAttempt, error: quizErr } = await supabase
-      .from('quiz_attempts')
-      .select('score, max_score, passed')
+    // SECURITY: Prevent duplicate task submissions for the same day
+    const { data: existingTask } = await supabase
+      .from('task_submissions')
+      .select('id')
       .eq('user_id', userId)
       .eq('day', day)
-      .order('submitted_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (quizErr || !quizAttempt) {
-      return res.status(403).json({ error: 'Complete the quiz first' });
+    if (existingTask) {
+      return res.status(400).json({ error: 'Task already submitted for this day.' });
     }
 
-    // Check if passed (60% threshold)
-    const passed = quizAttempt.passed || (quizAttempt.max_score > 0 && quizAttempt.score / quizAttempt.max_score >= 0.6);
-    if (!passed) {
+    // Ensure quiz is passed before accepting task
+    // Check challenge_progress first (authoritative), then quiz_attempts as fallback
+    const { data: progressCheck } = await supabase
+      .from('challenge_progress')
+      .select('quiz_passed')
+      .eq('user_id', userId)
+      .eq('day', day)
+      .maybeSingle();
+
+    let quizIsPassed = progressCheck?.quiz_passed || false;
+
+    // Fallback: check quiz_attempts table if challenge_progress doesn't have it
+    if (!quizIsPassed) {
+      const { data: quizAttempt } = await supabase
+        .from('quiz_attempts')
+        .select('passed')
+        .eq('user_id', userId)
+        .eq('day', day)
+        .eq('passed', true)
+        .maybeSingle();
+      quizIsPassed = !!quizAttempt;
+    }
+
+    if (!quizIsPassed) {
       return res.status(403).json({ error: 'Pass the quiz (60%) before submitting the task' });
     }
 

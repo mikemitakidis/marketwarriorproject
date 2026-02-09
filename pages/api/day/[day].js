@@ -1,4 +1,4 @@
-import { getServiceSupabase, getUserFromRequest, getGateStatus } from '../../../lib/serverAuth';
+import { getServiceSupabase, getUserFromRequest, getGateStatus, getUserChallengeStatus } from '../../../lib/serverAuth';
 import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/ratelimit';
 
 /**
@@ -6,6 +6,9 @@ import { rateLimiters, applyRateLimit, getIdentifier } from '../../../lib/rateli
  *
  * Returns the lesson content, quiz questions, and task prompt for a given day.
  * Ensures user is authenticated, paid, and has access to the day.
+ *
+ * Uses the same time-based unlock logic as the day page (getUserChallengeStatus)
+ * to ensure consistent access control across both the page and API.
  */
 export default async function handler(req, res) {
   // Apply rate limiting for general API access
@@ -37,17 +40,22 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Please complete onboarding first', redirect: '/welcome' });
   }
 
-  // Get progress for this day
-  let { data: progress, error: progError } = await supabase
+  // UNIFIED UNLOCK CHECK: Use the same time-based logic as the day page
+  // This ensures the page and API always agree on which days are accessible
+  const challengeStatus = await getUserChallengeStatus(userId);
+  if (!challengeStatus.unlockedDays.includes(dayNum)) {
+    return res.status(403).json({ error: 'Day is locked. Days unlock every 24 hours from your registration.' });
+  }
+
+  // For day 1, auto-create progress if doesn't exist
+  const { data: progress } = await supabase
     .from('challenge_progress')
     .select('*')
     .eq('user_id', userId)
     .eq('day', dayNum)
-    .single();
+    .maybeSingle();
 
-  // For day 1, auto-create progress if doesn't exist
-  if ((progError || !progress) && dayNum === 1) {
-    // First check if day 1 content exists
+  if (!progress && dayNum === 1) {
     const { data: day1Content } = await supabase
       .from('course_content')
       .select('day')
@@ -58,67 +66,6 @@ export default async function handler(req, res) {
       await supabase
         .from('challenge_progress')
         .upsert({ user_id: userId, day: 1, unlocked: true }, { onConflict: 'user_id,day' });
-
-      const { data: newProgress } = await supabase
-        .from('challenge_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('day', dayNum)
-        .single();
-      progress = newProgress;
-      progError = null;
-    }
-  }
-
-  if (progError || !progress) {
-    return res.status(403).json({ error: 'Day not available yet. Complete previous days first.' });
-  }
-
-  if (!progress.unlocked) {
-    return res.status(403).json({ error: 'Day is locked. Complete previous days first.' });
-  }
-
-  // For days > 1, verify previous day requirements
-  if (dayNum > 1) {
-    const { data: prevProgress } = await supabase
-      .from('challenge_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('day', dayNum - 1)
-      .single();
-
-    if (!prevProgress || !prevProgress.completed) {
-      return res.status(403).json({ error: 'Complete the previous day first' });
-    }
-
-    // Check quiz was passed (using quiz_attempts - correct table!)
-    const { data: quizAttempt } = await supabase
-      .from('quiz_attempts')
-      .select('score, max_score, passed')
-      .eq('user_id', userId)
-      .eq('day', dayNum - 1)
-      .order('submitted_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (quizAttempt) {
-      const passed = quizAttempt.passed || (quizAttempt.max_score > 0 && quizAttempt.score / quizAttempt.max_score >= 0.6);
-      if (!passed) {
-        return res.status(403).json({ error: `Pass Day ${dayNum - 1} quiz (60%) to continue` });
-      }
-    }
-
-    // Check task was submitted
-    const { data: taskSubmission } = await supabase
-      .from('task_submissions')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('day', dayNum - 1)
-      .limit(1)
-      .single();
-
-    if (!taskSubmission) {
-      return res.status(403).json({ error: `Complete Day ${dayNum - 1} task to continue` });
     }
   }
 

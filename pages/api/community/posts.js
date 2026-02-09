@@ -68,9 +68,14 @@ export default async function handler(req, res) {
         }
       }
 
-      // Search by title or content
+      // Search by title or content (sanitize to prevent PostgREST filter injection)
       if (search?.trim()) {
-        query = query.or(`title.ilike.%${search.trim()}%,content.ilike.%${search.trim()}%`);
+        const sanitized = search.trim()
+          .replace(/[\\%_]/g, c => '\\' + c)   // Escape SQL LIKE wildcards
+          .replace(/[(),."']/g, '');             // Strip PostgREST filter chars
+        if (sanitized.length > 0) {
+          query = query.or(`title.ilike.%${sanitized}%,content.ilike.%${sanitized}%`);
+        }
       }
 
       // Sort: pinned first, then by sort type
@@ -204,7 +209,11 @@ export default async function handler(req, res) {
         day_number: dayNum,
       };
       if (image_url) {
-        insertData.image_url = image_url;
+        // Validate image URL: must be HTTPS and not a dangerous protocol
+        if (typeof image_url === 'string' && image_url.startsWith('https://') && !/^(javascript|data|vbscript|file):/i.test(image_url)) {
+          insertData.image_url = image_url;
+        }
+        // Silently ignore invalid URLs
       }
 
       const { data: post, error } = await supabase
@@ -244,21 +253,26 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'You can only delete your own posts' });
       }
 
-      // Delete related data in order
-      const { data: comments } = await supabase
-        .from('forum_comments')
-        .select('id')
-        .eq('post_id', post_id);
-      const commentIds = (comments || []).map(c => c.id);
+      // Delete related data in order (continue even if intermediate steps fail)
+      try {
+        const { data: comments } = await supabase
+          .from('forum_comments')
+          .select('id')
+          .eq('post_id', post_id);
+        const commentIds = (comments || []).map(c => c.id);
 
-      if (commentIds.length > 0) {
-        await supabase.from('forum_reports').delete().in('comment_id', commentIds);
-        await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
+        if (commentIds.length > 0) {
+          await supabase.from('forum_reports').delete().in('comment_id', commentIds);
+          await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
+        }
+        await supabase.from('forum_reports').delete().eq('post_id', post_id);
+        await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
+        await supabase.from('forum_post_views').delete().eq('post_id', post_id);
+        await supabase.from('forum_comments').delete().eq('post_id', post_id);
+      } catch (cleanupErr) {
+        logger.error('Error cleaning up post related data:', cleanupErr);
+        // Continue with post deletion even if cleanup partially failed
       }
-      await supabase.from('forum_reports').delete().eq('post_id', post_id);
-      await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
-      await supabase.from('forum_post_views').delete().eq('post_id', post_id);
-      await supabase.from('forum_comments').delete().eq('post_id', post_id);
 
       const { error } = await supabase
         .from('forum_posts')

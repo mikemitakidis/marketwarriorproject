@@ -34,8 +34,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Cron endpoint not configured' });
   }
 
-  const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  // Use constant-time comparison to prevent timing attacks
+  const authHeader = req.headers.authorization || '';
+  const expected = `Bearer ${cronSecret}`;
+  const isValid = expected.length === authHeader.length &&
+    require('crypto').timingSafeEqual(Buffer.from(expected), Buffer.from(authHeader.padEnd(expected.length).slice(0, expected.length)));
+  if (!isValid) {
     logger.warn('[CRON] Unauthorized email-checks access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }
