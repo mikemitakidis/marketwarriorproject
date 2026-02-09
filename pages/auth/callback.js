@@ -104,7 +104,9 @@ export default function AuthCallback() {
         // Method 3: Try to get session from Supabase (might already be set)
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          window.location.replace(next || '/dashboard');
+          // Validate next to prevent open redirect - only allow safe relative paths
+          const safeNext = (typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') && !next.includes(':') && !next.includes('..')) ? next : '/dashboard';
+          window.location.replace(safeNext);
           return;
         }
 
