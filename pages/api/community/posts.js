@@ -239,49 +239,64 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'post_id is required' });
       }
 
-      // Verify the post belongs to this user
-      const { data: post, error: fetchErr } = await supabase
-        .from('forum_posts')
-        .select('id, user_id')
-        .eq('id', post_id)
-        .single();
+      // Use atomic database function for deletion (single transaction)
+      // This prevents orphaned data if any step fails
+      // Falls back to manual deletion if the function doesn't exist yet
+      const { data: rpcResult, error: rpcError } = await supabase
+        .rpc('delete_forum_post', { p_post_id: post_id, p_user_id: user.id });
 
-      if (fetchErr || !post) {
-        return res.status(404).json({ error: 'Post not found' });
-      }
-      if (post.user_id !== user.id) {
-        return res.status(403).json({ error: 'You can only delete your own posts' });
-      }
+      if (rpcError) {
+        // If RPC function doesn't exist, fall back to manual deletion
+        if (rpcError.message?.includes('function') || rpcError.code === '42883') {
+          logger.log('delete_forum_post RPC not available, using manual deletion');
 
-      // Delete related data in order (continue even if intermediate steps fail)
-      try {
-        const { data: comments } = await supabase
-          .from('forum_comments')
-          .select('id')
-          .eq('post_id', post_id);
-        const commentIds = (comments || []).map(c => c.id);
+          // Verify the post belongs to this user
+          const { data: post, error: fetchErr } = await supabase
+            .from('forum_posts')
+            .select('id, user_id')
+            .eq('id', post_id)
+            .single();
 
-        if (commentIds.length > 0) {
-          await supabase.from('forum_reports').delete().in('comment_id', commentIds);
-          await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
+          if (fetchErr || !post) {
+            return res.status(404).json({ error: 'Post not found' });
+          }
+          if (post.user_id !== user.id) {
+            return res.status(403).json({ error: 'You can only delete your own posts' });
+          }
+
+          // Delete related data in order
+          const { data: comments } = await supabase
+            .from('forum_comments')
+            .select('id')
+            .eq('post_id', post_id);
+          const commentIds = (comments || []).map(c => c.id);
+
+          if (commentIds.length > 0) {
+            await supabase.from('forum_reports').delete().in('comment_id', commentIds);
+            await supabase.from('forum_comment_likes').delete().in('comment_id', commentIds);
+          }
+          await supabase.from('forum_reports').delete().eq('post_id', post_id);
+          await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
+          await supabase.from('forum_post_views').delete().eq('post_id', post_id);
+          await supabase.from('forum_comments').delete().eq('post_id', post_id);
+
+          const { error } = await supabase
+            .from('forum_posts')
+            .delete()
+            .eq('id', post_id);
+
+          if (error) {
+            logger.error('Error deleting post:', error);
+            return res.status(500).json({ error: 'Failed to delete post' });
+          }
+        } else if (rpcError.message?.includes('Not authorized')) {
+          return res.status(403).json({ error: 'You can only delete your own posts' });
+        } else if (rpcError.message?.includes('not found')) {
+          return res.status(404).json({ error: 'Post not found' });
+        } else {
+          logger.error('Error deleting post via RPC:', rpcError);
+          return res.status(500).json({ error: 'Failed to delete post' });
         }
-        await supabase.from('forum_reports').delete().eq('post_id', post_id);
-        await supabase.from('forum_post_likes').delete().eq('post_id', post_id);
-        await supabase.from('forum_post_views').delete().eq('post_id', post_id);
-        await supabase.from('forum_comments').delete().eq('post_id', post_id);
-      } catch (cleanupErr) {
-        logger.error('Error cleaning up post related data:', cleanupErr);
-        // Continue with post deletion even if cleanup partially failed
-      }
-
-      const { error } = await supabase
-        .from('forum_posts')
-        .delete()
-        .eq('id', post_id);
-
-      if (error) {
-        logger.error('Error deleting post:', error);
-        return res.status(500).json({ error: 'Failed to delete post' });
       }
 
       return res.status(200).json({ success: true });

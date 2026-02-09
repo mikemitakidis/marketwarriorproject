@@ -167,6 +167,26 @@ export default async function handler(req, res) {
       const result = await model.generateContent(parts);
       const aiResponse = result.response.text();
 
+      // OUTPUT SAFETY FILTER: Check if the AI accidentally gave trading signals
+      const lowerResponse = aiResponse.toLowerCase();
+      const signalPatterns = [
+        /\b(buy|sell|short|long)\s+(now|immediately|today|this stock|this asset)\b/i,
+        /\bprice target[\s:]+\$?\d/i,
+        /\benter (a |the )?(long|short|buy|sell)\b/i,
+        /\bmy recommendation is to (buy|sell)\b/i,
+      ];
+      const containsSignal = signalPatterns.some(p => p.test(aiResponse));
+      if (containsSignal) {
+        logger.warn('[AI-COACH] Output filter caught potential trading signal, returning safe response');
+        return res.status(200).json({
+          response: 'I can only help with behavioral analysis and risk management education. I cannot provide specific buy/sell signals or trading recommendations. Please rephrase your question to focus on your trading discipline, risk management, or behavioral patterns.\n\n*Disclaimer: This is for educational purposes only and not financial advice.*',
+          stats: tradingContext.stats,
+          tradesAnalyzed: tradingContext.tradesCount,
+          requestsUsed: requestsToday + 1,
+          dailyLimit: userDailyLimit,
+        });
+      }
+
       // 6. INCREMENT DAILY COUNTER (in journal_users table)
       const { error: counterError } = await supabase
         .from('journal_users')
