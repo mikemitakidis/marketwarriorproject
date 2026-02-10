@@ -1,3 +1,4 @@
+import React from 'react';
 import { getUserFromRequest, getGateStatus, getServiceSupabase, getUserChallengeStatus } from '../lib/serverAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -32,6 +33,17 @@ export async function getServerSideProps({ req }) {
     // Get time-based unlock status
     const challengeStatus = await getUserChallengeStatus(user.id);
     const { unlockedDays, completedDays, welcomeCompletedAt } = challengeStatus;
+
+    // Check if user has a certificate
+    let certificate = null;
+    if (completedDays.length === 30) {
+      const { data: cert } = await supabase
+        .from('certificates')
+        .select('certificate_id, full_name, completion_date')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      certificate = cert || null;
+    }
 
     // Get quiz attempts for average calculation
     const { data: quizAttempts } = await supabase
@@ -69,6 +81,11 @@ export async function getServerSideProps({ req }) {
         unlockedDays,
         completedDays,
         welcomeCompletedAt: welcomeCompletedAt || null,
+        certificate: certificate ? {
+          id: certificate.certificate_id,
+          name: certificate.full_name,
+          date: certificate.completion_date,
+        } : null,
       },
     };
   } catch (err) {
@@ -77,12 +94,34 @@ export async function getServerSideProps({ req }) {
   }
 }
 
-export default function Dashboard({ user, stats, unlockedDays, completedDays, welcomeCompletedAt }) {
+export default function Dashboard({ user, stats, unlockedDays, completedDays, welcomeCompletedAt, certificate }) {
   const router = useRouter();
+  const [certLoading, setCertLoading] = React.useState(false);
+  const [certData, setCertData] = React.useState(certificate);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
+  };
+
+  const handleGenerateCertificate = async () => {
+    setCertLoading(true);
+    try {
+      const res = await fetch('/api/certificates/generate', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setCertData({
+          id: data.certificate.certificate_id,
+          name: data.certificate.full_name,
+          date: data.certificate.completion_date,
+        });
+      } else {
+        alert(data.error || 'Failed to generate certificate');
+      }
+    } catch {
+      alert('Failed to generate certificate');
+    }
+    setCertLoading(false);
   };
 
   const phases = [
@@ -271,8 +310,46 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
           font-family: monospace;
           margin-top: 4px;
         }
+        .cert-banner {
+          background: linear-gradient(135deg, #0d1a3a, #162350);
+          border: 2px solid #c9a84c;
+          border-radius: 16px;
+          padding: 28px 32px;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+        }
+        .cert-banner-left { display: flex; align-items: center; gap: 16px; }
+        .cert-banner-icon { font-size: 2.5rem; }
+        .cert-banner-title { font-size: 1.25rem; font-weight: 700; color: #c9a84c; margin-bottom: 4px; }
+        .cert-banner-desc { color: #94a3b8; font-size: 0.9rem; }
+        .cert-banner-id { color: #c9a84c; font-weight: 600; font-size: 0.85rem; margin-top: 4px; }
+        .cert-actions { display: flex; gap: 10px; flex-shrink: 0; }
+        .cert-btn {
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          font-size: 0.9rem;
+          border: none;
+          text-decoration: none;
+          color: white;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .cert-btn-download { background: linear-gradient(135deg, #c9a84c, #e8d48b); color: #0d1a3a; }
+        .cert-btn-share { background: #334155; }
+        .cert-btn-generate { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .cert-btn:hover { opacity: 0.9; transform: translateY(-1px); transition: all 0.2s; }
         @media (max-width: 768px) {
           .stats-grid, .actions-grid { grid-template-columns: repeat(2, 1fr); }
+          .cert-banner { flex-direction: column; text-align: center; }
+          .cert-banner-left { flex-direction: column; }
+          .cert-actions { flex-direction: column; width: 100%; }
+          .cert-btn { justify-content: center; }
         }
       `}</style>
 
@@ -294,6 +371,41 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
           <h1>Welcome back, {user.fullName}! 🔥</h1>
           <p>Your journey to becoming a confident trader continues.</p>
         </div>
+
+        {/* Certificate section - shows when all 30 days completed */}
+        {stats.daysCompleted === 30 && (
+          <div className="cert-banner">
+            <div className="cert-banner-left">
+              <div className="cert-banner-icon">{certData ? '\uD83C\uDF93' : '\uD83C\uDFC6'}</div>
+              <div>
+                {certData ? (
+                  <>
+                    <div className="cert-banner-title">Your Certificate is Ready!</div>
+                    <div className="cert-banner-desc">Congratulations on completing the 30-Day Trading Challenge!</div>
+                    <div className="cert-banner-id">Certificate ID: {certData.id}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="cert-banner-title">Challenge Complete!</div>
+                    <div className="cert-banner-desc">You completed all 30 days! Generate your Certificate of Completion.</div>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="cert-actions">
+              {certData ? (
+                <>
+                  <a href={`/api/certificates/download?id=${certData.id}`} className="cert-btn cert-btn-download">Download PDF</a>
+                  <a href={`/certificate/${certData.id}`} target="_blank" rel="noopener noreferrer" className="cert-btn cert-btn-share">Share</a>
+                </>
+              ) : (
+                <button className="cert-btn cert-btn-generate" onClick={handleGenerateCertificate} disabled={certLoading}>
+                  {certLoading ? 'Generating...' : 'Generate Certificate'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="stats-grid">
           <div className="stat-card">
