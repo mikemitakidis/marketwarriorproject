@@ -34,13 +34,16 @@ export default async function handler(req, res) {
         .order('created_at', { ascending: false });
 
       // Filter by type if specified
-      if (type === 'student') {
+      if (type === 'journal') {
+        // Journal announcements - only journal-specific ones
+        query = query.eq('type', 'journal');
+      } else if (type === 'student') {
         // Student announcements require authentication
         const user = await getUserFromRequest(req);
         if (!user) {
           return res.status(401).json({ error: 'Authentication required for student announcements' });
         }
-        // Students see both student and public announcements
+        // Students see both student and public announcements (not journal)
         query = query.in('type', ['student', 'public']);
       } else if (type === 'public') {
         // Public pages only see public announcements (no auth required)
