@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate Design A - Classic Gold</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #1a1a2e;
+    margin: 0;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .certificate {
+    width: 1056px;
+    height: 816px;
+    background: linear-gradient(145deg, #fefefe 0%, #f8f6f0 100%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  /* Gold border frame */
+  .border-outer {
+    position: absolute;
+    top: 12px; left: 12px; right: 12px; bottom: 12px;
+    border: 3px solid #c9a84c;
+  }
+  .border-inner {
+    position: absolute;
+    top: 20px; left: 20px; right: 20px; bottom: 20px;
+    border: 1px solid #c9a84c;
+  }
+
+  /* Corner ornaments */
+  .corner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    color: #c9a84c;
+    font-size: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .corner-tl { top: 24px; left: 24px; }
+  .corner-tr { top: 24px; right: 24px; }
+  .corner-bl { bottom: 24px; left: 24px; }
+  .corner-br { bottom: 24px; right: 24px; }
+
+  /* Content */
+  .content {
+    position: absolute;
+    top: 60px; left: 70px; right: 70px; bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    font-family: Arial, sans-serif;
+  }
+  .logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2d3748;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: Arial, sans-serif;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #c9a84c;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    font-family: Arial, sans-serif;
+    font-weight: 600;
+  }
+
+  .main-title {
+    font-size: 42px;
+    color: #1a202c;
+    font-weight: 400;
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+  }
+
+  .of-completion {
+    font-size: 16px;
+    color: #718096;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .presented-to {
+    font-size: 12px;
+    color: #a0aec0;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: Arial, sans-serif;
+  }
+
+  .recipient-name {
+    font-size: 38px;
+    color: #2d3748;
+    font-style: italic;
+    border-bottom: 2px solid #c9a84c;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    min-width: 400px;
+  }
+
+  .description {
+    font-size: 13px;
+    color: #4a5568;
+    line-height: 1.6;
+    max-width: 600px;
+    margin-bottom: 16px;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Phases section */
+  .phases {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .phase {
+    background: linear-gradient(135deg, #f7f5ee, #ede9db);
+    border: 1px solid #d4c88a;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #5a5230;
+    font-family: Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .phase-check {
+    color: #c9a84c;
+    font-weight: bold;
+  }
+
+  /* Bottom section */
+  .bottom-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .date-section, .verify-section {
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  .bottom-label {
+    font-size: 10px;
+    color: #a0aec0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .bottom-value {
+    font-size: 14px;
+    color: #2d3748;
+    font-weight: 600;
+  }
+
+  .signature-section {
+    text-align: center;
+  }
+  .signature-img {
+    height: 50px;
+    margin-bottom: 2px;
+  }
+  .signature-line {
+    width: 180px;
+    border-top: 1px solid #c9a84c;
+    margin: 0 auto;
+    padding-top: 4px;
+  }
+  .signature-name {
+    font-size: 13px;
+    color: #2d3748;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+  }
+  .signature-title {
+    font-size: 11px;
+    color: #718096;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Seal */
+  .seal {
+    position: absolute;
+    bottom: 70px;
+    right: 90px;
+    width: 80px;
+    height: 80px;
+    border: 3px solid #c9a84c;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #fefcf3, #f5efd5);
+  }
+  .seal-star { font-size: 18px; color: #c9a84c; }
+  .seal-text {
+    font-size: 8px;
+    color: #c9a84c;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+  }
+
+  .label {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #c9a84c;
+    color: #1a1a2e;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="label">Design A - Classic Gold</div>
+
+<div class="certificate">
+  <div class="border-outer"></div>
+  <div class="border-inner"></div>
+
+  <div class="corner corner-tl">&#10040;</div>
+  <div class="corner corner-tr">&#10040;</div>
+  <div class="corner corner-bl">&#10040;</div>
+  <div class="corner corner-br">&#10040;</div>
+
+  <div class="content">
+    <div class="logo-section">
+      <div class="logo-icon">MW</div>
+      <div class="logo-text">Market Warrior</div>
+    </div>
+
+    <div class="subtitle">30-Day Trading Challenge</div>
+
+    <div class="main-title">Certificate</div>
+    <div class="of-completion">of Completion</div>
+
+    <div class="presented-to">This is proudly presented to</div>
+    <div class="recipient-name">John Smith</div>
+
+    <div class="description">
+      For successfully completing the Market Warrior 30-Day Trading Challenge,
+      demonstrating dedication to mastering the fundamentals of trading and financial markets.
+    </div>
+
+    <div class="phases">
+      <div class="phase"><span class="phase-check">&#10003;</span> Trading Foundations</div>
+      <div class="phase"><span class="phase-check">&#10003;</span> Technical Analysis</div>
+      <div class="phase"><span class="phase-check">&#10003;</span> Advanced Strategies</div>
+      <div class="phase"><span class="phase-check">&#10003;</span> Risk Management</div>
+      <div class="phase"><span class="phase-check">&#10003;</span> Final Challenge</div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="date-section">
+        <div class="bottom-label">Date of Completion</div>
+        <div class="bottom-value">February 10, 2026</div>
+      </div>
+
+      <div class="signature-section">
+        <div style="font-family: 'Brush Script MT', cursive; font-size: 28px; color: #1a365d; margin-bottom: 2px;">Mike Mitakidis</div>
+        <div class="signature-line">
+          <div class="signature-name">Mike Mitakidis</div>
+          <div class="signature-title">Lead Instructor</div>
+        </div>
+      </div>
+
+      <div class="verify-section">
+        <div class="bottom-label">Verification ID</div>
+        <div class="bottom-value">MW-4829</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="seal">
+    <div class="seal-star">&#9733;</div>
+    <div class="seal-text">Verified</div>
+    <div class="seal-text">Complete</div>
+  </div>
+</div>
+
+</body>
+</html>
