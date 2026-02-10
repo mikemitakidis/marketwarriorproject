@@ -97,6 +97,11 @@ export default function AdminPanel() {
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastTransactionalId, setBroadcastTransactionalId] = useState('');
   const [broadcastSending, setBroadcastSending] = useState(false);
+
+  // Certificate state
+  const [certificates, setCertificates] = useState([]);
+  const [certLoading, setCertLoading] = useState(false);
+  const [certForm, setCertForm] = useState({ fullName: '', completionDate: '' });
   const [broadcastResult, setBroadcastResult] = useState(null);
 
   // Analytics state
@@ -176,11 +181,69 @@ export default function AdminPanel() {
         case 'analytics':
           await loadAnalyticsData();
           break;
+        case 'certificates':
+          await loadCertificates();
+          break;
       }
     } catch (err) {
       console.error('Load data error:', err);
     }
     setLoading(false);
+  }
+
+  async function loadCertificates() {
+    const res = await fetch('/api/admin/certificates', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setCertificates(data.certificates || []);
+    }
+  }
+
+  async function handleCreateCertificate() {
+    if (!certForm.fullName || !certForm.completionDate) {
+      alert('Please fill in both name and date');
+      return;
+    }
+    setCertLoading(true);
+    try {
+      const res = await fetch('/api/admin/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          fullName: certForm.fullName,
+          completionDate: certForm.completionDate,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCertForm({ fullName: '', completionDate: '' });
+        await loadCertificates();
+        alert(`Certificate created! ID: ${data.certificate.certificate_id}`);
+      } else {
+        alert(data.error || 'Failed to create certificate');
+      }
+    } catch {
+      alert('Failed to create certificate');
+    }
+    setCertLoading(false);
+  }
+
+  async function handleDeleteCertificate(certificateId) {
+    if (!confirm(`Delete certificate ${certificateId}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch('/api/admin/certificates', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ certificateId }),
+      });
+      if (res.ok) {
+        await loadCertificates();
+      }
+    } catch {
+      alert('Failed to delete certificate');
+    }
   }
 
   async function loadDashboardData() {
@@ -3107,54 +3170,105 @@ export default function AdminPanel() {
               {/* Certificates Tab */}
               {activeTab === 'certificates' && (
                 <div>
+                  {/* Create Certificate */}
                   <div style={styles.card}>
                     <div style={styles.cardHeader}>
-                      <h2 style={styles.cardTitle}>Certificate Management</h2>
+                      <h2 style={styles.cardTitle}>Create Certificate</h2>
                     </div>
-
-                    <div style={styles.certificateCreator}>
-                      <h4 style={{ color: '#92400e' }}>Create Certificate for Friends/Family</h4>
-                      <p style={{ color: '#78350f', marginBottom: '15px' }}>
-                        Create a completion certificate without requiring challenge completion
-                      </p>
-
-                      <div style={styles.formGroup}>
-                        <label style={styles.label}>Full Name</label>
-                        <input type="text" placeholder="Enter recipient's name" style={styles.input} />
-                      </div>
-
-                      <div style={styles.formGroup}>
-                        <label style={styles.label}>Completion Date</label>
-                        <input type="date" style={styles.input} />
-                      </div>
-
-                      <button style={styles.btnPrimary}>Generate Certificate</button>
-                    </div>
-
-                    <h3>Certificate Template</h3>
-                    <p style={{ color: '#64748b', marginBottom: '15px' }}>
-                      Edit the certificate template used for all graduates
+                    <p style={{ color: '#64748b', marginBottom: '20px' }}>
+                      Generate a certificate for friends, family, or anyone - no challenge completion required.
                     </p>
 
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Certificate Background Image URL</label>
-                      <input
-                        type="text"
-                        placeholder="https://example.com/certificate-bg.jpg"
-                        style={styles.input}
-                      />
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={styles.label}>Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="Enter recipient's name"
+                          style={styles.input}
+                          value={certForm.fullName}
+                          onChange={(e) => setCertForm({ ...certForm, fullName: e.target.value })}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={styles.label}>Completion Date</label>
+                        <input
+                          type="date"
+                          style={styles.input}
+                          value={certForm.completionDate}
+                          onChange={(e) => setCertForm({ ...certForm, completionDate: e.target.value })}
+                        />
+                      </div>
                     </div>
 
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Certificate Text Template</label>
-                      <textarea
-                        rows={8}
-                        placeholder="This certifies that {NAME} has successfully completed the Market Warrior 30-Day Challenge..."
-                        style={styles.textarea}
-                      ></textarea>
+                    <button
+                      style={styles.btnPrimary}
+                      onClick={handleCreateCertificate}
+                      disabled={certLoading}
+                    >
+                      {certLoading ? 'Generating...' : 'Generate Certificate'}
+                    </button>
+                  </div>
+
+                  {/* All Certificates */}
+                  <div style={styles.card}>
+                    <div style={styles.cardHeader}>
+                      <h2 style={styles.cardTitle}>All Certificates ({certificates.length})</h2>
                     </div>
 
-                    <button style={styles.btnSuccess}>Save Template</button>
+                    {certificates.length === 0 ? (
+                      <p style={{ color: '#64748b' }}>No certificates issued yet.</p>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                              <th style={{ padding: '10px', textAlign: 'left', color: '#64748b', fontSize: '13px' }}>ID</th>
+                              <th style={{ padding: '10px', textAlign: 'left', color: '#64748b', fontSize: '13px' }}>Name</th>
+                              <th style={{ padding: '10px', textAlign: 'left', color: '#64748b', fontSize: '13px' }}>Date</th>
+                              <th style={{ padding: '10px', textAlign: 'left', color: '#64748b', fontSize: '13px' }}>Issued By</th>
+                              <th style={{ padding: '10px', textAlign: 'left', color: '#64748b', fontSize: '13px' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {certificates.map((cert) => (
+                              <tr key={cert.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '10px', fontWeight: 600, color: '#c9a84c' }}>{cert.certificate_id}</td>
+                                <td style={{ padding: '10px' }}>{cert.full_name}</td>
+                                <td style={{ padding: '10px', color: '#64748b' }}>{new Date(cert.completion_date).toLocaleDateString()}</td>
+                                <td style={{ padding: '10px', color: '#64748b', fontSize: '13px' }}>{cert.issued_by}</td>
+                                <td style={{ padding: '10px' }}>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <a
+                                      href={`/api/certificates/download?id=${cert.certificate_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ ...styles.btnPrimary, fontSize: '12px', padding: '5px 10px', textDecoration: 'none' }}
+                                    >
+                                      Download
+                                    </a>
+                                    <a
+                                      href={`/certificate/${cert.certificate_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ ...styles.btnSuccess, fontSize: '12px', padding: '5px 10px', textDecoration: 'none' }}
+                                    >
+                                      View
+                                    </a>
+                                    <button
+                                      style={{ ...styles.btnDanger, fontSize: '12px', padding: '5px 10px' }}
+                                      onClick={() => handleDeleteCertificate(cert.certificate_id)}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -3455,6 +3569,16 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     fontSize: '0.85em',
+  },
+  btnDanger: {
+    padding: '12px 30px',
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '0.95em',
   },
   btnSmSuccess: {
     padding: '8px 16px',
