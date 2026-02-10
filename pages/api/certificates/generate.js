@@ -1,5 +1,5 @@
 import { getUserFromRequest, getServiceSupabase, getUserChallengeStatus } from '../../../lib/serverAuth';
-import { generateUniqueCertificateId, formatCertificateDate } from '../../../lib/certificateGenerator';
+import { generateUniqueCertificateId } from '../../../lib/certificateGenerator';
 import logger from '../../../lib/logger';
 
 export default async function handler(req, res) {
@@ -51,18 +51,42 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'User name not found' });
     }
 
+    // Get actual challenge completion date (Day 30 completed_at, or latest day)
+    const { data: day30 } = await supabase
+      .from('challenge_progress')
+      .select('completed_at')
+      .eq('user_id', user.id)
+      .eq('day', 30)
+      .eq('completed', true)
+      .maybeSingle();
+
+    let completionDateRaw;
+    if (day30?.completed_at) {
+      completionDateRaw = new Date(day30.completed_at);
+    } else {
+      // Fallback: latest completed day timestamp
+      const { data: latest } = await supabase
+        .from('challenge_progress')
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      completionDateRaw = latest?.completed_at ? new Date(latest.completed_at) : new Date();
+    }
+
     // Generate unique certificate ID
     const certificateId = await generateUniqueCertificateId(supabase);
-    const completionDate = formatCertificateDate(new Date());
 
-    // Store in database
+    // Store in database with actual completion date
     const { data: cert, error: insertError } = await supabase
       .from('certificates')
       .insert({
         user_id: user.id,
         certificate_id: certificateId,
         full_name: profile.full_name,
-        completion_date: new Date().toISOString().split('T')[0],
+        completion_date: completionDateRaw.toISOString().split('T')[0],
         issued_by: 'system',
       })
       .select()
@@ -78,7 +102,7 @@ export default async function handler(req, res) {
       certificate: {
         certificate_id: certificateId,
         full_name: profile.full_name,
-        completion_date: completionDate,
+        completion_date: completionDateRaw.toISOString().split('T')[0],
       },
     });
   } catch (err) {
