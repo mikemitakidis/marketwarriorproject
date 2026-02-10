@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import AnnouncementBanner from '../AnnouncementBanner';
 
 export default function JournalLayout({ children, user, title = 'Trading Journal', settings }) {
   const router = useRouter();
@@ -319,6 +320,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         </aside>
 
         <main className="main">
+          <AnnouncementBanner type="journal" />
           <div className="content">
             {children}
           </div>

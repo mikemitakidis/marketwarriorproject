@@ -73,7 +73,8 @@ export default async function handler(req, res) {
         }
       }
 
-      const announcementType = type === 'public' ? 'public' : 'student';
+      const validTypes = ['student', 'public', 'journal'];
+      const announcementType = validTypes.includes(type) ? type : 'student';
 
       const { data, error } = await supabase
         .from('announcements')
@@ -134,7 +135,10 @@ export default async function handler(req, res) {
       if (message !== undefined) updates.message = message.trim();
       if (link_url !== undefined) updates.link_url = sanitizedLinkUrl;
       if (link_text !== undefined) updates.link_text = link_text?.trim() || null;
-      if (type !== undefined) updates.type = type === 'public' ? 'public' : 'student';
+      if (type !== undefined) {
+        const validTypes = ['student', 'public', 'journal'];
+        updates.type = validTypes.includes(type) ? type : 'student';
+      }
       if (is_visible !== undefined) updates.is_visible = Boolean(is_visible);
       if (background_color !== undefined) updates.background_color = background_color;
       if (text_color !== undefined) updates.text_color = text_color;

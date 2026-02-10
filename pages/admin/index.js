@@ -2803,7 +2803,8 @@ export default function AdminPanel() {
                             onChange={(e) => setNewAnnouncement({ ...newAnnouncement, type: e.target.value })}
                             style={styles.select}
                           >
-                            <option value="student">Student Only (Dashboard, Days, Journal, Community)</option>
+                            <option value="student">Student Only (Dashboard, Days, Community)</option>
+                            <option value="journal">Journal Only (Trading Journal pages)</option>
                             <option value="public">Public (Landing Page + All Student Pages)</option>
                           </select>
                         </div>
@@ -2934,9 +2935,9 @@ export default function AdminPanel() {
                               <td>
                                 <span style={{
                                   ...styles.badge,
-                                  ...(ann.type === 'public' ? styles.badgeSuccess : styles.badgeInfo),
+                                  ...(ann.type === 'public' ? styles.badgeSuccess : ann.type === 'journal' ? styles.badgeWarning : styles.badgeInfo),
                                 }}>
-                                  {ann.type === 'public' ? '🌐 Public' : '👥 Student'}
+                                  {ann.type === 'public' ? '🌐 Public' : ann.type === 'journal' ? '📓 Journal' : '👥 Student'}
                                 </span>
                               </td>
                               <td>
@@ -3040,6 +3041,7 @@ export default function AdminPanel() {
                             style={styles.select}
                           >
                             <option value="student">Student Only</option>
+                            <option value="journal">Journal Only</option>
                             <option value="public">Public</option>
                           </select>
                         </div>
