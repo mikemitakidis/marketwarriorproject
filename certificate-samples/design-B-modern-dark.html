@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate Design B - Modern Dark</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #0a0a1a;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .certificate {
+    width: 1056px;
+    height: 816px;
+    background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 40%, #0f172a 100%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* Gradient border */
+  .gradient-border {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 4px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #667eea, #f093fb);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Decorative glow spots */
+  .glow-1 {
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(102,126,234,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .glow-2 {
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(118,75,162,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Grid pattern overlay */
+  .grid-pattern {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .content {
+    position: absolute;
+    top: 50px; left: 70px; right: 70px; bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+  }
+
+  .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .logo-icon {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .challenge-badge {
+    background: rgba(102,126,234,0.15);
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 20px;
+    padding: 5px 18px;
+    font-size: 11px;
+    color: #a78bfa;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 22px;
+  }
+
+  .main-title {
+    font-size: 48px;
+    font-weight: 200;
+    color: white;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .of-completion {
+    font-size: 14px;
+    color: #a78bfa;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+    margin-bottom: 20px;
+  }
+
+  .presented-to {
+    font-size: 11px;
+    color: #64748b;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .recipient-name {
+    font-size: 40px;
+    font-weight: 300;
+    color: white;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+
+  .description {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.7;
+    max-width: 580px;
+    margin-bottom: 20px;
+  }
+
+  /* Phases as horizontal pills */
+  .phases {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .phase {
+    background: rgba(102,126,234,0.1);
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: #c4b5fd;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .phase-icon {
+    font-size: 12px;
+  }
+
+  /* Bottom section */
+  .bottom-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .info-block {
+    text-align: center;
+  }
+  .info-label {
+    font-size: 9px;
+    color: #475569;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .info-value {
+    font-size: 14px;
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+
+  .signature-section {
+    text-align: center;
+  }
+  .signature-cursive {
+    font-family: 'Brush Script MT', 'Segoe Script', cursive;
+    font-size: 30px;
+    color: #a78bfa;
+    margin-bottom: 4px;
+  }
+  .signature-line {
+    width: 180px;
+    border-top: 1px solid rgba(102,126,234,0.4);
+    margin: 0 auto;
+    padding-top: 6px;
+  }
+  .signature-name {
+    font-size: 13px;
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  .signature-title {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* Seal */
+  .seal {
+    position: absolute;
+    bottom: 55px;
+    right: 85px;
+    width: 85px;
+    height: 85px;
+    border: 2px solid rgba(102,126,234,0.4);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102,126,234,0.08);
+    z-index: 2;
+  }
+  .seal-icon { font-size: 20px; margin-bottom: 2px; }
+  .seal-text {
+    font-size: 8px;
+    color: #a78bfa;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .label {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 18px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="label">Design B - Modern Dark</div>
+
+<div class="certificate">
+  <div class="gradient-border"></div>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+  <div class="grid-pattern"></div>
+
+  <div class="content">
+    <div class="logo-section">
+      <div class="logo-icon">MW</div>
+      <div class="logo-text">Market Warrior</div>
+    </div>
+
+    <div class="challenge-badge">30-Day Trading Challenge</div>
+
+    <div class="main-title">Certificate</div>
+    <div class="of-completion">of Completion</div>
+
+    <div class="divider"></div>
+
+    <div class="presented-to">Awarded to</div>
+    <div class="recipient-name">John Smith</div>
+
+    <div class="description">
+      For successfully completing all 30 days of the Market Warrior Trading Challenge,
+      demonstrating commitment to mastering the fundamentals of trading and financial markets.
+    </div>
+
+    <div class="phases">
+      <div class="phase"><span class="phase-icon">&#10003;</span> Trading Foundations</div>
+      <div class="phase"><span class="phase-icon">&#10003;</span> Technical Analysis</div>
+      <div class="phase"><span class="phase-icon">&#10003;</span> Advanced Strategies</div>
+      <div class="phase"><span class="phase-icon">&#10003;</span> Risk Management</div>
+      <div class="phase"><span class="phase-icon">&#10003;</span> Final Challenge</div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="info-block">
+        <div class="info-label">Completion Date</div>
+        <div class="info-value">February 10, 2026</div>
+      </div>
+
+      <div class="signature-section">
+        <div class="signature-cursive">Mike Mitakidis</div>
+        <div class="signature-line">
+          <div class="signature-name">Mike Mitakidis</div>
+          <div class="signature-title">Lead Instructor</div>
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-label">Verification ID</div>
+        <div class="info-value">MW-4829</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="seal">
+    <div class="seal-icon">&#9733;</div>
+    <div class="seal-text">Verified</div>
+    <div class="seal-text">Complete</div>
+  </div>
+</div>
+
+</body>
+</html>
