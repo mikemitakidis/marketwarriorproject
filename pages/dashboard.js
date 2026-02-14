@@ -341,7 +341,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
           gap: 6px;
         }
         .cert-btn-download { background: linear-gradient(135deg, #c9a84c, #e8d48b); color: #0d1a3a; }
-        .cert-btn-share { background: #334155; }
+        .cert-btn-share { background: #0077b5; }
         .cert-btn-generate { background: linear-gradient(135deg, #22c55e, #16a34a); }
         .cert-btn:hover { opacity: 0.9; transform: translateY(-1px); transition: all 0.2s; }
         @media (max-width: 768px) {
@@ -396,7 +396,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
               {certData ? (
                 <>
                   <a href={`/api/certificates/download?id=${certData.id}`} className="cert-btn cert-btn-download">Download PDF</a>
-                  <a href={`/certificate/${certData.id}`} target="_blank" rel="noopener noreferrer" className="cert-btn cert-btn-share">Share</a>
+                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://www.marketwarrior.club/certificate/${certData.id}`)}`} target="_blank" rel="noopener noreferrer" className="cert-btn cert-btn-share">Share on LinkedIn</a>
                 </>
               ) : (
                 <button className="cert-btn cert-btn-generate" onClick={handleGenerateCertificate} disabled={certLoading}>

@@ -193,6 +193,29 @@ export default function CertificateVerification({ certificate }) {
           transition: transform 0.2s;
         }
         .download-btn:hover { transform: translateY(-2px); }
+        .linkedin-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #0077b5;
+          color: white;
+          border: none;
+          padding: 14px 32px;
+          border-radius: 10px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: none;
+          transition: transform 0.2s;
+          margin-left: 12px;
+        }
+        .linkedin-btn:hover { transform: translateY(-2px); background: #005e93; }
+        .btn-row {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
         .footer {
           color: #475569;
           font-size: 0.85rem;
@@ -236,9 +259,19 @@ export default function CertificateVerification({ certificate }) {
           </div>
         </div>
 
-        <a href={`/api/certificates/download?id=${certificate.id}`} className="download-btn">
-          &#128196; Download Certificate PDF
-        </a>
+        <div className="btn-row">
+          <a href={`/api/certificates/download?id=${certificate.id}`} className="download-btn">
+            &#128196; Download PDF
+          </a>
+          <a
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${baseUrl}/certificate/${certificate.id}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="linkedin-btn"
+          >
+            Share on LinkedIn
+          </a>
+        </div>
 
         <div className="footer">
           <p>Issued by <a href="https://www.marketwarrior.club">Market Warrior</a></p>
