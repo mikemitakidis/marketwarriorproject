@@ -396,7 +396,7 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
               {certData ? (
                 <>
                   <a href={`/api/certificates/download?id=${certData.id}`} className="cert-btn cert-btn-download">Download PDF</a>
-                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://www.marketwarrior.club/certificate/${certData.id}`)}`} target="_blank" rel="noopener noreferrer" className="cert-btn cert-btn-share">Share on LinkedIn</a>
+                  <a href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent('30-Day Trading Challenge')}&organizationId=111592077&issueYear=${new Date(certData.date).getFullYear()}&issueMonth=${new Date(certData.date).getMonth() + 1}&certId=${certData.id}&certUrl=${encodeURIComponent(`https://www.marketwarrior.club/certificate/${certData.id}`)}`} target="_blank" rel="noopener noreferrer" className="cert-btn cert-btn-share">Add to LinkedIn</a>
                 </>
               ) : (
                 <button className="cert-btn cert-btn-generate" onClick={handleGenerateCertificate} disabled={certLoading}>

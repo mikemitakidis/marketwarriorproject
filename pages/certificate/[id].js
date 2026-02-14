@@ -264,12 +264,12 @@ export default function CertificateVerification({ certificate }) {
             &#128196; Download PDF
           </a>
           <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${baseUrl}/certificate/${certificate.id}`)}`}
+            href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent('30-Day Trading Challenge')}&organizationId=111592077&issueYear=${new Date(certificate.completionDate).getFullYear()}&issueMonth=${new Date(certificate.completionDate).getMonth() + 1}&certId=${certificate.id}&certUrl=${encodeURIComponent(`${baseUrl}/certificate/${certificate.id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="linkedin-btn"
           >
-            Share on LinkedIn
+            Add to LinkedIn Profile
           </a>
         </div>
 
