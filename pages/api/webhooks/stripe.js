@@ -235,6 +235,30 @@ export default async function handler(req, res) {
         }).catch(err => logger.error('[LOOPS] challenge_welcome fire-and-forget error:', err));
       }
 
+      // 6. Send admin notification email via Resend (non-blocking)
+      const resendKey = process.env.RESEND_API_KEY;
+      const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || 'support@marketwarrior.club';
+      if (resendKey) {
+        const amountDisplay = checkout.amount_total
+          ? `${(checkout.amount_total / 100).toFixed(2)} ${(checkout.currency || 'usd').toUpperCase()}`
+          : 'unknown';
+        fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Market Warrior <status@mail.marketwarrior.club>',
+            to: adminEmail,
+            subject: `New Payment: ${amountDisplay}`,
+            html: `<p><strong>New payment received!</strong></p>
+              <p>Email: ${customerEmail || 'unknown'}</p>
+              <p>Amount: ${amountDisplay}</p>
+              <p>User ID: ${userId}</p>
+              <p>Session: ${checkout.id}</p>
+              <p>Time: ${new Date().toUTCString()}</p>`,
+          }),
+        }).catch(err => console.error('[WEBHOOK] Admin notification failed:', err.message));
+      }
+
     } catch (err) {
       logger.error('Error processing checkout:', err);
       return res.status(500).json({ error: 'Processing error' });
