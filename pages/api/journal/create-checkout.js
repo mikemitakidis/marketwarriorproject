@@ -58,27 +58,47 @@ export default async function handler(req, res) {
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
 
     // Determine mode based on price type (one-time vs recurring)
-    const { productType = 'lifetime' } = req.body || {};
+    const { productType = 'lifetime', currency = 'usd' } = req.body || {};
     const mode = productType === 'subscription' ? 'subscription' : 'payment';
+
+    // Validate currency
+    const supportedCurrencies = ['usd', 'eur', 'gbp', 'aud', 'cad', 'nzd'];
+    const selectedCurrency = supportedCurrencies.includes(currency.toLowerCase()) ? currency.toLowerCase() : 'usd';
 
     // ── Price resolution ────────────────────────────────────────────
     let priceId = null;
     let priceSource = 'none';
 
-    // Strategy 1: Product-based dynamic lookup (preferred)
+    // Strategy 1: Product-based dynamic lookup with currency (preferred)
     const journalProductId = process.env.STRIPE_JOURNAL_PRODUCT_ID;
     if (journalProductId) {
       try {
+        // Look up the active price for the user's currency
         const prices = await stripe.prices.list({
           product: journalProductId,
           active: true,
+          currency: selectedCurrency,
           limit: 1,
         });
         if (prices.data.length > 0) {
           priceId = prices.data[0].id;
-          priceSource = `product:${journalProductId}`;
-        } else {
-          console.error(`[JOURNAL-CHECKOUT] No active price on product ${journalProductId}`);
+          priceSource = `product:${journalProductId}/${selectedCurrency}`;
+        } else if (selectedCurrency !== 'usd') {
+          // Fallback: try USD price on the same product
+          const usdPrices = await stripe.prices.list({
+            product: journalProductId,
+            active: true,
+            currency: 'usd',
+            limit: 1,
+          });
+          if (usdPrices.data.length > 0) {
+            priceId = usdPrices.data[0].id;
+            priceSource = `product:${journalProductId}/usd (fallback)`;
+          }
+        }
+
+        if (!priceId) {
+          console.error(`[JOURNAL-CHECKOUT] No active price on product ${journalProductId} for ${selectedCurrency} or usd`);
         }
       } catch (err) {
         console.error('[JOURNAL-CHECKOUT] Product price lookup failed:', err.message);
@@ -91,7 +111,7 @@ export default async function handler(req, res) {
       if (priceId) priceSource = 'env:STRIPE_JOURNAL_PRICE_ID';
     }
 
-    console.error(`[JOURNAL-CHECKOUT] priceId=${priceId} from ${priceSource}, user=${user.id}`);
+    console.error(`[JOURNAL-CHECKOUT] priceId=${priceId} from ${priceSource}, currency=${selectedCurrency}, user=${user.id}`);
 
     if (!priceId || !priceId.startsWith('price_')) {
       console.error('[JOURNAL-CHECKOUT] No valid price ID configured');
