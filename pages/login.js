@@ -275,9 +275,24 @@ export default function LoginPage() {
         .links a { color: #667eea; text-decoration: none; cursor: pointer; }
         .forgot { text-align: right; margin-bottom: 20px; }
         .forgot a { color: #667eea; font-size: 14px; cursor: pointer; }
-        @media (max-width: 520px) {
-          .container { padding: 30px 24px; margin: 10px; }
-          h1 { font-size: 1.6em; }
+        @media (max-width: 768px) {
+          .container { padding: 40px 28px; }
+          h1 { font-size: 1.8em; }
+          .tab { min-height: 48px; }
+          .btn { min-height: 52px; }
+          .btn-google { min-height: 52px; }
+          input { min-height: 48px; font-size: 16px; }
+          .forgot a { display: inline-block; min-height: 44px; line-height: 44px; }
+          .links a { display: inline-block; min-height: 44px; line-height: 44px; }
+        }
+        @media (max-width: 480px) {
+          .container { padding: 28px 20px; margin: 10px; }
+          h1 { font-size: 1.5em; }
+          .subtitle { font-size: 1rem; margin-bottom: 24px; }
+          .tabs { margin-bottom: 24px; }
+          .tab { padding: 14px 8px; font-size: 14px; }
+          .form-group { margin-bottom: 18px; }
+          .btn { padding: 16px; font-size: 15px; }
         }
       `}</style>
 

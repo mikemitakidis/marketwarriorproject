@@ -311,10 +311,22 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
           font-size: 0.9em;
           margin-bottom: 20px;
         }
+        @media (max-width: 768px) {
+          .container { padding: 36px 24px; }
+          .btn { min-height: 52px; }
+          .btn-google { min-height: 52px; }
+          .price-box { padding: 24px; }
+          .logo { width: 80px; }
+        }
         @media (max-width: 480px) {
-          .container { padding: 30px 20px; }
-          h1 { font-size: 1.6em; }
-          .price { font-size: 2.5em; }
+          .container { padding: 28px 18px; }
+          h1 { font-size: 1.5em; }
+          .price { font-size: 2.2em; }
+          .subtitle { font-size: 0.95rem; }
+          .price-box { padding: 20px; border-radius: 16px; }
+          .feature { padding: 10px 0; font-size: 0.9rem; }
+          .btn { padding: 16px; font-size: 1.1em; }
+          .guarantee { font-size: 0.85em; }
         }
       `}</style>
 

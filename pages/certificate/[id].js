@@ -222,6 +222,34 @@ export default function CertificateVerification({ certificate }) {
           margin-top: 32px;
         }
         .footer a { color: #667eea; text-decoration: none; }
+        @media (max-width: 768px) {
+          .container { padding: 24px 16px; }
+          .logo-section { margin-bottom: 24px; }
+          .logo-section img { width: 40px; height: 40px; }
+          .logo-text { font-size: 1.25rem; }
+          .valid-badge { padding: 8px 18px; font-size: 0.9rem; margin-bottom: 24px; }
+          .cert-card { padding: 24px 16px; border-radius: 12px; }
+          .cert-name { font-size: 1.5rem; }
+          .cert-desc { font-size: 0.9rem; margin-bottom: 16px; }
+          .phases { gap: 6px; margin-bottom: 16px; }
+          .phase { padding: 5px 10px; font-size: 0.75rem; }
+          .cert-details { gap: 24px; padding-top: 16px; }
+          .detail-value { font-size: 1rem; }
+          .download-btn, .linkedin-btn {
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            min-height: 48px;
+            width: 100%;
+            justify-content: center;
+            margin-left: 0;
+          }
+          .btn-row { flex-direction: column; gap: 10px; }
+        }
+        @media (max-width: 480px) {
+          .cert-name { font-size: 1.25rem; }
+          .cert-card { padding: 20px 14px; }
+          .cert-details { flex-direction: column; gap: 16px; }
+        }
       `}</style>
 
       <div className="container">

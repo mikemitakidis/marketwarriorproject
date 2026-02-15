@@ -119,6 +119,12 @@ export default function ResetPasswordPage({ userEmail }) {
         }
         .message.error { background: #fef2f2; color: #dc2626; }
         .message.success { background: #f0fdf4; color: #16a34a; }
+        @media (max-width: 480px) {
+          .container { padding: 28px 20px; }
+          h1 { font-size: 1.4em; }
+          input { min-height: 48px; font-size: 16px; }
+          .btn { min-height: 48px; }
+        }
         .email-info {
           background: #f8fafc;
           padding: 12px;
