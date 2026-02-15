@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -6,6 +7,7 @@ import AnnouncementBanner from '../AnnouncementBanner';
 export default function JournalLayout({ children, user, title = 'Trading Journal', settings }) {
   const router = useRouter();
   const currentPath = router.pathname;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/journal/auth/logout', { method: 'POST' });
@@ -128,6 +130,20 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
         .sidebar-affiliate-link:hover {
           color: rgba(255, 255, 255, 0.7) !important;
         }
+        @media (max-width: 768px) {
+          .journal-sidebar-nav a {
+            padding: 14px 16px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+          }
+          .sidebar-cta-card {
+            min-height: 44px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+          }
+        }
       `}</style>
 
       <style jsx>{`
@@ -248,22 +264,76 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
           max-width: 1400px;
           margin: 0 auto;
         }
+        .hamburger {
+          display: none;
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 200;
+          background: rgba(30, 41, 59, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          color: white;
+          width: 44px;
+          height: 44px;
+          font-size: 20px;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+        }
+        .mobile-overlay {
+          display: none;
+        }
         @media (max-width: 768px) {
+          .hamburger {
+            display: flex;
+          }
           .sidebar {
-            width: 100%;
-            height: auto;
-            position: relative;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 150;
+          }
+          .sidebar.open {
+            transform: translateX(0);
+          }
+          .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 140;
+          }
+          .mobile-overlay.open {
+            display: block;
           }
           .main {
             margin-left: 0;
+          }
+          .content {
+            padding: 16px;
+            padding-top: 64px;
           }
         }
       `}</style>
 
       <div className="layout">
-        <aside className="sidebar">
+        <button
+          className="hamburger"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? '\u2715' : '\u2630'}
+        </button>
+        <div
+          className={`mobile-overlay${mobileMenuOpen ? ' open' : ''}`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <aside className={`sidebar${mobileMenuOpen ? ' open' : ''}`}>
           <div className="sidebar-header">
-            <Link href="/trading-journal" className="logo">
+            <Link href="/trading-journal" className="logo" onClick={() => setMobileMenuOpen(false)}>
               <div className="logo-icon">MW</div>
               <div>
                 <div className="logo-text">Trading Journal</div>
@@ -278,6 +348,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
                 key={item.href}
                 href={item.href}
                 className={isActive(item.href) ? 'active' : ''}
+                onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
               </Link>

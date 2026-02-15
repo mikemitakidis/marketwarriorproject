@@ -373,8 +373,32 @@ export default function WelcomePage({ userEmail }) {
           text-align: center;
         }
         @media (max-width: 768px) {
-          .content { padding: 30px 20px; }
-          h1 { font-size: 2em; }
+          .header { padding: 30px 20px; }
+          .logo { font-size: 60px; margin-bottom: 12px; }
+          h1 { font-size: 1.6em; margin-bottom: 10px; }
+          .subtitle { font-size: 1rem; }
+          .content { padding: 24px 16px; }
+          .intro-section, .instructions-section, .rewards-section, .disclaimer-section,
+          .name-section, .agreement-section, .welcome-message { padding: 20px; border-radius: 14px; }
+          .intro-section h2, .instructions-section h2, .rewards-section h2,
+          .disclaimer-section h2 { font-size: 1.25em; }
+          .terms-section h3 { font-size: 1.4em; }
+          .term-item { padding: 18px; border-radius: 12px; }
+          .term-item h4 { font-size: 1.1em; }
+          .checkbox-item { padding: 14px 12px; min-height: 48px; }
+          .checkbox-item input[type="checkbox"] { width: 28px; height: 28px; }
+          .name-input input { font-size: 16px; min-height: 48px; padding: 14px 16px; }
+          .start-button { min-height: 56px; font-size: 1.15em; padding: 18px; border-radius: 12px; }
+          .warning-box { padding: 16px; }
+        }
+        @media (max-width: 480px) {
+          .header { padding: 24px 16px; }
+          h1 { font-size: 1.35em; }
+          .content { padding: 16px 12px; }
+          .intro-section, .instructions-section, .rewards-section, .disclaimer-section,
+          .name-section, .agreement-section { padding: 16px; margin-bottom: 20px; }
+          .term-item { padding: 14px; margin-bottom: 14px; }
+          .checkbox-item label { font-size: 0.9rem; }
         }
       `}</style>
 
