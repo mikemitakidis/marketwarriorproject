@@ -100,13 +100,17 @@ async function getRecipients(supabase, audience) {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .select(baseSelect)
         .eq('has_paid', true)
         .not('email', 'is', null)
         .gte('last_login', sevenDaysAgo.toISOString());
 
+      if (error?.message?.includes('last_login')) {
+        console.error('[BROADCAST] last_login column missing — run sql/migrations/2026-02-08_add_last_login.sql');
+        return [];
+      }
       return data || [];
     }
 
@@ -173,13 +177,17 @@ async function getRecipients(supabase, audience) {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .select(baseSelect)
         .eq('has_paid', true)
         .not('email', 'is', null)
         .lte('last_login', sevenDaysAgo.toISOString());
 
+      if (error?.message?.includes('last_login')) {
+        console.error('[BROADCAST] last_login column missing — run sql/migrations/2026-02-08_add_last_login.sql');
+        return [];
+      }
       return data || [];
     }
 
