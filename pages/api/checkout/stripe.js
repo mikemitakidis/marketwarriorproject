@@ -139,10 +139,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     logger.error('Stripe checkout error:', err?.message || err);
-    // Surface Stripe-specific errors for debugging
     if (err?.type === 'StripeInvalidRequestError') {
       logger.error('Stripe details:', { code: err.code, param: err.param, statusCode: err.statusCode });
-      return res.status(500).json({ error: `Stripe error: ${err.message}` });
     }
     return res.status(500).json({ error: 'Payment initialization failed. Please try again.' });
   }
