@@ -45,10 +45,49 @@ export default function UpgradePage({ user }) {
     setError(null);
 
     try {
+      // Detect user's currency from timezone/locale
+      let currency = 'usd';
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const tzMap = {
+          'Pacific/Auckland': 'nzd', 'Pacific/Chatham': 'nzd',
+          'Australia/Sydney': 'aud', 'Australia/Melbourne': 'aud', 'Australia/Brisbane': 'aud',
+          'Australia/Perth': 'aud', 'Australia/Adelaide': 'aud', 'Australia/Hobart': 'aud',
+          'Europe/London': 'gbp',
+          'Europe/Paris': 'eur', 'Europe/Berlin': 'eur', 'Europe/Rome': 'eur',
+          'Europe/Madrid': 'eur', 'Europe/Amsterdam': 'eur', 'Europe/Brussels': 'eur',
+          'Europe/Vienna': 'eur', 'Europe/Athens': 'eur', 'Europe/Helsinki': 'eur',
+          'Europe/Dublin': 'eur', 'Europe/Lisbon': 'eur', 'Europe/Luxembourg': 'eur',
+          'Europe/Malta': 'eur', 'Europe/Tallinn': 'eur', 'Europe/Riga': 'eur',
+          'Europe/Vilnius': 'eur', 'Europe/Bratislava': 'eur', 'Europe/Ljubljana': 'eur',
+          'Europe/Nicosia': 'eur', 'Asia/Nicosia': 'eur',
+          'Europe/Warsaw': 'eur', 'Europe/Prague': 'eur', 'Europe/Budapest': 'eur',
+          'Europe/Bucharest': 'eur', 'Europe/Sofia': 'eur', 'Europe/Zagreb': 'eur',
+          'Europe/Copenhagen': 'eur', 'Europe/Stockholm': 'eur', 'Europe/Oslo': 'eur',
+          'America/Toronto': 'cad', 'America/Vancouver': 'cad', 'America/Montreal': 'cad',
+          'America/Edmonton': 'cad', 'America/Winnipeg': 'cad', 'America/Halifax': 'cad',
+          'America/New_York': 'usd', 'America/Chicago': 'usd', 'America/Denver': 'usd',
+          'America/Los_Angeles': 'usd', 'America/Phoenix': 'usd',
+        };
+        if (tzMap[timezone]) {
+          currency = tzMap[timezone];
+        } else {
+          const region = (navigator.language || '').split('-')[1]?.toUpperCase();
+          const regionMap = {
+            'US': 'usd', 'GB': 'gbp', 'AU': 'aud', 'CA': 'cad', 'NZ': 'nzd',
+            'DE': 'eur', 'FR': 'eur', 'IT': 'eur', 'ES': 'eur', 'NL': 'eur',
+            'BE': 'eur', 'AT': 'eur', 'GR': 'eur', 'PT': 'eur', 'IE': 'eur',
+            'FI': 'eur', 'PL': 'eur', 'CZ': 'eur', 'HU': 'eur', 'RO': 'eur',
+            'BG': 'eur', 'HR': 'eur', 'DK': 'eur', 'SE': 'eur', 'NO': 'eur',
+          };
+          currency = regionMap[region] || 'usd';
+        }
+      } catch (e) { /* fallback to usd */ }
+
       const res = await fetch('/api/journal/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productType: 'lifetime' }),
+        body: JSON.stringify({ productType: 'lifetime', currency }),
       });
 
       const data = await res.json();

@@ -104,7 +104,7 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
           'Australia/Darwin': 'aud',
           // UK
           'Europe/London': 'gbp',
-          // Europe (EUR)
+          // Europe (EUR) — comprehensive list
           'Europe/Paris': 'eur',
           'Europe/Berlin': 'eur',
           'Europe/Rome': 'eur',
@@ -112,15 +112,45 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
           'Europe/Amsterdam': 'eur',
           'Europe/Brussels': 'eur',
           'Europe/Vienna': 'eur',
+          'Europe/Athens': 'eur',
+          'Europe/Helsinki': 'eur',
+          'Europe/Dublin': 'eur',
+          'Europe/Lisbon': 'eur',
+          'Europe/Luxembourg': 'eur',
+          'Europe/Malta': 'eur',
+          'Europe/Tallinn': 'eur',
+          'Europe/Riga': 'eur',
+          'Europe/Vilnius': 'eur',
+          'Europe/Bratislava': 'eur',
+          'Europe/Ljubljana': 'eur',
+          'Europe/Nicosia': 'eur',
+          'Asia/Nicosia': 'eur',
+          // EU but non-euro — still show EUR as closest supported
+          'Europe/Warsaw': 'eur',
+          'Europe/Prague': 'eur',
+          'Europe/Budapest': 'eur',
+          'Europe/Bucharest': 'eur',
+          'Europe/Sofia': 'eur',
+          'Europe/Zagreb': 'eur',
+          'Europe/Copenhagen': 'eur',
+          'Europe/Stockholm': 'eur',
+          'Europe/Oslo': 'eur',
           // Canada
           'America/Toronto': 'cad',
           'America/Vancouver': 'cad',
           'America/Montreal': 'cad',
+          'America/Edmonton': 'cad',
+          'America/Winnipeg': 'cad',
+          'America/Halifax': 'cad',
+          'America/St_Johns': 'cad',
           // US
           'America/New_York': 'usd',
           'America/Chicago': 'usd',
           'America/Denver': 'usd',
           'America/Los_Angeles': 'usd',
+          'America/Phoenix': 'usd',
+          'America/Anchorage': 'usd',
+          'Pacific/Honolulu': 'usd',
         };
 
         if (timezoneMap[timezone]) {
@@ -134,17 +164,18 @@ export default function PayPage({ userEmail, displayPrice = '49.99' }) {
             'US': 'usd',
             'GB': 'gbp',
             'UK': 'gbp',
-            'EU': 'eur',
-            'DE': 'eur',
-            'FR': 'eur',
-            'IT': 'eur',
-            'ES': 'eur',
-            'NL': 'eur',
-            'BE': 'eur',
-            'AT': 'eur',
             'AU': 'aud',
             'CA': 'cad',
             'NZ': 'nzd',
+            // Eurozone + EU/EEA
+            'EU': 'eur', 'DE': 'eur', 'FR': 'eur', 'IT': 'eur',
+            'ES': 'eur', 'NL': 'eur', 'BE': 'eur', 'AT': 'eur',
+            'GR': 'eur', 'PT': 'eur', 'IE': 'eur', 'FI': 'eur',
+            'LU': 'eur', 'MT': 'eur', 'CY': 'eur', 'SK': 'eur',
+            'SI': 'eur', 'EE': 'eur', 'LV': 'eur', 'LT': 'eur',
+            'HR': 'eur', 'PL': 'eur', 'CZ': 'eur', 'HU': 'eur',
+            'RO': 'eur', 'BG': 'eur', 'DK': 'eur', 'SE': 'eur',
+            'NO': 'eur',
           };
 
           currency = currencyMap[region] || 'usd';
