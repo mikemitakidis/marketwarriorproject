@@ -399,6 +399,64 @@ export default function DayTemplatePage({ day, isCompleted, quizPassed: initialQ
         .template-iframe.loaded {
           opacity: 1;
         }
+
+        @media (max-width: 768px) {
+          .status-bar {
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            gap: 8px;
+          }
+          .status-left {
+            order: 1;
+            gap: 8px;
+          }
+          .status-center {
+            order: 3;
+            width: 100%;
+            text-align: left;
+            font-size: 0.85rem;
+          }
+          .status-right {
+            order: 2;
+            gap: 8px;
+            margin-left: auto;
+          }
+          .nav-btn {
+            min-height: 44px;
+            min-width: 44px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+          }
+          .badge {
+            padding: 6px 10px;
+            font-size: 12px;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+          }
+          .day-indicator {
+            font-size: 0.85rem;
+          }
+        }
+        @media (max-width: 480px) {
+          .status-bar {
+            padding: 8px 10px;
+          }
+          .status-right {
+            gap: 6px;
+          }
+          .status-right a[style] {
+            display: none !important;
+          }
+          .nav-btn {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+          }
+          .badge {
+            padding: 4px 8px;
+            font-size: 11px;
+          }
+        }
       `}</style>
     </>
   );

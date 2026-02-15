@@ -99,6 +99,54 @@ export default async function handler(req, res) {
   visibility: visible !important;
   opacity: 1 !important;
 }
+/* ===== MOBILE RESPONSIVENESS ===== */
+@media (max-width: 768px) {
+  .container { padding: 12px !important; }
+  .day-header { padding: 20px !important; margin-bottom: 20px !important; }
+  .day-header h1 { font-size: 1.5em !important; }
+  .day-header p { font-size: 1em !important; }
+  .day-badge { padding: 8px 16px !important; font-size: 0.85rem !important; }
+  .section { padding: 20px !important; margin-bottom: 20px !important; border-radius: 12px !important; }
+  .section h2 { font-size: 1.3em !important; gap: 10px !important; }
+  .section h3 { font-size: 1.15em !important; margin: 15px 0 10px 0 !important; }
+  .highlight-box, .example-box, .warning-box, .interactive-element { padding: 16px !important; margin: 16px 0 !important; }
+  .terms-grid, .order-types-grid, .types-grid, .features-grid, .tools-grid, .strategies-grid, .indicators-grid, .patterns-grid, .concepts-grid, .components-grid, .risk-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .term-card, .type-card, .feature-card, .tool-card, .strategy-card, .indicator-card, .pattern-card, .concept-card, .component-card, .risk-card {
+    padding: 16px !important;
+  }
+  table { font-size: 0.85rem !important; }
+  th, td { padding: 10px 8px !important; }
+  .order-type-table { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+  .quiz-section, .task-section { padding: 16px !important; }
+  .quiz-container { padding: 16px !important; margin: 16px 0 !important; }
+  .quiz-option { padding: 14px !important; min-height: 44px !important; font-size: 0.95rem !important; }
+  .quiz-btn { min-height: 44px !important; padding: 12px 20px !important; font-size: 0.95rem !important; }
+  .quiz-navigation { gap: 8px !important; flex-wrap: wrap !important; }
+  .quiz-results { padding: 20px !important; }
+  .quiz-header h2 { font-size: 1.2em !important; }
+  #taskResponse { min-height: 120px !important; font-size: 16px !important; }
+  #submitTaskBtn { min-height: 48px !important; font-size: 1rem !important; width: 100% !important; }
+  .completion-section { padding: 16px !important; }
+  .step-content, .phase-content, .lesson-content { padding: 16px !important; }
+  .comparison-table, .analysis-table { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+  img { max-width: 100% !important; height: auto !important; }
+  pre, code { overflow-x: auto !important; font-size: 0.85rem !important; white-space: pre-wrap !important; word-break: break-word !important; }
+  iframe { max-width: 100% !important; }
+}
+@media (max-width: 480px) {
+  .container { padding: 8px !important; }
+  .day-header { padding: 16px !important; }
+  .day-header h1 { font-size: 1.25em !important; }
+  .section { padding: 14px !important; }
+  .section h2 { font-size: 1.15em !important; flex-direction: column !important; align-items: flex-start !important; }
+  .highlight-box, .example-box, .warning-box { padding: 12px !important; }
+  .quiz-option { padding: 12px !important; }
+  .term-card h4, .type-card h4 { font-size: 1.1em !important; }
+}
+/* ===== END MOBILE RESPONSIVENESS ===== */
 /* VALIDATION ERROR MESSAGE - visible on page since alert() is blocked in sandbox */
 #mw-validation-error {
   position: fixed !important;

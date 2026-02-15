@@ -345,11 +345,46 @@ export default function Dashboard({ user, stats, unlockedDays, completedDays, we
         .cert-btn-generate { background: linear-gradient(135deg, #22c55e, #16a34a); }
         .cert-btn:hover { opacity: 0.9; transform: translateY(-1px); transition: all 0.2s; }
         @media (max-width: 768px) {
-          .stats-grid, .actions-grid { grid-template-columns: repeat(2, 1fr); }
-          .cert-banner { flex-direction: column; text-align: center; }
+          .header { padding: 12px 16px; }
+          .logo { font-size: 1rem; gap: 8px; }
+          .logo img { width: 32px; height: 32px; }
+          .user-section { gap: 10px; }
+          .user-name { font-size: 0.85rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          .logout-btn { min-height: 44px; min-width: 44px; padding: 8px 14px; font-size: 0.85rem; }
+          .container { padding: 16px; }
+          .welcome-banner { padding: 20px; margin-bottom: 16px; }
+          .welcome-banner h1 { font-size: 1.25rem; }
+          .welcome-banner p { font-size: 0.9rem; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+          .stat-card { padding: 16px; }
+          .stat-value { font-size: 1.5rem; }
+          .stat-label { font-size: 0.8rem; }
+          .actions-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+          .action-card { padding: 16px; }
+          .action-icon { font-size: 1.5rem; margin-bottom: 8px; }
+          .action-title { font-size: 0.9rem; }
+          .action-desc { font-size: 0.8rem; }
+          .progress-section { padding: 16px; }
+          .progress-header h2 { font-size: 1.1rem; }
+          .day-btn { width: 44px; height: 44px; }
+          .days-grid { gap: 6px; }
+          .phase-header { font-size: 0.85rem; flex-wrap: wrap; }
+          .unlock-info { padding: 12px 14px; gap: 10px; }
+          .cert-banner { flex-direction: column; text-align: center; padding: 20px; }
           .cert-banner-left { flex-direction: column; }
+          .cert-banner-icon { font-size: 2rem; }
+          .cert-banner-title { font-size: 1.1rem; }
           .cert-actions { flex-direction: column; width: 100%; }
-          .cert-btn { justify-content: center; }
+          .cert-btn { justify-content: center; min-height: 44px; }
+        }
+        @media (max-width: 480px) {
+          .actions-grid { grid-template-columns: 1fr; }
+          .user-name { display: none; }
+          .welcome-banner h1 { font-size: 1.1rem; }
+          .stat-value { font-size: 1.25rem; }
+          .stat-card { padding: 12px; }
+          .action-card { padding: 14px; }
+          .cert-banner { padding: 16px; }
         }
       `}</style>
 
