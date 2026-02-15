@@ -7,8 +7,15 @@ import logger from '../../../lib/logger';
  * API route: /api/checkout/stripe
  *
  * Creates a Stripe Checkout Session with multi-currency support.
- * Detects user's currency and uses the appropriate price ID.
- * Fallback to USD if currency is not configured.
+ *
+ * Price resolution (in order):
+ *  1. Fetch product ID from app_settings (key: stripe_product_id) or env STRIPE_PRODUCT_ID
+ *     → dynamically look up the active Stripe price for the user's currency
+ *  2. Fallback: static price IDs from app_settings (stripe_price_id_{currency})
+ *  3. Fallback: STRIPE_PRICE_ID env var
+ *
+ * Using the product ID approach means you can freely change prices in the
+ * Stripe Dashboard without ever updating your database or env vars.
  *
  * Supported currencies: USD, EUR, GBP, AUD, CAD, NZD
  */
@@ -61,82 +68,120 @@ export default async function handler(req, res) {
     const supportedCurrencies = ['usd', 'eur', 'gbp', 'aud', 'cad', 'nzd'];
     const selectedCurrency = supportedCurrencies.includes(currencyLower) ? currencyLower : 'usd';
 
-    // Fetch price ID for selected currency from database
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const supabase = getServiceSupabase();
-    const priceIdKey = `stripe_price_id_${selectedCurrency}`;
 
     let priceId = null;
     let priceSource = 'none';
-    try {
-      const { data: setting } = await supabase
-        .from('app_settings')
-        .select('value')
-        .eq('key', priceIdKey)
-        .maybeSingle();
 
-      if (setting?.value) {
-        priceId = setting.value;
-        priceSource = `db:${priceIdKey}`;
-      }
-    } catch (err) {
-      console.error(`[CHECKOUT] Error fetching ${priceIdKey}:`, err.message);
-    }
-
-    // Fallback to USD if selected currency price not found
-    if (!priceId && selectedCurrency !== 'usd') {
-      console.error(`[CHECKOUT] Price for ${selectedCurrency} not found, falling back to USD`);
+    // ── Strategy 1: Product-based dynamic price lookup ──────────────
+    // This is the preferred method — product IDs never change when you
+    // edit prices in Stripe Dashboard.
+    let productId = process.env.STRIPE_PRODUCT_ID || null;
+    if (!productId) {
       try {
-        const { data: usdSetting } = await supabase
+        const { data: prodSetting } = await supabase
           .from('app_settings')
           .select('value')
-          .eq('key', 'stripe_price_id_usd')
+          .eq('key', 'stripe_product_id')
           .maybeSingle();
+        if (prodSetting?.value) productId = prodSetting.value;
+      } catch (err) {
+        console.error('[CHECKOUT] Error fetching stripe_product_id:', err.message);
+      }
+    }
 
-        if (usdSetting?.value) {
-          priceId = usdSetting.value;
-          priceSource = 'db:stripe_price_id_usd';
+    if (productId) {
+      try {
+        // Look up the active price for the user's currency on this product
+        const prices = await stripe.prices.list({
+          product: productId,
+          active: true,
+          currency: selectedCurrency,
+          limit: 1,
+        });
+
+        if (prices.data.length > 0) {
+          priceId = prices.data[0].id;
+          priceSource = `product:${productId}/${selectedCurrency}`;
+        } else if (selectedCurrency !== 'usd') {
+          // Fallback: try USD price on the same product
+          const usdPrices = await stripe.prices.list({
+            product: productId,
+            active: true,
+            currency: 'usd',
+            limit: 1,
+          });
+          if (usdPrices.data.length > 0) {
+            priceId = usdPrices.data[0].id;
+            priceSource = `product:${productId}/usd (fallback)`;
+          }
+        }
+
+        if (priceId) {
+          console.error(`[CHECKOUT] Dynamic price resolved: ${priceId} from ${priceSource}`);
+        } else {
+          console.error(`[CHECKOUT] No active price found on product ${productId} for ${selectedCurrency} or usd`);
         }
       } catch (err) {
-        // Try legacy stripe_price_id key
-        const { data: legacySetting } = await supabase
+        console.error(`[CHECKOUT] Product price lookup failed:`, err.message);
+      }
+    }
+
+    // ── Strategy 2: Static price IDs from app_settings (legacy) ─────
+    if (!priceId) {
+      const priceIdKey = `stripe_price_id_${selectedCurrency}`;
+      try {
+        const { data: setting } = await supabase
           .from('app_settings')
           .select('value')
-          .eq('key', 'stripe_price_id')
+          .eq('key', priceIdKey)
           .maybeSingle();
 
-        if (legacySetting?.value) {
-          priceId = legacySetting.value;
-          priceSource = 'db:stripe_price_id (legacy)';
+        if (setting?.value) {
+          priceId = setting.value;
+          priceSource = `db:${priceIdKey}`;
+        }
+      } catch (err) {
+        console.error(`[CHECKOUT] Error fetching ${priceIdKey}:`, err.message);
+      }
+
+      // Fallback to USD static price
+      if (!priceId && selectedCurrency !== 'usd') {
+        try {
+          const { data: usdSetting } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'stripe_price_id_usd')
+            .maybeSingle();
+
+          if (usdSetting?.value) {
+            priceId = usdSetting.value;
+            priceSource = 'db:stripe_price_id_usd';
+          }
+        } catch (err) {
+          // noop
         }
       }
     }
 
-    // Final fallback to env variable
+    // ── Strategy 3: Env var fallback ────────────────────────────────
     if (!priceId) {
       priceId = process.env.STRIPE_PRICE_ID || '';
       if (priceId) priceSource = 'env:STRIPE_PRICE_ID';
     }
 
-    console.error(`[CHECKOUT] Resolved priceId=${priceId} from ${priceSource}, keyMode=${keyMode}`);
+    console.error(`[CHECKOUT] Final priceId=${priceId} from ${priceSource}, keyMode=${keyMode}`);
 
-    // Validate price ID format
     if (!priceId || !priceId.startsWith('price_')) {
       console.error(`[CHECKOUT] INVALID price config: priceId="${priceId}", source=${priceSource}`);
       return res.status(500).json({ error: 'Invalid price configuration. Please contact support.' });
-    }
-
-    // Detect potential mode mismatch (test price with live key or vice versa)
-    if (keyMode === 'LIVE' && priceId.includes('_test_')) {
-      console.error(`[CHECKOUT] WARNING: Using TEST price ID with LIVE Stripe key!`);
-    } else if (keyMode === 'TEST' && !priceId.includes('_test_')) {
-      console.error(`[CHECKOUT] WARNING: Using LIVE price ID with TEST Stripe key!`);
     }
 
     // Use trusted domain for redirect URLs (not client-controlled origin header)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
