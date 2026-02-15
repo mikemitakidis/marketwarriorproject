@@ -66,6 +66,10 @@ export default async function handler(req, res) {
       .gte('last_login', eightDaysAgo.toISOString());
 
     if (inactiveErr) {
+      // If last_login column doesn't exist yet, log and skip gracefully
+      if (inactiveErr.message?.includes('last_login')) {
+        console.error('[CRON] last_login column missing — run sql/migrations/2026-02-08_add_last_login.sql');
+      }
       logger.error('[CRON] Inactivity query error:', inactiveErr.message);
     } else if (inactiveUsers && inactiveUsers.length > 0) {
       logger.log(`[CRON] Found ${inactiveUsers.length} users inactive for 7 days`);
