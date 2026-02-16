@@ -26,18 +26,28 @@ const BROKER_PRESETS = {
   etoro: {
     label: 'eToro',
     mapping: {
-      symbol:      ['Instrument Name', 'Details', 'Instrument'],
-      direction:   ['Action', 'Type'],
+      // eToro "Action" column = instrument name, e.g. "Berkshire Hathaway Inc (BRK.B)"
+      symbol:      ['Action', 'Instrument Name', 'Details', 'Instrument'],
+      direction:   ['Long / Short'],
       entry_price: ['Open Rate', 'Open Price'],
       exit_price:  ['Close Rate', 'Close Price'],
       entry_date:  ['Open Date', 'Date Open', 'Date'],
       exit_date:   ['Close Date', 'Date Close'],
-      quantity:    ['Units', 'Amount'],
+      quantity:    ['Units / Contracts', 'Units'],
       pnl:         ['Profit', 'Realized Equity Change', 'P/L'],
-      stop_loss:   ['Stop Loss Rate', 'SL'],
-      take_profit: ['Take Profit Rate', 'TP'],
+      stop_loss:   ['Stop loss rate', 'Stop Loss Rate', 'SL'],
+      take_profit: ['Take profit rate', 'Take Profit Rate', 'TP'],
     },
-    directionMap: { buy: 'long', sell: 'short' },
+    directionMap: { long: 'long', short: 'short', buy: 'long', sell: 'short' },
+    dateFormat: 'dmy', // eToro uses DD/MM/YYYY — skip native parsing to avoid MM/DD confusion
+    // Extract ticker from "Company Name (TICKER)" format
+    symbolExtract: (raw) => {
+      const match = raw.match(/\(([^)]+)\)\s*$/);
+      return match ? match[1] : raw;
+    },
+    // Use eToro's "Type" column for asset class
+    assetClassField: 'Type',
+    assetClassMap: { stocks: 'stock', cfd: 'stock', crypto: 'crypto' },
   },
   robinhood: {
     label: 'Robinhood',
@@ -254,11 +264,23 @@ function resolvePresetMapping(presetMapping, headers) {
   const headerLower = headers.map(h => h.toLowerCase().trim());
 
   for (const [field, candidates] of Object.entries(presetMapping)) {
+    // Phase 1: Exact match (case-insensitive)
     for (const candidate of candidates) {
       const idx = headerLower.indexOf(candidate.toLowerCase().trim());
       if (idx !== -1) {
         resolved[field] = headers[idx]; // Use original casing
         break;
+      }
+    }
+    // Phase 2: Prefix match — handles "Profit" matching "Profit(USD)", etc.
+    if (!resolved[field]) {
+      for (const candidate of candidates) {
+        const candLower = candidate.toLowerCase().trim();
+        const idx = headerLower.findIndex(h => h.startsWith(candLower));
+        if (idx !== -1) {
+          resolved[field] = headers[idx];
+          break;
+        }
       }
     }
   }
@@ -283,7 +305,11 @@ function parseRow(row, mapping, preset) {
     return col ? (row[col] ?? null) : null;
   };
 
-  const symbol = get('symbol');
+  let symbol = get('symbol');
+  // Extract ticker from full names (e.g., eToro: "Berkshire Hathaway Inc (BRK.B)" → "BRK.B")
+  if (preset?.symbolExtract && symbol) {
+    symbol = preset.symbolExtract(symbol);
+  }
   const entryPriceRaw = get('entry_price');
   const entryPrice = parseNumber(entryPriceRaw);
 
@@ -314,10 +340,13 @@ function parseRow(row, mapping, preset) {
     if (rawQty < 0) direction = 'short';
   }
 
-  // Date parsing
-  const entryDate = parseDate(get('entry_date'));
+  // Date parsing (pass format hint to avoid DD/MM vs MM/DD confusion)
+  const dateFormat = preset?.dateFormat || null;
+  const entryDate = parseDate(get('entry_date'), dateFormat);
   const exitDateRaw = get('exit_date');
-  const exitDate = exitDateRaw ? parseDate(exitDateRaw) : null;
+  const exitDate = exitDateRaw ? parseDate(exitDateRaw, dateFormat) : null;
+
+  const cleanSymbol = symbol.toUpperCase().trim();
 
   // ThinkOrSwim: Pos Effect determines entry vs exit
   if (preset?.posEffectField) {
@@ -327,21 +356,33 @@ function parseRow(row, mapping, preset) {
       const isClosing = pe.includes('close') || pe === 'to close';
       if (isClosing) {
         return {
-          symbol: symbol.toUpperCase().trim(),
+          symbol: cleanSymbol,
           direction,
           entry_price: null,
           exit_price: entryPrice, // The price is actually the exit
           entry_date: entryDate,
           exit_date: entryDate,
           quantity,
-          asset_class: detectAssetClass(symbol),
+          asset_class: detectAssetClass(cleanSymbol),
         };
       }
     }
   }
 
+  // Asset class: use broker's type column if available, otherwise auto-detect
+  let assetClass;
+  if (preset?.assetClassField) {
+    const typeHeader = Object.keys(row).find(
+      k => k.toLowerCase().trim() === preset.assetClassField.toLowerCase().trim()
+    );
+    const typeVal = typeHeader ? (row[typeHeader] || '').toLowerCase().trim() : '';
+    assetClass = preset.assetClassMap?.[typeVal] || detectAssetClass(cleanSymbol);
+  } else {
+    assetClass = detectAssetClass(cleanSymbol);
+  }
+
   return {
-    symbol: symbol.toUpperCase().trim(),
+    symbol: cleanSymbol,
     direction,
     entry_price: entryPrice,
     exit_price: !isNaN(exitPrice) ? exitPrice : null,
@@ -351,7 +392,7 @@ function parseRow(row, mapping, preset) {
     pnl_amount: !isNaN(pnl) ? pnl : null,
     stop_loss: !isNaN(stopLoss) ? stopLoss : null,
     take_profit: !isNaN(takeProfit) ? takeProfit : null,
-    asset_class: detectAssetClass(symbol),
+    asset_class: assetClass,
   };
 }
 
@@ -375,7 +416,7 @@ function getFirstMappedValue(row, mapping, field) {
 }
 
 function parseNumber(val) {
-  if (val === null || val === undefined || val === '') return NaN;
+  if (val === null || val === undefined || val === '' || val === '-' || val === 'N/A') return NaN;
   // Remove currency symbols, thousands separators, whitespace
   const cleaned = String(val).replace(/[$€£¥,\s]/g, '').replace(/\((.+)\)/, '-$1');
   return parseFloat(cleaned);
@@ -391,8 +432,8 @@ function autoDetectColumns(firstRow) {
     exit_price: /^(exit.?price|close.?price|close.?rate|sell.?price)$/i,
     entry_date: /^(entry.?date|open.?date|date.?opened|entry.?time|open.?time|exec.?time|date.?time|activity.?date|time|trading.?time|date)$/i,
     exit_date: /^(exit.?date|close.?date|date.?closed|exit.?time|close.?time)$/i,
-    quantity: /^(quantity|qty|size|volume|lots|shares|contracts|units|no\.?\s?of\s?shares)$/i,
-    pnl: /^(pnl|profit|p.?l|gain.?loss|result|net.?p.?l|realized.?p.?l|realized.?equity.?change)$/i,
+    quantity: /^(quantity|qty|size|volume|lots|shares|contracts|units|no\.?\s?of\s?shares|units\s*\/\s*contracts)$/i,
+    pnl: /^(pnl|profit(\s*\(.*\))?|p.?l|gain.?loss|result(\s*\(.*\))?|net.?p.?l|realized.?p.?l|realized.?equity.?change)$/i,
     stop_loss: /^(stop.?loss|sl|stop|s\/l|stop.?loss.?rate)$/i,
     take_profit: /^(take.?profit|tp|target|t\/p|take.?profit.?rate)$/i,
   };
@@ -423,18 +464,20 @@ function parseDirection(direction) {
 //          DD/MM/YYYY HH:MM:SS, eToro dates, IBKR dates,
 //          Trading 212 "2024-01-15T10:30:00+02:00", etc.
 // ────────────────────────────────────────────────────────────────
-function parseDate(dateStr) {
+function parseDate(dateStr, formatHint) {
   if (!dateStr || typeof dateStr !== 'string') return null;
   dateStr = dateStr.trim();
-  if (!dateStr) return null;
+  if (!dateStr || dateStr === '-' || dateStr.toLowerCase() === 'n/a') return null;
 
-  // 1) Try native Date parsing (handles ISO 8601, RFC 2822, etc.)
-  const nativeParsed = new Date(dateStr);
-  if (!isNaN(nativeParsed.getTime())) {
-    // Sanity check: year should be between 1990 and 2100
-    const yr = nativeParsed.getFullYear();
-    if (yr >= 1990 && yr <= 2100) {
-      return nativeParsed.toISOString();
+  // 1) Try native Date parsing — ONLY when no format hint
+  //    (native JS assumes MM/DD/YYYY for "04/12/2025", but eToro means DD/MM/YYYY)
+  if (!formatHint) {
+    const nativeParsed = new Date(dateStr);
+    if (!isNaN(nativeParsed.getTime())) {
+      const yr = nativeParsed.getFullYear();
+      if (yr >= 1990 && yr <= 2100) {
+        return nativeParsed.toISOString();
+      }
     }
   }
 
