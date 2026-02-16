@@ -1,12 +1,46 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import JournalLayout from '../../components/journal/JournalLayout';
 import { getJournalUser, getServiceSupabase, checkJournalAccess } from '../../lib/journalAuth';
 
+// ────────────────────────────────────────────────────────────────
+// Format definitions — grouped for the UI
+// ────────────────────────────────────────────────────────────────
+const FORMAT_GROUPS = [
+  {
+    label: 'Popular Brokers',
+    formats: [
+      { value: 'etoro',      label: 'eToro',               description: 'Account statement CSV export' },
+      { value: 'robinhood',  label: 'Robinhood',           description: 'Activity export from Robinhood' },
+      { value: 'ibkr',       label: 'Interactive Brokers',  description: 'Flex query or activity statement' },
+      { value: 'trading212', label: 'Trading 212',          description: 'Export from Trading 212 history' },
+    ],
+  },
+  {
+    label: 'Other Platforms',
+    formats: [
+      { value: 'tradingview',  label: 'TradingView',   description: 'Export from TradingView trade history' },
+      { value: 'mt4',          label: 'MT4/MT5',       description: 'MetaTrader statement export' },
+      { value: 'thinkorswim',  label: 'ThinkOrSwim',   description: 'TOS activity export' },
+    ],
+  },
+  {
+    label: 'Custom',
+    formats: [
+      { value: 'generic', label: 'Generic CSV', description: 'Any CSV — auto-detect or map columns manually' },
+    ],
+  },
+];
+
+// Only generic format requires manual mapping validation
+const GENERIC_FORMAT = 'generic';
+const requiredFields = ['symbol', 'entry_price'];
+const optionalFields = ['direction', 'exit_price', 'entry_date', 'exit_date', 'quantity', 'pnl', 'stop_loss', 'take_profit'];
+
 export default function ImportPage({ user, settings }) {
   const router = useRouter();
   const [file, setFile] = useState(null);
-  const [format, setFormat] = useState('generic');
+  const [format, setFormat] = useState('etoro');
   const [csvData, setCsvData] = useState(null);
   const [previewRows, setPreviewRows] = useState([]);
   const [columnMapping, setColumnMapping] = useState({});
@@ -15,15 +49,7 @@ export default function ImportPage({ user, settings }) {
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Upload, 2: Preview & Map, 3: Result
 
-  const formats = [
-    { value: 'generic', label: 'Generic CSV', description: 'Auto-detect columns or map manually' },
-    { value: 'tradingview', label: 'TradingView', description: 'Export from TradingView trade history' },
-    { value: 'mt4', label: 'MT4/MT5', description: 'MetaTrader statement export' },
-    { value: 'thinkorswim', label: 'ThinkOrSwim', description: 'TOS activity export' },
-  ];
-
-  const requiredFields = ['symbol', 'entry_price'];
-  const optionalFields = ['direction', 'exit_price', 'entry_date', 'exit_date', 'quantity', 'pnl', 'stop_loss', 'take_profit'];
+  const isGeneric = format === GENERIC_FORMAT;
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -34,9 +60,9 @@ export default function ImportPage({ user, settings }) {
     }
   };
 
-  const parseCSV = async (file) => {
+  const parseCSV = async (csvFile) => {
     try {
-      const text = await file.text();
+      const text = await csvFile.text();
       const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim());
 
       if (lines.length < 2) {
@@ -44,19 +70,15 @@ export default function ImportPage({ user, settings }) {
         return;
       }
 
-      // Parse header
       const delimiter = detectDelimiter(lines[0]);
       const headers = parseCSVLine(lines[0], delimiter);
 
-      // Parse data rows
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
         const values = parseCSVLine(lines[i], delimiter);
         if (values.length === headers.length) {
           const row = {};
-          headers.forEach((h, idx) => {
-            row[h] = values[idx]?.trim();
-          });
+          headers.forEach((h, idx) => { row[h] = values[idx]?.trim(); });
           rows.push(row);
         }
       }
@@ -64,7 +86,7 @@ export default function ImportPage({ user, settings }) {
       setCsvData({ headers, rows });
       setPreviewRows(rows.slice(0, 5));
 
-      // Auto-detect column mapping
+      // Auto-detect for generic format
       const autoMapping = autoDetectColumns(headers);
       setColumnMapping(autoMapping);
 
@@ -78,15 +100,10 @@ export default function ImportPage({ user, settings }) {
     const delimiters = [',', ';', '\t', '|'];
     let maxCount = 0;
     let bestDelimiter = ',';
-
     for (const d of delimiters) {
       const count = (line.match(new RegExp(`\\${d}`, 'g')) || []).length;
-      if (count > maxCount) {
-        maxCount = count;
-        bestDelimiter = d;
-      }
+      if (count > maxCount) { maxCount = count; bestDelimiter = d; }
     }
-
     return bestDelimiter;
   };
 
@@ -94,54 +111,39 @@ export default function ImportPage({ user, settings }) {
     const result = [];
     let current = '';
     let inQuotes = false;
-
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-
       if (char === '"') {
         if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-          // Escaped quote ("") inside quoted field
-          current += '"';
-          i++; // skip next quote
-        } else {
-          inQuotes = !inQuotes;
-        }
+          current += '"'; i++;
+        } else { inQuotes = !inQuotes; }
       } else if (char === delimiter && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
+        result.push(current); current = '';
+      } else { current += char; }
     }
     result.push(current);
-
     return result.map(v => v.replace(/^"|"$/g, '').trim());
   };
 
   const autoDetectColumns = (headers) => {
     const mapping = {};
     const patterns = {
-      symbol: /^(symbol|ticker|instrument|pair|item|underlying)$/i,
-      direction: /^(direction|side|type|action|order.?type)$/i,
-      entry_price: /^(entry.?price|open.?price|buy.?price|price|fill.?price)$/i,
-      exit_price: /^(exit.?price|close.?price|sell.?price)$/i,
-      entry_date: /^(entry.?date|open.?date|date.?opened|entry.?time|open.?time|exec.?time|date.?time)$/i,
+      symbol: /^(symbol|ticker|instrument|pair|item|underlying|instrument.?name)$/i,
+      direction: /^(direction|side|type|action|order.?type|trans.?code)$/i,
+      entry_price: /^(entry.?price|open.?price|open.?rate|buy.?price|price|fill.?price|price.?\/.?share)$/i,
+      exit_price: /^(exit.?price|close.?price|close.?rate|sell.?price)$/i,
+      entry_date: /^(entry.?date|open.?date|date.?opened|entry.?time|open.?time|exec.?time|date.?time|time|date)$/i,
       exit_date: /^(exit.?date|close.?date|date.?closed|exit.?time|close.?time)$/i,
-      quantity: /^(quantity|qty|size|volume|lots|shares|contracts)$/i,
-      pnl: /^(pnl|profit|p.?l|gain.?loss|result|net.?p.?l)$/i,
-      stop_loss: /^(stop.?loss|sl|stop)$/i,
-      take_profit: /^(take.?profit|tp|target)$/i,
+      quantity: /^(quantity|qty|size|volume|lots|shares|contracts|units|no\.?\s?of\s?shares)$/i,
+      pnl: /^(pnl|profit|p.?l|gain.?loss|result|net.?p.?l|realized.?p.?l)$/i,
+      stop_loss: /^(stop.?loss|sl|stop|s\/l)$/i,
+      take_profit: /^(take.?profit|tp|target|t\/p)$/i,
     };
-
     for (const header of headers) {
       for (const [field, pattern] of Object.entries(patterns)) {
-        if (pattern.test(header) && !mapping[field]) {
-          mapping[field] = header;
-          break;
-        }
+        if (pattern.test(header) && !mapping[field]) { mapping[field] = header; break; }
       }
     }
-
     return mapping;
   };
 
@@ -151,11 +153,13 @@ export default function ImportPage({ user, settings }) {
       return;
     }
 
-    // Validate required fields are mapped
-    const missingRequired = requiredFields.filter(f => !columnMapping[f]);
-    if (missingRequired.length > 0) {
-      setError(`Please map required fields: ${missingRequired.join(', ')}`);
-      return;
+    // Only enforce required field mapping for generic format
+    if (isGeneric) {
+      const missingRequired = requiredFields.filter(f => !columnMapping[f]);
+      if (missingRequired.length > 0) {
+        setError(`Please map required fields: ${missingRequired.join(', ')}`);
+        return;
+      }
     }
 
     setImporting(true);
@@ -168,13 +172,18 @@ export default function ImportPage({ user, settings }) {
         body: JSON.stringify({
           rows: csvData.rows,
           format,
-          columnMapping: format === 'generic' ? columnMapping : undefined,
+          columnMapping: isGeneric ? columnMapping : undefined,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        // If backend returns row-level errors, show them
+        if (data.errors && data.errors.length > 0) {
+          const errLines = data.errors.slice(0, 5).map(e => `Row ${e.row}: ${e.reason}`).join('\n');
+          throw new Error(`${data.error}\n\n${errLines}`);
+        }
         throw new Error(data.error || data.message || 'Import failed');
       }
 
@@ -200,262 +209,151 @@ export default function ImportPage({ user, settings }) {
   return (
     <JournalLayout user={user} title="Import Trades" settings={settings}>
       <style jsx>{`
-        .header {
-          margin-bottom: 32px;
-        }
-        h1 {
-          color: white;
-          font-size: 1.8rem;
-          margin-bottom: 8px;
-        }
-        .subtitle {
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.9rem;
-        }
-        .steps {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 32px;
-        }
+        .header { margin-bottom: 32px; }
+        h1 { color: white; font-size: 1.8rem; margin-bottom: 8px; }
+        .subtitle { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+        .steps { display: flex; gap: 16px; margin-bottom: 32px; }
         .step {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
+          display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+          background: rgba(255, 255, 255, 0.05); border-radius: 8px;
           color: rgba(255, 255, 255, 0.5);
         }
         .step.active {
           background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-          color: #667eea;
-          border: 1px solid rgba(102, 126, 234, 0.3);
+          color: #667eea; border: 1px solid rgba(102, 126, 234, 0.3);
         }
-        .step.completed {
-          color: #10b981;
-        }
+        .step.completed { color: #10b981; }
         .step-number {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
+          width: 28px; height: 28px; border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1); display: flex;
+          align-items: center; justify-content: center; font-weight: 600;
         }
-        .step.active .step-number {
-          background: #667eea;
-          color: white;
-        }
-        .step.completed .step-number {
-          background: #10b981;
-          color: white;
-        }
+        .step.active .step-number { background: #667eea; color: white; }
+        .step.completed .step-number { background: #10b981; color: white; }
         .section {
-          background: rgba(30, 41, 59, 0.6);
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 32px;
+          background: rgba(30, 41, 59, 0.6); border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.1); padding: 32px;
           margin-bottom: 24px;
         }
-        .section-title {
-          color: white;
-          font-size: 1.1rem;
-          margin-bottom: 20px;
+        .section-title { color: white; font-size: 1.1rem; margin-bottom: 20px; }
+        .group-label {
+          color: rgba(255, 255, 255, 0.4); font-size: 0.75rem;
+          text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;
+          margin-bottom: 10px; margin-top: 20px;
         }
+        .group-label:first-child { margin-top: 0; }
         .format-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 16px;
-          margin-bottom: 24px;
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 12px; margin-bottom: 8px;
         }
         .format-card {
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.2s;
+          padding: 16px; background: rgba(255, 255, 255, 0.03);
+          border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+          cursor: pointer; transition: all 0.2s;
         }
-        .format-card:hover {
-          border-color: rgba(102, 126, 234, 0.3);
-        }
-        .format-card.selected {
-          border-color: #667eea;
-          background: rgba(102, 126, 234, 0.1);
-        }
-        .format-name {
-          color: white;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-        .format-desc {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.8rem;
-        }
+        .format-card:hover { border-color: rgba(102, 126, 234, 0.3); }
+        .format-card.selected { border-color: #667eea; background: rgba(102, 126, 234, 0.1); }
+        .format-name { color: white; font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
+        .format-desc { color: rgba(255, 255, 255, 0.5); font-size: 0.78rem; }
         .dropzone {
-          border: 2px dashed rgba(255, 255, 255, 0.2);
-          border-radius: 12px;
-          padding: 40px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s;
+          border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 12px;
+          padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s;
         }
-        .dropzone:hover {
-          border-color: #667eea;
-          background: rgba(102, 126, 234, 0.05);
-        }
-        .dropzone-icon {
-          font-size: 3rem;
-          margin-bottom: 16px;
-        }
-        .dropzone-text {
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 8px;
-        }
-        .dropzone-hint {
-          color: rgba(255, 255, 255, 0.4);
-          font-size: 0.85rem;
-        }
-        .file-input {
-          display: none;
-        }
+        .dropzone:hover { border-color: #667eea; background: rgba(102, 126, 234, 0.05); }
+        .dropzone-icon { font-size: 3rem; margin-bottom: 16px; }
+        .dropzone-text { color: rgba(255, 255, 255, 0.7); margin-bottom: 8px; }
+        .dropzone-hint { color: rgba(255, 255, 255, 0.4); font-size: 0.85rem; }
+        .file-input { display: none; }
         .selected-file {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 16px;
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          border-radius: 8px;
-          margin-top: 16px;
+          display: flex; align-items: center; gap: 12px; padding: 16px;
+          background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 8px; margin-top: 16px;
         }
-        .file-icon {
-          font-size: 1.5rem;
-        }
-        .file-name {
-          color: white;
-          font-weight: 500;
-        }
-        .file-size {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.85rem;
-        }
+        .file-icon { font-size: 1.5rem; }
+        .file-name { color: white; font-weight: 500; }
+        .file-size { color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; }
         .mapping-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 16px;
-          margin-bottom: 24px;
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 16px; margin-bottom: 24px;
         }
-        .mapping-item {
-          padding: 16px;
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 8px;
-        }
+        .mapping-item { padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; }
         .mapping-label {
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 0.85rem;
-          margin-bottom: 8px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
+          color: rgba(255, 255, 255, 0.7); font-size: 0.85rem;
+          margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
         }
-        .required {
-          color: #ef4444;
-        }
+        .required { color: #ef4444; }
         .mapping-select {
-          width: 100%;
-          padding: 10px 12px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 6px;
-          color: white;
-          font-size: 0.9rem;
+          width: 100%; padding: 10px 12px; background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px;
+          color: white; font-size: 0.9rem;
         }
-        .preview-table {
-          width: 100%;
-          overflow-x: auto;
-          margin-bottom: 24px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 0.85rem;
-        }
+        .preview-table { width: 100%; overflow-x: auto; margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td {
-          padding: 12px 16px;
-          text-align: left;
+          padding: 12px 16px; text-align: left;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         th {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          font-weight: 600;
+          color: rgba(255, 255, 255, 0.5); font-size: 0.75rem;
+          text-transform: uppercase; font-weight: 600;
           background: rgba(255, 255, 255, 0.03);
         }
-        td {
-          color: rgba(255, 255, 255, 0.8);
-        }
-        .btn-group {
-          display: flex;
-          gap: 12px;
-          justify-content: flex-end;
-        }
+        td { color: rgba(255, 255, 255, 0.8); }
+        .btn-group { display: flex; gap: 12px; justify-content: flex-end; }
         .btn {
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
+          padding: 12px 24px; border-radius: 8px; font-weight: 600;
+          cursor: pointer; transition: all 0.2s; border: none;
         }
-        .btn-primary {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-        }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .btn-primary:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
-        .btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary {
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.2);
           color: rgba(255, 255, 255, 0.7);
         }
-        .btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
         .error-box {
-          padding: 16px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          border-radius: 8px;
-          color: #ef4444;
-          margin-bottom: 24px;
+          padding: 16px; background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;
+          color: #ef4444; margin-bottom: 24px; white-space: pre-line;
         }
-        .success-box {
-          text-align: center;
-          padding: 40px;
+        .success-box { text-align: center; padding: 40px; }
+        .success-icon { font-size: 4rem; margin-bottom: 20px; }
+        .success-title { color: #10b981; font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; }
+        .success-message { color: rgba(255, 255, 255, 0.7); margin-bottom: 24px; }
+        .import-warnings {
+          text-align: left; max-width: 500px; margin: 0 auto 24px;
+          padding: 16px; background: rgba(251, 191, 36, 0.1);
+          border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px;
         }
-        .success-icon {
-          font-size: 4rem;
+        .import-warnings-title {
+          color: #fbbf24; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;
+        }
+        .import-warning-item {
+          color: rgba(255, 255, 255, 0.6); font-size: 0.8rem;
+          padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .import-warning-item:last-child { border-bottom: none; }
+        .auto-detect-note {
+          padding: 12px 16px; background: rgba(102, 126, 234, 0.1);
+          border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 8px;
+          color: rgba(255, 255, 255, 0.7); font-size: 0.85rem;
           margin-bottom: 20px;
         }
-        .success-title {
-          color: #10b981;
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin-bottom: 8px;
+        @media (max-width: 768px) {
+          .steps { flex-direction: column; gap: 8px; }
+          .format-grid { grid-template-columns: 1fr 1fr; }
+          .mapping-grid { grid-template-columns: 1fr; }
+          .section { padding: 20px; }
+          .btn-group { flex-direction: column; }
+          .btn { width: 100%; text-align: center; }
         }
-        .success-message {
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 24px;
+        @media (max-width: 480px) {
+          .format-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -472,7 +370,7 @@ export default function ImportPage({ user, settings }) {
         </div>
         <div className={`step ${step >= 2 ? (step === 2 ? 'active' : 'completed') : ''}`}>
           <div className="step-number">{step > 2 ? '✓' : '2'}</div>
-          <span>Map Columns</span>
+          <span>{isGeneric ? 'Map Columns' : 'Preview'}</span>
         </div>
         <div className={`step ${step >= 3 ? 'active' : ''}`}>
           <div className="step-number">3</div>
@@ -480,28 +378,32 @@ export default function ImportPage({ user, settings }) {
         </div>
       </div>
 
-      {error && (
-        <div className="error-box">{error}</div>
-      )}
+      {error && <div className="error-box">{error}</div>}
 
       {/* Step 1: Upload */}
       {step === 1 && (
         <div className="section">
-          <div className="section-title">Choose Format</div>
-          <div className="format-grid">
-            {formats.map((f) => (
-              <div
-                key={f.value}
-                className={`format-card ${format === f.value ? 'selected' : ''}`}
-                onClick={() => setFormat(f.value)}
-              >
-                <div className="format-name">{f.label}</div>
-                <div className="format-desc">{f.description}</div>
-              </div>
-            ))}
-          </div>
+          <div className="section-title">Choose Your Broker or Platform</div>
 
-          <div className="section-title">Upload File</div>
+          {FORMAT_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="group-label">{group.label}</div>
+              <div className="format-grid">
+                {group.formats.map((f) => (
+                  <div
+                    key={f.value}
+                    className={`format-card ${format === f.value ? 'selected' : ''}`}
+                    onClick={() => setFormat(f.value)}
+                  >
+                    <div className="format-name">{f.label}</div>
+                    <div className="format-desc">{f.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className="section-title" style={{ marginTop: 28 }}>Upload File</div>
           <label className="dropzone">
             <input
               type="file"
@@ -529,29 +431,40 @@ export default function ImportPage({ user, settings }) {
       {/* Step 2: Preview & Map */}
       {step === 2 && csvData && (
         <>
-          <div className="section">
-            <div className="section-title">Column Mapping</div>
-            <div className="mapping-grid">
-              {[...requiredFields, ...optionalFields].map((field) => (
-                <div key={field} className="mapping-item">
-                  <label className="mapping-label">
-                    {field.replace(/_/g, ' ')}
-                    {requiredFields.includes(field) && <span className="required">*</span>}
-                  </label>
-                  <select
-                    className="mapping-select"
-                    value={columnMapping[field] || ''}
-                    onChange={(e) => setColumnMapping({ ...columnMapping, [field]: e.target.value })}
-                  >
-                    <option value="">-- Not Mapped --</option>
-                    {csvData.headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+          {/* Column Mapping — only show for Generic format */}
+          {isGeneric && (
+            <div className="section">
+              <div className="section-title">Column Mapping</div>
+              <div className="mapping-grid">
+                {[...requiredFields, ...optionalFields].map((field) => (
+                  <div key={field} className="mapping-item">
+                    <label className="mapping-label">
+                      {field.replace(/_/g, ' ')}
+                      {requiredFields.includes(field) && <span className="required">*</span>}
+                    </label>
+                    <select
+                      className="mapping-select"
+                      value={columnMapping[field] || ''}
+                      onChange={(e) => setColumnMapping({ ...columnMapping, [field]: e.target.value })}
+                    >
+                      <option value="">-- Not Mapped --</option>
+                      {csvData.headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* For broker presets, show a note instead of mapping */}
+          {!isGeneric && (
+            <div className="auto-detect-note">
+              Columns will be auto-mapped using the <strong>{FORMAT_GROUPS.flatMap(g => g.formats).find(f => f.value === format)?.label || format}</strong> preset.
+              If the import fails, try <strong>Generic CSV</strong> and map columns manually.
+            </div>
+          )}
 
           <div className="section">
             <div className="section-title">Preview ({previewRows.length} of {csvData.rows.length} rows)</div>
@@ -577,9 +490,7 @@ export default function ImportPage({ user, settings }) {
             </div>
 
             <div className="btn-group">
-              <button className="btn btn-secondary" onClick={reset}>
-                Cancel
-              </button>
+              <button className="btn btn-secondary" onClick={reset}>Cancel</button>
               <button
                 className="btn btn-primary"
                 onClick={handleImport}
@@ -599,12 +510,30 @@ export default function ImportPage({ user, settings }) {
             <div className="success-icon">✅</div>
             <div className="success-title">Import Complete!</div>
             <div className="success-message">
-              Successfully imported {result.imported} trades into your journal.
+              {result.message}
             </div>
+
+            {/* Show row-level warnings/errors if any */}
+            {result.errors && result.errors.length > 0 && (
+              <div className="import-warnings">
+                <div className="import-warnings-title">
+                  {result.skipped > 0 ? `${result.skipped} rows had issues:` : 'Some rows had warnings:'}
+                </div>
+                {result.errors.map((e, i) => (
+                  <div key={i} className="import-warning-item">
+                    Row {e.row}: {e.reason}
+                  </div>
+                ))}
+                {result.errors.length >= 20 && (
+                  <div className="import-warning-item" style={{ fontStyle: 'italic' }}>
+                    ...and more (showing first 20)
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="btn-group" style={{ justifyContent: 'center' }}>
-              <button className="btn btn-secondary" onClick={reset}>
-                Import More
-              </button>
+              <button className="btn btn-secondary" onClick={reset}>Import More</button>
               <button
                 className="btn btn-primary"
                 onClick={() => router.push('/trading-journal/trades')}
@@ -632,7 +561,6 @@ export async function getServerSideProps({ req, res }) {
     }
 
     const supabase = getServiceSupabase();
-
     const { data: settings } = await supabase
       .from('journal_settings')
       .select('*')
@@ -641,11 +569,7 @@ export async function getServerSideProps({ req, res }) {
 
     return {
       props: {
-        user: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName || null,
-        },
+        user: { id: user.id, email: user.email, fullName: user.fullName || null },
         settings: settings || null,
       },
     };

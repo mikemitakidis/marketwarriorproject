@@ -6,12 +6,129 @@ import logger from '../../../lib/logger';
  * API: /api/journal/import-trades
  * POST: Import trades from CSV data
  *
- * Supports formats:
- * - TradingView (export from trade history)
- * - MT4/MT5 (statement export)
- * - ThinkOrSwim (export from activity)
+ * Supports:
+ * - Broker presets: eToro, Robinhood, IBKR, Trading 212
+ * - Platform presets: TradingView, MT4/MT5, ThinkOrSwim
  * - Generic CSV (with column mapping)
+ *
+ * All broker/platform presets resolve to header mappings and go through
+ * the generic parser — no fragile per-format code paths.
+ *
+ * Returns row-level error reporting so the user knows which rows failed.
  */
+
+// ────────────────────────────────────────────────────────────────
+// Broker / platform preset mappings
+// Each preset maps our internal field names to the CSV header(s)
+// that broker is known to use. First match wins.
+// ────────────────────────────────────────────────────────────────
+const BROKER_PRESETS = {
+  etoro: {
+    label: 'eToro',
+    mapping: {
+      symbol:      ['Instrument Name', 'Details', 'Instrument'],
+      direction:   ['Action', 'Type'],
+      entry_price: ['Open Rate', 'Open Price'],
+      exit_price:  ['Close Rate', 'Close Price'],
+      entry_date:  ['Open Date', 'Date Open', 'Date'],
+      exit_date:   ['Close Date', 'Date Close'],
+      quantity:    ['Units', 'Amount'],
+      pnl:         ['Profit', 'Realized Equity Change', 'P/L'],
+      stop_loss:   ['Stop Loss Rate', 'SL'],
+      take_profit: ['Take Profit Rate', 'TP'],
+    },
+    directionMap: { buy: 'long', sell: 'short' },
+  },
+  robinhood: {
+    label: 'Robinhood',
+    mapping: {
+      symbol:      ['Instrument', 'Symbol', 'Ticker'],
+      direction:   ['Trans Code', 'Side', 'Type'],
+      entry_price: ['Price', 'Average Price'],
+      entry_date:  ['Activity Date', 'Process Date', 'Date'],
+      quantity:    ['Quantity', 'Qty', 'Shares'],
+      pnl:         ['Amount', 'Realized P/L'],
+    },
+    directionMap: { buy: 'long', sell: 'short' },
+  },
+  ibkr: {
+    label: 'Interactive Brokers',
+    mapping: {
+      symbol:      ['Symbol', 'Financial Instrument'],
+      direction:   ['Buy/Sell', 'Side', 'Code'],
+      entry_price: ['T. Price', 'TradePrice', 'Price', 'Trade Price'],
+      entry_date:  ['Date/Time', 'DateTime', 'TradeDate', 'Date', 'Trade Date/Time'],
+      quantity:    ['Quantity', 'Qty'],
+      pnl:         ['Realized P/L', 'Realized PnL', 'MTM P/L'],
+    },
+    // IBKR sometimes encodes direction in quantity sign
+    quantitySignIsDirection: true,
+    directionMap: { buy: 'long', 'bot': 'long', sell: 'short', sld: 'short' },
+  },
+  trading212: {
+    label: 'Trading 212',
+    mapping: {
+      symbol:      ['Ticker', 'Symbol', 'Name'],
+      direction:   ['Action', 'Type'],
+      entry_price: ['Price / share', 'Price', 'Price/share'],
+      entry_date:  ['Time', 'Date', 'Trading time'],
+      quantity:    ['No. of shares', 'Shares', 'Quantity'],
+      pnl:         ['Result', 'Result (EUR)', 'Result (USD)', 'Result (GBP)'],
+    },
+    directionMap: {
+      'market buy': 'long', 'limit buy': 'long', buy: 'long',
+      'market sell': 'short', 'limit sell': 'short', sell: 'short',
+    },
+  },
+  tradingview: {
+    label: 'TradingView',
+    mapping: {
+      symbol:      ['Symbol', 'Ticker'],
+      direction:   ['Side', 'Type', 'Direction'],
+      entry_price: ['Entry Price', 'Open', 'Open Price', 'Price'],
+      exit_price:  ['Exit Price', 'Close', 'Close Price'],
+      entry_date:  ['Date Opened', 'Entry Date', 'Open Date', 'Date'],
+      exit_date:   ['Date Closed', 'Exit Date', 'Close Date'],
+      quantity:    ['Quantity', 'Qty', 'Contracts'],
+      pnl:         ['Profit', 'P&L', 'PnL', 'Net P/L'],
+    },
+    directionMap: { buy: 'long', long: 'long', sell: 'short', short: 'short' },
+  },
+  mt4: {
+    label: 'MT4/MT5',
+    mapping: {
+      symbol:      ['Symbol', 'Item'],
+      direction:   ['Type'],
+      entry_price: ['Price', 'Open Price'],
+      exit_price:  ['Close Price'],
+      entry_date:  ['Open Time', 'Open'],
+      exit_date:   ['Close Time', 'Close'],
+      quantity:    ['Size', 'Volume', 'Lots'],
+      pnl:         ['Profit', 'P/L'],
+      stop_loss:   ['S/L', 'SL', 'Stop Loss'],
+      take_profit: ['T/P', 'TP', 'Take Profit'],
+    },
+    directionMap: { buy: 'long', sell: 'short' },
+    skipRow: (row) => {
+      const type = (row['Type'] || '').toLowerCase();
+      return type.includes('balance') || type.includes('credit') || type.includes('deposit') || type.includes('withdraw');
+    },
+  },
+  thinkorswim: {
+    label: 'ThinkOrSwim',
+    mapping: {
+      symbol:      ['Symbol', 'Underlying'],
+      direction:   ['Side'],
+      entry_price: ['Price', 'Fill Price', 'Net Price'],
+      entry_date:  ['Exec Time', 'Date/Time', 'Date'],
+      quantity:    ['Qty', 'Quantity'],
+    },
+    directionMap: { buy: 'long', sell: 'short' },
+    // TOS uses Pos Effect to determine entry vs exit
+    posEffectField: ['Pos Effect'],
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -40,46 +157,65 @@ export default async function handler(req, res) {
       });
     }
 
-    // Parse trades based on format
-    let parsedTrades;
-    try {
-      switch (format) {
-        case 'tradingview':
-          parsedTrades = parseTradingViewFormat(rows);
-          break;
-        case 'mt4':
-        case 'mt5':
-          parsedTrades = parseMT4MT5Format(rows);
-          break;
-        case 'thinkorswim':
-          parsedTrades = parseThinkOrSwimFormat(rows);
-          break;
-        case 'generic':
-        default:
-          parsedTrades = parseGenericFormat(rows, columnMapping);
-          break;
+    // ── Resolve column mapping ────────────────────────────────────
+    const preset = BROKER_PRESETS[format];
+    let resolvedMapping;
+
+    if (preset) {
+      // Broker / platform preset: resolve header names from row keys
+      const headers = Object.keys(rows[0] || {});
+      resolvedMapping = resolvePresetMapping(preset.mapping, headers);
+    } else if (format === 'generic' && columnMapping) {
+      // Generic: use user-provided mapping
+      resolvedMapping = columnMapping;
+    } else {
+      // Fallback: auto-detect
+      resolvedMapping = autoDetectColumns(rows[0] || {});
+    }
+
+    // ── Parse trades with row-level error tracking ────────────────
+    const parsed = [];
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 2; // +2 because row 1 is header, data starts at 2
+
+      try {
+        // Skip row if preset says to
+        if (preset?.skipRow && preset.skipRow(row)) {
+          continue;
+        }
+
+        const trade = parseRow(row, resolvedMapping, preset);
+
+        if (!trade) {
+          errors.push({ row: rowNum, reason: 'Missing symbol or entry price' });
+          continue;
+        }
+
+        if (!trade.entry_date) {
+          errors.push({ row: rowNum, reason: `Could not parse date: "${getFirstMappedValue(row, resolvedMapping, 'entry_date')}"`, trade: { symbol: trade.symbol } });
+          // Still import the trade with current timestamp as fallback
+          trade.entry_date = new Date().toISOString();
+        }
+
+        parsed.push(trade);
+      } catch (err) {
+        errors.push({ row: rowNum, reason: err.message });
       }
-    } catch (parseError) {
-      logger.error('CSV parse error:', parseError);
+    }
+
+    if (parsed.length === 0) {
       return res.status(400).json({
-        error: 'Failed to parse CSV data',
-        message: parseError.message,
+        error: 'No valid trades found. Check that your file matches the selected format.',
+        errors: errors.slice(0, 20),
       });
     }
 
-    if (parsedTrades.length === 0) {
-      return res.status(400).json({ error: 'No valid trades found in data' });
-    }
-
-    // Insert trades into database
+    // ── Insert into database ──────────────────────────────────────
     const supabase = getServiceSupabase();
-    // Filter out trades with no entry_date (invalid date parsing)
-    const validTrades = parsedTrades.filter(t => t.entry_date);
-    if (validTrades.length === 0) {
-      return res.status(400).json({ error: 'No valid trades found. Check date formats in your data.' });
-    }
-
-    const tradesToInsert = validTrades.map((trade) => ({
+    const tradesToInsert = parsed.map((trade) => ({
       journal_user_id: user.id,
       ...trade,
       status: trade.exit_date ? 'closed' : 'open',
@@ -98,7 +234,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       imported: data.length,
-      message: `Successfully imported ${data.length} trades`,
+      total: rows.length,
+      skipped: rows.length - data.length,
+      errors: errors.slice(0, 20), // Cap to avoid huge payloads
+      message: `Successfully imported ${data.length} of ${rows.length} trades`,
     });
 
   } catch (err) {
@@ -107,169 +246,160 @@ export default async function handler(req, res) {
   }
 }
 
-function parseTradingViewFormat(rows) {
-  // TradingView CSV columns typically:
-  // Symbol, Side, Entry Price, Exit Price, Profit, Date Opened, Date Closed, Quantity
-  return rows.map((row) => {
-    const symbol = row['Symbol'] || row['symbol'] || row[0];
-    const side = row['Side'] || row['side'] || row['Type'] || row[1];
-    const entryPrice = parseFloat(row['Entry Price'] || row['entry_price'] || row['Open'] || row[2]);
-    const exitPrice = parseFloat(row['Exit Price'] || row['exit_price'] || row['Close'] || row[3]);
-    const profit = parseFloat(row['Profit'] || row['profit'] || row['P&L'] || row[4]);
-    const entryDate = row['Date Opened'] || row['date_opened'] || row['Entry Date'] || row[5];
-    const exitDate = row['Date Closed'] || row['date_closed'] || row['Exit Date'] || row[6];
-    const quantity = parseFloat(row['Quantity'] || row['quantity'] || row['Qty'] || row[7]) || 1;
+// ────────────────────────────────────────────────────────────────
+// Resolve a preset mapping against actual CSV headers
+// ────────────────────────────────────────────────────────────────
+function resolvePresetMapping(presetMapping, headers) {
+  const resolved = {};
+  const headerLower = headers.map(h => h.toLowerCase().trim());
 
-    if (!symbol || isNaN(entryPrice)) {
-      return null;
+  for (const [field, candidates] of Object.entries(presetMapping)) {
+    for (const candidate of candidates) {
+      const idx = headerLower.indexOf(candidate.toLowerCase().trim());
+      if (idx !== -1) {
+        resolved[field] = headers[idx]; // Use original casing
+        break;
+      }
     }
-
-    return {
-      symbol: symbol.toUpperCase(),
-      direction: (side?.toLowerCase().includes('long') || side?.toLowerCase() === 'buy') ? 'long' : 'short',
-      entry_price: entryPrice,
-      exit_price: exitPrice || null,
-      entry_date: parseDate(entryDate),
-      exit_date: exitDate ? parseDate(exitDate) : null,
-      quantity,
-      pnl_amount: profit || (exitPrice ? (exitPrice - entryPrice) * quantity * (side?.toLowerCase().includes('short') ? -1 : 1) : null),
-      asset_class: detectAssetClass(symbol),
-    };
-  }).filter(Boolean);
-}
-
-function parseMT4MT5Format(rows) {
-  // MT4/MT5 statement format:
-  // Ticket, Open Time, Type, Size, Symbol, Price, S/L, T/P, Close Time, Close Price, Profit
-  return rows.map((row) => {
-    const symbol = row['Symbol'] || row['Item'] || row[4];
-    const type = row['Type'] || row[2];
-    const openTime = row['Open Time'] || row['Open'] || row[1];
-    const closeTime = row['Close Time'] || row['Close'] || row[8];
-    const openPrice = parseFloat(row['Price'] || row['Open Price'] || row[5]);
-    const closePrice = parseFloat(row['Close Price'] || row[9]);
-    const size = parseFloat(row['Size'] || row['Volume'] || row['Lots'] || row[3]) || 1;
-    const profit = parseFloat(row['Profit'] || row['P/L'] || row[10]);
-    const stopLoss = parseFloat(row['S/L'] || row['SL'] || row[6]);
-    const takeProfit = parseFloat(row['T/P'] || row['TP'] || row[7]);
-
-    // Skip non-trade rows (deposits, withdrawals, etc.)
-    if (!symbol || !type || type.toLowerCase().includes('balance')) {
-      return null;
-    }
-
-    const direction = (type.toLowerCase() === 'buy' || type.toLowerCase().includes('long')) ? 'long' : 'short';
-
-    return {
-      symbol: symbol.toUpperCase(),
-      direction,
-      entry_price: openPrice,
-      exit_price: closePrice || null,
-      entry_date: parseDate(openTime),
-      exit_date: closeTime ? parseDate(closeTime) : null,
-      quantity: size,
-      stop_loss: !isNaN(stopLoss) ? stopLoss : null,
-      take_profit: !isNaN(takeProfit) ? takeProfit : null,
-      pnl_amount: !isNaN(profit) ? profit : null,
-      asset_class: detectAssetClass(symbol),
-    };
-  }).filter(Boolean);
-}
-
-function parseThinkOrSwimFormat(rows) {
-  // ThinkOrSwim export format:
-  // Exec Time, Spread, Side, Qty, Pos Effect, Symbol, Exp, Strike, Type, Price, Net Price
-  return rows.map((row) => {
-    const symbol = row['Symbol'] || row['Underlying'] || row[5];
-    const side = row['Side'] || row[2];
-    const execTime = row['Exec Time'] || row['Date/Time'] || row[0];
-    const price = parseFloat(row['Price'] || row['Fill Price'] || row[9]);
-    const qty = parseFloat(row['Qty'] || row['Quantity'] || row[3]) || 1;
-    const posEffect = row['Pos Effect'] || row[4];
-
-    if (!symbol || !side) {
-      return null;
-    }
-
-    // Determine if this is opening or closing a position
-    const isOpening = posEffect?.toLowerCase().includes('open') || posEffect?.toLowerCase() === 'to open';
-
-    return {
-      symbol: symbol.toUpperCase(),
-      direction: (side.toLowerCase() === 'buy' || side.toLowerCase().includes('long')) ? 'long' : 'short',
-      entry_price: isOpening ? price : null,
-      exit_price: !isOpening ? price : null,
-      entry_date: parseDate(execTime),
-      exit_date: !isOpening ? parseDate(execTime) : null,
-      quantity: Math.abs(qty),
-      asset_class: detectAssetClass(symbol),
-    };
-  }).filter(Boolean);
-}
-
-function parseGenericFormat(rows, columnMapping) {
-  if (!columnMapping) {
-    // Try to auto-detect columns
-    columnMapping = autoDetectColumns(rows[0]);
   }
 
-  return rows.map((row) => {
-    const getValue = (key) => {
-      const colName = columnMapping[key];
-      return colName ? row[colName] : null;
-    };
-
-    const symbol = getValue('symbol');
-    const direction = getValue('direction');
-    const entryPrice = parseFloat(getValue('entry_price'));
-    const exitPrice = parseFloat(getValue('exit_price'));
-    const entryDate = getValue('entry_date');
-    const exitDate = getValue('exit_date');
-    const quantity = parseFloat(getValue('quantity')) || 1;
-    const pnl = parseFloat(getValue('pnl'));
-    const stopLoss = parseFloat(getValue('stop_loss'));
-    const takeProfit = parseFloat(getValue('take_profit'));
-
-    if (!symbol || isNaN(entryPrice)) {
-      return null;
+  // Fill gaps with auto-detection for any unresolved fields
+  if (!resolved.symbol || !resolved.entry_price) {
+    const auto = autoDetectColumns({ ...Object.fromEntries(headers.map(h => [h, ''])) });
+    for (const [field, col] of Object.entries(auto)) {
+      if (!resolved[field]) resolved[field] = col;
     }
+  }
 
-    return {
-      symbol: symbol.toUpperCase(),
-      direction: parseDirection(direction),
-      entry_price: entryPrice,
-      exit_price: !isNaN(exitPrice) ? exitPrice : null,
-      entry_date: parseDate(entryDate),
-      exit_date: exitDate ? parseDate(exitDate) : null,
-      quantity,
-      pnl_amount: !isNaN(pnl) ? pnl : null,
-      stop_loss: !isNaN(stopLoss) ? stopLoss : null,
-      take_profit: !isNaN(takeProfit) ? takeProfit : null,
-      asset_class: detectAssetClass(symbol),
-    };
-  }).filter(Boolean);
+  return resolved;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Parse a single row into a trade object
+// ────────────────────────────────────────────────────────────────
+function parseRow(row, mapping, preset) {
+  const get = (field) => {
+    const col = mapping[field];
+    return col ? (row[col] ?? null) : null;
+  };
+
+  const symbol = get('symbol');
+  const entryPriceRaw = get('entry_price');
+  const entryPrice = parseNumber(entryPriceRaw);
+
+  if (!symbol || symbol.trim() === '' || isNaN(entryPrice)) {
+    return null;
+  }
+
+  const exitPriceRaw = get('exit_price');
+  const exitPrice = parseNumber(exitPriceRaw);
+  const quantity = Math.abs(parseNumber(get('quantity'))) || 1;
+  const pnl = parseNumber(get('pnl'));
+  const stopLoss = parseNumber(get('stop_loss'));
+  const takeProfit = parseNumber(get('take_profit'));
+
+  // Direction resolution
+  let direction = 'long';
+  const dirRaw = get('direction');
+  if (dirRaw) {
+    const dirLower = dirRaw.toLowerCase().trim();
+    if (preset?.directionMap) {
+      direction = preset.directionMap[dirLower] || parseDirection(dirRaw);
+    } else {
+      direction = parseDirection(dirRaw);
+    }
+  } else if (preset?.quantitySignIsDirection) {
+    // IBKR: negative quantity = sell/short
+    const rawQty = parseNumber(get('quantity'));
+    if (rawQty < 0) direction = 'short';
+  }
+
+  // Date parsing
+  const entryDate = parseDate(get('entry_date'));
+  const exitDateRaw = get('exit_date');
+  const exitDate = exitDateRaw ? parseDate(exitDateRaw) : null;
+
+  // ThinkOrSwim: Pos Effect determines entry vs exit
+  if (preset?.posEffectField) {
+    const posEffect = getFirstValue(row, preset.posEffectField);
+    if (posEffect) {
+      const pe = posEffect.toLowerCase();
+      const isClosing = pe.includes('close') || pe === 'to close';
+      if (isClosing) {
+        return {
+          symbol: symbol.toUpperCase().trim(),
+          direction,
+          entry_price: null,
+          exit_price: entryPrice, // The price is actually the exit
+          entry_date: entryDate,
+          exit_date: entryDate,
+          quantity,
+          asset_class: detectAssetClass(symbol),
+        };
+      }
+    }
+  }
+
+  return {
+    symbol: symbol.toUpperCase().trim(),
+    direction,
+    entry_price: entryPrice,
+    exit_price: !isNaN(exitPrice) ? exitPrice : null,
+    entry_date: entryDate,
+    exit_date: exitDate,
+    quantity,
+    pnl_amount: !isNaN(pnl) ? pnl : null,
+    stop_loss: !isNaN(stopLoss) ? stopLoss : null,
+    take_profit: !isNaN(takeProfit) ? takeProfit : null,
+    asset_class: detectAssetClass(symbol),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────
+
+function getFirstValue(row, candidates) {
+  for (const c of candidates) {
+    if (row[c] !== undefined && row[c] !== null && row[c] !== '') return row[c];
+    // Also try case-insensitive
+    const key = Object.keys(row).find(k => k.toLowerCase().trim() === c.toLowerCase().trim());
+    if (key && row[key] !== undefined && row[key] !== '') return row[key];
+  }
+  return null;
+}
+
+function getFirstMappedValue(row, mapping, field) {
+  const col = mapping[field];
+  return col ? (row[col] ?? '') : '';
+}
+
+function parseNumber(val) {
+  if (val === null || val === undefined || val === '') return NaN;
+  // Remove currency symbols, thousands separators, whitespace
+  const cleaned = String(val).replace(/[$€£¥,\s]/g, '').replace(/\((.+)\)/, '-$1');
+  return parseFloat(cleaned);
 }
 
 function autoDetectColumns(firstRow) {
   const mapping = {};
   const keys = Object.keys(firstRow);
-
   const patterns = {
-    symbol: /^(symbol|ticker|instrument|pair|item)$/i,
-    direction: /^(direction|side|type|action)$/i,
-    entry_price: /^(entry.?price|open.?price|buy.?price|price)$/i,
-    exit_price: /^(exit.?price|close.?price|sell.?price)$/i,
-    entry_date: /^(entry.?date|open.?date|date.?opened|entry.?time|open.?time)$/i,
+    symbol: /^(symbol|ticker|instrument|pair|item|underlying|instrument.?name)$/i,
+    direction: /^(direction|side|type|action|order.?type|trans.?code|buy.?sell)$/i,
+    entry_price: /^(entry.?price|open.?price|open.?rate|buy.?price|price|fill.?price|t\.?\s?price|trade.?price|price.?\/.?share)$/i,
+    exit_price: /^(exit.?price|close.?price|close.?rate|sell.?price)$/i,
+    entry_date: /^(entry.?date|open.?date|date.?opened|entry.?time|open.?time|exec.?time|date.?time|activity.?date|time|trading.?time|date)$/i,
     exit_date: /^(exit.?date|close.?date|date.?closed|exit.?time|close.?time)$/i,
-    quantity: /^(quantity|qty|size|volume|lots|shares)$/i,
-    pnl: /^(pnl|profit|p.?l|gain.?loss|result)$/i,
-    stop_loss: /^(stop.?loss|sl|stop)$/i,
-    take_profit: /^(take.?profit|tp|target)$/i,
+    quantity: /^(quantity|qty|size|volume|lots|shares|contracts|units|no\.?\s?of\s?shares)$/i,
+    pnl: /^(pnl|profit|p.?l|gain.?loss|result|net.?p.?l|realized.?p.?l|realized.?equity.?change)$/i,
+    stop_loss: /^(stop.?loss|sl|stop|s\/l|stop.?loss.?rate)$/i,
+    take_profit: /^(take.?profit|tp|target|t\/p|take.?profit.?rate)$/i,
   };
 
   for (const key of keys) {
     for (const [field, pattern] of Object.entries(patterns)) {
-      if (pattern.test(key) && !mapping[field]) {
+      if (pattern.test(key.trim()) && !mapping[field]) {
         mapping[field] = key;
         break;
       }
@@ -281,33 +411,85 @@ function autoDetectColumns(firstRow) {
 
 function parseDirection(direction) {
   if (!direction) return 'long';
-  const d = direction.toLowerCase();
-  if (d.includes('short') || d === 'sell' || d === 's') return 'short';
+  const d = direction.toLowerCase().trim();
+  if (d.includes('short') || d === 'sell' || d === 's' || d === 'sld' ||
+      d.includes('market sell') || d.includes('limit sell')) return 'short';
   return 'long';
 }
 
+// ────────────────────────────────────────────────────────────────
+// Robust date parser
+// Handles: ISO, DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD,
+//          DD/MM/YYYY HH:MM:SS, eToro dates, IBKR dates,
+//          Trading 212 "2024-01-15T10:30:00+02:00", etc.
+// ────────────────────────────────────────────────────────────────
 function parseDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return null;
+  dateStr = dateStr.trim();
   if (!dateStr) return null;
 
-  // Try parsing various date formats
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toISOString();
+  // 1) Try native Date parsing (handles ISO 8601, RFC 2822, etc.)
+  const nativeParsed = new Date(dateStr);
+  if (!isNaN(nativeParsed.getTime())) {
+    // Sanity check: year should be between 1990 and 2100
+    const yr = nativeParsed.getFullYear();
+    if (yr >= 1990 && yr <= 2100) {
+      return nativeParsed.toISOString();
+    }
   }
 
-  // Try DD/MM/YYYY or MM/DD/YYYY
-  const parts = dateStr.split(/[/\-\.]/);
+  // 2) Strip time portion if present: "15/02/2026 14:30:00" → "15/02/2026"
+  const dateTimeParts = dateStr.split(/[\sT]+/);
+  const datePart = dateTimeParts[0];
+  const timePart = dateTimeParts[1] || '';
+
+  // 3) Try splitting by common separators
+  const parts = datePart.split(/[/\-\.]/);
   if (parts.length === 3) {
-    // Assume MM/DD/YYYY for US format
-    const [a, b, c] = parts.map(p => parseInt(p, 10));
-    let result;
-    if (a > 12) {
-      // DD/MM/YYYY
-      result = new Date(c, b - 1, a);
+    let [a, b, c] = parts.map(p => parseInt(p, 10));
+    if (isNaN(a) || isNaN(b) || isNaN(c)) return null;
+
+    let year, month, day;
+
+    if (a > 100) {
+      // YYYY-MM-DD (a is the year)
+      year = a; month = b; day = c;
+    } else if (c > 100) {
+      // DD/MM/YYYY or MM/DD/YYYY (c is the year)
+      if (a > 12) {
+        // Must be DD/MM/YYYY (a > 12 can't be month)
+        day = a; month = b; year = c;
+      } else if (b > 12) {
+        // Must be MM/DD/YYYY (b > 12 can't be month)
+        month = a; day = b; year = c;
+      } else {
+        // Ambiguous: default to DD/MM/YYYY (most brokers are international)
+        day = a; month = b; year = c;
+      }
+    } else if (c >= 0 && c < 100) {
+      // Two-digit year: DD/MM/YY
+      year = c < 50 ? 2000 + c : 1900 + c;
+      if (a > 12) {
+        day = a; month = b;
+      } else {
+        day = a; month = b; // Default DD/MM
+      }
     } else {
-      // MM/DD/YYYY
-      result = new Date(c, a - 1, b);
+      return null;
     }
+
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+    // Reconstruct with time if present
+    let hours = 0, minutes = 0, seconds = 0;
+    if (timePart) {
+      const tp = timePart.split(/[:.]/);
+      hours = parseInt(tp[0], 10) || 0;
+      minutes = parseInt(tp[1], 10) || 0;
+      seconds = parseInt(tp[2], 10) || 0;
+    }
+
+    const result = new Date(year, month - 1, day, hours, minutes, seconds);
     if (!isNaN(result.getTime())) {
       return result.toISOString();
     }
@@ -318,24 +500,29 @@ function parseDate(dateStr) {
 
 function detectAssetClass(symbol) {
   if (!symbol) return 'other';
-  const s = symbol.toUpperCase();
+  const s = symbol.toUpperCase().trim();
 
-  // Forex pairs
-  if (/^(EUR|USD|GBP|JPY|AUD|NZD|CAD|CHF)/.test(s) && s.length === 6) {
+  // Forex pairs (6 chars, both halves are known currencies)
+  const fxCurrencies = ['EUR', 'USD', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
+  if (s.length === 6 && fxCurrencies.includes(s.slice(0, 3)) && fxCurrencies.includes(s.slice(3))) {
+    return 'forex';
+  }
+  // Also match pairs with separator: EUR/USD, EUR_USD
+  if (/^[A-Z]{3}[/_][A-Z]{3}$/.test(s) && fxCurrencies.includes(s.slice(0, 3))) {
     return 'forex';
   }
 
   // Crypto
-  if (/(BTC|ETH|XRP|SOL|DOGE|USDT|USDC)/.test(s)) {
+  if (/(BTC|ETH|XRP|SOL|DOGE|USDT|USDC|ADA|DOT|AVAX|MATIC|LINK|SHIB)/.test(s) ||
+      s.endsWith('USD') && s.length > 6) {
     return 'crypto';
   }
 
   // Futures (common patterns)
-  if (/^(ES|NQ|YM|CL|GC|SI|ZB|ZN)/.test(s) || s.includes('/')) {
+  if (/^(ES|NQ|YM|CL|GC|SI|ZB|ZN|RTY|MES|MNQ|MCL)/.test(s)) {
     return 'futures';
   }
 
-  // Default to stock
   return 'stock';
 }
 
