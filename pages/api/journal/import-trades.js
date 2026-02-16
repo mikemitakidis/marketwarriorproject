@@ -85,9 +85,40 @@ const BROKER_PRESETS = {
       quantity:    ['No. of shares', 'Shares', 'Quantity'],
       pnl:         ['Result', 'Result (EUR)', 'Result (USD)', 'Result (GBP)'],
     },
+    // In Trading 212 Invest mode, ALL positions are long.
+    // "Market sell" = closing a long, NOT opening a short.
     directionMap: {
       'market buy': 'long', 'limit buy': 'long', buy: 'long',
-      'market sell': 'short', 'limit sell': 'short', sell: 'short',
+      'market sell': 'long', 'limit sell': 'long', sell: 'long',
+    },
+    // Skip non-trade rows: dividends, deposits, stock splits, ADR fees, etc.
+    skipRow: (row) => {
+      const action = (row['Action'] || '').toLowerCase();
+      return !action.includes('buy') && !action.includes('sell');
+    },
+    // Trading 212 exports individual transactions, NOT matched trades.
+    // For sell rows: "Price / share" is the EXIT price (closing a long).
+    // We back-calculate approximate entry_price from P&L and exchange rate.
+    transformRow: (trade, row) => {
+      const action = (row['Action'] || '').toLowerCase();
+      if (action.includes('sell')) {
+        // Price/share is the exit price for sells
+        trade.exit_price = trade.entry_price;
+        trade.exit_date = trade.entry_date;
+        // Back-calculate entry_price: P&L(account_ccy) * exchange_rate = P&L(price_ccy)
+        // Then: entry_price = exit_price - P&L(price_ccy) / quantity
+        const exchangeRate = parseFloat(row['Exchange rate']) || 1;
+        if (trade.pnl_amount != null && !isNaN(trade.pnl_amount) && trade.quantity > 0) {
+          const pnlInPriceCurrency = trade.pnl_amount * exchangeRate;
+          const approxEntry = trade.exit_price - (pnlInPriceCurrency / trade.quantity);
+          if (approxEntry > 0) {
+            trade.entry_price = Math.round(approxEntry * 10000) / 10000;
+          }
+        }
+        // entry_date is unknown for sells (we don't know when user bought)
+        // Keep sell date — user can edit later
+      }
+      return trade;
     },
   },
   tradingview: {
@@ -197,11 +228,16 @@ export default async function handler(req, res) {
           continue;
         }
 
-        const trade = parseRow(row, resolvedMapping, preset);
+        let trade = parseRow(row, resolvedMapping, preset);
 
         if (!trade) {
           errors.push({ row: rowNum, reason: 'Missing symbol or entry price' });
           continue;
+        }
+
+        // Apply preset-specific row transformation (e.g., Trading 212 sell→exit swap)
+        if (preset?.transformRow) {
+          trade = preset.transformRow(trade, row);
         }
 
         if (!trade.entry_date) {
