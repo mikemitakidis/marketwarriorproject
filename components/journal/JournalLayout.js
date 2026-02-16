@@ -28,6 +28,7 @@ export default function JournalLayout({ children, user, title = 'Trading Journal
     { href: '/trading-journal/share', label: 'Share' },
     { href: '/trading-journal/challenge', label: 'Challenge' },
     { href: '/trading-journal/settings', label: 'Settings' },
+    { href: '/trading-journal/guide', label: 'User Guide' },
   ];
 
   const isActive = (href) => {
