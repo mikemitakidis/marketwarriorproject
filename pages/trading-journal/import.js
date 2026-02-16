@@ -184,7 +184,8 @@ export default function ImportPage({ user, settings }) {
           const errLines = data.errors.slice(0, 5).map(e => `Row ${e.row}: ${e.reason}`).join('\n');
           throw new Error(`${data.error}\n\n${errLines}`);
         }
-        throw new Error(data.error || data.message || 'Import failed');
+        const detail = data.details ? ` (${data.details})` : '';
+        throw new Error((data.error || data.message || 'Import failed') + detail);
       }
 
       setResult(data);

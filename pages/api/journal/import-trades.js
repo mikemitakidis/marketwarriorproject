@@ -237,8 +237,12 @@ export default async function handler(req, res) {
       .select('id');
 
     if (error) {
-      logger.error('Trade import error:', error);
-      return res.status(500).json({ error: 'Failed to import trades' });
+      console.error('Trade import DB error:', error.message, error.details, error.hint, error.code);
+      return res.status(500).json({
+        error: 'Failed to import trades',
+        details: error.message || 'Unknown database error',
+        hint: error.hint || null,
+      });
     }
 
     return res.status(200).json({
@@ -251,8 +255,8 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    logger.error('Import API error:', err);
-    return res.status(500).json({ error: 'Server error' });
+    console.error('Import API error:', err.message || err);
+    return res.status(500).json({ error: 'Server error', details: err.message || 'Unknown error' });
   }
 }
 
