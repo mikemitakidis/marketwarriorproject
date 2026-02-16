@@ -287,6 +287,10 @@ export default function ImportPage({ user, settings }) {
           border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px;
           color: white; font-size: 0.9rem;
         }
+        .mapping-select option {
+          background: #1a1a2e;
+          color: white;
+        }
         .preview-table { width: 100%; overflow-x: auto; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td {
