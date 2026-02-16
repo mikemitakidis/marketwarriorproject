@@ -208,8 +208,11 @@ export default async function handler(req, res) {
         .single();
 
       if (insertError) {
-        logger.error('Error creating trade:', insertError);
-        return res.status(500).json({ error: 'Failed to create trade' });
+        console.error('Error creating trade:', insertError.message, insertError.details, insertError.hint, insertError.code);
+        return res.status(500).json({
+          error: 'Failed to create trade',
+          details: insertError.message || 'Unknown database error',
+        });
       }
 
       // Add tags if provided (validate ownership first)

@@ -429,6 +429,10 @@ export default function GoalsPage({ user, settings }) {
           color: white;
           font-size: 1rem;
         }
+        .form-select option {
+          background: #1a1a2e;
+          color: white;
+        }
         .form-buttons {
           display: flex;
           gap: 12px;
